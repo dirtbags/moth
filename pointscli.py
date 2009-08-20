@@ -20,7 +20,7 @@ def main():
     req = points.encode_request(now, cat, team, score)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     while True:
-        s.sendto(req, (opts.host, 9999))
+        s.sendto(req, (opts.host, 6667))
         r, w, x = select.select([s], [], [], 0.2)
         if r:
             b = s.recv(500)
