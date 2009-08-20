@@ -1,8 +1,29 @@
+#! /usr/bin/env python3
+
 import optparse
 import select
 import points
 import socket
 import time
+
+def submit(sock, cat, team, score):
+    now = int(time.time())
+    req = points.encode_request(now, cat, team, score)
+    while True:
+        sock.send(req)
+        r, w, x = select.select([sock], [], [], 0.2)
+        if r:
+            b = sock.recv(500)
+            when, txt = points.decode_response(b)
+            assert when == now
+            if txt == 'OK':
+                return
+            raise ValueError(txt)
+
+def makesock(host):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect((host, 6667))
+    return s
 
 def main():
     p = optparse.OptionParser(usage='%prog CATEGORY TEAM SCORE')
@@ -16,21 +37,13 @@ def main():
     except ValueError:
         return p.print_usage()
 
-    now = int(time.time())
-    req = points.encode_request(now, cat, team, score)
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    while True:
-        s.sendto(req, (opts.host, 6667))
-        r, w, x = select.select([s], [], [], 0.2)
-        if r:
-            b = s.recv(500)
-            when, txt = points.decode_response(b)
-            assert when == now
-            if txt == 'OK':
-                return
-            print(txt)
-            raise ValueError(txt)
+    s = makesock(opts.host)
 
+    try:
+        submit(s, cat, team, score)
+    except ValueError as err:
+        print(err)
+        raise
 
 if __name__ == '__main__':
     main()

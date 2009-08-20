@@ -50,14 +50,12 @@ class CategoryHandler(socketserver.StreamRequestHandler):
             catpass = self.rfile.readline().strip()
             cat, passwd = catpass.split(b':::')
             passwd = passwd.decode('utf-8')
-            print(cat, passwd, hexdigest(cat))
             if passwd != hexdigest(cat):
                 self.wfile.write(b'ERROR :Closing Link: Invalid password\n')
                 return
             cat = cat.decode('utf-8')
         except ValueError as foo:
             self.wfile.write(b'ERROR :Closing Link: Invalid command\n')
-            print(foo)
             return
 
         flags[cat] = house

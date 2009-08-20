@@ -10,7 +10,7 @@ import io
 ## Authentication
 ##
 
-key = b'mullosks peck my galloping genitals'
+key = b'mollusks peck my galloping genitals'
 def digest(data):
     return hmac.new(key, data).digest()
 
@@ -131,6 +131,7 @@ class Storage:
         l = struct.pack('!I', len(b))
         self.f.write(l)
         self.f.write(b)
+        print('added %d points to [%s] in [%s]' % (score, team, cat))
 
     def categories(self):
         return sorted(self.points_by_cat)

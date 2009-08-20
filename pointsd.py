@@ -27,7 +27,7 @@ class MyHandler(socketserver.BaseRequestHandler):
 
         # Replays can happen legitimately.
         if not req in acked:
-            if not (now - 2 < when < now):
+            if not (now - 2 < when <= now):
                 resp = points.encode_response(when, 'Your clock is off')
                 peer.sendto(resp, self.client_address)
                 return
