@@ -1,0 +1,99 @@
+This documents the physical requirements for the event.  So we can
+schedule stuff.
+
+
+Duration
+========
+
+The event can be tailored to last anywhere from 1 hour to several days.
+For multi-day events, hosts should provide a lock on all doors to the
+event area and allow contestants to store their equipment overnight.
+
+
+Organizers
+==========
+
+The event can usually be run by just one organizer.
+
+
+Contestants
+===========
+
+The event hardware can handle any number of contestants, from as few as
+two, to as many as 1000.  ACS maintains hardware to support up to 49
+contestants (at most 7 teams with at most 7 people per team).  Larger or
+more teams can be accomodated, if the contestants or event hosts provide
+additional equipment (see "Large Events" below).
+
+
+Teams
+=====
+
+There can be 1-7 teams.  With more than one team, more categories become
+available, such as the attack/defend scenario.  Teams should be between
+2 and 6 people, but teams can be larger if they don't need more than 6
+computers connected to the provided switch (eg. if they bring their own
+switch, additional network cables, and power strip).
+
+Each team is expected to provide any laptops, desktops, network cables,
+storage devices, or additional networking equipment they want.  An
+8-port switch is provided to each team as a courtesy, but need not be
+used.  Contestants are encouraged to reconfigure the network topology in
+their team area, adding more switches, firewalls, or whatever else they
+desire.
+
+
+Organizer area
+==============
+
+The organizer area must have power and one connection to the Internet.
+It should be near a wall or some other surface which can serve as a
+screen for a projector.  It must have a table or tables large enough to
+support one laptop per organizer, a QNAP TS329 (6x4x8½ inches), and a
+stereo amplifier (about 2x1 feet), unless the host has a specific desire
+for no music.  Each organizer needs a chair.
+
+
+Team areas
+==========
+
+Ideally there should be one round(ish) table per team, and a chair for
+each team member.  Each team's area needs space for the equipment they
+bring (their laptops), a power strip, one QNAP TS-239 (6×4×8½ inches),
+and one 8-port switch.  Each team area must be located within 50 feet of
+the organizer area, so that their team's network can reach the organizer
+area's switch.
+
+
+Large Events
+============
+
+An almost unlimited number of contestants can be supported by the event
+software.  For events with over 7 teams, certain contest categories
+cannot be run (eg. sysadmin, injection/exploits) since only 7 "services"
+boxes exist.
+
+We can provide a 48-port switch in addition to our eight 8-port
+switches, and a 2'×1'×1' box full of CAT-5 cables of various lengths, so
+up to 47 teams can be accommodated if the host can provide more switches,
+power strips, and CAT5 cables.
+
+For safety reasons (to minimize tripping hazards and clutter), it is
+suggested that each team area have only one or two uplink connections to
+the organizer area's switch.
+
+
+
+Example: 91 contestants (7 teams, 13 contestants per team)
+----------------------------------------------------------
+
+Each team's area has 1 uplink connection connected to port 1 of the
+services box.  Port 2 of the services box connects to an 8-port hub,
+which also feeds a second 8-port hub, for a total of 13 connections.
+
+
+Example: 168 contestants (12 teams, 14 contestants per team)
+------------------------------------------------------------
+
+Each team area has 2 uplink connections, each connected to an 8-port
+switch.  There are no services boxes in this configuration.
