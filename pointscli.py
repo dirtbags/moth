@@ -7,18 +7,28 @@ import socket
 import time
 
 def submit(sock, cat, team, score):
-    now = int(time.time())
-    req = points.encode_request(now, cat, team, score)
+    begin = time.time()
+    mark = int(begin)
+    req = points.encode_request(mark, cat, team, score)
     while True:
         sock.send(req)
-        r, w, x = select.select([sock], [], [], 0.2)
-        if r:
-            b = sock.recv(500)
+        r, w, x = select.select([sock], [], [], begin + 2 - time.time())
+        if not r:
+            break
+        b = sock.recv(500)
+        try:
             when, txt = points.decode_response(b)
-            assert when == now
-            if txt == 'OK':
-                return
+        except ValueError:
+            # Ignore invalid packets
+            continue
+        if when != mark:
+            # Ignore wrong timestamp
+            continue
+        if txt == 'OK':
+            return
+        else:
             raise ValueError(txt)
+
 
 def makesock(host):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

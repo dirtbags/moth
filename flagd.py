@@ -8,6 +8,7 @@ import hmac
 import optparse
 import points
 import pointscli
+import traceback
 
 key = b'My First Shared Secret (tm)'
 def hexdigest(data):
@@ -39,7 +40,7 @@ class Submitter(threading.Thread):
         try:
             pointscli.submit(self.sock, cat, team, 1)
         except:
-            print('Uh oh, exception submitting')
+            traceback.print_exc()
 
 
 class CategoryHandler(socketserver.StreamRequestHandler):

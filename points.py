@@ -84,10 +84,15 @@ def decode_response(b):
 ##
 ## Storage
 ##
+def incdict(dict, key, amt=1):
+    dict.setdefault(key, 0)
+    dict[key] += amt
+
 class Storage:
     def __init__(self, fn):
         self.points_by_team = {}
         self.points_by_cat = {}
+        self.points_by_cat_team = {}
         self.log = []
         self.events = set()
         self.f = io.BytesIO()
@@ -98,7 +103,7 @@ class Storage:
             while True:
                 l = f.read(4)
                 if not l:
-                    return
+                    break
                 (l,) = struct.unpack('!I', l)
                 b = f.read(l)
                 req = decode_request(b)
@@ -118,20 +123,16 @@ class Storage:
 
         when, cat, team, score = req
 
-        if team not in self.points_by_team:
-            self.points_by_team[team] = 0
-        self.points_by_team[team] += score
-        if cat not in self.points_by_cat:
-            self.points_by_cat[cat] = 0
-        self.points_by_cat[cat] += score
+        incdict(self.points_by_team, team, score)
+        incdict(self.points_by_cat, cat, score)
+        incdict(self.points_by_cat_team, (cat, team), score)
         self.log.append(req)
         self.events.add(req)
 
         b = encode_request(*req)
-        l = struct.pack('!I', len(b))
-        self.f.write(l)
-        self.f.write(b)
-        print('added %d points to [%s] in [%s]' % (score, team, cat))
+        lb = struct.pack('!I', len(b)) + b
+        self.f.write(lb)
+        self.f.flush()
 
     def categories(self):
         return sorted(self.points_by_cat)
@@ -140,10 +141,13 @@ class Storage:
         return sorted(self.points_by_team)
 
     def cat_points(self, cat):
-        return self.points_by_cat[cat]
+        return self.points_by_cat.get(cat, 0)
 
     def team_points(self, team):
-        return self.points_by_team[team]
+        return self.points_by_team.get(team, 0)
+
+    def team_points_in_cat(self, cat, team):
+        return self.points_by_cat_team.get((cat, team), 0)
 
 
 ##
@@ -176,6 +180,8 @@ def test():
     assert s.categories() == ['cat1', 'merf']
     assert s.team_points('aardvarks') == 60
     assert s.cat_points('cat1') == 30
+    assert s.team_points_in_cat('cat1', 'aardvarks') == 10
+    assert s.team_points_in_cat('merf', 'zebras') == 0
 
     del s
     s = Storage('test.dat')
