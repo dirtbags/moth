@@ -112,7 +112,10 @@ class Storage:
         except IOError:
             pass
 
-        self.f = open(fn, 'ab')
+        try:
+            self.f = open(fn, 'ab')
+        except IOError:
+            self.f = None
 
     def __contains__(self, req):
         return req in self.events
@@ -148,6 +151,19 @@ class Storage:
 
     def team_points_in_cat(self, cat, team):
         return self.points_by_cat_team.get((cat, team), 0)
+
+
+##
+## Colors
+##
+def colors(teams):
+    colors = ['F0888A', '88BDF0', '00782B', '999900', 'EF9C00',
+              'F4B5B7', 'E2EFFB', '89CA9D', 'FAF519', 'FFE7BB',
+              'BA88F0', '8DCFF4', 'BEDFC4', 'FFFAB2', 'D7D7D7',
+              'C5B9D7', '006189', '8DCB41', 'FFCC00', '898989']
+    return dict(zip(teams, colors))
+
+
 
 
 ##
