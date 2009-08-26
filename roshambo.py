@@ -1,38 +1,38 @@
 #! /usr/bin/env python3
 
-##
-## XXX: Move more of this into game
-##
-
 import game
 
-class Roshambo(game.Game):
+class Roshambo(game.TurnBasedGame):
     def setup(self):
-        print("Hello from setup")
-        self.other_move = None
+        self.moves = []
+
+    def calculate_moves(self):
+        moves = [m[1] for m in self.moves]
+        if moves[0] == moves[1]:
+            self.moves[0][0].write('tie')
+            self.moves[1][0].write('tie')
+            self.moves = []
+        elif moves in (('rock', 'scissors'),
+                       ('scissors', 'paper'),
+                       ('paper', 'rock')):
+            # First player wins
+            self.declare_winner(self.moves[0][0])
+        else:
+            self.declare_winner(self.moves[1][0])
 
     def make_move(self, player, move):
-        print(self.other_move, player, move)
-        if self.other_move:
-            other_player, other_move = self.other_move
-            moves = (move, other_move)
-            if move in (('rock', 'scissors'),
-                        ('scissors', 'paper'),
-                        ('paper', 'rock')):
-                # Player wins
-                self.declare_winner(player)
-            else:
-                self.declare_winner(other_player)
-            other_player.unblock()
-        else:
-            self.other_move = (player, move)
-            player.block()
+        self.moves.append((player, move))
+        self.end_turn(player)
 
-    def handle(self, player, cmd, args):
-        if cmd in ('rock', 'scissors', 'paper'):
-            self.make_move(player, cmd)
-        else:
-            raise ValueError('Invalid command')
+    def do_rock(self, player, args):
+        self.make_move(player, 'rock')
+
+    def do_scissors(self, player, args):
+        self.make_move(player, 'scissors')
+
+    def do_paper(self, player, args):
+        self.make_move(player, 'paper')
+
 
 def main():
     game.run(2, Roshambo, 5388, b'roshambo:::984233f357ecac03b3e38b9414cd262b')
