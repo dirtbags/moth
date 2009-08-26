@@ -1,0 +1,36 @@
+zork
+----
+
+Implement the map of Adventure (aka Zork I, II, and III) in MOO.  There
+is a "flag" object you must find, its location is known.  BFS or DFS
+should be an option somehow.  Once a flag is taken, it relocates to
+another room.
+
+
+ffs
+---
+
+You get an image of a Berkeley Fast Filesystem.  You must find the file
+called "key" and submit its contents.
+
+
+gzip1
+-----
+
+You get a smallish gzip file which inflates to something very large.
+Toward the end is the key.
+
+
+gzip2
+-----
+
+gzip files support an FNAME extra field for the original filename.  gzip
+files can be concatenated to form another valid gzip file.  Since only
+the first FNAME will be examined by the gzip program, use this as a
+covert data channel.
+
+
+jpegs
+-----
+
+Same as gzip2 but with jpeg comment fields.
