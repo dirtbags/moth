@@ -55,7 +55,7 @@ class RandomBot(threading.Thread):
             ret = c.command(move)
             if ret == ['WIN']:
                 print('%s wins' % self.team)
-            time.sleep(random.uniform(0.2, 2))
+            time.sleep(random.uniform(0.2, 3))
 
 def main():
     bots = []

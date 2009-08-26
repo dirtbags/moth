@@ -15,6 +15,44 @@ timeout = 30.0
 # The current time of day
 now = time.time()
 
+# Heartbeat frequency (in seconds)
+pulse = 2.0
+
+##
+## Heartbeat stuff
+##
+
+hearts = set()
+last_beat = 0
+
+def add_heart(cb):
+    global hearts
+
+    hearts.add(cb)
+
+
+def del_heart(cb):
+    global hearts
+
+    hearts.remove(cb)
+
+
+def beat_heart():
+    global hearts, last_beat, now
+
+    if now - last_beat > pulse:
+        last_beat = now
+        for cb in hearts:
+            try:
+                cb()
+            except:
+                traceback.print_exc()
+
+
+##
+## Network stuff
+##
+
 class Listener(asyncore.dispatcher):
     def __init__(self, addr, player_factory, manager):
         asyncore.dispatcher.__init__(self)
@@ -77,6 +115,13 @@ class Manager:
         self.games = {}
         self.lobby = set()
         self.contestants = []
+        add_heart(self.heartbeat)
+
+    def heartbeat(self):
+        games = list(self.games)
+        for game in games:
+            print('heartbeat', game)
+            game.heartbeat()
 
     def enter_lobby(self, player):
         self.lobby.add(player)
@@ -86,13 +131,13 @@ class Manager:
         self.contestants.append(player)
         self.run_contest()
 
-    def leave(self, player):
-        """Player has left the tournament"""
+    def disconnect(self, player):
+        """Player has disconnected."""
 
         pass
 
     def set_flag(self, player):
-        """Player has the flag"""
+        """Player has the flag."""
 
         self.flagger.set_flag(player.name)
 
@@ -143,17 +188,9 @@ class Manager:
                 player.attach_game(game)
 
     def declare_winner(self, game, winner):
+        print('winner', game)
         players = self.games[game]
         del self.games[game]
-
-        # Game is over, detach all players
-        for p in players:
-            p.detach_game()
-
-        # Inform losers of their loss
-        losers = [p for p in players if p != winner]
-        for p in losers:
-            p.lose()
 
         # Winner stays in the contest
         winner.win()
@@ -225,10 +262,12 @@ class Player(asynchat.async_chat):
         self._write_val(['ERR', msg])
 
     def win(self):
+        self.detach_game()
         self._write_val(['WIN'])
         self.unblock()
 
     def lose(self):
+        self.detach_game()
         self._write_val(['LOSE'])
         self.unblock()
 
@@ -273,9 +312,8 @@ class Player(asynchat.async_chat):
 
     def close(self):
         if self.game:
-            self.game.forfeit(self)
-            self.manager.leave(self)
-
+            self.game.disconnect(self)
+        self.manager.disconnect(self)
         asynchat.async_chat.close(self)
 
     def send(self, data):
@@ -294,14 +332,21 @@ class Game:
         self.manager = manager
         self.players = players
         self.setup()
-        if not hasattr(self, 'forfeit'):
-            if len(self.players) == 2:
-                self.forfeit = self.forfeit_2p
-            else:
-                raise NotImplementedError('forfeit method undefined')
 
-    def declare_winner(self, player):
-        self.manager.declare_winner(self, player)
+    def heartbeat(self):
+        pass
+
+    def declare_winner(self, winner):
+        self.manager.declare_winner(self, winner)
+
+        # Congratulate winner
+        winner.win()
+
+        # Inform losers of their loss
+        losers = [p for p in players if p != winner]
+        for p in losers:
+            p.lose()
+
 
     def handle(self, player, cmd, args):
         """Handle a command from player.
@@ -317,7 +362,7 @@ class Game:
         except AttributeError:
             raise ValueError('Invalid command: %s' % cmd)
 
-    def forfeit_2p(self, player):
+    def forfeit(self, player):
         """Player forfeits the game, in a 2-player game.
 
         If your game has more than 2 players, you need to define
@@ -325,24 +370,83 @@ class Game:
 
         """
 
-        if player == self.players[0]:
-            self.declare_winner(self.players[1])
+        if len(self.players) == 2:
+            if player == self.players[0]:
+                self.declare_winner(self.players[1])
+            else:
+                self.declare_winner(self.players[0])
         else:
-            self.declare_winner(self.players[0])
+            raise NotImplementedError('forfeit method undefined')
+
+    def disconnect(self, player):
+        """Disconnect the player."""
+
+        self.forfeit(player)
 
 
 class TurnBasedGame(Game):
+    # How long you get to make a move (in seconds)
+    move_timeout = 2.0
+
     def __init__(self, manager, players):
+        global now
+
         self.ended_turn = set()
+        self.winner = None
+        self.lastmoved = dict([(p, now) for p in players])
         Game.__init__(self, manager, players)
 
+    def heartbeat(self):
+        global now
+
+        for p, when in self.lastmoved.items():
+            if now - when > self.move_timeout:
+                self.disconnect(p)
+            if self.winner:
+                break
+
+    def disconnect(self, player):
+        Game.disconnect(self, player)
+        self.end_turn(player)
+
+    def declare_winner(self, winner):
+        """Declare winner.
+
+        In a turn-based game, you can't tell anyone that the game has
+        ended until they make a move.  Otherwise, you ruin the illusion
+        of the game being synchronous.  This only sets the winner variable,
+        which is checked in self.end_turn().
+
+        """
+
+        self.manager.declare_winner(self, winner)
+        self.winner = winner
+
     def calculate_moves(self):
-        """Override this to define what to do when the turn is over"""
+        """Calculate all moves at the end of a turn.
+
+        Override this to define what to do when every player has ended
+        their turn.
+
+        """
         pass
 
     def end_turn(self, player):
-        """End player's turn"""
+        """End player's turn."""
+
+        global now
+
+        # The player has ended their turn; it's okay to tell them now
+        # that the game has ended.
+        if self.winner:
+            if self.winner == player:
+                player.win()
+            else:
+                player.lose()
+            return
+
         self.ended_turn.add(player)
+        self.lastmoved[player] = now
         player.block()
         if len(self.ended_turn) == len(self.players):
             for p in self.players:
@@ -351,12 +455,20 @@ class TurnBasedGame(Game):
             self.ended_turn = set()
 
 
+
+##
+## Running a game
+##
+
 def loop():
-    global timeout, now
+    global timeout, pulse, now
+
+    my_timeout = min(timeout, pulse)
 
     while True:
         now = time.time()
-        asyncore.poll2(timeout=timeout)
+        beat_heart()
+        asyncore.poll2(timeout=my_timeout)
 
 
 def run(nplayers, game_factory, port, auth):
