@@ -224,11 +224,8 @@ class Player(asynchat.async_chat):
     def err(self, msg):
         self._write_val(['ERR', msg])
 
-    def win(self, flag=False):
-        val = ['WIN']
-        if flag:
-            val.append('You have the flag')
-        self._write_val(val)
+    def win(self):
+        self._write_val(['WIN'])
         self.unblock()
 
     def lose(self):
@@ -237,6 +234,9 @@ class Player(asynchat.async_chat):
 
     def collect_incoming_data(self, data):
         self.inbuf.append(data)
+        if len(self.inbuf) > 10:
+            self.err('Too much data, punk.')
+            self.close()
 
     def found_terminator(self):
         self.last_activity = time.time()
