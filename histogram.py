@@ -18,10 +18,9 @@ fn = 'scores.hist'
 scoresfile = open(fn, 'w')
 i = 2
 for team in teams:
-    plotparts.append('"%s" using 1:%d with lines linetype rgb "#%s"' % (fn, i, teamcolors[team]))
+    plotparts.append('"%s" using 1:%d with lines linewidth 2 linetype rgb "#%s"' % (fn, i, teamcolors[team]))
     scores[team] = 0
     i += 1
-print(plotparts)
 
 def write_scores(t):
     scoresfile.write('%d' % t)
@@ -51,7 +50,7 @@ gp.write('set border 3\n')
 gp.write('set xtics nomirror\n')
 gp.write('set ytics nomirror\n')
 gp.write('set nokey\n')
-gp.write('set terminal png transparent x000000 xffffff\n')
+gp.write('set terminal png transparent size 640,200 x000000 xffffff\n')
 gp.write('set output "histogram.png"\n')
 gp.write('plot %s\n' % ','.join(plotparts))
 gp.flush()
