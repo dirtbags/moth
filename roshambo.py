@@ -13,9 +13,9 @@ class Roshambo(game.TurnBasedGame):
             players[0].write('tie')
             players[1].write('tie')
             self.moves = []
-        elif moves in (('rock', 'scissors'),
-                       ('scissors', 'paper'),
-                       ('paper', 'rock')):
+        elif moves in (['rock', 'scissors'],
+                       ['scissors', 'paper'],
+                       ['paper', 'rock']):
             # First player wins
             self.declare_winner(players[0])
         else:
