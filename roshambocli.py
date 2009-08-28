@@ -19,7 +19,7 @@ class Client:
     def write(self, *val):
         s = json.dumps(val)
         if self.debug:
-            print('--> %s' % s)
+            print(self, '--> %s' % s)
         self.wfile.write(s.encode('utf-8') + b'\n')
 
     def read(self):
@@ -48,6 +48,7 @@ class RandomBot(threading.Thread):
 
     def run(self):
         c = Client(('localhost', 5388))
+        c.debug = True
         #print('lobby', c.command('^', 'lobby'))
         c.command('login', self.team, 'furble')
         while True:
@@ -55,7 +56,10 @@ class RandomBot(threading.Thread):
             ret = c.command(move)
             if ret == ['WIN']:
                 print('%s wins' % self.team)
-            time.sleep(random.uniform(0.2, 3))
+            amt = random.uniform(0.2, 2.1)
+            if c.debug:
+                print(c, 'sleep %f' % amt)
+            time.sleep(amt)
 
 def main():
     bots = []

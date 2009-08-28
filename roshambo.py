@@ -7,18 +7,19 @@ class Roshambo(game.TurnBasedGame):
         self.moves = []
 
     def calculate_moves(self):
+        players = [m[0] for m in self.moves]
         moves = [m[1] for m in self.moves]
         if moves[0] == moves[1]:
-            self.moves[0][0].write('tie')
-            self.moves[1][0].write('tie')
+            players[0].write('tie')
+            players[1].write('tie')
             self.moves = []
         elif moves in (('rock', 'scissors'),
                        ('scissors', 'paper'),
                        ('paper', 'rock')):
             # First player wins
-            self.declare_winner(self.moves[0][0])
+            self.declare_winner(players[0])
         else:
-            self.declare_winner(self.moves[1][0])
+            self.declare_winner(players[1])
 
     def make_move(self, player, move):
         self.moves.append((player, move))
@@ -35,7 +36,7 @@ class Roshambo(game.TurnBasedGame):
 
 
 def main():
-    game.run(2, Roshambo, 5388, b'roshambo:::984233f357ecac03b3e38b9414cd262b')
+    game.run(Roshambo, 5388, b'roshambo:::984233f357ecac03b3e38b9414cd262b', 2)
 
 if __name__ == '__main__':
     main()

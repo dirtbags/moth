@@ -9,9 +9,6 @@ import time
 from errno import EPIPE
 
 
-# Number of seconds (roughly) you can be idle before you pass your turn
-timeout = 30.0
-
 # The current time of day
 now = time.time()
 
@@ -87,10 +84,12 @@ class Flagger(asynchat.async_chat):
     def handle_error(self):
         # If we lose the connection to flagd, nobody can score any
         # points.  Terminate everything.
-        asynchat.async_chat.handle_error(self)
         asyncore.close_all()
+        asynchat.async_chat.handle_error(self)
 
     def set_flag(self, team):
+        if not team:
+            team = 'dirtbags'
         self.push(team.encode('utf-8') + b'\n')
         self.flag = team
 
@@ -108,19 +107,18 @@ class Manager:
 
     """
 
-    def __init__(self, nplayers, game_factory, flagger):
-        self.nplayers = nplayers
+    def __init__(self, game_factory, flagger, minplayers, maxplayers=None):
         self.game_factory = game_factory
         self.flagger = flagger
-        self.games = {}
+        self.minplayers = minplayers
+        self.maxplayers = maxplayers or minplayers
+        self.games = set()
         self.lobby = set()
         self.contestants = []
         add_heart(self.heartbeat)
 
     def heartbeat(self):
-        games = list(self.games)
-        for game in games:
-            print('heartbeat', game)
+        for game in list(self.games):
             game.heartbeat()
 
     def enter_lobby(self, player):
@@ -142,66 +140,54 @@ class Manager:
         self.flagger.set_flag(player.name)
 
     def start_contest(self):
-        """Start a new contest.
+        """Start a new contest."""
 
-        This is where we purge any disconnected clients from the lobby.
-        """
-
-        self.contestants = []
-        gone = set()
-        for player in self.lobby:
-            if player.connected:
-                self.contestants.append(player)
-            else:
-                gone.add(player)
-        self.lobby.difference_update(gone)
+        self.contestants = list(self.lobby)
 
     def run_contest(self):
         # Purge any disconnected players
         self.contestants = [p for p in self.contestants if p.connected]
         self.lobby = set([p for p in self.lobby if p.connected])
 
-        # This is the closest thing we get to pattern matching in python
         llen = len(self.lobby)
         clen = len(self.contestants)
         glen = len(self.games)
-        if   (((llen == 1)                                                       )):
+        if llen == 1:
             # Give the flag to the only team connected
             self.set_flag(list(self.lobby)[0])
-        elif ((                            (clen == 1)             and (glen == 0))):
+        elif llen < self.minplayers:
+            # More than one connected team, but still not enough to play
+            self.set_flag(None)
+        elif (clen == 1) and (glen == 0):
             # Give the flag to the last team standing, and start a new contest
             self.set_flag(self.contestants.pop())
             self.start_contest()
-        if   (((llen == 0)             and (clen == 0)             and (glen == 0)) or
-              ((llen < self.nplayers)  and (clen == 0)             and (glen == 0)) or
-              (                            (clen < self.nplayers)  and (glen >= 1))):
-            pass
-        elif (((llen >= self.nplayers) and (clen == 0)             and (glen == 0))):
+        elif (llen >= self.minplayers) and (clen == 0) and (glen == 0):
+            # There are enough in the lobby to begin a contest now
             self.start_contest()
 
-        while len(self.contestants) >= self.nplayers:
-            players = self.contestants[:self.nplayers]
-            del self.contestants[:self.nplayers]
-            game = self.game_factory(self, players)
-            self.games[game] = players
+        while len(self.contestants) >= self.minplayers:
+            players = self.contestants[:self.maxplayers]
+            del self.contestants[:self.maxplayers]
+            game = self.game_factory(self, set(players))
+            self.games.add(game)
             for player in players:
                 player.attach_game(game)
 
-    def declare_winner(self, game, winner):
-        print('winner', game)
-        players = self.games[game]
-        del self.games[game]
+    def declare_winner(self, game, winner=None):
+        print('winner', game, winner)
+        self.games.remove(game)
 
         # Winner stays in the contest
-        winner.win()
-        self.add_contestant(winner)
+        if winner:
+            self.add_contestant(winner)
 
     def player_cmd(self, args):
         cmd = args[0].lower()
         if cmd == 'lobby':
             return [p.name for p in self.lobby]
         elif cmd == 'games':
-            return [[p.name for p in ps] for ps in self.games.values()]
+            return len(self.games)
         elif cmd == 'flag':
             return self.flagger.flag
         else:
@@ -209,7 +195,12 @@ class Manager:
 
 
 class Player(asynchat.async_chat):
+    # How long can a connection not send anything at all (unless blocked)?
+    timeout = 10.0
+
     def __init__(self, sock, manager):
+        global now
+
         asynchat.async_chat.__init__(self, sock=sock)
         self.manager = manager
         self.game = None
@@ -218,14 +209,14 @@ class Player(asynchat.async_chat):
         self.blocked = None
         self.name = None
         self.pending = None
-        self.last_activity = time.time()
+        self.last_activity = now
 
     def readable(self):
         global now, timeout
 
         ret = (not self.blocked) and asynchat.async_chat.readable(self)
         if ret:
-            if now - self.last_activity > timeout:
+            if now - self.last_activity > self.timeout:
                 # They waited too long.
                 self.err('idle timeout')
                 self.close()
@@ -238,8 +229,10 @@ class Player(asynchat.async_chat):
 
     def unblock(self):
         """Unblock reads"""
+        global now
+
         self.blocked = False
-        self.last_activity = time.time()
+        self.last_activity = now
 
     def attach_game(self, game):
         self.game = game
@@ -311,8 +304,9 @@ class Player(asynchat.async_chat):
             self.err(str(err))
 
     def close(self):
+        self.unblock()
         if self.game:
-            self.game.disconnect(self)
+            self.game.player_died(self)
         self.manager.disconnect(self)
         asynchat.async_chat.close(self)
 
@@ -333,6 +327,9 @@ class Game:
         self.players = players
         self.setup()
 
+    def setup(self):
+        pass
+
     def heartbeat(self):
         pass
 
@@ -340,13 +337,13 @@ class Game:
         self.manager.declare_winner(self, winner)
 
         # Congratulate winner
-        winner.win()
+        if winner:
+            winner.win()
 
         # Inform losers of their loss
         losers = [p for p in players if p != winner]
         for p in losers:
             p.lose()
-
 
     def handle(self, player, cmd, args):
         """Handle a command from player.
@@ -363,24 +360,17 @@ class Game:
             raise ValueError('Invalid command: %s' % cmd)
 
     def forfeit(self, player):
-        """Player forfeits the game, in a 2-player game.
+        """Player forfeits the game."""
 
-        If your game has more than 2 players, you need to define
-        your own forfeit method.
+        self.remove(player)
 
-        """
+    def remove(self, player):
+        """Remove the player from the game."""
 
-        if len(self.players) == 2:
-            if player == self.players[0]:
-                self.declare_winner(self.players[1])
-            else:
-                self.declare_winner(self.players[0])
-        else:
-            raise NotImplementedError('forfeit method undefined')
+        self.players.remove(player)
+        player.detach_game()
 
-    def disconnect(self, player):
-        """Disconnect the player."""
-
+    def player_died(self, player):
         self.forfeit(player)
 
 
@@ -388,26 +378,45 @@ class TurnBasedGame(Game):
     # How long you get to make a move (in seconds)
     move_timeout = 2.0
 
+    # How long you get to complete the game (in seconds)
+    game_timeout = 6.0
+
     def __init__(self, manager, players):
         global now
 
         self.ended_turn = set()
+        self.running = True
         self.winner = None
         self.lastmoved = dict([(p, now) for p in players])
+        self.began = now
         Game.__init__(self, manager, players)
 
     def heartbeat(self):
         global now
 
-        for p, when in self.lastmoved.items():
-            if now - when > self.move_timeout:
-                self.disconnect(p)
-            if self.winner:
-                break
+        if now - self.began > self.game_timeout:
+            self.running = False
 
-    def disconnect(self, player):
-        Game.disconnect(self, player)
-        self.end_turn(player)
+        # Idle players forfeit.  They're also booted, so we don't have
+        # to worry about the synchronous illusion.
+        for player in list(self.players):
+            if not player.connected:
+                self.remove(player)
+                continue
+            when = self.lastmoved[player]
+            if now - when > self.move_timeout:
+                player.err('Timeout waiting for a move')
+                player.close()
+
+        # If everyone left, nobody wins.
+        if not self.players:
+            self.manager.declare_winner(self, None)
+
+    def player_died(self, player):
+        Game.player_died(self, player)
+        if player in self.players:
+            # Update stuff
+            self.heartbeat()
 
     def declare_winner(self, winner):
         """Declare winner.
@@ -419,7 +428,7 @@ class TurnBasedGame(Game):
 
         """
 
-        self.manager.declare_winner(self, winner)
+        self.running = False
         self.winner = winner
 
     def calculate_moves(self):
@@ -436,24 +445,38 @@ class TurnBasedGame(Game):
 
         global now
 
-        # The player has ended their turn; it's okay to tell them now
-        # that the game has ended.
-        if self.winner:
-            if self.winner == player:
-                player.win()
-            else:
-                player.lose()
-            return
-
         self.ended_turn.add(player)
         self.lastmoved[player] = now
-        player.block()
-        if len(self.ended_turn) == len(self.players):
-            for p in self.players:
-                p.unblock()
+        if not self.players:
+            self.manager.declare_winner(self, None)
+        elif len(self.players) == 1:
+            winners = list(self.players)
+            self.declare_winner(winners[0])
+        elif len(self.ended_turn) >= len(self.players):
             self.calculate_moves()
+            if self.running:
+                for p in self.players:
+                    p.unblock()
+            else:
+                # Game has ended, tell everyone how they did
+                for p in list(self.players):
+                    if self.winner == p:
+                        p.win()
+                    else:
+                        p.lose()
+                self.manager.declare_winner(self, self.winner)
             self.ended_turn = set()
-
+        elif self.running:
+            player.block()
+        else:
+            # The game has ended, tell the player, now that they've made
+            # a move.
+            if self.winner == player:
+                player.win()
+                self.manager.declare_winner(self, self.winner)
+            else:
+                player.lose()
+            self.remove(player)
 
 
 ##
@@ -461,19 +484,17 @@ class TurnBasedGame(Game):
 ##
 
 def loop():
-    global timeout, pulse, now
+    global pulse, now
 
-    my_timeout = min(timeout, pulse)
-
-    while True:
+    while asyncore.socket_map:
         now = time.time()
         beat_heart()
-        asyncore.poll2(timeout=my_timeout)
+        asyncore.poll2(timeout=pulse, map=asyncore.socket_map)
 
 
-def run(nplayers, game_factory, port, auth):
+def run(game_factory, port, auth, minplayers, maxplayers=None):
     flagger = Flagger(('localhost', 6668), auth)
-    manager = Manager(2, game_factory, flagger)
+    manager = Manager(game_factory, flagger, minplayers, maxplayers)
     listener = Listener(('', port), Player, manager)
     loop()
 
