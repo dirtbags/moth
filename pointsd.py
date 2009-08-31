@@ -1,43 +1,51 @@
 #! /usr/bin/env python3
 
-import socketserver
+import asyncore
+import socket
 import struct
 import points
 import time
 
-acked = points.Storage('scores.dat')
+class MyHandler(asyncore.dispatcher):
+    def __init__(self, port):
+        asyncore.dispatcher.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.bind(('', port))
+        self.acked = points.Storage('scores.dat')
+        self.outq = []
 
-class MyHandler(socketserver.BaseRequestHandler):
-    def respond(self, when, txt):
-        peer = self.request[1]
-        resp = points.encode_response(when, txt)
-        peer.sendto(resp, self.client_address)
+    def writable(self):
+        return bool(self.outq)
 
-    def handle(self):
-        global acked
+    def handle_write(self):
+        dgram, peer = self.outq.pop(0)
+        self.socket.sendto(dgram, peer)
 
+    def handle_read(self):
+        dgram, peer = self.socket.recvfrom(4096)
         now = int(time.time())
-        data = self.request[0]
-        peer = self.request[1]
         try:
-            req = points.decode_request(data)
+            req = points.decode_request(dgram)
         except ValueError as e:
             return self.respond(now, str(e))
         when, cat, team, score = req
 
         # Replays can happen legitimately.
-        if not req in acked:
+        if not req in self.acked:
             if not (now - 2 < when <= now):
                 resp = points.encode_response(when, 'Your clock is off')
-                peer.sendto(resp, self.client_address)
+                self.outq.append((resp, peer))
                 return
-
-            acked.add(req)
+            self.acked.add(req)
 
         resp = points.encode_response(when, 'OK')
-        peer.sendto(resp, self.client_address)
+        self.outq.append((resp, peer))
+
+    def respond(self, peer, when, txt):
+        resp = points.encode_response(when, txt)
+        self.outq.append((resp, peer))
 
 
 if __name__ == "__main__":
-   server = socketserver.UDPServer(('', 6667), MyHandler)
-   server.serve_forever()
+    h = MyHandler(6667)
+    asyncore.loop()
