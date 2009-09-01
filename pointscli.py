@@ -17,11 +17,11 @@ def submit(sock, cat, team, score):
             break
         b = sock.recv(500)
         try:
-            when, txt = points.decode_response(b)
+            when, cat_, txt = points.decode_response(b)
         except ValueError:
             # Ignore invalid packets
             continue
-        if when != mark:
+        if (when != mark) or (cat_ != cat):
             # Ignore wrong timestamp
             continue
         if txt == 'OK':

@@ -35,7 +35,7 @@ for cat, total in categories:
     for points, team in scores:
         color = teamcolors[team]
         print('<div style="height: %f%%; overflow: hidden; background: #%s; color: black;">' % (float(points * 100)/total, color))
-        print('<!-- %s --> %s: %d' % (cat, team, points))
+        print('<!-- category: %s --> %s: %d' % (cat, team, points))
         print('</div>')
     print('</td>')
 print('</tr>')

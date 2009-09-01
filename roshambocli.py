@@ -27,7 +27,7 @@ class Client:
         if not line:
             return
         if self.debug:
-            print ('<-- %s' % line)
+            print (self, '<-- %s' % line)
         return json.loads(line)
 
     def command(self, *val):
@@ -41,29 +41,33 @@ class Client:
             return ret
 
 
-class RandomBot(threading.Thread):
-    def __init__(self, team):
+class IdiotBot(threading.Thread):
+    def __init__(self, team, move):
         threading.Thread.__init__(self)
         self.team = team
+        self.move = move
+
+    def get_move(self):
+        return self.move
 
     def run(self):
         c = Client(('localhost', 5388))
-        c.debug = True
+        c.debug = False
         #print('lobby', c.command('^', 'lobby'))
         c.command('login', self.team, 'furble')
         while True:
-            move = random.choice(['rock', 'scissors', 'paper'])
+            move = self.get_move()
             ret = c.command(move)
             if ret == ['WIN']:
                 print('%s wins' % self.team)
-            amt = random.uniform(0.2, 2.1)
+            amt = random.uniform(0.1, 1.2)
             if c.debug:
                 print(c, 'sleep %f' % amt)
             time.sleep(amt)
 
 def main():
     bots = []
-    for i in ['zebra', 'aardvark', 'wembly']:
-        bots.append(RandomBot(i).start())
+    for team, move in (('rockbot', 'rock'), ('cutbot', 'scissors'), ('paperbot', 'paper')):
+        bots.append(IdiotBot(team, move).start())
 
 main()

@@ -46,19 +46,22 @@ def main(s=None):
     write_scores(when)
     scoresfile.flush()
 
-    gp = os.popen('gnuplot 2> /dev/null', 'w')
-    gp.write('set style data lines\n')
-    gp.write('set xdata time\n')
-    gp.write('set timefmt "%s"\n')
-    gp.write('set format ""\n')
-    gp.write('set border 3\n')
-    gp.write('set xtics nomirror\n')
-    gp.write('set ytics nomirror\n')
-    gp.write('set nokey\n')
-    gp.write('set terminal png transparent size 640,200 x000000 xffffff\n')
-    gp.write('set output "histogram.png"\n')
-    gp.write('plot %s\n' % ','.join(plotparts))
-    gp.close()
+    instructions = tempfile.NamedTemporaryFile('w')
+    instructions.write('''
+set style data lines
+set xdata time
+set timefmt "%%s"
+set format ""
+set border 3
+set xtics nomirror
+set ytics nomirror
+set nokey
+set terminal png transparent size 640,200 x000000 xffffff
+set output "histogram.png"
+plot %(plot)s\n''' % {'plot': ','.join(plotparts)})
+    instructions.flush()
+
+    gp = os.system('gnuplot %s' % instructions.name)
 
 if __name__ == '__main__':
     main()

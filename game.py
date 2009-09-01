@@ -9,42 +9,8 @@ import time
 from errno import EPIPE
 
 
-# The current time of day
-now = time.time()
-
 # Heartbeat frequency (in seconds)
 pulse = 2.0
-
-##
-## Heartbeat stuff
-##
-
-hearts = set()
-last_beat = 0
-
-def add_heart(cb):
-    global hearts
-
-    hearts.add(cb)
-
-
-def del_heart(cb):
-    global hearts
-
-    hearts.remove(cb)
-
-
-def beat_heart():
-    global hearts, last_beat, now
-
-    if now - last_beat > pulse:
-        last_beat = now
-        for cb in hearts:
-            try:
-                cb()
-            except:
-                traceback.print_exc()
-
 
 ##
 ## Network stuff
@@ -59,12 +25,19 @@ class Listener(asyncore.dispatcher):
         self.listen(4)
         self.player_factory = player_factory
         self.manager = manager
+        self.last_beat = 0
 
     def handle_accept(self):
         conn, addr = self.accept()
         player = self.player_factory(conn, self.manager)
         # We don't need to keep the player, asyncore.socket_map already
         # has a reference to it for as long as it's open.
+
+    def readable(self):
+        now = time.time()
+        if now > self.last_beat + pulse:
+            self.manager.heartbeat(now)
+        return True
 
 
 class Flagger(asynchat.async_chat):
@@ -115,11 +88,12 @@ class Manager:
         self.games = set()
         self.lobby = set()
         self.contestants = []
-        add_heart(self.heartbeat)
+        self.last_beat = 0
 
-    def heartbeat(self):
+    def heartbeat(self, now):
+        # Called by listener to beat heart
         for game in list(self.games):
-            game.heartbeat()
+            game.heartbeat(now)
 
     def enter_lobby(self, player):
         self.lobby.add(player)
@@ -143,6 +117,7 @@ class Manager:
         """Start a new contest."""
 
         self.contestants = list(self.lobby)
+        print('new playoff:', [c.name for c in self.contestants])
 
     def run_contest(self):
         # Purge any disconnected players
@@ -175,7 +150,7 @@ class Manager:
                 player.attach_game(game)
 
     def declare_winner(self, game, winner=None):
-        print('winner', game, winner)
+        print('Winner:', winner and winner.name)
         self.games.remove(game)
 
         # Winner stays in the contest
@@ -199,8 +174,6 @@ class Player(asynchat.async_chat):
     timeout = 10.0
 
     def __init__(self, sock, manager):
-        global now
-
         asynchat.async_chat.__init__(self, sock=sock)
         self.manager = manager
         self.game = None
@@ -209,14 +182,12 @@ class Player(asynchat.async_chat):
         self.blocked = None
         self.name = None
         self.pending = None
-        self.last_activity = now
+        self.last_activity = time.time()
 
     def readable(self):
-        global now, timeout
-
         ret = (not self.blocked) and asynchat.async_chat.readable(self)
         if ret:
-            if now - self.last_activity > self.timeout:
+            if time.time() - self.last_activity > self.timeout:
                 # They waited too long.
                 self.err('idle timeout')
                 self.close()
@@ -229,10 +200,8 @@ class Player(asynchat.async_chat):
 
     def unblock(self):
         """Unblock reads"""
-        global now
-
         self.blocked = False
-        self.last_activity = now
+        self.last_activity = time.time()
 
     def attach_game(self, game):
         self.game = game
@@ -330,7 +299,7 @@ class Game:
     def setup(self):
         pass
 
-    def heartbeat(self):
+    def heartbeat(self, now):
         pass
 
     def declare_winner(self, winner):
@@ -382,8 +351,7 @@ class TurnBasedGame(Game):
     game_timeout = 6.0
 
     def __init__(self, manager, players):
-        global now
-
+        now = time.time()
         self.ended_turn = set()
         self.running = True
         self.winner = None
@@ -391,10 +359,8 @@ class TurnBasedGame(Game):
         self.began = now
         Game.__init__(self, manager, players)
 
-    def heartbeat(self):
-        global now
-
-        if now - self.began > self.game_timeout:
+    def heartbeat(self, now=None):
+        if now and (now - self.began > self.game_timeout):
             self.running = False
 
         # Idle players forfeit.  They're also booted, so we don't have
@@ -443,7 +409,7 @@ class TurnBasedGame(Game):
     def end_turn(self, player):
         """End player's turn."""
 
-        global now
+        now = time.time()
 
         self.ended_turn.add(player)
         self.lastmoved[player] = now
@@ -483,18 +449,13 @@ class TurnBasedGame(Game):
 ## Running a game
 ##
 
-def loop():
-    global pulse, now
-
-    while asyncore.socket_map:
-        now = time.time()
-        beat_heart()
-        asyncore.poll2(timeout=pulse, map=asyncore.socket_map)
-
-
-def run(game_factory, port, auth, minplayers, maxplayers=None):
+def start(game_factory, port, auth, minplayers, maxplayers=None):
     flagger = Flagger(('localhost', 6668), auth)
     manager = Manager(game_factory, flagger, minplayers, maxplayers)
     listener = Listener(('', port), Player, manager)
-    loop()
+    return (flagger, manager, listener)
+
+def run(game_factory, port, auth, minplayers, maxplayers=None):
+    start(game_factory, port, auth, minplayers, maxplayers)
+    asyncore.loop(use_poll=True)
 

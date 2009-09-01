@@ -35,9 +35,13 @@ class Roshambo(game.TurnBasedGame):
         self.make_move(player, 'paper')
 
 
-def main():
-    game.run(Roshambo, 5388, b'roshambo:::984233f357ecac03b3e38b9414cd262b', 2)
+def start():
+    return game.start(Roshambo, 5388, b'roshambo:::984233f357ecac03b3e38b9414cd262b', 2)
 
 if __name__ == '__main__':
-    main()
+    import asyncore
+
+    start()
+    asyncore.loop(use_poll=True)
+
 
