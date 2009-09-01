@@ -3,10 +3,17 @@
 import asyncore
 import pointsd
 import flagd
+import histogram
 
 def main():
-    pointsd.start()
-    flagd.start()
-    asyncore.loop(timeout=30, use_poll=True)
+    pointsrv = pointsd.start()
+    flagsrv = flagd.start()
+    s = pointsrv.store
+    slen = 0
+    while True:
+        asyncore.loop(timeout=30, use_poll=True, count=1)
+        if len(s) > slen:
+            slen = len(s)
+            histogram.main(s)
 
 main()

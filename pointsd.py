@@ -6,12 +6,15 @@ import struct
 import points
 import time
 
+house = 'dirtbags'
+
 class MyHandler(asyncore.dispatcher):
-    def __init__(self, port):
+    def __init__(self, port=6667):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.bind(('', port))
-        self.acked = points.Storage('scores.dat')
+        self.store = points.Storage('scores.dat')
+        self.acked = set()
         self.outq = []
 
     def writable(self):
@@ -22,30 +25,31 @@ class MyHandler(asyncore.dispatcher):
         self.socket.sendto(dgram, peer)
 
     def handle_read(self):
-        dgram, peer = self.socket.recvfrom(4096)
         now = int(time.time())
+        dgram, peer = self.socket.recvfrom(4096)
         try:
-            req = points.decode_request(dgram)
+            id, when, cat, team, score = points.decode_request(dgram)
         except ValueError as e:
-            return self.respond(now, str(e))
-        when, cat, team, score = req
+            return self.respond(peer, now, str(e))
+        team = team or house
 
         # Replays can happen legitimately.
-        if not req in self.acked:
+        if not (id in self.acked):
             if not (now - 2 < when <= now):
-                resp = points.encode_response(when, 'Your clock is off')
-                self.outq.append((resp, peer))
-                return
-            self.acked.add(req)
+                return self.respond(peer, id, 'Your clock is off')
+            self.store.add((when, cat, team, score))
+            self.acked.add(id)
 
-        resp = points.encode_response(when, 'OK')
+        self.respond(peer, id, 'OK')
+
+    def respond(self, peer, id, txt):
+        resp = points.encode_response(id, txt)
         self.outq.append((resp, peer))
 
-    def respond(self, peer, when, txt):
-        resp = points.encode_response(when, txt)
-        self.outq.append((resp, peer))
 
+def start():
+    return MyHandler()
 
 if __name__ == "__main__":
-    h = MyHandler(6667)
+    h = start()
     asyncore.loop()

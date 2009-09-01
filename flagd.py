@@ -34,7 +34,6 @@ class Submitter(asyncore.dispatcher):
         self.unacked[id] = q
 
     def writable(self):
-        print('writable?')
         now = int(time.time())
         if now >= self.lastupdate + 60:
             for cat, team in self.flags.items():
@@ -45,7 +44,6 @@ class Submitter(asyncore.dispatcher):
                 self.pending.append(q)
             self.lastretrans = now
         ret = bool(self.pending)
-        print(ret)
         return ret
 
     def handle_write(self):
@@ -71,8 +69,9 @@ class Submitter(asyncore.dispatcher):
 
         team = team or points.house
 
-        self.flags[cat] = team
-        self.submit(now, cat, team, 1)
+        if self.flags.get(cat) != team:
+            self.flags[cat] = team
+            self.submit(now, cat, team, 1)
 
 
 class Listener(asyncore.dispatcher):
@@ -132,6 +131,7 @@ class FlagServer(asynchat.async_chat):
 
     def handle_close(self):
         self.set_flag(None)
+        self.close()
 
 
 def start():

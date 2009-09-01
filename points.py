@@ -5,6 +5,8 @@ import hmac
 import struct
 import io
 
+## Name of the house team
+house = 'dirtbags'
 
 ##
 ## Authentication
@@ -48,8 +50,8 @@ def unpackstr(b):
 ##
 ## Request
 ##
-def encode_request(when, cat, team, score):
-    base = (struct.pack('!I', when) +
+def encode_request(id, when, cat, team, score):
+    base = (struct.pack('!II', id, when) +
             packstr(cat) +
             packstr(team) +
             struct.pack('!i', score))
@@ -57,36 +59,35 @@ def encode_request(when, cat, team, score):
 
 def decode_request(b):
     base = check_sig(b)
-    when, base = unpack('!I', base)
+    id, when, base = unpack('!II', base)
     cat, base = unpackstr(base)
     team, base = unpackstr(base)
     score, base = unpack('!i', base)
     assert not base
-    return (when, cat, team, score)
+    return (id, when, cat, team, score)
 
 
 ##
 ## Response
 ##
-def encode_response(when, txt):
-    base = (struct.pack('!I', when) +
+def encode_response(id, txt):
+    base = (struct.pack('!I', id) +
             packstr(txt))
     return sign(base)
 
 def decode_response(b):
     base = check_sig(b)
-    when, base = unpack('!I', base)
+    id, base = unpack('!I', base)
     txt, base = unpackstr(base)
     assert not base
-    return (when, txt)
+    return (id, txt)
 
 
 ##
 ## Storage
 ##
 def incdict(dict, key, amt=1):
-    dict.setdefault(key, 0)
-    dict[key] += amt
+    dict[key] = dict.get(key, 0) + amt
 
 class Storage:
     def __init__(self, fn):
@@ -94,7 +95,6 @@ class Storage:
         self.points_by_cat = {}
         self.points_by_cat_team = {}
         self.log = []
-        self.events = set()
         self.f = io.BytesIO()
 
         # Read stored scores
@@ -106,8 +106,11 @@ class Storage:
                     break
                 (l,) = struct.unpack('!I', l)
                 b = f.read(l)
-                req = decode_request(b)
-                self.add(req)
+                when, score, catlen, teamlen, b = unpack('!IiHH', b)
+                cat = b[:catlen].decode('utf-8')
+                team = b[catlen:].decode('utf-8')
+                req = (when, cat, team, score)
+                self.add(req, False)
             f.close()
         except IOError:
             pass
@@ -117,25 +120,26 @@ class Storage:
         except IOError:
             self.f = None
 
-    def __contains__(self, req):
-        return req in self.events
+    def __len__(self):
+        return len(self.log)
 
-    def add(self, req):
-        if req in self.events:
-            return
-
+    def add(self, req, write=True):
         when, cat, team, score = req
 
         incdict(self.points_by_team, team, score)
         incdict(self.points_by_cat, cat, score)
         incdict(self.points_by_cat_team, (cat, team), score)
         self.log.append(req)
-        self.events.add(req)
 
-        b = encode_request(*req)
-        lb = struct.pack('!I', len(b)) + b
-        self.f.write(lb)
-        self.f.flush()
+        if write:
+            cat = cat.encode('utf-8')
+            team = team.encode('utf-8')
+            b = (struct.pack('!IiHH', when, score, len(cat), len(team)) +
+                 cat + team)
+            lb = struct.pack('!I', len(b))
+            self.f.write(lb)
+            self.f.write(b)
+            self.f.flush()
 
     def categories(self):
         return sorted(self.points_by_cat)
@@ -179,7 +183,7 @@ def test():
     req = (now, 'category 5', 'foobers in heat', 43)
     assert decode_request(encode_request(*req)) == req
 
-    rsp = (now, 'hello world')
+    rsp = (now, 'cat6', 'hello world')
     assert decode_response(encode_response(*rsp)) == rsp
 
 
