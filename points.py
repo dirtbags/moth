@@ -4,9 +4,7 @@ import socket
 import hmac
 import struct
 import io
-
-## Name of the house team
-house = 'dirtbags'
+import teams
 
 ##
 ## Authentication

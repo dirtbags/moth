@@ -9,6 +9,7 @@ import hmac
 import optparse
 import points
 import pointscli
+import teams
 import traceback
 
 key = b'My First Shared Secret (tm)'
@@ -67,7 +68,7 @@ class Submitter(asyncore.dispatcher):
     def set_flag(self, cat, team):
         now = int(time.time())
 
-        team = team or points.house
+        team = team or teams.house
 
         if self.flags.get(cat) != team:
             self.flags[cat] = team

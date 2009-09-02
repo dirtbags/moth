@@ -34,11 +34,11 @@ class MyHandler(asyncore.dispatcher):
         team = team or house
 
         # Replays can happen legitimately.
-        if not (id in self.acked):
+        if not ((peer, id) in self.acked):
             if not (now - 2 < when <= now):
                 return self.respond(peer, id, 'Your clock is off')
             self.store.add((when, cat, team, score))
-            self.acked.add(id)
+            self.acked.add((peer, id))
 
         self.respond(peer, id, 'OK')
 

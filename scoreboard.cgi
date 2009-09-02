@@ -17,9 +17,10 @@ print('''<?xml version="1.0" encoding="UTF-8" ?>
  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
-    <title>yo mom</title>
+    <title>CTF Scoreboard</title>
+    <link rel="stylesheet" href="ctf.css" type="text/css" />
   </head>
-  <body style="background: black; color: white;">
+  <body>
     <h1>Scoreboard</h1>
 ''')
 print('<table>')

@@ -6,6 +6,7 @@ import asynchat
 import socket
 import traceback
 import time
+import teams
 from errno import EPIPE
 
 
@@ -25,7 +26,6 @@ class Listener(asyncore.dispatcher):
         self.listen(4)
         self.player_factory = player_factory
         self.manager = manager
-        self.last_beat = 0
 
     def handle_accept(self):
         conn, addr = self.accept()
@@ -34,9 +34,7 @@ class Listener(asyncore.dispatcher):
         # has a reference to it for as long as it's open.
 
     def readable(self):
-        now = time.time()
-        if now > self.last_beat + pulse:
-            self.manager.heartbeat(now)
+        self.manager.heartbeat(time.time())
         return True
 
 
@@ -89,11 +87,25 @@ class Manager:
         self.lobby = set()
         self.contestants = []
         self.last_beat = 0
+        self.timers = set()
 
     def heartbeat(self, now):
-        # Called by listener to beat heart
-        for game in list(self.games):
-            game.heartbeat(now)
+        """Called by listener to beat heart."""
+
+        now = time.time()
+        if now > self.last_beat + pulse:
+            for game in list(self.games):
+                game.heartbeat(now)
+        for event in self.timers:
+            when, cb = event
+            if now >= when:
+                self.timers.remove(event)
+                cb()
+
+    def add_timer(self, when, cb):
+        """Add a timed callback."""
+
+        self.timers.add((when, cb))
 
     def enter_lobby(self, player):
         self.lobby.add(player)
@@ -248,13 +260,14 @@ class Player(asynchat.async_chat):
             cmd, args = val[0].lower(), val[1:]
 
             if cmd == 'login':
-                if not self.name:
-                    # XXX Check password
+                if self.name:
+                    self.err('Already logged in.')
+                elif teams.chkpasswd(args[0], args[1]):
                     self.name = args[0]
                     self.write('Welcome to the fray, %s.' % self.name)
                     self.manager.enter_lobby(self)
                 else:
-                    self.err('Already logged in.')
+                    self.err('Invalid password.')
             elif cmd == '^':
                 # Send to manager
                 ret = self.manager.player_cmd(args)

@@ -1,0 +1,21 @@
+body {
+    background: #000;
+    color: #0f0;
+}
+.readme {
+    background: #444;
+}
+a:link {
+    color: #ff0;
+}
+a:visited {
+    color: #880;
+}
+a:hover {
+    color: #000;
+    background: #ff0;
+}
+.error {
+    color: #000;
+    background: #f00;
+}
