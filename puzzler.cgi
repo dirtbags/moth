@@ -8,6 +8,13 @@ import re
 import sys
 import pointscli
 import teams
+from urllib.parse import quote, unquote
+
+##
+## This allows you to edit the URL and work on puzzles that haven't been
+## unlocked yet.  For now I think that's an okay vulnerability.  It's a
+## hacking contest, after all.
+##
 
 cat_re = re.compile(r'^[a-z]+$')
 points_re = re.compile(r'^[0-9]+$')
@@ -21,8 +28,7 @@ points_by_cat = {}
 points_by_team = {}
 try:
     for line in open('puzzler.dat'):
-        line = line.strip()
-        cat, team, pts = line.split('\t')
+        cat, team, pts = [unquote(v) for v in line.strip().split('\t')]
         pts = int(pts)
         points_by_cat[cat] = max(points_by_cat.get(cat, 0), pts)
         points_by_team.setdefault((team, cat), set()).add(pts)
@@ -96,10 +102,10 @@ def show_puzzles(cat, cat_dir):
     puzzles = sorted([int(v) for v in os.listdir(cat_dir)])
     if puzzles:
         print('<ul>')
-        opened = max(opened, puzzles[0])
         for p in puzzles:
-            if p <= opened:
-                print('<li><a href="puzzler.cgi?c=%s&p=%d">%d</a></li>' % (cat, p, p))
+            print('<li><a href="puzzler.cgi?c=%s&p=%d">%d</a></li>' % (cat, p, p))
+            if p > opened:
+                break
         print('</ul>')
     else:
         print('<p>None (someone is slacking)</p>')
@@ -132,11 +138,12 @@ def show_puzzle(cat, points, points_dir):
 def win(cat, team, points):
     start_html('Winner!')
     points = int(points)
-    pointscli.submit(cat, team, points)
-    end_html()
     f = open('puzzler.dat', 'a')
-    fctnl.lockf(f, LOCK_EX)
-    f.write('%s\t%s\t%d\n' % (cat, team, points))
+    fcntl.lockf(f, fcntl.LOCK_EX)
+    f.write('%s\t%s\t%d\n' % (quote(cat), quote(team), points))
+    pointscli.submit(cat, team, points)
+    print('<p>%d points for %s.</p>' % (team, points))
+    end_html()
 
 def main():
     cat_dir = safe_join('puzzles', cat)

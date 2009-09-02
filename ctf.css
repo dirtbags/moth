@@ -19,3 +19,8 @@ a:hover {
     color: #000;
     background: #f00;
 }
+input {
+    border: 2px solid #088;
+    color: #fff;
+    background: #000;
+}
