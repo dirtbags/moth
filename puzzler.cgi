@@ -111,7 +111,7 @@ def show_puzzles(cat, cat_dir):
         print('<p>None (someone is slacking)</p>')
     end_html()
 
-def show_puzzle(cat, points, points_dir):
+def show_puzzle(cat, points, points_dir, team, passwd):
     # Show puzzle in cat for points
     start_html('%s for %s' % (cat, points))
     fn = os.path.join(points_dir, 'index.html')
@@ -128,8 +128,8 @@ def show_puzzle(cat, points, points_dir):
     print('<form action="puzzler.cgi" method="post">')
     print('<input type="hidden" name="c" value="%s" />' % cat)
     print('<input type="hidden" name="p" value="%s" />' % points)
-    print('Team: <input name="t" /><br />')
-    print('Password: <input type="password" name="w" /><br />')
+    print('Team: <input name="t" value="%s" /><br />' % (team or ''))
+    print('Password: <input type="password" name="w" value="%s" /><br />' % (passwd or ''))
     print('Key: <input name="k" /><br />')
     print('<input type="submit" />')
     print('</form>')
@@ -166,7 +166,7 @@ def main():
             print()
             dump_file(fn)
         else:
-            show_puzzle(cat, points, points_dir)
+            show_puzzle(cat, points, points_dir, team, passwd)
     else:
         thekey = open('%s/key' % points_dir).read().strip()
         if not teams.chkpasswd(team, passwd):
