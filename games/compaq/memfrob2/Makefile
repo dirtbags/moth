@@ -1,0 +1,5 @@
+LDFLAGS = -static
+
+main:
+
+
