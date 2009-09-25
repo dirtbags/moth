@@ -88,7 +88,7 @@ def incdict(dict, key, amt=1):
     dict[key] = dict.get(key, 0) + amt
 
 class Storage:
-    def __init__(self, fn):
+    def __init__(self, fn='/var/lib/ctf/points.dat'):
         self.points_by_team = {}
         self.points_by_cat = {}
         self.points_by_cat_team = {}

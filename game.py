@@ -96,6 +96,7 @@ class Manager:
         if now > self.last_beat + pulse:
             for game in list(self.games):
                 game.heartbeat(now)
+            self.last_beat = now
         for event in self.timers:
             when, cb = event
             if now >= when:
@@ -373,6 +374,7 @@ class TurnBasedGame(Game):
         Game.__init__(self, manager, players)
 
     def heartbeat(self, now=None):
+        print('heart', self)
         if now and (now - self.began > self.game_timeout):
             self.running = False
 

@@ -8,6 +8,7 @@ import re
 import sys
 import pointscli
 import teams
+import http.cookies
 from urllib.parse import quote, unquote
 
 ##
@@ -27,7 +28,7 @@ def dbg(*vals):
 points_by_cat = {}
 points_by_team = {}
 try:
-    for line in open('puzzler.dat'):
+    for line in open('/var/lib/ctf/puzzler.dat'):
         cat, team, pts = [unquote(v) for v in line.strip().split('\t')]
         pts = int(pts)
         points_by_cat[cat] = max(points_by_cat.get(cat, 0), pts)
@@ -36,20 +37,33 @@ except IOError:
     pass
 
 
-f = cgi.FieldStorage()
+c = http.cookies.SimpleCookie(os.environ.get('HTTP_COOKIE', ''))
+try:
+    team = c['team'].value
+    passwd = c['passwd'].value
+except KeyError:
+    team, passwd = None, None
 
+f = cgi.FieldStorage()
 cat = f.getfirst('c')
 points = f.getfirst('p')
-team = f.getfirst('t')
-passwd = f.getfirst('w')
+team = f.getfirst('t', team)
+passwd = f.getfirst('w', passwd)
 key = f.getfirst('k')
 
 verboten = ['key', 'index.html']
 
 def start_html(title):
-    print('''Content-type: text/html
-
-<?xml version="1.0" encoding="UTF-8"?>
+    print('Content-type: text/html')
+    if team or passwd:
+        c = http.cookies.SimpleCookie()
+        if team:
+            c['team'] = team
+        if passwd:
+            c['passwd'] = passwd
+        print(c)
+    print()
+    print('''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC
   "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -111,9 +125,9 @@ def show_puzzles(cat, cat_dir):
         print('<p>None (someone is slacking)</p>')
     end_html()
 
-def show_puzzle(cat, points, points_dir, team, passwd):
+def show_puzzle(cat, points, points_dir, team='', passwd=''):
     # Show puzzle in cat for points
-    start_html('%s for %s' % (cat, points))
+    start_html('%s for %s points' % (cat, points))
     fn = os.path.join(points_dir, 'index.html')
     if os.path.exists(fn):
         print('<div class="readme">')
@@ -139,10 +153,11 @@ def win(cat, team, points):
     start_html('Winner!')
     points = int(points)
     f = open('puzzler.dat', 'a')
+    pointscli.submit(cat, team, points)
     fcntl.lockf(f, fcntl.LOCK_EX)
     f.write('%s\t%s\t%d\n' % (quote(cat), quote(team), points))
-    pointscli.submit(cat, team, points)
-    print('<p>%d points for %s.</p>' % (team, points))
+    print('<p>%d points for %s.</p>' % (points, team))
+    print('<p>Back to <a href="puzzler.cgi?c=%s">%s</a>.</p>' % (cat, cat))
     end_html()
 
 def main():
@@ -168,16 +183,24 @@ def main():
         else:
             show_puzzle(cat, points, points_dir, team, passwd)
     else:
-        thekey = open('%s/key' % points_dir).read().strip()
+        try:
+            thekey = open('%s/key' % points_dir, encoding='utf-8').read().strip()
+        except IOError:
+            # If there's no key, this can never be solved.
+            thekey = False
         if not teams.chkpasswd(team, passwd):
             start_html('Wrong password')
             end_html()
         elif key != thekey:
-            show_puzzle(cat, points, points_dir)
-        elif points_by_team.get((team, cat)):
+            show_puzzle(cat, points, points_dir, team, passwd)
+        elif int(points) in points_by_team.get((team, cat), set()):
             start_html('Greedy greedy')
             end_html()
         else:
             win(cat, team, points)
 
 main()
+
+# Local Variables:
+# mode: python
+# End:

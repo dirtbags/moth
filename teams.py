@@ -1,27 +1,36 @@
 #! /usr/bin/env python3
 
 import fcntl
+import time
+import os
 from urllib.parse import quote, unquote
 
 house = 'dirtbags'
 
+passwdfn = '/var/lib/ctf/passwd'
+
 teams = None
+built = 0
 def build_teams():
-    global teams
+    global teams, built
+
+    modt = os.path.getmtime(passwdfn)
+    if modt <= built:
+        return
 
     teams = {}
     try:
-        f = open('passwd')
+        f = open(passwdfn)
         for line in f:
             line = line.strip()
             team, passwd = [unquote(v) for v in line.strip().split('\t')]
             teams[team] = passwd
     except IOError:
         pass
+    built = time.time()
 
 def validate(team):
-    if teams is None:
-        build_teams()
+    build_teams()
 
 def chkpasswd(team, passwd):
     validate(team)

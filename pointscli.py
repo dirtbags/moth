@@ -13,7 +13,7 @@ def makesock(host):
 
 def submit(cat, team, score, sock=None):
     if not sock:
-        sock = makesock('cfl-sunray1')
+        sock = makesock('localhost')
     begin = time.time()
     mark = int(begin)
     req = points.encode_request(1, mark, cat, team, score)

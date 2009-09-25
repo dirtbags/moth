@@ -51,7 +51,7 @@ class IdiotBot(threading.Thread):
         return self.move
 
     def run(self):
-        c = Client(('localhost', 5388))
+        c = Client(('cfl', 5388))
         c.debug = False
         #print('lobby', c.command('^', 'lobby'))
         c.command('login', self.team, 'furble')
@@ -60,7 +60,7 @@ class IdiotBot(threading.Thread):
             ret = c.command(move)
             if ret == ['WIN']:
                 print('%s wins' % self.team)
-            amt = random.uniform(0.1, 1.2)
+            amt = random.uniform(0.1, 2.6)
             if c.debug:
                 print(c, 'sleep %f' % amt)
             time.sleep(amt)

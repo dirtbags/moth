@@ -13,7 +13,7 @@ class MyHandler(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.bind(('', port))
-        self.store = points.Storage('scores.dat')
+        self.store = points.Storage()
         self.acked = set()
         self.outq = []
 
