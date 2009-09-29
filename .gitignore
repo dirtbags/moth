@@ -1,0 +1,7 @@
+*~
+*.pyc
+*.dat
+passwd
+target/
+puzzler/
+ctf.tce

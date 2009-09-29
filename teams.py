@@ -9,13 +9,14 @@ house = 'dirtbags'
 
 passwdfn = '/var/lib/ctf/passwd'
 
-teams = None
+teams = {}
 built = 0
 def build_teams():
     global teams, built
 
-    modt = os.path.getmtime(passwdfn)
-    if modt <= built:
+    if not os.path.exists(passwdfn):
+        return
+    if os.path.getmtime(passwdfn) <= built:
         return
 
     teams = {}
@@ -46,7 +47,7 @@ def exists(team):
     return team in teams
 
 def add(team, passwd):
-    f = open('passwd', 'a')
+    f = open(passwdfn, 'a')
     fcntl.lockf(f, fcntl.LOCK_EX)
     f.seek(0, 2)
     f.write('%s\t%s\n' % (quote(team), quote(passwd)))

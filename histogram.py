@@ -4,13 +4,16 @@ import points
 import time
 import os
 import tempfile
+import config
+
+pngout = config.datafile('histogram.png')
 
 def main(s=None):
     scores = {}
     now = 0
 
     if not s:
-        s = points.Storage('scores.dat')
+        s = points.Storage()
 
     plotparts = []
     teams = s.teams()
@@ -57,11 +60,12 @@ set xtics nomirror
 set ytics nomirror
 set nokey
 set terminal png transparent size 640,200 x000000 xffffff
-set output "histogram.png"
-plot %(plot)s\n''' % {'plot': ','.join(plotparts)})
+set output "%(pngout)s"
+plot %(plot)s\n''' % {'plot': ','.join(plotparts),
+                      'pngout': pngout})
     instructions.flush()
 
-    gp = os.system('gnuplot %s' % instructions.name)
+    gp = os.system('gnuplot %s 2>/dev/null' % instructions.name)
 
 if __name__ == '__main__':
     main()

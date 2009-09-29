@@ -5,6 +5,8 @@ import hmac
 import struct
 import io
 import teams
+import config
+import os
 
 ##
 ## Authentication
@@ -88,7 +90,9 @@ def incdict(dict, key, amt=1):
     dict[key] = dict.get(key, 0) + amt
 
 class Storage:
-    def __init__(self, fn='/var/lib/ctf/points.dat'):
+    def __init__(self, fn=None):
+        if not fn:
+            fn = config.datafile('scores.dat')
         self.points_by_team = {}
         self.points_by_cat = {}
         self.points_by_cat_team = {}
