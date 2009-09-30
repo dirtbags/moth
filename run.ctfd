@@ -1,0 +1,4 @@
+#! /bin/sh
+
+/usr/lib/ctf/ctfd.py 2>&1 | logger -t ctfd
+

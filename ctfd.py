@@ -5,6 +5,7 @@ import pointsd
 import game
 import flagd
 import histogram
+import config
 
 def main():
     pointsrv = pointsd.start()

@@ -61,12 +61,15 @@ for cat in os.listdir(opts.puzzles):
             f.write('</ul>\n')
         f.write('''
     <form action="%(cgi)s" method="post">
-      <input type="hidden" name="c" value="%(cat)s" />
-      <input type="hidden" name="p" value="%(points)s" />
-      Team: <input name="t" /><br />
-      Password: <input type="password" name="w" /><br />
-      Key: <input name="k" /><br />
-      <input type="submit" />
+      <fieldset>
+        <legend>Your answer:</legend>
+        <input type="hidden" name="c" value="%(cat)s" />
+        <input type="hidden" name="p" value="%(points)s" />
+        Team: <input name="t" /><br />
+        Password: <input type="password" name="w" /><br />
+        Key: <input name="k" /><br />
+        <input type="submit" />
+      </fieldset>
     </form>
   </body>
 </html>

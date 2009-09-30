@@ -1,3 +1,0 @@
-#! /bin/sh
-
-/usr/lib/ctf/uberserv.py | logger -t ctf

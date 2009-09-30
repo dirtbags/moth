@@ -30,7 +30,9 @@ def main():
 
         <form method="post" action="%s">
           <fieldset>
-            <label>Desired Team Team:</label>
+            <legend>Registration information:</legend>
+
+            <label>Team Name:</label>
             <input type="text" name="team" />
             <span class="error">$team_error</span><br />
 

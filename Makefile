@@ -19,15 +19,15 @@ target: $(PYC)
 
 	$(INSTALL) -d $(CTFDIR)
 	$(INSTALL) $(PYC) $(CTFDIR)
-	$(INSTALL) uberserv.py $(CTFDIR)
+	$(INSTALL) ctfd.py $(CTFDIR)
 
 	$(INSTALL) -d $(WWWDIR)
-	$(INSTALL) index.html ctf.css $(WWWDIR)
+	$(INSTALL) index.html intro.html ctf.css $(WWWDIR)
 	$(FAKE) ln -s /var/lib/ctf/histogram.png $(WWWDIR)
 	$(INSTALL) register.cgi scoreboard.cgi puzzler.cgi $(WWWDIR)
 
 	$(INSTALL) -d $(DESTDIR)/var/service/ctf
-	$(INSTALL) run.uberserv $(DESTDIR)/var/service/ctf/run
+	$(INSTALL) run.ctfd $(DESTDIR)/var/service/ctf/run
 
 	rm -rf $(WWWDIR)/puzzler
 	$(INSTALL) -d $(WWWDIR)/puzzler
