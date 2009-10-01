@@ -2,17 +2,25 @@
 
 import os
 
+team_colors = ['F0888A', '88BDF0', '00782B', '999900', 'EF9C00',
+               'F4B5B7', 'E2EFFB', '89CA9D', 'FAF519', 'FFE7BB',
+               'BA88F0', '8DCFF4', 'BEDFC4', 'FFFAB2', 'D7D7D7',
+               'C5B9D7', '006189', '8DCB41', 'FFCC00', '898989']
+
 if 'home' in os.environ.get('SCRIPT_FILENAME', ''):
     # We're a CGI running out of someone's home directory
     config = {'global':
                   {'data_dir': '.',
                    'base_url': '.',
                    'css_url': 'ctf.css',
-                   'diasbled_dir': 'disabled'
+                   'diasbled_dir': 'disabled',
+                   'flags_dir': 'flags',
+                   'house_team': 'dirtbags',
+                   'passwd': 'passwd',
+                   'team_colors': team_colors,
                    },
               'puzzler':
                   {'dir': 'puzzles',
-                   'ignore_dir': 'puzzler.ignore',
                    'cgi_url': 'puzzler.cgi',
                    'base_url': 'puzzler',
                    'keys_file': 'puzzler.keys',
@@ -25,10 +33,13 @@ else:
                    'base_url': '/',
                    'css_url': '/ctf.css',
                    'disabled_dir': '/var/lib/ctf/disabled',
+                   'flags_dir': '/var/lib/ctf/flags',
+                   'house_team': 'dirtbags',
+                   'passwd': '/var/lib/ctf/passwd',
+                   'team_colors': team_colors,
                    },
               'puzzler':
                   {'dir': '/usr/lib/www/puzzler',
-                   'ignore_dir': '/var/lib/ctf/puzzler.ignore',
                    'cgi_url': '/puzzler.cgi',
                    'base_url': '/puzzler',
                    'keys_file': '/usr/lib/ctf/puzzler.keys',

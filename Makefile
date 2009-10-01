@@ -22,12 +22,15 @@ target: $(PYC)
 	$(INSTALL) ctfd.py $(CTFDIR)
 
 	$(INSTALL) -d $(WWWDIR)
-	$(INSTALL) index.html intro.html ctf.css $(WWWDIR)
+	$(INSTALL) index.html intro.html ctf.css grunge.png $(WWWDIR)
 	$(FAKE) ln -s /var/lib/ctf/histogram.png $(WWWDIR)
 	$(INSTALL) register.cgi scoreboard.cgi puzzler.cgi $(WWWDIR)
 
 	$(INSTALL) -d $(DESTDIR)/var/service/ctf
 	$(INSTALL) run.ctfd $(DESTDIR)/var/service/ctf/run
+
+	$(INSTALL) -d $(DESTDIR)/var/service/ctf/log
+	$(INSTALL) run.log.ctfd $(DESTDIR)/var/service/ctf/log/run
 
 	rm -rf $(WWWDIR)/puzzler
 	$(INSTALL) -d $(WWWDIR)/puzzler

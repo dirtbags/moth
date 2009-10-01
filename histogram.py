@@ -4,6 +4,7 @@ import points
 import time
 import os
 import tempfile
+import teams
 import config
 
 pngout = config.datafile('histogram.png')
@@ -16,8 +17,7 @@ def main(s=None):
         s = points.Storage()
 
     plotparts = []
-    teams = s.teams()
-    teamcolors = points.colors(teams)
+    teams = s.teams
 
     catscores = {}
     for cat in s.categories():
@@ -27,7 +27,7 @@ def main(s=None):
     fn = scoresfile.name
     i = 2
     for team in teams:
-        plotparts.append('"%s" using 1:%d with lines linewidth 2 linetype rgb "#%s"' % (fn, i, teamcolors[team]))
+        plotparts.append('"%s" using 1:%d with lines linewidth 2 linetype rgb "#%s"' % (fn, i, teams.color(team)))
         scores[team] = 0
         i += 1
 

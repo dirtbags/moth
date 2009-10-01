@@ -7,14 +7,18 @@ import functools
 import time
 import hmac
 import optparse
+import os
 import points
 import pointscli
 import teams
+import config
 import traceback
 
 key = b'My First Shared Secret (tm)'
 def hexdigest(data):
     return hmac.new(key, data).hexdigest()
+
+flags_dir = config.get('global', 'flags_dir')
 
 class Submitter(asyncore.dispatcher):
     def __init__(self, host='localhost', port=6667):
@@ -110,8 +114,10 @@ class FlagServer(asynchat.async_chat):
 
     def set_flag(self, team):
         self.flag = team
-        if self.cat:
-            self.submitter.set_flag(self.cat, team)
+        self.submitter.set_flag(self.cat, team)
+        f = open(os.path.join(flags_dir, self.cat), 'w')
+        if team:
+            f.write(team)
 
     def found_terminator(self):
         data = b''.join(self.inbuf)

@@ -59,9 +59,11 @@ class Flagger(asynchat.async_chat):
         asynchat.async_chat.handle_error(self)
 
     def set_flag(self, team):
-        if not team:
-            team = 'dirtbags'
-        self.push(team.encode('utf-8') + b'\n')
+        if team:
+            eteam = team.encode('utf-8')
+        else:
+            eteam = b''
+        self.push(eteam + b'\n')
         self.flag = team
 
 

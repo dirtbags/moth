@@ -93,7 +93,7 @@ class Storage:
     def __init__(self, fn=None):
         if not fn:
             fn = config.datafile('scores.dat')
-        self.points_by_team = {}
+        self.teams = set()
         self.points_by_cat = {}
         self.points_by_cat_team = {}
         self.log = []
@@ -128,7 +128,7 @@ class Storage:
     def add(self, req, write=True):
         when, cat, team, score = req
 
-        incdict(self.points_by_team, team, score)
+        self.teams.add(team)
         incdict(self.points_by_cat, cat, score)
         incdict(self.points_by_cat_team, (cat, team), score)
         self.log.append(req)
@@ -146,29 +146,21 @@ class Storage:
     def categories(self):
         return sorted(self.points_by_cat)
 
-    def teams(self):
-        return sorted(self.points_by_team)
+    def get_teams(self):
+        return sorted(self.teams)
 
     def cat_points(self, cat):
         return self.points_by_cat.get(cat, 0)
 
     def team_points(self, team):
-        return self.points_by_team.get(team, 0)
+        points = 0
+        for cat, tot in self.points_by_cat.items():
+            team_points = self.team_points_in_cat(cat, team)
+            points += team_points / float(tot)
+        return points
 
     def team_points_in_cat(self, cat, team):
         return self.points_by_cat_team.get((cat, team), 0)
-
-
-##
-## Colors
-##
-def colors(teams):
-    colors = ['F0888A', '88BDF0', '00782B', '999900', 'EF9C00',
-              'F4B5B7', 'E2EFFB', '89CA9D', 'FAF519', 'FFE7BB',
-              'BA88F0', '8DCFF4', 'BEDFC4', 'FFFAB2', 'D7D7D7',
-              'C5B9D7', '006189', '8DCB41', 'FFCC00', '898989']
-    return dict(zip(teams, colors))
-
 
 
 
@@ -198,9 +190,8 @@ def test():
     s.add((now, 'cat1', 'zebras', 20))
     s.add((now, 'cat1', 'aardvarks', 10))
     s.add((now, 'merf', 'aardvarks', 50))
-    assert s.teams() == ['aardvarks', 'zebras']
+    assert s.get_teams() == ['aardvarks', 'zebras']
     assert s.categories() == ['cat1', 'merf']
-    assert s.team_points('aardvarks') == 60
     assert s.cat_points('cat1') == 30
     assert s.team_points_in_cat('cat1', 'aardvarks') == 10
     assert s.team_points_in_cat('merf', 'zebras') == 0
