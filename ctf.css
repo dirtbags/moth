@@ -12,6 +12,26 @@ body {
     max-width: 700px;
 }
 
+/**** heading ****/
+
+h1:first-child {
+    text-transform: lowercase;
+    font-size: 1.6em;
+/*     background-color: #222; */
+/*     opacity: 0.9; */
+    padding: 3px;
+    color: #2a2;
+    margin: 0 0 1em 70px;
+}
+
+h1:first-child:before {
+   color: #fff;
+   letter-spacing: -0.1em;
+   content: "Capture The Flag: ";
+}
+
+/**** body ****/
+
 a img {
     border: 0px;
 }
@@ -28,6 +48,12 @@ a:hover {
     font-weight: bold;
 }
 
+
+h1, h2, h3 {
+    color: #999;
+    letter-spacing: -0.05em;
+}
+
 code, pre, .readme {
     color: #fff;
     background-color: #555;
@@ -42,33 +68,12 @@ th, td {
     height: 400px;
 }
 
-/**** heading ****/
-
-h1:first-child {
-    text-transform: lowercase;
-    font-size: 1.6em;
-    background-color: #222;
-    opacity: 0.9;
-    padding: 3px;
-    color: #2a2;
-    margin: 0 0 1em 70px;
-}
-
-h1:first-child:before {
-   color: #fff;
-   letter-spacing: -0.1em;
-   content: "Capture The Flag: ";
-}
-
-/*** body ***/
-
 p {
     line-height: 1.4em;
     margin-bottom: 20px;
     color: #f4f4f4;
 }
 
-h1, h2, h3 {
-    color: #999;
-    letter-spacing: -0.05em;
+.center {
+    text-align: center;
 }

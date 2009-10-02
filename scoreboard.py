@@ -15,6 +15,7 @@ def main():
     categories = [(cat, s.cat_points(cat)) for cat in s.categories()]
 
     print('Content-type: text/html')
+    print('Refresh: 10')
     print()
     print('''<?xml version="1.0" encoding="UTF-8" ?>
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -24,7 +25,7 @@ def main():
         <title>Scoreboard</title>
         <link rel="stylesheet" href="%sctf.css" type="text/css" />
       </head>
-      <body>
+      <body style="max-width: inherit;">
         <h1>Scoreboard</h1>
     ''' % config.base_url)
     print('<table class="scoreboard">')
@@ -66,7 +67,10 @@ def main():
     print('</tr>')
     print('''</table>
 
-        <img src="histogram.png" alt=""/>
+        <p class="center">
+          <img src="histogram.png" alt="scores over time" />
+        </p>
+
       </body>
     </html>''')
 

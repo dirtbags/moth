@@ -17,7 +17,6 @@ def main(s=None):
         s = points.Storage()
 
     plotparts = []
-    teams = s.teams
 
     catscores = {}
     for cat in s.categories():
@@ -26,14 +25,14 @@ def main(s=None):
     scoresfile = tempfile.NamedTemporaryFile('w')
     fn = scoresfile.name
     i = 2
-    for team in teams:
+    for team in s.teams:
         plotparts.append('"%s" using 1:%d with lines linewidth 2 linetype rgb "#%s"' % (fn, i, teams.color(team)))
         scores[team] = 0
         i += 1
 
     def write_scores(t):
         scoresfile.write('%d' % t)
-        for team in teams:
+        for team in s.teams:
             scoresfile.write('\t%f' % (scores[team]))
         scoresfile.write('\n')
 
@@ -65,7 +64,7 @@ plot %(plot)s\n''' % {'plot': ','.join(plotparts),
                       'pngout': pngout})
     instructions.flush()
 
-    gp = os.system('gnuplot %s 2>/dev/null' % instructions.name)
+    gp = os.system('gnuplot %s 2>/dev/null </dev/null' % instructions.name)
 
 if __name__ == '__main__':
     main()

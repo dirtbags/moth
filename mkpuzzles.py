@@ -22,7 +22,10 @@ for cat in os.listdir(opts.puzzles):
     for points in os.listdir(dirname):
         pointsdir = os.path.join(dirname, points)
         outdir = os.path.join(opts.htmldir, cat, points)
-        os.makedirs(outdir)
+        try:
+            os.makedirs(outdir)
+        except OSError:
+            pass
 
         readme = ''
         files = []
@@ -33,6 +36,8 @@ for cat in os.listdir(opts.puzzles):
                 keys.append((cat, points, key))
             elif fn == 'index.html':
                 readme = open(path, encoding='utf-8').read()
+            elif fn.endswith('~'):
+                pass
             else:
                 files.append((fn, path))
 

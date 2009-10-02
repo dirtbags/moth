@@ -12,8 +12,8 @@ if 'home' in os.environ.get('SCRIPT_FILENAME', ''):
     config = {'global':
                   {'data_dir': '.',
                    'base_url': '.',
-                   'css_url': 'ctf.css',
-                   'diasbled_dir': 'disabled',
+                   'css_url': '/~neale/ctf/ctf.css',
+                   'disabled_dir': 'disabled',
                    'flags_dir': 'flags',
                    'house_team': 'dirtbags',
                    'passwd': 'passwd',

@@ -21,7 +21,7 @@ def hexdigest(data):
 flags_dir = config.get('global', 'flags_dir')
 
 class Submitter(asyncore.dispatcher):
-    def __init__(self, host='localhost', port=6667):
+    def __init__(self, host='', port=6667):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.connect((host, port))
@@ -70,6 +70,8 @@ class Submitter(asyncore.dispatcher):
             raise ValueError(txt)
 
     def set_flag(self, cat, team):
+        if not cat:
+            return
         now = int(time.time())
 
         team = team or teams.house

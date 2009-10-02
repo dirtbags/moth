@@ -6,10 +6,11 @@ WWWDIR = $(DESTDIR)/usr/lib/www
 FAKE = fakeroot -s fake -i fake
 INSTALL = $(FAKE) install
 
-PYC  = config.pyc points.pyc game.pyc teams.pyc
+PYC  = config.pyc points.pyc teams.pyc
 PYC += register.pyc scoreboard.pyc puzzler.pyc
 PYC += flagd.pyc pointsd.pyc pointscli.pyc
-PYC += roshambo.pyc histogram.pyc
+PYC += histogram.pyc
+#PYC += roshambo.pyc game.pyc
 
 all: ctf.tce
 

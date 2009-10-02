@@ -28,6 +28,10 @@ def main():
       <body>
         <h1>Team Registration</h1>
 
+        <p>
+          Pick a short team name: you'll be typing it a lot.
+        </p>
+
         <form method="post" action="%s">
           <fieldset>
             <legend>Registration information:</legend>
