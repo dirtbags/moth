@@ -41,15 +41,28 @@ class Flagger(asynchat.async_chat):
 
 class Kevin(irc.Bot):
     def __init__(self, host, flagger, tokens, victims):
-        irc.Bot.__init__(self, host, ['kevin'], 'Kevin', ['#kevin'])
+        irc.Bot.__init__(self, host,
+                         ['kevin', 'kev', 'kevin_', 'kev_', 'kevinm', 'kevinm_'],
+                         'Kevin',
+                         ['+kevin'])
         self.flagger = flagger
         self.tokens = tokens
         self.victims = victims
         self.affiliation = {}
 
-    def cmd_join(self, sender, forum, addl):
-        if sender.name() in self.nicks:
+    def cmd_001(self, sender, forum, addl):
+        self.write(['OPER', 'bot', 'BottyMcBotpants'])
+        irc.Bot.cmd_001(self, sender, forum, addl)
+
+    def cmd_JOIN(self, sender, forum, addl):
+        if sender.name == self.nick:
             self.tell_flag(forum)
+
+    def cmd_381(self, sender, forum, addl):
+        # You are now an IRC Operator
+        if self.nick != 'kevin':
+            self.write(['KILL', 'kevin'], 'You are not kevin.  I am kevin.')
+            self.write(['NICK', 'kevin'])
 
     def err(self, exception):
         """Save the traceback for later inspection"""
@@ -71,7 +84,7 @@ class Kevin(irc.Bot):
     def tell_flag(self, forum):
         forum.msg('%s has the flag.' % (self.flagger.flag or nobody))
 
-    def cmd_privmsg(self, sender, forum, addl):
+    def cmd_PRIVMSG(self, sender, forum, addl):
         text = addl[0]
         if text.startswith('!'):
             parts = text[1:].lower().split(' ', 1)
