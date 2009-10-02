@@ -10,7 +10,7 @@ print '''
 <html>
 	<head>
 		<title>1</title>
-		<link rel="stylesheet" type="text/css" href="../ctf.css" media="all" />
+		<link rel="stylesheet" type="text/css" href="ctf.css" media="all" />
 		<!-- key = ktFfb8R1Bw -->
 	</head>
 	<body>
