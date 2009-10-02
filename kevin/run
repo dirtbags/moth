@@ -1,0 +1,5 @@
+#! /bin/sh
+
+[ -f /var/lib/ctf/disabled/kevin ] && exit 0
+
+exec envuidgid ctf /usr/lib/ctf/kevin.py --victims=/var/lib/ctf/kevin/victims.txt --tokens=/var/lib/ctf/kevin/tokens
