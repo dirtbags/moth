@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import game
+from ctf import game
 
 class Roshambo(game.TurnBasedGame):
     def setup(self):

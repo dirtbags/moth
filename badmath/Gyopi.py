@@ -11,10 +11,11 @@ try:
 except:
     import sys
     sys.path.append('/home/pflarr/repos/gctf/')
-    from ctf.flagd import Flagger, irc
+    from ctf.flagd import Flagger
+    from ctf import irc
 
 class Gyopi(irc.Bot):
-    STATE_FN = 'pi.state'
+    STATE_FN = 'badmath.state'
 
     SALT = b'this is questionable.'
 
