@@ -5,6 +5,7 @@ import os
 import config
 import teams
 import points
+import sys
 
 flags_dir = config.get('global', 'flags_dir')
 house_team = config.get('global', 'house_team')
@@ -38,7 +39,7 @@ def main():
             fn = os.path.join(flags_dir, cat)
             team = open(fn).read() or house_team
             print('  <br/>')
-            print('  <!-- flag: %s --> flag: <span style="color: #%s">%s</span>'
+            print('  <!-- flag: %s --> <span style="color: #%s" title="flag holder">%s</span>'
                   % (cat, teams.color(team), team))
         except IOError:
             pass
@@ -67,7 +68,7 @@ def main():
     print('</tr>')
     print('''</table>
 
-        <p class="center">
+        <p class="histogram">
           <img src="histogram.png" alt="scores over time" />
         </p>
 

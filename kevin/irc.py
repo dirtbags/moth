@@ -256,7 +256,7 @@ class User(Recipient):
         return 'User(%s, %s, %s)' % (self.name(), self.user, self.host)
 
 def recipient(interface, name):
-    if name[0] in ["&", "#"]:
+    if name[0] in ['&', '#', '+']:
         return Channel(interface, name)
     else:
         return User(interface, name, None, None)
@@ -384,7 +384,7 @@ class SmartIRCHandler(IRCHandler):
                 int(op)
             except ValueError:
                 self.dbg("WARNING: unknown server code: %s" % op)
-            addl = tuple(args[3:]) + (text,)
+            addl = tuple(args[2:]) + (text,)
 
         try:
             self.handle_cooked(op, sender, forum, addl)
@@ -395,13 +395,13 @@ class SmartIRCHandler(IRCHandler):
 
     def handle_cooked(self, op, sender, forum, addl):
         try:
-            func = getattr(self, 'cmd_' + op.lower())
+            func = getattr(self, 'cmd_' + op.upper())
         except AttributeError:
             self.unhandled(op, sender, forum, addl)
             return
         func(sender, forum, addl)
 
-    def cmd_ping(self, sender, forum, addl):
+    def cmd_PING(self, sender, forum, addl):
         self.write(['PONG'], addl[0])
 
     def unhandled(self, op, sender, forum, addl):
@@ -469,8 +469,20 @@ class Bot(SmartIRCHandler):
         self.announce('*bzert*')
 
     def cmd_001(self, sender, forum, addl):
+        # Welcome to IRC
+        self.nick = addl[0]
         for c in self.channels:
             self.write(['JOIN'], c)
+
+    def cmd_433(self, sender, forum, addl):
+        # Nickname already in use
+        self.nicks.append(self.nicks.pop(0))
+        self.write(['NICK', self.nicks[0]])
+
+    def cmd_NICK(self, sender, forum, addl):
+        if addl[0] == self.nick:
+            self.nick = sender.name()
+            print(self.nick)
 
     def writable(self):
         if not self.waiting:
