@@ -17,7 +17,7 @@ print '''
 <html>
 	<head>
 		<title>4</title>
-		<link rel="stylesheet" type="text/css" href="ctf.css" media="all" />
+		<link rel="stylesheet" type="text/css" href=",ctf.css" media="all" />
 	</head>
 	<body>
 		<div id="wrapper">
