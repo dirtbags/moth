@@ -13,8 +13,6 @@ from ctf.flagd import Flagger
 nobody = '\002[nobody]\002'
 
 class Kevin(irc.Bot):
-    debug = True
-
     def __init__(self, host, flagger, tokens, victims):
         irc.Bot.__init__(self, host,
                          ['kevin', 'kev', 'kevin_', 'kev_', 'kevinm', 'kevinm_'],
