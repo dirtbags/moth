@@ -8,8 +8,8 @@ kevin.tce: target
 
 
 target: kevin.py irc.pyc run log.run
-	$(INSTALL) -d target/usr/lib/ctf
-	$(INSTALL) kevin.py irc.py target/usr/lib/ctf
+	$(INSTALL) -d target/usr/lib/ctf/kevin
+	$(INSTALL) kevin.py irc.py target/usr/lib/ctf/kevin
 
 	$(INSTALL) --owner=100 -d target/var/lib/ctf/kevin/tokens
 

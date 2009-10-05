@@ -2,9 +2,9 @@
 
 import fcntl
 import time
-import config
 import os
 from urllib.parse import quote, unquote
+from . import config
 
 house = config.get('global', 'house_team')
 passwdfn = config.get('global', 'passwd')

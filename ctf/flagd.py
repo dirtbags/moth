@@ -8,11 +8,11 @@ import time
 import hmac
 import optparse
 import os
-import points
-import pointscli
-import teams
-import config
 import traceback
+from . import teams
+from . import points
+from . import pointscli
+from . import config
 
 key = b'My First Shared Secret (tm)'
 def hexdigest(data):
@@ -21,7 +21,7 @@ def hexdigest(data):
 flags_dir = config.get('global', 'flags_dir')
 
 class Submitter(asyncore.dispatcher):
-    def __init__(self, host='', port=6667):
+    def __init__(self, host='127.0.0.1', port=6667):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.connect((host, port))
@@ -82,7 +82,7 @@ class Submitter(asyncore.dispatcher):
 
 
 class Listener(asyncore.dispatcher):
-    def __init__(self, connection_factory, host='localhost', port=6668):
+    def __init__(self, connection_factory, host='', port=6668):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()

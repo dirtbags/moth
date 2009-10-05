@@ -7,9 +7,9 @@ import re
 import sys
 import http.cookies
 from urllib.parse import quote, unquote
-import config
-import pointscli
-import teams
+from . import config
+from . import pointscli
+from . import teams
 
 datafile = config.datafile('puzzler.dat')
 keysfile = config.get('puzzler', 'keys_file')

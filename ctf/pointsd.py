@@ -3,10 +3,11 @@
 import asyncore
 import socket
 import struct
-import points
 import time
+from . import points
+from . import config
 
-house = 'dirtbags'
+house = config.get('global', 'house_team')
 
 class MyHandler(asyncore.dispatcher):
     def __init__(self, port=6667):

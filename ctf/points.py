@@ -4,9 +4,9 @@ import socket
 import hmac
 import struct
 import io
-import teams
-import config
 import os
+from . import teams
+from . import config
 
 ##
 ## Authentication

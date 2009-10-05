@@ -2,10 +2,10 @@
 
 import cgitb; cgitb.enable()
 import os
-import config
-import teams
-import points
 import sys
+from . import config
+from . import teams
+from . import points
 
 flags_dir = config.get('global', 'flags_dir')
 house_team = config.get('global', 'house_team')

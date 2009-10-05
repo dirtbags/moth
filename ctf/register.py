@@ -2,10 +2,10 @@
 
 import cgitb; cgitb.enable()
 import cgi
-import teams
 import fcntl
 import string
-import config
+from . import teams
+from . import config
 
 def main():
     print('Content-type: text/html')

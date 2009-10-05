@@ -1,12 +1,14 @@
 DESTDIR = target
 
+PYCDIR = $(DESTDIR)/usr/lib/python3.1/site-packages
 CTFDIR = $(DESTDIR)/usr/lib/ctf
 WWWDIR = $(DESTDIR)/usr/lib/www
 
 FAKE = fakeroot -s fake -i fake
 INSTALL = $(FAKE) install
 
-PYC  = config.pyc points.pyc teams.pyc
+PYC  = __init__.pyc
+PYC += config.pyc points.pyc teams.pyc
 PYC += register.pyc scoreboard.pyc puzzler.pyc
 PYC += flagd.pyc pointsd.pyc pointscli.pyc
 PYC += histogram.pyc
@@ -19,9 +21,11 @@ target: $(PYC)
 	$(INSTALL) -d $(DESTDIR)/var/lib/ctf/disabled
 	touch $(DESTDIR)/var/lib/ctf/disabled/survey
 
-	$(INSTALL) -d $(CTFDIR)
-	$(INSTALL) $(PYC) $(CTFDIR)
-	$(INSTALL) ctfd.py $(CTFDIR)
+	$(INSTALL) -d $(PYCDIR)/ctf
+	$(INSTALL) $(PYC) $(PYCDIR)/ctf
+
+	$(INSTALL) -d $(DESTDIR)/usr/sbin
+	$(INSTALL) ctfd.py $(DESTDIR)/usr/sbin
 
 	$(INSTALL) -d $(WWWDIR)
 	$(INSTALL) index.html intro.html ctf.css grunge.png $(WWWDIR)
@@ -36,6 +40,7 @@ target: $(PYC)
 
 	rm -rf $(WWWDIR)/puzzler
 	$(INSTALL) -d $(WWWDIR)/puzzler
+	$(INSTALL) -d $(CTFDIR)
 	./mkpuzzles.py --htmldir=$(WWWDIR)/puzzler --keyfile=$(CTFDIR)/puzzler.keys
 
 ctf.tce: target
@@ -45,5 +50,8 @@ clean:
 	rm -rf target
 	rm -f fake ctf.tce $(PYC)
 
-%.pyc: %.py
-	python3 -c 'import $*'
+ctf/%.pyc: ctf/%.py
+	python3 -c 'from ctf import $(notdir $*)'
+
+%.pyc: ctf/%.pyc
+	cp $< $@

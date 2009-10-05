@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-import points
 import time
 import os
 import tempfile
-import teams
-import config
+from . import points
+from . import teams
+from . import config
 
 pngout = config.datafile('histogram.png')
 

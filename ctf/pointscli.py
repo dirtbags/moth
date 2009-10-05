@@ -2,9 +2,9 @@
 
 import optparse
 import select
-import points
 import socket
 import time
+from . import points
 
 def makesock(host):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -1,4 +1,4 @@
 #! /bin/sh
 
-exec envuidgid ctf /usr/lib/ctf/ctfd.py 2>&1
+exec envuidgid ctf /usr/sbin/ctfd.py 2>&1
 
