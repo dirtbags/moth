@@ -1,13 +1,14 @@
 #! /usr/bin/env python3
 
-import irc
 import os
 import optparse
 import asynchat
 import socket
 import asyncore
 from urllib.parse import quote_plus as quote
-from ctf import Flagger
+
+from ctf import irc
+from ctf.flagd import Flagger
 
 nobody = '\002[nobody]\002'
 
@@ -122,6 +123,8 @@ def main():
     p.add_option('-p', '--password', dest='password',
                  default='kevin:::7db3e44d53d4a466f8facd7b7e9aa2b7',
                  help='Flag server password')
+    p.add_option('-c', '--channel', dest='channel', 
+                 help='Channel to join')
     opts, args = p.parse_args()
 
     f = Flagger(opts.flagd, opts.password.encode('utf-8'))

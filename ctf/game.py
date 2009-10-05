@@ -8,7 +8,7 @@ import traceback
 import time
 from errno import EPIPE
 from . import teams
-from . import Flagger
+from . import flagd
 
 
 # Heartbeat frequency (in seconds)
@@ -439,7 +439,7 @@ class TurnBasedGame(Game):
 ##
 
 def start(game_factory, port, auth, minplayers, maxplayers=None):
-    flagger = Flagger(('localhost', 6668), auth)
+    flagger = flagd.Flagger(('localhost', 6668), auth)
     manager = Manager(game_factory, flagger, minplayers, maxplayers)
     listener = Listener(('', port), Player, manager)
     return (flagger, manager, listener)

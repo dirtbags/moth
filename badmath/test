@@ -1,0 +1,10 @@
+#! /bin/sh
+
+[ -f /var/lib/ctf/disabled/badmath ] && exit 0
+
+DATA_PATH=
+if $DATA_PATH; then
+    mkdir -p $DATA_PATH;
+fi
+
+python3.0 Gyopi.py --path=$DATA_PATH --irc=irc.lanl.gov --flagd=ctf1.lanl.gov --channel=#badmath

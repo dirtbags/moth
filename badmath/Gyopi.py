@@ -1,4 +1,3 @@
-import irc
 import badmath
 import time
 import os
@@ -6,7 +5,13 @@ import traceback
 import pickle
 from hashlib import sha256
 
-import Flagger
+try:
+    from ctf import irc
+    from ctf.flagd import Flagger
+except:
+    import sys
+    sys.path.append('/home/pflarr/repos/gctf/')
+    from ctf.flagd import Flagger, irc
 
 class Gyopi(irc.Bot):
     STATE_FN = 'pi.state'
@@ -20,8 +25,8 @@ class Gyopi(irc.Bot):
     FLAG_HOST = b'ctf1.lanl.gov'
 #    FLAG_HOST = b'localhost'
 
-    def __init__(self, host, dataPath, flagger):
-        irc.Bot.__init__(self, host, ['gyupi'], 'Gyupi', ['#badmath'])
+    def __init__(self, host, channels, dataPath, flagger):
+        irc.Bot.__init__(self, host, ['gyopi'], 'Gyopi', channels)
 
         self._dataPath = dataPath
 
@@ -96,15 +101,15 @@ class Gyopi(irc.Bot):
         stateFile = open(statePath + '.tmp', 'wb')
         pickle.dump(state, stateFile)
         stateFile.close()
-        os.move( statePath + '.tmp', statePath)
+        os.rename( statePath + '.tmp', statePath)
 
     def _tellFlag(self, forum):
         """Announce who owns the flag."""
         forum.msg('%s has the flag.' % (self._flag.flag))
-        forum.msg('Difficulty level is %d' % self._lvl)
 
     def _tellPuzzle(self, forum):
         """Announce the current puzzle."""
+        forum.msg('Difficulty level is %d' % self._lvl)
         forum.msg('The problem is: %s' % ' '.join( map(str, self._puzzle)))
 
     def _getStations(self):
@@ -173,8 +178,8 @@ class Gyopi(irc.Bot):
             elif cmd.startswith('h'):
                 # Help
                 forum.msg('Goal: Help me with my math homework, FROM ANOTHER DIMENSION!')
-                forum.msg('Goal: The current winner gets to control the contest music.')
-                forum.msg('Commands: !help, !flag, !register [TEAM], !solve SOLUTION,!? EQUATION, !ops, !problem', '!who')
+                #forum.msg('Goal: The current winner gets to control the contest music.')
+                forum.msg('Commands: !help, !flag, !register [TEAM], !solve SOLUTION,!? EQUATION, !ops, !problem, !who')
             elif cmd.startswith('prob'):
                 self._tellPuzzle(forum)
             elif cmd.startswith('solve') and args:
@@ -238,18 +243,21 @@ if __name__ == '__main__':
     import optparse
 
     p = optparse.OptionParser()
-    p.add_option('-h', '--host', dest='ircHost', default='localhost',
-                 'IRC Host to connect to.')
+    p.add_option('-i', '--irc', dest='ircHost', default='localhost',
+                 help='IRC Host to connect to.')
     p.add_option('-f', '--flagd', dest='flagd', default='localhost',
-                 'Flag Server to connect to')
+                 help='Flag Server to connect to')
     p.add_option('-p', '--password', dest='password',
                  default='badmath:::a41c6753210c0bdafd84b3b62d7d1666',
                  help='Flag server password')
     p.add_option('-d', '--path', dest='path', default='/var/lib/badmath',
-                 'Path to where we can store state info.')
+                 help='Path to where we can store state info.')
+    p.add_option('-c', '--channel', dest='channel', default='+badmath',
+                 help='Which channel to join')
 
     opts, args = p.parse_args()
+    channels = [opts.channel]
 
-    flagger = Flagger.Flagger(opts.flagd, opts.password.encode('utf-8')) 
-    gyopi = Gyopi((opts.ircHost, 6667), opts.path, flagger)
+    flagger = Flagger(opts.flagd, opts.password.encode('utf-8')) 
+    gyopi = Gyopi((opts.ircHost, 6667), channels, opts.path, flagger)
     irc.run_forever()
