@@ -7,9 +7,8 @@ kevin.tce: target
 	$(FAKE) sh -c 'cd target && tar -czf - --exclude=placeholder --exclude=*~ .' > $@
 
 
-target: kevin.py irc.pyc run log.run
-	$(INSTALL) -d target/usr/lib/ctf/kevin
-	$(INSTALL) kevin.py irc.py target/usr/lib/ctf/kevin
+target: kevin.py run log.run
+	$(INSTALL) -D kevin.py target/usr/bin/kevin.py
 
 	$(INSTALL) --owner=100 -d target/var/lib/ctf/kevin/tokens
 

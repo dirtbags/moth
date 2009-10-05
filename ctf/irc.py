@@ -7,6 +7,8 @@ import sys
 import traceback
 import time
 
+channel_prefixes = '+#&'
+
 class IRCHandler(asynchat.async_chat):
     """IRC Server connection.
 
@@ -256,7 +258,7 @@ class User(Recipient):
         return 'User(%s, %s, %s)' % (self.name(), self.user, self.host)
 
 def recipient(interface, name):
-    if name[0] in ['&', '#', '+']:
+    if name[0] in channel_prefixes:
         return Channel(interface, name)
     else:
         return User(interface, name, None, None)
@@ -327,9 +329,8 @@ class SmartIRCHandler(IRCHandler):
             # PRIVMSG ['neale!~user@127.0.0.1', 'PRIVMSG', '#hydra'] firebot, foo
             # PRIVMSG ['neale!~user@127.0.0.1', 'PRIVMSG', 'firebot'] firebot, foo
             try:
-                if args[2][0] in '#&':
-                    forum = self.recipient(args[2])
-                else:
+                forum = self.recipient(args[2])
+                if not forum.is_channel():
                     forum = sender
                 addl = (text,)
             except IndexError:
