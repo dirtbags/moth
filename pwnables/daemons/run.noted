@@ -1,0 +1,4 @@
+#! /bin/sh
+
+cd /var/lib/notes
+exec tcpsvd 0 4000 /usr/sbin/in.noted

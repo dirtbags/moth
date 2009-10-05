@@ -10,7 +10,7 @@ kevin.tce: target
 target: kevin.py run log.run
 	$(INSTALL) -D kevin.py target/usr/bin/kevin.py
 
-	$(INSTALL) --owner=100 -d target/var/lib/ctf/kevin/tokens
+	$(INSTALL) --owner=100 -d target/var/lib/kevin/tokens
 
 	$(INSTALL) -d target/var/service/kevin
 	$(INSTALL) run target/var/service/kevin/run
