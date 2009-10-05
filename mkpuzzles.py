@@ -62,7 +62,8 @@ for cat in os.listdir(opts.puzzles):
             f.write('<ul>\n')
             for fn, path in files:
                 shutil.copy(path, outdir)
-                f.write('<li><a href="%s">%s</a></li>\n' % (fn, fn))
+                if not fn.startswith(','):
+                    f.write('<li><a href="%s">%s</a></li>\n' % (fn, fn))
             f.write('</ul>\n')
         f.write('''
     <form action="%(cgi)s" method="post">
