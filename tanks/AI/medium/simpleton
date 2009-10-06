@@ -1,0 +1,8 @@
+>addsensor(50, 0, 5, 1); # 0-Fire Sensor
+>addsensor(30, 0, 50); # 1-Anti-collision sensor
+
+# Commands
+         : move(90, 100).
+           turretset(0);
+sense(0) : fire();
+sense(1) : move(-100, 100)

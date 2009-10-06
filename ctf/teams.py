@@ -3,7 +3,11 @@
 import fcntl
 import time
 import os
-from urllib.parse import quote, unquote
+# python 2 compatibility
+try:
+    from urllib.parse import quote, unquote
+except:
+    from urllib import quote, unquote
 from . import config
 
 house = config.get('global', 'house_team')
@@ -14,7 +18,6 @@ teams = {}
 built = 0
 def build_teams():
     global teams, built
-
     if not os.path.exists(passwdfn):
         return
     if os.path.getmtime(passwdfn) <= built:

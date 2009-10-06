@@ -1,6 +1,7 @@
 *~
 *.pyc
 *.dat
+*.swp
 passwd
 target/
 puzzler/

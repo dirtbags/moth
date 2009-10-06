@@ -50,7 +50,7 @@ else:
 				<h2>SALE: %s</h2>
 				<p>Use the order form below to place an order.</p>
 
-				<form method="post" action="4.py">
+				<form method="post" action="4.cgi">
 					How many would you like?
 					<select name="quantity">
 						<option value="12">12</option>

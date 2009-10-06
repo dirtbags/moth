@@ -34,7 +34,7 @@ if (fields.has_key('num')):
 	''' % int(fields['num'].value)
 
 print '''
-				<form method="get" action="two.py">
+				<form method="get" action="2.cgi">
 					Enter an integer: <input name="num" type="text" size="10" />
 				</form>
 			</div>
