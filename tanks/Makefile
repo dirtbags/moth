@@ -1,5 +1,5 @@
 FAKE = fakeroot -s fake -i fake
-INSTALL = $(fake) install
+INSTALL = $(FAKE) install -o 100
 
 all: tanks.tce
 
@@ -19,7 +19,7 @@ target:
 
 	$(INSTALL) -d target/var/lib/www/tanks/
 	$(INSTALL) www/* target/var/lib/www/tanks/
-#	$(FAKE) ln -s target/var/lib/tanks/ target/var/lib/www/data
+	$(FAKE) ln -s target/var/lib/tanks/ target/var/lib/www/data
 
 	$(INSTALL) -d target/usr/lib/python2.6/site-packages/tanks/
 	$(INSTALL) lib/* target/usr/lib/python2.6/site-packages/tanks/

@@ -1,0 +1,6 @@
+#! /bin/sh
+
+[ -f /var/lib/ctf/disabled/tanks ] && exit 0
+
+envuidgid ctf python2.6 run_tanks.py /var/lib/tanks/ easy 100  &
+envuidgid ctf report_score.py
