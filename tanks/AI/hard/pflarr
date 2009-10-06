@@ -1,0 +1,31 @@
+>addsensor(50, 0, 45, 1); # 0-Fire Sensor
+>addsensor(30, 0, 180); # 1-Anti-collision sensor
+>addsensor(100, 40, 60, 1); # 2 turret clockwise
+>addsensor(100, 320, 60, 1); # 3 turret ccw
+>addsensor(80, 180, 160); # 4 Coward
+>addsensor(100, 0, 0, 1); # 5-Fire Sensor2
+>addsensor(100, 0, 0); # 6-Chase Sensor
+>addsensor(75, 75, 30); # 7-quick turn right
+>addsensor(75, 285, 30); # 8-quick turn left
+
+# Commands
+         : move(70, 75).
+           turretset(0);
+random(1, 10): move(75, 75).
+               turretset(0);
+sense(2) : turretcw(50).
+           move(85, 70);
+sense(2) & sense(0): turretcw(25).
+                     move(85, 70);
+sense(3) : turretccw(50).
+           move(70, 85);
+sense(3) & sense(0) : turretccw(25).
+                      move(70, 85);
+sense(5) & sense(7) : move(70, 30);
+sense(5) & sense(8) : move(30, 70);
+#sense(5) : turretset();
+sense(0) & sense(5) : fire();
+sense(6) & sense(5) & fireready(): move(100,100);
+sense(4) : move(100,100);
+sense(1) : move(-50, 25);
+fireready() : led();

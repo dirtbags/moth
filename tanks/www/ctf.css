@@ -1,0 +1,99 @@
+/**** document ****/
+
+html {
+    background: #222 url(grunge.png) repeat-x;
+}
+
+body {
+    font-family: sans-serif;
+    color: #eee;
+    margin: 50px 0 0 100px;
+    padding: 10px;
+    max-width: 700px;
+}
+
+/**** heading ****/
+
+h1:first-child {
+    text-transform: lowercase;
+    font-size: 1.6em;
+/*     background-color: #222; */
+/*     opacity: 0.9; */
+    padding: 3px;
+    color: #2a2;
+    margin: 0 0 1em 70px;
+}
+
+h1:first-child:before {
+   color: #fff;
+   letter-spacing: -0.1em;
+   content: "Capture The Flag: ";
+}
+
+/**** body ****/
+
+a img {
+    border: 0px;
+}
+
+a {
+    text-decoration: none;
+    color: #2a2;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #fff;
+    background: #2a2;
+    font-weight: bold;
+}
+
+
+h1, h2, h3 {
+    color: #999;
+    letter-spacing: -0.05em;
+}
+
+code, pre, .readme {
+    color: #fff;
+    background-color: #555;
+    margin: 1em;
+}
+
+th, td {
+    vertical-align: top;
+}
+
+.scoreboard td {
+    height: 400px;
+}
+
+p {
+    line-height: 1.4em;
+    margin-bottom: 20px;
+    color: #f4f4f4;
+}
+
+dt {
+    white-space: pre;
+}
+
+dt div.tab {
+    background-color: #333;
+    display: inline-block;
+    padding: 5px;
+    border: 3px solid green;
+    border-bottom: none;
+    font-weight: bold;
+}
+
+dd {
+    border: 3px solid green;
+    margin: 0px;
+    padding: 5px;
+    background-color: #282828;
+}
+
+fieldset * {
+    margin: 3px;
+}

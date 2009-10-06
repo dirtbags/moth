@@ -1,0 +1,16 @@
+body { background-color : #000000;
+       color : #E0E0E0;
+     }
+
+table { 
+        border : 2px solid #00EE00;
+        border-collapse : collapse;
+        margin : 3px;
+      }
+
+table td { border : 1px solid #00BB00;
+           padding-left: 3px;
+           padding-right: 3px;
+           text-align: left;
+           vertical-align: top;
+         }

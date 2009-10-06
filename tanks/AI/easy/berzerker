@@ -1,0 +1,5 @@
+random(1,10): move(50, 100);
+random(1,10): move(100, 50);
+random(1,10): turretcw();
+random(1,10): turretccw();
+random(1,30): fire();

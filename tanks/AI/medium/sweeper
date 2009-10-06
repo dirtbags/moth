@@ -1,0 +1,18 @@
+# Just sit there and sweep the field until it finds something to shoot.
+# Uses a long-range sensor on the left and right to hone in.
+
+>addsensor(50, 0, 5, 1);    # 0
+>addsensor(100, 90, 150, 1); # 1
+>addsensor(100, 270, 150, 1);   # 2
+>addsensor(100, 0, 359, 0); # 3
+
+# Default movement if nothing is detected
+            : move(70, 70) . turretccw();
+random(2, 3): move(40, 70) . turretccw();
+random(1, 3): move(70, 40) . turretccw();
+
+# We found something!!
+sense(3): move(0, 0);
+sense(1): turretcw();
+sense(2): turretccw();
+sense(0): fire();
