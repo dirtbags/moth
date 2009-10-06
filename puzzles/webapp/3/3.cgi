@@ -47,7 +47,7 @@ else:
 				<h2>SALE: %s</h2>
 				<p>Use the order form below to place an order.</p>
 
-				<form method="get" action="3.py">
+				<form method="get" action="3.cgi">
 					How many would you like?
 					<select name="quantity">
 						<option value="12">12</option>
