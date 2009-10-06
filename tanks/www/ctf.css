@@ -54,7 +54,7 @@ h1, h2, h3 {
     letter-spacing: -0.05em;
 }
 
-code, pre, .readme {
+code, pre, .readme, div.errors {
     color: #fff;
     background-color: #555;
     margin: 1em;
@@ -97,3 +97,4 @@ dd {
 fieldset * {
     margin: 3px;
 }
+

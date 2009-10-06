@@ -18,7 +18,7 @@ except:
 print open('head.html').read() % "Documentation"
 print '<BODY>'
 print '<H1>Pflanzarr Documentation</H1>'
-print '<a href="submit.html">Submit</a> | <a href="results.cgi">Results</a> | <a href="docs.cgi">Documentation</a>'
+print open('links.html').read() 
 print Program.__doc__
 
 print '<H3>Setup Actions:</H3>'

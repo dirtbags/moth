@@ -5,6 +5,8 @@ import random
 import subprocess
 import xml.sax.saxutils
 
+from urllib import unquote, quote
+
 from PIL import Image, ImageColor, ImageDraw
 
 try:
@@ -14,6 +16,7 @@ except:
     path = '/home/pflarr/repos/gctf/'
     sys.path.append(path)
     from ctf import teams
+teams.build_teams()
 
 import Tank
 
@@ -43,7 +46,7 @@ class Pflanzarr:
         players = []
         for p in tmpPlayers:
             p = unquote(p)
-            if not (p.startswith('.') or p.endswith('#') or p.endswith('~'))
+            if not (p.startswith('.') or p.endswith('#') or p.endswith('~'))\
                and p in teams.teams:
                 players.append(p)
 
@@ -54,23 +57,27 @@ class Pflanzarr:
 
         assert len(players) >= 1, "There must be at least one player."
 
-        # The one is added to ensure that there is at least one defaultAI bot.
-        size = math.sqrt(len(players) + 1)
-        if int(size) != size:
-            size = size + 1
+        # The one is added to ensure that there is at least one #default bot.
+        cols = math.sqrt(len(players) + 1)
+        if int(cols) != cols:
+            cols = cols + 1
 
-        size = int(size)
-        if size < 2:
-            size = 2
+        cols = int(cols)
+        if cols < 2:
+            cols = 2
 
-        self._board = (size*self.SPACING, size*self.SPACING)
+        rows = len(players)/cols
+        if len(players) % cols != 0:
+            rows = rows + 1
+
+        self._board = (cols*self.SPACING, rows*self.SPACING)
         
-        while len(players) < size**2:
+        while len(players) < cols*rows:
             players.append('#default')
 
         self._tanks = []
-        for i in range(size):
-            for j in range(size):
+        for i in range(cols):
+            for j in range(rows):
                 startX = i*self.SPACING + self.SPACING/2
                 startY = j*self.SPACING + self.SPACING/2
                 player = random.choice(players)
@@ -78,7 +85,7 @@ class Pflanzarr:
                 if player == '#default':
                     color = '#a0a0a0'
                 else:
-                    color = team.teams[player][1]
+                    color = '#%s' % teams.teams[player][1]
                 tank = Tank.Tank( player, (startX, startY), color,
                                   self._board, testMode=True)
                 if player == '#default':
@@ -250,7 +257,7 @@ class Pflanzarr:
             print tank.name, 'has errors'
             
 
-        fileName = os.path.join(self._errorDir, tank.name)
+        fileName = os.path.join(self._errorDir, quote(tank.name))
         file = open(fileName, 'w')
         for error in tank._program.errors:
             file.write(error)
@@ -351,7 +358,8 @@ class Pflanzarr:
         self._resultsDir = os.path.join(dir, 'results')
         self._errorDir = os.path.join(dir, 'errors')
         self._imageDir = os.path.join(dir, 'frames')
-        os.mkdir( self._imageDir )
+        if not os.path.isdir(self._imageDir):
+            os.mkdir( self._imageDir )
         self._playerDir = os.path.join(dir, 'ai', 'players')
 
     def _getDefaultAIs(self, dir, difficulty):

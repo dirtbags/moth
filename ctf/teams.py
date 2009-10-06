@@ -18,7 +18,6 @@ teams = {}
 built = 0
 def build_teams():
     global teams, built
-
     if not os.path.exists(passwdfn):
         return
     if os.path.getmtime(passwdfn) <= built:
