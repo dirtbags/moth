@@ -27,7 +27,7 @@ cat_re = re.compile(r'^[a-z]+$')
 points_re = re.compile(r'^[0-9]+$')
 
 def dbg(*vals):
-    print('<--: \nContent-type: text/html\n\n--><pre>')
+    print('<!--: \nContent-type: text/html\n\n--><pre>')
     print(*vals)
     print('</pre>')
 
@@ -59,32 +59,16 @@ passwd = f.getfirst('w', passwd)
 key = f.getfirst('k')
 
 def start_html(title):
-    if os.environ.get('GATEWAY_INTERFACE'):
-        print('Content-type: text/html')
-        if team or passwd:
-            c = http.cookies.SimpleCookie()
-            if team:
-                c['team'] = team
-            if passwd:
-                c['passwd'] = passwd
-            print(c)
-        print()
-    print('''<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC
-  "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <title>%s</title>
-    <link rel="stylesheet" href="%s" type="text/css" />
-  </head>
-  <body>
-    <h1>%s</h1>
-''' % (title, config.css, title))
+    if team or passwd:
+        c = http.cookies.SimpleCookie()
+        if team:
+            c['team'] = team
+        if passwd:
+            c['passwd'] = passwd
+        print(c)
+    config.start_html(title)
 
-def end_html():
-    print('</body></html>')
-
+end_html = config.end_html
 
 def safe_join(*args):
     safe = list(args[:1])
@@ -125,7 +109,17 @@ def show_puzzles(cat, cat_dir):
     if puzzles:
         print('<ul>')
         for p in puzzles:
-            print('<li><a href="%s/%s/%d">%d</a></li>' % (base_url, cat, p, p))
+            cls = ''
+            try:
+                if p in points_by_team[(team, cat)]:
+                    cls = 'solved'
+            except KeyError:
+                pass
+            print('<li><a href="%(base)s/%(cat)s/%(points)d" class="%(class)s">%(points)d</a></li>' %
+                  {'base': base_url,
+                   'cat': cat,
+                   'points': p,
+                   'class': cls})
             if p > opened:
                 break
         print('</ul>')

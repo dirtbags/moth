@@ -33,7 +33,7 @@ def main():
     pw = f.getfirst('pw')
     confirm_pw = f.getfirst('confirm_pw')
 
-    html = string.Template(head('Team Registration') +
+    html = string.Template(config.start_html('Team Registration') +
                            ('''
         <p>
           Pick a short team name: you'll be typing it a lot.
@@ -58,7 +58,7 @@ def main():
             <input type="submit" value="Register" />
           </fieldset>
         </form>''' % config.url('register.cgi')) +
-                           foot())
+                           config.end_html())
 
     if not (team and pw and confirm_pw):    # If we're starting from the beginning?
         html = html.substitute(team_error='',
@@ -71,9 +71,9 @@ def main():
                                pw_match_error='Passwords do not match')
     else:
         teams.add(team, pw)
-        html = (head('Team registered') +
+        html = (config.start_html('Team registered') +
                 ('<p>Congratulations, <samp>%s</samp> is now registered.  Go <a href="%s">back to the front page</a> and start playing!</p>' % (team, config.url(''))) +
-                foot())
+                config.end_html())
 
     print(html)
 
