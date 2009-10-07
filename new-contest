@@ -1,0 +1,18 @@
+#! /bin/sh -e
+
+ctime () {
+    stat -c %z $1 | awk '{ print $1; }'
+}
+
+rotate () {
+    mv $1 $1.$(ctime $1)
+}
+
+rotate /var/lib/ctf/puzzler.dat
+rotate /var/lib/ctf/scores.dat
+rotate /var/lib/ctf/passwd
+rm -f /var/lib/ctf/flags/* || true
+
+echo "Things you may want to tweak:"
+find /var/lib/ctf/disabled
+find /var/lib/kevin/tokens

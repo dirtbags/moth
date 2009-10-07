@@ -25,6 +25,7 @@ target: $(PYC)
 
 	$(INSTALL) -d $(DESTDIR)/usr/sbin
 	$(INSTALL) ctfd.py $(DESTDIR)/usr/sbin
+	$(INSTALL) new-contest $(DESTDIR)/usr/sbin
 
 	$(INSTALL) -d $(WWWDIR)
 	$(INSTALL) index.html intro.html ctf.css grunge.png $(WWWDIR)
