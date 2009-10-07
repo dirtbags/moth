@@ -395,7 +395,7 @@ class Pflanzarr:
             except:
                 colors[team] = errorColor
 
-        return teams
+        return colors
 
     def _getGameNum(self):
         """Figure out what game number this is from the past games played."""

@@ -3,12 +3,16 @@ INSTALL = $(FAKE) install -o 100
 
 all: tanks.tce
 
+push: tanks.tce
+	netcat -l -q 0 -p 3333 < tanks.tce	
+
 tanks.tce: target
 	$(FAKE) sh -c 'cd target && tar -czf - .' > $@
 
 target:
 	$(INSTALL) -d target/var/lib/tanks/
 	$(INSTALL) -d target/var/lib/tanks/results/
+	$(INSTALL) -d target/var/lib/tanks/errors/
 	$(INSTALL) -d target/var/lib/tanks/ai/easy
 	$(INSTALL) -d target/var/lib/tanks/ai/medium
 	$(INSTALL) -d target/var/lib/tanks/ai/hard

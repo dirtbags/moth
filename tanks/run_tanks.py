@@ -7,7 +7,7 @@ T = 60*5
 try:
     while 1:
         start = time.time()
-        p = Pflanzarr(sys.argv[1], sys.argv[2])
+        p = Pflanzarr.Pflanzarr(sys.argv[1], sys.argv[2])
         p.run(int(sys.argv[3]))
         
         diff = time.time() - start
