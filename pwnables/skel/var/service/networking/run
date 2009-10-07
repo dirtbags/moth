@@ -1,0 +1,14 @@
+#! /bin/sh -e
+
+# busybox's dc doesn't support i :<
+# Its awk does support 0xa0 as an int, but gawk doesn't.  This only works on busybox.
+lastd=$(awk -F ':' '{for (i=1; i<NF; i++) {q = xor(q, "0x" $i);} print (q<2?2:q);}' /sys/class/net/eth0/address)
+
+myip=10.0.0.$lastd
+
+ifconfig eth0 $myip netmask 255.255.0.0
+ifconfig eth1 192.168.0.1
+
+while true; do
+    sleep 10d
+done

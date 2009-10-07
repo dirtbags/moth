@@ -64,6 +64,10 @@ th, td {
     vertical-align: top;
 }
 
+.scoreboard {
+    background: #222;
+}
+
 .scoreboard td {
     height: 400px;
 }

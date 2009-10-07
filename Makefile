@@ -11,8 +11,7 @@ PYC  = __init__.pyc
 PYC += config.pyc points.pyc teams.pyc
 PYC += register.pyc scoreboard.pyc puzzler.pyc
 PYC += flagd.pyc pointsd.pyc pointscli.pyc
-PYC += histogram.pyc
-#PYC += roshambo.pyc game.pyc
+PYC += histogram.pyc irc.pyc
 
 all: ctf.tce
 

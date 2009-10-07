@@ -60,8 +60,8 @@ class Kevin(irc.Bot):
     def cmd_PRIVMSG(self, sender, forum, addl):
         text = addl[0]
         if text.startswith('!'):
-            parts = text[1:].lower().split(' ', 1)
-            cmd = parts[0]
+            parts = text[1:].split(' ', 1)
+            cmd = parts[0].lower()
             if len(parts) > 1:
                 args = parts[1]
             else:

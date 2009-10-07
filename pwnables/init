@@ -1,0 +1,25 @@
+#! /bin/sh
+
+## This is the init for the desktop services box.
+. /sbin/db-funcs.sh
+
+dbmsg
+dbmsg "-----------------------------------------------------------------------"
+dbmsg "Bringing up pwnables personality"
+dbmsg "-----------------------------------------------------------------------"
+dbmsg
+
+# /usr and /home live in RAM
+mount -t tmpfs usr /usr
+mount -t tmpfs home /home
+
+# Unpackage everything.  Globs are sorted in busybox.
+cd /
+for i in /opt/tce/*.tce; do
+    dbmsg "Unpacking $i..."
+    tar xzf $i
+done
+
+# Pass control to /usr/sbin/init
+[ -x /usr/sbin/init ] && exec /usr/sbin/init
+exec busybox init

@@ -2,4 +2,4 @@
 
 [ -f /var/lib/ctf/disabled/kevin ] && exit 0
 
-exec envuidgid ctf /usr/lib/ctf/kevin/kevin.py --victims=/var/lib/ctf/kevin/victims.txt --tokens=/var/lib/ctf/kevin/tokens
+exec envuidgid ctf /usr/bin/kevin.py --victims=/var/lib/kevin/victims.txt --tokens=/var/lib/kevin/tokens
