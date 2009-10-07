@@ -3,6 +3,7 @@
 *.dat
 *.swp
 passwd
+fake
 target/
 puzzler/
 ctf.tce
