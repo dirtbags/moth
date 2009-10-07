@@ -2,6 +2,7 @@
 *.pyc
 *.dat
 *.swp
+*.tce
 passwd
 fake
 target/

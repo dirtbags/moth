@@ -80,7 +80,7 @@ class Pflanzarr:
                 if player == None:
                     color = '#a0a0a0'
                 else:
-                    color = 
+                    color = colors[player]
                 tank = Tank.Tank( player, (startX, startY), color,
                                   self._board, testMode=True)
                 if player == None:

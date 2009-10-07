@@ -4,5 +4,5 @@
 
 ln -s /var/lib/tanks /usr/lib/www/tanks/results
 
-envuidgid ctf python2.6 run_tanks.py /var/lib/tanks/ easy 100  2>&1 &
-envuidgid ctf report_score.py 2>&1
+exec envuidgid ctf python2.6 run_tanks.py /var/lib/tanks/ easy 100  2>&1 &
+#envuidgid ctf report_score.py 2>&1

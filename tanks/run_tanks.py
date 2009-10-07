@@ -15,6 +15,8 @@ try:
             time.sleep( diff - T )
 
 except:
+    import traceback
+    traceback.print_exc()
     print 'Usage: python2.6 run_tanks.py data_dir easy|medium|hard max_turns'
 
     

@@ -24,7 +24,7 @@ target:
 	$(INSTALL) lib/* target/usr/lib/python2.6/site-packages/tanks/
 
 	$(INSTALL) -d target/var/service/tanks
-	$(INSTALL) run target/var/service/tanks/run
+	$(INSTALL) run run_tanks.py target/var/service/tanks/
 	
 	$(INSTALL) -d target/var/service/tanks/log/
 	$(INSTALL) log.run target/var/service/tanks/log/run
