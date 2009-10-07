@@ -1,9 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-print """Content-Type: text/html\n\n"""
-print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN">\n\n"""
+print("""Content-Type: text/html\n\n""")
+print("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN">\n\n""")
 import cgi
 import cgitb; cgitb.enable()
+import sys
 import os
 
 import Config
@@ -16,18 +17,17 @@ except:
 try:
     from ctf import teams
 except:
-    import sys
     path = '/home/pflarr/repos/gctf/'
     sys.path.append(path)
     from ctf import teams
 teams.build_teams()
 
 head = open('head.html').read() % "Error Report"
-print head
-print open('links.html').read()
+print(head)
+print(open('links.html').read())
 
 def done():
-    print '</body></html>'
+    print('</body></html>')
     sys.exit(0)
 
 fields = cgi.FieldStorage()
@@ -38,25 +38,25 @@ if team and passwd and \
     path = os.path.join(Config.DATA_PATH, 'errors', quote(team))
     if os.path.isfile(path):
         errors = open(path).readlines()
-        print '<p>Your latest errors:'
-        print '<div class=errors>'
+        print('<p>Your latest errors:')
+        print('<div class=errors>')
         if errors:
-            print '<BR>\n'.join(errors)
+            print('<BR>\n'.join(errors))
         else:
-            print 'There were no errors.'
-        print '</div>'
+            print('There were no errors.')
+        print('</div>')
     else:
-        print '<p>No error file found.'
+        print('<p>No error file found.')
 
     done()
 
 if team and team not in teams.teams:
-    print '<p>Invalid team.'
+    print('<p>Invalid team.')
 
 if team and team in teams.teams and passwd != teams.teams[team][0]:
-    print '<p>Invalid password.'
+    print('<p>Invalid password.')
 
-print '''
+print('''
 <form action="errors.cgi" method="get">
     <fieldset>
         <legend>Error report request:</legend>
@@ -64,6 +64,6 @@ print '''
         Password: <input type="text" name="passwd"><BR>
         <button type="get my errors">Submit</button>
     </fieldset>
-</form>'''
+</form>''')
 
 done()

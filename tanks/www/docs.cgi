@@ -7,7 +7,7 @@ import os
 import sys
 
 try:
-    from Tanks import Program, setup, conditions, actions, docs
+    from tanks import Program, setup, conditions, actions, docs
 except:
     path = os.getcwd().split('/')
     path.pop()

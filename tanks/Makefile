@@ -17,9 +17,8 @@ target:
 	$(INSTALL) AI/medium/* target/var/lib/tanks/ai/medium/
 	$(INSTALL) AI/hard/* target/var/lib/tanks/ai/hard/
 
-	$(INSTALL) -d target/var/lib/www/tanks/
-	$(INSTALL) www/* target/var/lib/www/tanks/
-	$(FAKE) ln -s target/var/lib/tanks/ target/var/lib/www/data
+	$(INSTALL) -d target/usr/lib/www/tanks/
+	$(INSTALL) www/* target/usr/lib/www/tanks/
 
 	$(INSTALL) -d target/usr/lib/python2.6/site-packages/tanks/
 	$(INSTALL) lib/* target/usr/lib/python2.6/site-packages/tanks/
