@@ -40,6 +40,7 @@ class Gyopi(irc.Bot):
             self._lvl = 0
             self._flag.set_flag( self.FLAG_DEFAULT )
 
+            self._tokens = []
             self._lastAttempt = {}
             self._affiliations = {}
             self._newPuzzle()
@@ -62,7 +63,7 @@ class Gyopi(irc.Bot):
         self.last_tb = '%s %s %s' % (t, v, infostr)
         print(self.last_tb)
 
-    def cmd_join(self, sender, forum, addl):
+    def cmd_JOIN(self, sender, forum, addl):
         """On join, announce who has the flag."""
         if sender.name() in self.nicks:
             self._tellFlag(forum)
@@ -150,11 +151,11 @@ class Gyopi(irc.Bot):
             self._tokens[user].remove(token)
 
 
-    def cmd_privmsg(self, sender, forum, addl):
+    def cmd_PRIVMSG(self, sender, forum, addl):
         text = addl[0]
         who = sender.name()
         if text.startswith('!'):
-            parts = text[1:].lower().split(' ', 1)
+            parts = text[1:].split(' ', 1)
             cmd = parts[0]
             if len(parts) > 1:
                 args = parts[1]
@@ -179,6 +180,7 @@ class Gyopi(irc.Bot):
             elif cmd.startswith('h'):
                 # Help
                 forum.msg('Goal: Help me with my math homework, FROM ANOTHER DIMENSION!')
+                forum.msg('Order of operations is always left to right.')
                 #forum.msg('Goal: The current winner gets to control the contest music.')
                 forum.msg('Commands: !help, !flag, !register [TEAM], !solve SOLUTION,!? EQUATION, !ops, !problem, !who')
             elif cmd.startswith('prob'):
@@ -208,11 +210,15 @@ class Gyopi(irc.Bot):
 #                    self._giveToken(who, sender)
                     self._saveState()
                 else:
-                    forum.msg('%s: %s != %s' % (who, attempt, answer))
                     forum.msg('%s: That is not correct.' % who)
 
             # Test a simple one op command.
             elif cmd.startswith('?'):
+                if not args:
+                    forum.msg('%s: Give me an easier problem, and I\'ll '
+                              'give you the answer.' % who)
+                    return 
+
                 try:
                     tokens = badmath.parse(''.join(args))
                 except (ValueError) as msg:
@@ -253,7 +259,7 @@ if __name__ == '__main__':
                  help='Flag server password')
     p.add_option('-d', '--path', dest='path', default='/var/lib/badmath',
                  help='Path to where we can store state info.')
-    p.add_option('-c', '--channel', dest='channel', default='+badmath',
+    p.add_option('-c', '--channel', dest='channel', default='#badmath',
                  help='Which channel to join')
 
     opts, args = p.parse_args()
