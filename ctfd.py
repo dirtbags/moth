@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
 import asyncore
-import pointsd
-import game
-import flagd
-import histogram
-import config
 import os
 import sys
+import optparse
+from ctf import pointsd
+from ctf import flagd
+from ctf import histogram
+from ctf import config
 
 do_reap = False
 
@@ -27,6 +27,14 @@ def sigchld(signum, frame):
     do_reap = True
 
 def main():
+    p = optparse.OptionParser()
+    p.add_option('-p', '--genpass', dest='cat', default=None,
+                 help='Generate a flagger password for the given category')
+    opts, args = p.parse_args()
+    if opts.cat:
+        print('%s:::%s' % (opts.cat, flagd.hexdigest(opts.cat.encode('utf-8'))))
+        return
+
     pointsrv = pointsd.start()
     flagsrv = flagd.start()
 
