@@ -17,6 +17,9 @@ all: ctf.tce
 
 target: $(PYC)
 	$(INSTALL) -d --mode=0755 --owner=100 $(DESTDIR)/var/lib/ctf
+
+	$(INSTALL) -d --mode=0755 --owner=100 $(DESTDIR)/var/lib/ctf/survey
+
 	$(INSTALL) -d $(DESTDIR)/var/lib/ctf/disabled
 	touch $(DESTDIR)/var/lib/ctf/disabled/survey
 
