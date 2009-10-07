@@ -1,0 +1,8 @@
+#! /bin/sh
+
+case "$REMOTEADDR" in
+    10.0.0.[2-254])
+        touch /var/lib/pollster/$REMOTEADDR
+        ;;
+esac
+
