@@ -8,6 +8,7 @@ if f.getfirst('submit'):
     print()
     print('Thanks for filling in the survey.')
     print()
+    print(dir(f))
     print('The key is:')
     print('    quux blorb frotz')
 else:

@@ -4,6 +4,7 @@ import asyncore
 import os
 import sys
 import optparse
+import signal
 from ctf import pointsd
 from ctf import flagd
 from ctf import histogram
@@ -38,6 +39,7 @@ def main():
     pointsrv = pointsd.start()
     flagsrv = flagd.start()
 
+    signal.signal(signal.SIGCHLD, sigchld)
     s = pointsrv.store
     slen = 0
     while True:
