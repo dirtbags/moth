@@ -70,20 +70,17 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 	sock.send(msg)
 
 	# get a response
-	resp = ''
+	resp = []
 	try:
-		# first read
-		data = sock.recv(1024)
-		resp += data.decode('utf-8')
-		max_recv -= 1
-
-		# remaining reads as necessary until timeout or socket closes
-		while(len(data) > 0 and max_recv > 0):
+		# read from the socket until <max_recv> responses or read,
+		# a timeout occurs, the socket closes, or some other exception 
+		# is raised
+		for i in range(max_recv):
 			data = sock.recv(1024)
-			resp += data.decode('utf-8')
-			max_recv -= 1
-		sock.close()
-
+			if len(data) == 0:
+				break
+			resp.append(data)
+	
 	except socket.timeout as e:
 		print('pollster: timed out waiting for a response from %s:%d (%s)' % (ip, port, e))
 		traceback.print_exc()
@@ -91,10 +88,12 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 		print('pollster: receive from %s:%d failed (%s)' % (ip, port, e))
 		traceback.print_exc()
 	
+	sock.close()
+
 	if len(resp) == 0:
 		return None
 
-	return resp
+	return b''.join(resp)
 
 # PUT POLLS FUNCTIONS HERE
 #  Each function should take an IP address and return a team name or None
@@ -105,14 +104,14 @@ def poll_fingerd(ip):
 	resp = socket_poll(ip, 79, b'flag\n', socket.SOCK_STREAM)
 	if resp is None:
 		return None
-	return resp.strip('\r\n')
+	return resp.strip(b'\r\n')
 
 def poll_noted(ip):
 	''' Poll the noted service. Returns None or a team name. '''
 	resp = socket_poll(ip, 4000, b'rflag\n', socket.SOCK_STREAM)
 	if resp is None:
 		return None
-	return resp.strip('\r\n')
+	return resp.strip(b'\r\n')
 
 def poll_catcgi(ip):
 	''' Poll the cat.cgi web service. Returns None or a team name. '''
@@ -121,11 +120,11 @@ def poll_catcgi(ip):
 	if resp is None:
 		return None
 
-	content = resp.split('\r\n\r\n')
+	content = resp.split(b'\r\n\r\n')
 	if len(content) < 3:
 		return None
 
-	content = content[1].split('\r\n')
+	content = content[1].split(b'\r\n')
 
 	try:
 		content_len = int(content[0])
@@ -134,7 +133,7 @@ def poll_catcgi(ip):
 	
 	if content_len <= 0:
 		return None
-	return content[1].strip('\r\n')
+	return content[1].strip(b'\r\n')
 
 def poll_tftpd(ip):
 	''' Poll the tftp service. Returns None or a team name. '''
@@ -145,8 +144,12 @@ def poll_tftpd(ip):
 	if len(resp) <= 5:
 		return None
 	
-	resp = resp.split('\n')[0]
-	return resp[4:].strip('\r\n')
+	resp = resp.split(b'\n')[0]
+
+	# ack
+	resp = socket_poll(ip, 69, b'\x00\x04' + resp[2:4], socket.SOCK_DGRAM, 0)
+
+	return resp[4:].strip(b'\r\n')
 	
 # PUT POLL FUNCTIONS IN HERE OR THEY WONT BE POLLED
 POLLS = {
@@ -217,7 +220,7 @@ while True:
 
 		# perform polls
 		for service,func in POLLS.items():
-			team = func(ip)
+			team = str(func(ip))
 			if team is None:
 				team = 'dirtbags'
 
