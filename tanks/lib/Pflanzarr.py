@@ -201,7 +201,11 @@ class Pflanzarr:
                 break
         winner = random.choice(winners)
 
-        html = ['<html><body>',
+        html = ['<html>',
+                '<head><title>Game %d results</title>',
+                '<link href="../ctf.css" rel="stylesheet" type="text/css">',
+                '</head>',
+                '<body>',
                 '<table><tr><th>Team<th>Kills<th>Cause of Death']
         for tank in tanks:
             if tank is winner:
