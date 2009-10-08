@@ -1,0 +1,8 @@
+10:		the key is in the generated source.
+20:		enter a non-integer into form field and submit. the key is in the resulting
+		traceback.
+30:		change the value in the GET request to a non-integer. the key is in the
+		resulting traceback.
+40:		change the value in the POST request to a non-integer. the key is in the
+		resulting traceback.
+
