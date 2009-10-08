@@ -24,12 +24,14 @@ target:
 	$(INSTALL) -d target/usr/lib/www/tanks/
 	$(INSTALL) www/* target/usr/lib/www/tanks/
 
+	ln -s /var/lib/tanks target/usr/lib/www/tanks/results
+
 	$(INSTALL) -d target/usr/lib/python2.6/site-packages/tanks/
 	$(INSTALL) lib/* target/usr/lib/python2.6/site-packages/tanks/
 
 	$(INSTALL) -d target/var/service/tanks
 	$(INSTALL) run run_tanks.py target/var/service/tanks/
-	
+
 	$(INSTALL) -d target/var/service/tanks/log/
 	$(INSTALL) log.run target/var/service/tanks/log/run
 

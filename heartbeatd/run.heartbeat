@@ -4,6 +4,6 @@
 # No problem, traceroute can send a UDP packet too.
 while true; do
     # Apparently traceroute adds 1 to the base port (-p)
-    traceroute -m 2 -q 1 -p 8 10.0.0.1
+    traceroute -m 2 -q 1 -p 8 10.0.0.1 2>/dev/null >/dev/null
     sleep 10
 done
