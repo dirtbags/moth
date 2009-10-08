@@ -98,8 +98,9 @@ def start_html(title, hdr='', cls=''):
       <ul>
         <li><a href="%(base)s">Home</a></li>
         <li><a href="%(base)sintro.html">Intro/Rules</a></li>
+        <li><a href="%(base)sservices.html">Service flags</a></li>
         <li><a href="%(base)spuzzler.cgi">Puzzles</a></li>
-        <li><a href="%(base)sscoresboard.cgi">Scoreboard</a></li>
+        <li><a href="%(base)sscoreboard.cgi">Scoreboard</a></li>
       </ul>
     </div>
 ''' % {'title': title,
