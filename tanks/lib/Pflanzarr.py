@@ -201,16 +201,25 @@ class Pflanzarr:
                 break
         winner = random.choice(winners)
 
-        html = ['<html><body>',
+        html = ['<html>',
+                '<head><title>Game %d results</title>',
+                '<link href="../ctf.css" rel="stylesheet" type="text/css">',
+                '</head>',
+                '<body>',
                 '<table><tr><th>Team<th>Kills<th>Cause of Death']
         for tank in tanks:
             if tank is winner:
-                rowStyle = 'style="color:red;"'
+                rowStyle = 'style="font-weight:bold; '\
+                           'background-color:%s"' % tank._color
             else:
-                rowStyle = ''
+                rowStyle = 'style="background-color:%s"' % tank._color
+            if name:
+                name = xml.sax.saxutils.escape(tank.name)
+            else:
+                name = '#default'
             html.append('<tr %s><td>%s<td>%d<td>%s' % 
                         (rowStyle, 
-                         xml.sax.saxutils.escape(tank.name), 
+                         name,
                          len(kills[tank]), 
                          xml.sax.saxutils.escape(tank.deathReason))) 
 

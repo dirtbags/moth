@@ -18,4 +18,4 @@ target:
 	$(MAKE) -C daemons TARGET=$(TARGET) install
 
 clean:
-	rm -rf target
+	rm -rf target pwnables.tce

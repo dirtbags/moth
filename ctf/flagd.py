@@ -142,6 +142,8 @@ class FlagServer(asynchat.async_chat):
         self.inbuf.append(data)
 
     def set_flag(self, team):
+        if not self.cat:
+            return
         self.flag = team
         self.submitter.set_flag(self.cat, team)
         f = open(os.path.join(flags_dir, self.cat), 'w')
