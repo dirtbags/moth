@@ -202,14 +202,16 @@ class Pflanzarr:
         winner = random.choice(winners)
 
         html = ['<html>',
-                '<head><title>Game %d results</title>',
-                '<link href="/ctf.css" rel="stylesheet" type="text/css">',
+                '<head><title>Game %d Results</title>' % self._gameNum ,
+                '<link href="/tanks/ctf.css" rel="stylesheet" type="text/css">',
                 '</head>',
                 '<body>',
-                '<table><tr><th>Team<th>Kills<th>Cause of Death']
+                '<H1>Game %d Results</H1>' % self._gameNum,
+                '<table class="results">',
+                '<tr><th>Team<th>Kills<th>Cause of Death']
         for tank in tanks:
             if tank is winner:
-                rowStyle = 'style="font-weight:bold; '\
+                rowStyle = 'style="text-decoration:underline; '\
                            'background-color:%s"' % tank.color
             else:
                 rowStyle = 'style="background-color:%s"' % tank.color
@@ -238,7 +240,7 @@ class Pflanzarr:
 
         movieCmd = ['ffmpeg', 
                     '-r', '10', # Set the framerate to 10/second
-                    '-b', '400k', # Set the bitrate
+                    '-b', '4000k', # Set the bitrate
                     '-i', '%s/%%05d.ppm' % self._imageDir, # The input files.
 #                    '-vcodec', 'msmpeg4v2',
                     '%s/game.avi' % self._gameDir]

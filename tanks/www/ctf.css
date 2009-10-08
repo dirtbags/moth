@@ -98,3 +98,7 @@ fieldset * {
     margin: 3px;
 }
 
+table.results td, th{
+    padding : 3px;
+    font-weight : bold;
+}
