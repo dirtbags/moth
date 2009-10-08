@@ -197,7 +197,7 @@ while True:
 			if out is not None:
 				out.write('<tr><td>%s</td><td>%s</td>\n' % (service, team))
 
-			pointscli.submit(service, team, 1)
+			pointscli.submit('svc.' + service, team, 1)
 
 		if out is not None:
 			out.write('</table>\n')
