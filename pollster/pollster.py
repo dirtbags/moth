@@ -13,10 +13,10 @@ from ctf import config
 from ctf import pointscli
 
 DEBUG         = False
-POLL_INTERVAL = config.get('poll_interval')
-IP_DIR        = config.get('heartbeat_dir')
-REPORT_PATH   = config.get('poll_dir')
-SOCK_TIMEOUT  = config.get('poll_timeout')
+POLL_INTERVAL = config.get('pollster', 'poll_interval')
+IP_DIR        = config.get('pollster', 'heartbeat_dir')
+REPORT_PATH   = config.get('pollster', 'results')
+SOCK_TIMEOUT  = config.get('pollster', 'poll_timeout')
 
 class PointSubmitter(threading.Thread):
 	''' Pulls point allocations from the queue and submits them. '''
@@ -24,7 +24,7 @@ class PointSubmitter(threading.Thread):
 		threading.Thread.__init__(self)
 		self.point_queue = point_queue
 		self.sock = pointscli.makesock('localhost')
-	
+
 	def run(self):
 		# loop forever
 		while(True):
@@ -40,7 +40,7 @@ class PointSubmitter(threading.Thread):
 
 def socket_poll(ip, port, msg, prot, max_recv=1):
 	''' Connect via socket to the specified <ip>:<port> using the
-	specified <prot>, send the specified <msg> and return the 
+	specified <prot>, send the specified <msg> and return the
 	response or None if something went wrong. <max_recvs> specifies
 	how many times to read from the socket (default to once). '''
 
@@ -51,7 +51,7 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 		print('pollster: create socket failed (%s)' % e)
 		traceback.print_exc()
 		return None
-	
+
 	sock.settimeout(SOCK_TIMEOUT)
 
 	# connect
@@ -90,7 +90,7 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 	except Exception as e:
 		print('pollster: receive from %s:%d failed (%s)' % (ip, port, e))
 		traceback.print_exc()
-	
+
 	if len(resp) == 0:
 		return None
 
@@ -131,7 +131,7 @@ def poll_catcgi(ip):
 		content_len = int(content[0])
 	except Exception as e:
 		return None
-	
+
 	if content_len <= 0:
 		return None
 	return content[1].strip('\r\n')
@@ -141,13 +141,13 @@ def poll_tftpd(ip):
 	resp = socket_poll(ip, 69, b'\x00\x01' + b'flag' + b'\x00' + b'octet' + b'\x00', socket.SOCK_DGRAM)
 	if resp is None:
 		return None
-	
+
 	if len(resp) <= 5:
 		return None
-	
+
 	resp = resp.split('\n')[0]
 	return resp[4:].strip('\r\n')
-	
+
 # PUT POLL FUNCTIONS IN HERE OR THEY WONT BE POLLED
 POLLS = {
 	'fingerd'  : poll_fingerd,
@@ -174,7 +174,7 @@ while True:
 	except Exception as e:
 		print('pollster: could not list dir %s (%s)' % (IP_DIR, e))
 		traceback.print_exc()
-	
+
 	try:
 		os.remove(REPORT_PATH)
 	except Exception as e:
@@ -184,16 +184,9 @@ while True:
 		out = open(REPORT_PATH, 'w')
 	except Exception as e:
 		out = None
-		pass
-	
-	if out is not None:
-		out.write('<html>\n<head>\n')
-		out.write('<title>Pollster Results</title>\n')
-		out.write('<link rel="stylesheet" href="ctf.css" type="text/css" media="all" />\n')
-		out.write('</head><body>\n<h1>Polling Results</h1>\n')
 
+        out.write(config.start_html('Team Service Availability'))
 	for ip in ips:
-
 		# check file name format is ip
 		if ip_re.match(ip) is None:
 			continue
@@ -231,7 +224,7 @@ while True:
 
 		if out is not None:
 			out.write('</table>\n')
-	
+
 	if DEBUG is True:
 		print('+-----------------------------------------+')
 
@@ -240,8 +233,7 @@ while True:
 	sleep_time = POLL_INTERVAL - exec_time
 
 	if out is not None:
-		out.write('<p><b>Next poll in: %ds</b></p>\n' % sleep_time)
-		out.write('</body>\n</html>\n')
+                out.write(config.end_html())
 		out.close()
 
 	# sleep until its time to poll again

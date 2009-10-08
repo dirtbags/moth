@@ -66,9 +66,10 @@ def start_html(title):
         if passwd:
             c['passwd'] = passwd
         print(c)
-    config.start_html(title)
+    print(config.start_html(title))
 
-end_html = config.end_html
+def end_html():
+    print(config.end_html())
 
 def safe_join(*args):
     safe = list(args[:1])

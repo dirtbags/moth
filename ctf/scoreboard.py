@@ -15,20 +15,8 @@ def main():
 
     categories = [(cat, s.cat_points(cat)) for cat in s.categories()]
 
-    print('Content-type: text/html')
     print('Refresh: 10')
-    print()
-    print('''<?xml version="1.0" encoding="UTF-8" ?>
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-      <head>
-        <title>Scoreboard</title>
-        <link rel="stylesheet" href="%sctf.css" type="text/css" />
-      </head>
-      <body style="max-width: inherit;">
-        <h1>Scoreboard</h1>
-    ''' % config.base_url)
+    print(config.start_html('Scoreboard', cls='wide'))
     print('<table class="scoreboard">')
     print('<tr>')
     print('<th>Overall</th>')
@@ -71,9 +59,8 @@ def main():
         <p class="histogram">
           <img src="histogram.png" alt="scores over time" />
         </p>
-
-      </body>
-    </html>''')
+''')
+    print(config.end_html())
 
 if __name__ == '__main__':
     main()

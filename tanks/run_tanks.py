@@ -14,6 +14,8 @@ MAX_HIST = 30
 HIST_STEP = 100
 key = 'tanks:::2bac5e912ff2e1ad559b177eb5aeecca'
 
+running = True
+
 class Flagger(asynchat.async_chat):
     """Use to connect to flagd and submit the current flag holder."""
 
@@ -31,6 +33,7 @@ class Flagger(asynchat.async_chat):
     def handle_error(self):
         # If we lose the connection to flagd, nobody can score any
         # points.  Terminate everything.
+        running = False
         asyncore.close_all()
         asynchat.async_chat.handle_error(self)
 
@@ -84,6 +87,8 @@ def main():
     lastrun = 0
     while True:
         asyncore.loop(60, count=1)
+        if not running:
+            break
         now = time.time()
         if now - lastrun >= 60:
             run_tanks(args, turns, flagger)

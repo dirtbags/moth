@@ -24,9 +24,6 @@ def reap():
     except OSError:
         pass
 
-def sigchld(signum, frame):
-    do_reap = True
-
 def main():
     p = optparse.OptionParser()
     p.add_option('-p', '--genpass', dest='cat', default=None,
@@ -39,13 +36,11 @@ def main():
     pointsrv = pointsd.start()
     flagsrv = flagd.start()
 
-    signal.signal(signal.SIGCHLD, sigchld)
     s = pointsrv.store
     slen = 0
     while True:
-        if do_reap:
-            reap()
         asyncore.loop(timeout=30, use_poll=True, count=1)
+        reap()
         if len(s) > slen:
             slen = len(s)
             chart(s)

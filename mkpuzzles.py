@@ -17,6 +17,37 @@ opts, args = p.parse_args()
 
 keys = []
 
+js = '''
+<script type="text/javascript">
+    function readCookie(key) {
+        var s = key + '=';
+        var toks = document.cookie.split(';');
+        for (var i = 0; i < toks.length; i++) {
+            var tok = toks[i];
+            while (tok.charAt(0) == ' ') {
+                tok = tok.substring(1, tok.length);
+            }
+            if (tok.indexOf(s) == 0) {
+                return tok.substring(s.length, tok.length);
+            }
+        }
+        return null;
+    }
+
+    function getTeamInfo() {
+        team = readCookie('team');
+        passwd = readCookie('passwd');
+        if (team != null) {
+            document.getElementById("form").t.value = team;
+        }
+        if (passwd != null) {
+            document.getElementById("form").w.value = passwd;
+        }
+    }
+    window.onload = getTeamInfo;
+</script>
+'''
+
 for cat in os.listdir(opts.puzzles):
     dirname = os.path.join(opts.puzzles, cat)
     for points in os.listdir(dirname):
@@ -43,47 +74,7 @@ for cat in os.listdir(opts.puzzles):
 
         title = '%s for %s points' % (cat, points)
         f = open(os.path.join(outdir, 'index.html'), 'w', encoding='utf-8')
-        f.write('''<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC
-  "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <title>%(title)s</title>
-    <link rel="stylesheet" href="%(css)s" type="text/css" />
-	<script type="text/javascript">
-		function readCookie(key) {
-			var s = key + '=';
-			var toks = document.cookie.split(';');
-			for (var i = 0; i < toks.length; i++) {
-				var tok = toks[i];
-				while (tok.charAt(0) == ' ') {
-					tok = tok.substring(1, tok.length);
-				}
-				if (tok.indexOf(s) == 0) {
-					return tok.substring(s.length, tok.length);
-				}
-			}
-			return null;
-		}
-		
-		function getTeamInfo() {
-			team = readCookie('team');
-			passwd = readCookie('passwd');
-			if (team != null) {
-				document.getElementById("form").t.value = team;
-			}
-			if (passwd != null) {
-				document.getElementById("form").w.value = passwd;
-			}
-		}
-		window.onload = getTeamInfo;
-	</script>
-  </head>
-  <body>
-    <h1>%(title)s</h1>
-''' % {'title': title,
-       'css': config.css})
+        f.write(config.start_html(title, js))
         if readme:
             f.write('<div class="readme">%s</div>\n' % readme)
         if files:
@@ -105,11 +96,10 @@ for cat in os.listdir(opts.puzzles):
         <input type="submit" />
       </fieldset>
     </form>
-  </body>
-</html>
 ''' % {'cgi': config.get('puzzler', 'cgi_url'),
        'cat': cat,
        'points': points})
+        f.write(config.end_html())
 
 f = open(opts.keyfile, 'w', encoding='utf-8')
 for key in keys:
