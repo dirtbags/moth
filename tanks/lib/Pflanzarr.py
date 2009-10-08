@@ -203,17 +203,17 @@ class Pflanzarr:
 
         html = ['<html>',
                 '<head><title>Game %d results</title>',
-                '<link href="../ctf.css" rel="stylesheet" type="text/css">',
+                '<link href="/ctf.css" rel="stylesheet" type="text/css">',
                 '</head>',
                 '<body>',
                 '<table><tr><th>Team<th>Kills<th>Cause of Death']
         for tank in tanks:
             if tank is winner:
                 rowStyle = 'style="font-weight:bold; '\
-                           'background-color:%s"' % tank._color
+                           'background-color:%s"' % tank.color
             else:
-                rowStyle = 'style="background-color:%s"' % tank._color
-            if name:
+                rowStyle = 'style="background-color:%s"' % tank.color
+            if tank.name:
                 name = xml.sax.saxutils.escape(tank.name)
             else:
                 name = '#default'
@@ -250,9 +250,9 @@ class Pflanzarr:
         clearFrames = ['rm', '-rf', '%s' % self._imageDir]
 
         print 'Making Movie'
-        subprocess.call(movieCmd)
-#        subprocess.call(movieCmd, stderr=open('/dev/null', 'w'),
-#                                  stdout=open('/dev/null', 'w'))
+#        subprocess.call(movieCmd)
+        subprocess.call(movieCmd, stderr=open('/dev/null', 'w'),
+                                  stdout=open('/dev/null', 'w'))
         subprocess.call(clearFrames)
 
     def _outputErrors(self, tank):
