@@ -1,10 +1,11 @@
 #! /usr/bin/python
 
+import asynchat
+import asyncore
 import optparse
 import shutil
+import socket
 import time
-import asyncore
-import asynchat
 from tanks import Pflanzarr
 
 T = 60*5
@@ -41,7 +42,7 @@ class Flagger(asynchat.async_chat):
         self.flag = team
 
 
-def run_tanks():
+def run_tanks(args, turns):
     p = Pflanzarr.Pflanzarr(args[0], args[1])
     p.run(turns)
 
@@ -84,7 +85,7 @@ def main():
         asyncore.loop(60, count=1)
         now = time.time()
         if now - lastrun >= 60:
-            run_tanks()
+            run_tanks(args, turns)
             lastrun = now
 
 if __name__ == '__main__':

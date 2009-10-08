@@ -203,16 +203,16 @@ class Pflanzarr:
 
         html = ['<html>',
                 '<head><title>Game %d results</title>',
-                '<link href="../ctf.css" rel="stylesheet" type="text/css">',
+                '<link href="/ctf.css" rel="stylesheet" type="text/css">',
                 '</head>',
                 '<body>',
                 '<table><tr><th>Team<th>Kills<th>Cause of Death']
         for tank in tanks:
             if tank is winner:
                 rowStyle = 'style="font-weight:bold; '\
-                           'background-color:%s"' % tank._color
+                           'background-color:%s"' % tank.color
             else:
-                rowStyle = 'style="background-color:%s"' % tank._color
+                rowStyle = 'style="background-color:%s"' % tank.color
             if name:
                 name = xml.sax.saxutils.escape(tank.name)
             else:
