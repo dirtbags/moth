@@ -43,7 +43,7 @@ class Flagger(asynchat.async_chat):
         self.flag = team
 
 
-def run_tanks(args, turns):
+def run_tanks(args, turns, flagger):
     p = Pflanzarr.Pflanzarr(args[0], args[1])
     p.run(turns)
 
@@ -86,7 +86,7 @@ def main():
         asyncore.loop(60, count=1)
         now = time.time()
         if now - lastrun >= 60:
-            run_tanks(args, turns)
+            run_tanks(args, turns, flagger)
             lastrun = now
 
 if __name__ == '__main__':
