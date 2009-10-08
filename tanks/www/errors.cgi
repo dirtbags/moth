@@ -24,6 +24,7 @@ teams.build_teams()
 
 head = open('head.html').read() % "Error Report"
 print(head)
+print('<H1>Your Errors</H1>')
 print(open('links.html').read())
 
 def done():

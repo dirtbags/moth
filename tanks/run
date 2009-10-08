@@ -2,5 +2,5 @@
 
 [ -f /var/lib/ctf/disabled/tanks ] && exit 0
 
-exec envuidgid ctf python2.6 run_tanks.py /var/lib/tanks/ easy 100 2>&1
+exec envuidgid ctf python2.6 run_tanks.py /var/lib/tanks/ easy 500 2>&1
 #envuidgid ctf report_score.py 2>&1
