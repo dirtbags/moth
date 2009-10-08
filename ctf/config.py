@@ -37,6 +37,10 @@ else:
                    'house_team': 'dirtbags',
                    'passwd': '/var/lib/ctf/passwd',
                    'team_colors': team_colors,
+				   'poll_interval': 60,
+				   'poll_timeout': 0.5,
+				   'heartbeat_dir': '/var/lib/pollster',
+				   'poll_dir': '/var/lib/www',
                    },
               'puzzler':
                   {'dir': '/usr/lib/www/puzzler',
