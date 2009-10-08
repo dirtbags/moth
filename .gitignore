@@ -2,7 +2,9 @@
 *.pyc
 *.dat
 *.swp
+*.tce
 passwd
+fake
 target/
 puzzler/
 ctf.tce

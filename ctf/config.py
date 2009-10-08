@@ -37,6 +37,10 @@ else:
                    'house_team': 'dirtbags',
                    'passwd': '/var/lib/ctf/passwd',
                    'team_colors': team_colors,
+				   'poll_interval': 60,
+				   'poll_timeout': 0.5,
+				   'heartbeat_dir': '/var/lib/pollster',
+				   'poll_dir': '/var/lib/www',
                    },
               'puzzler':
                   {'dir': '/usr/lib/www/puzzler',
@@ -66,3 +70,23 @@ def datafile(filename):
 
 def url(path):
     return base_url + path
+
+def start_html(title):
+    if os.environ.get('GATEWAY_INTERFACE'):
+        print('Content-type: text/html')
+        print()
+    print('''<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC
+  "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>%s</title>
+    <link rel="stylesheet" href="%s" type="text/css" />
+  </head>
+  <body>
+    <h1>%s</h1>
+''' % (title, css, title))
+
+def end_html():
+    print('</body></html>')

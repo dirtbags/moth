@@ -1,0 +1,5 @@
+#! /bin/sh
+
+[ -f /var/lib/ctf/disabled/tanks ] && exit 0
+
+exec envuidgid ctf python3 report_score.py 2>&1

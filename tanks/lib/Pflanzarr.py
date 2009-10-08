@@ -9,18 +9,11 @@ from urllib import unquote, quote
 
 from PIL import Image, ImageColor, ImageDraw
 
-try:
-    from ctf import teams
-except:
-    import sys
-    path = '/home/pflarr/repos/gctf/'
-    sys.path.append(path)
-    from ctf import teams
-teams.build_teams()
-
 import Tank
 
 class Pflanzarr:
+
+    TEAMS_FILE = '/var/lib/ctf/passwd'
 
     FRAME_DELAY = 15
 
@@ -42,12 +35,14 @@ class Pflanzarr:
         if not os.path.exists(self._gameDir):
             os.mkdir(self._gameDir)
 
+        colors = self._getColors()
+
         tmpPlayers = os.listdir(self._playerDir)
         players = []
         for p in tmpPlayers:
             p = unquote(p)
             if not (p.startswith('.') or p.endswith('#') or p.endswith('~'))\
-               and p in teams.teams:
+               and p in colors:
                 players.append(p)
 
         AIs = {}
@@ -73,7 +68,7 @@ class Pflanzarr:
         self._board = (cols*self.SPACING, rows*self.SPACING)
         
         while len(players) < cols*rows:
-            players.append('#default')
+            players.append(None)
 
         self._tanks = []
         for i in range(cols):
@@ -82,13 +77,13 @@ class Pflanzarr:
                 startY = j*self.SPACING + self.SPACING/2
                 player = random.choice(players)
                 players.remove(player)
-                if player == '#default':
+                if player == None:
                     color = '#a0a0a0'
                 else:
-                    color = '#%s' % teams.teams[player][1]
+                    color = colors[player]
                 tank = Tank.Tank( player, (startX, startY), color,
                                   self._board, testMode=True)
-                if player == '#default':
+                if player == None:
                     tank.program(random.choice(defaultAIs))
                 else:
                     tank.program(AIs[player])
@@ -156,10 +151,12 @@ class Pflanzarr:
             if tank in kills[tank]:
                 kills[tank].remove(tank)
 
-        self._saveResults(kills)
         for tank in self._tanks:
             self._outputErrors(tank)
         self._makeMovie()
+        # This needs to go after _makeMovie; the web scripts look for these
+        # files to see if the game has completed.
+        self._saveResults(kills)
 
     def _killTanks(self, tanks, reason):
         for tank in tanks:
@@ -204,22 +201,32 @@ class Pflanzarr:
                 break
         winner = random.choice(winners)
 
-        html = ['<html><body>',
+        html = ['<html>',
+                '<head><title>Game %d results</title>',
+                '<link href="/ctf.css" rel="stylesheet" type="text/css">',
+                '</head>',
+                '<body>',
                 '<table><tr><th>Team<th>Kills<th>Cause of Death']
         for tank in tanks:
             if tank is winner:
-                rowStyle = 'style="color:red;"'
+                rowStyle = 'style="font-weight:bold; '\
+                           'background-color:%s"' % tank.color
             else:
-                rowStyle = ''
+                rowStyle = 'style="background-color:%s"' % tank.color
+            if tank.name:
+                name = xml.sax.saxutils.escape(tank.name)
+            else:
+                name = '#default'
             html.append('<tr %s><td>%s<td>%d<td>%s' % 
                         (rowStyle, 
-                         xml.sax.saxutils.escape(tank.name), 
+                         name,
                          len(kills[tank]), 
                          xml.sax.saxutils.escape(tank.deathReason))) 
 
         html.append('</table><body></html>')
 
-        if winner.name != '#default':
+        # Write a blank file if the winner is a default tank..
+        if winner.name != None:
             winnerFile.write(tanks[0].name)
         winnerFile.close()
 
@@ -243,14 +250,14 @@ class Pflanzarr:
         clearFrames = ['rm', '-rf', '%s' % self._imageDir]
 
         print 'Making Movie'
-        subprocess.call(movieCmd)
-#        subprocess.call(movieCmd, stderr=open('/dev/null', 'w'),
-#                                  stdout=open('/dev/null', 'w'))
+#        subprocess.call(movieCmd)
+        subprocess.call(movieCmd, stderr=open('/dev/null', 'w'),
+                                  stdout=open('/dev/null', 'w'))
         subprocess.call(clearFrames)
 
     def _outputErrors(self, tank):
         """Output errors for each team."""
-        if tank.name == '#default':
+        if tank.name == None:
             return 
         
         if tank._program.errors:
@@ -378,7 +385,27 @@ class Pflanzarr:
             defaultAIs.append( file.read() )
 
         return defaultAIs
-             
+    
+    def _getColors(self):
+        """Get the team colors from the passwd file.  The passwd file location
+    is set by self.TEAMS_FILE.  Returns a dictionary of players->color"""
+        errorColor = '#ffffff'
+
+        try:
+            file = open(self.TEAMS_FILE)
+        except:
+            return {}.fromkeys(players, errorColor)
+
+        colors = {}
+        for line in file:
+            try:
+                team, passwd, color = map(unquote, line.split('\t'))
+                colors[team] = '#%s' % color
+            except:
+                colors[team] = errorColor
+
+        return colors
+
     def _getGameNum(self):
         """Figure out what game number this is from the past games played."""
 

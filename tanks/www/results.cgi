@@ -28,22 +28,28 @@ except:
 
 if not games:
     print "<p>No games have occurred yet."
+
 gameNums = []
 for game in games:
     try:
-        num = int(game)
-        path = os.path.join( 'results', game, 'results.html')
-        if os.path.exists( path ):
-            gameNums.append( int(num) )
-        else:
-            continue
-
+        gameNums.append( int(game) )
     except:
         continue
 
 gameNums.sort(reverse=True)
 
+# Don't include games that haven't completed
+i = 0
+num = str(gameNums[i])
+for i in range(len(gameNums)):
+    path = os.path.join( 'results', str(gameNums[i]), 'results.html') )
+    if os.path.exists( path ):
+        break
+gameNums = gameNums[i:]
+
 for num in gameNums:
     print '<p>%d - ' % num,
     print '<a href="results/%d/game.avi">v</a>' % num,
     print '<a href="results/%d/results.html">r</a>' % num
+
+print '</body></html>'

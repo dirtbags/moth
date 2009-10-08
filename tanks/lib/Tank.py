@@ -75,7 +75,7 @@ class Tank(object):
         else:
             self._tAngle = tAngle
 
-        self._color = color
+        self.color = color
  
         # You can't fire until fireReady is 0.
         self._fireReady = self.FIRE_RATE
@@ -466,7 +466,7 @@ class Tank(object):
                 
         # The base body rectangle.
         for poly in gm.displacePoly(hood, self.pos, self._limits):
-            d.polygon( poly, fill=self._color )
+            d.polygon( poly, fill=self.color )
 
         # The treads
         for poly in gm.displacePoly(tread1, self.pos, self._limits) + \
@@ -475,7 +475,7 @@ class Tank(object):
 
         # The turret circle
         for poly in gm.displacePoly(self.body, self.pos, self._limits):
-            d.ellipse( poly, fill=self._color, outline='black')
+            d.ellipse( poly, fill=self.color, outline='black')
 
         self._drawLaser(d)
 
@@ -491,7 +491,7 @@ class Tank(object):
         if self._fired:
             laser = gm.rotatePoly( self.laser, self._angle + self._tAngle )
             for poly in gm.displacePoly(laser, self.pos, self._limits):
-                drawing.polygon(poly, fill=self._color)
+                drawing.polygon(poly, fill=self.color)
 
         self._fired = False
 
@@ -522,7 +522,7 @@ class Tank(object):
             if self._sensorState[i]:
                 color = '#000000'
             else:
-                color = self._color
+                color = self.color
 
             r, angle, width, tAttached = self._sensors[i]
             r = int(r)

@@ -1,3 +1,0 @@
-#! /bin/sh
-
-exec tcpsvd 0 79 /usr/sbin/in.fingerd

@@ -17,6 +17,9 @@ all: ctf.tce
 
 target: $(PYC)
 	$(INSTALL) -d --mode=0755 --owner=100 $(DESTDIR)/var/lib/ctf
+
+	$(INSTALL) -d --mode=0755 --owner=100 $(DESTDIR)/var/lib/ctf/survey
+
 	$(INSTALL) -d $(DESTDIR)/var/lib/ctf/disabled
 	touch $(DESTDIR)/var/lib/ctf/disabled/survey
 
@@ -25,6 +28,7 @@ target: $(PYC)
 
 	$(INSTALL) -d $(DESTDIR)/usr/sbin
 	$(INSTALL) ctfd.py $(DESTDIR)/usr/sbin
+	$(INSTALL) new-contest $(DESTDIR)/usr/sbin
 
 	$(INSTALL) -d $(WWWDIR)
 	$(INSTALL) index.html intro.html ctf.css grunge.png $(WWWDIR)

@@ -48,7 +48,7 @@ def displacePoly(points, disp, limits, coordSequence=False):
     maxX, maxY = limits
     basePoints = []
     for point in points:
-        x,y = point[0] + disp[0], point[1] + disp[1]
+        x,y = int(point[0] + disp[0]), int(point[1] + disp[1])
 
         # Check if duplication is needed on each axis
         if x > maxX:

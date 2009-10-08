@@ -5,4 +5,4 @@
 DATA_PATH=/var/lib/badmath
 mkdir -p $DATA_PATH
 
-exec envuidgid ctf python3.0 usr/lib/ctf/badmath/Gyopi.py --data=$DATA_PATH
+exec envuidgid ctf python3 /usr/lib/ctf/badmath/Gyopi.py --path=$DATA_PATH

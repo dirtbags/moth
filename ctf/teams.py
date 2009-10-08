@@ -28,9 +28,7 @@ def build_teams():
         f = open(passwdfn)
         for line in f:
             line = line.strip()
-            team, passwd = [unquote(v) for v in line.strip().split('\t')]
-            color = team_colors.pop(0)
-            team_colors.append(color)
+            team, passwd, color = map(unquote, line.strip().split('\t'))
             teams[team] = (passwd, color)
     except IOError:
         pass
@@ -53,10 +51,15 @@ def exists(team):
     return team in teams
 
 def add(team, passwd):
+    build_teams()
+    color = team_colors[len(teams)%len(team_colors)]
+
+    assert team not in teams, "Team already exists."
+
     f = open(passwdfn, 'a')
     fcntl.lockf(f, fcntl.LOCK_EX)
     f.seek(0, 2)
-    f.write('%s\t%s\n' % (quote(team), quote(passwd)))
+    f.write('%s\t%s\t%s\n' % (quote(team), quote(passwd), quote(color)))
 
 def color(team):
     t = teams.get(team)
@@ -66,6 +69,3 @@ def color(team):
         if not t:
             return '888888'
     return t[1]
-
-
-

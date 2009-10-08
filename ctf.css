@@ -77,3 +77,19 @@ p {
     margin-bottom: 20px;
     color: #f4f4f4;
 }
+
+.solved {
+    text-decoration: line-through;
+}
+
+table.pollster {
+	margin-left: 5em;
+}
+
+table.pollster td {
+	padding: 2px 1em 2px 5px;
+}
+
+table.pollster thead {
+	font-weight: bold;
+}

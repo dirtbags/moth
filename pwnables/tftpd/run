@@ -1,3 +1,0 @@
-#! /bin/sh
-
-exec udpsvd 0 69 tftpd /var/lib/tftp
