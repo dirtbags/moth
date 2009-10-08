@@ -3,6 +3,7 @@
 import asynchat
 import asyncore
 import optparse
+import os
 import shutil
 import socket
 import time
@@ -59,7 +60,7 @@ def run_tanks(args, turns):
     highest = gameNums[0]
     for num in gameNums:
         if highest - MAX_HIST > num and not (num % HIST_STEP == 0):
-            shutil.rmtree(os.path.join(path, num))
+            shutil.rmtree(os.path.join(path, str(num)))
 
     try:
         winner = open('/var/lib/tanks/winner').read().strip()

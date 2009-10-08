@@ -213,7 +213,7 @@ class Pflanzarr:
                            'background-color:%s"' % tank.color
             else:
                 rowStyle = 'style="background-color:%s"' % tank.color
-            if name:
+            if tank.name:
                 name = xml.sax.saxutils.escape(tank.name)
             else:
                 name = '#default'
@@ -250,9 +250,9 @@ class Pflanzarr:
         clearFrames = ['rm', '-rf', '%s' % self._imageDir]
 
         print 'Making Movie'
-        subprocess.call(movieCmd)
-#        subprocess.call(movieCmd, stderr=open('/dev/null', 'w'),
-#                                  stdout=open('/dev/null', 'w'))
+#        subprocess.call(movieCmd)
+        subprocess.call(movieCmd, stderr=open('/dev/null', 'w'),
+                                  stdout=open('/dev/null', 'w'))
         subprocess.call(clearFrames)
 
     def _outputErrors(self, tank):
