@@ -52,6 +52,9 @@ for cat in os.listdir(opts.puzzles):
     dirname = os.path.join(opts.puzzles, cat)
     for points in os.listdir(dirname):
         pointsdir = os.path.join(dirname, points)
+        if not os.path.isdir(pointsdir):
+            continue
+
         outdir = os.path.join(opts.htmldir, cat, points)
         try:
             os.makedirs(outdir)
