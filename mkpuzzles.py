@@ -71,10 +71,10 @@ for cat in os.listdir(opts.puzzles):
 			team = readCookie('team');
 			passwd = readCookie('passwd');
 			if (team != null) {
-				form.t.value = team;
+				document.getElementById("form").t.value = team;
 			}
 			if (passwd != null) {
-				form.w.value = passwd;
+				document.getElementById("form").w.value = passwd;
 			}
 		}
 		window.onload = getTeamInfo;
