@@ -42,7 +42,7 @@ gameNums.sort(reverse=True)
 i = 0
 num = str(gameNums[i])
 for i in range(len(gameNums)):
-    path = os.path.join( 'results', str(gameNums[i]), 'results.html') )
+    path = os.path.join( 'results', str(gameNums[i]), 'results.html') 
     if os.path.exists( path ):
         break
 gameNums = gameNums[i:]

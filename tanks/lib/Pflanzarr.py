@@ -238,7 +238,7 @@ class Pflanzarr:
 
         movieCmd = ['ffmpeg', 
                     '-r', '10', # Set the framerate to 10/second
-                    '-b', '8k', # Set the bitrate
+                    '-b', '400k', # Set the bitrate
                     '-i', '%s/%%05d.ppm' % self._imageDir, # The input files.
 #                    '-vcodec', 'msmpeg4v2',
                     '%s/game.avi' % self._gameDir]
