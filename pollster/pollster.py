@@ -6,8 +6,6 @@ import sys
 import time
 import socket
 import traceback
-import threading
-import queue
 
 from ctf import config
 from ctf import pointscli
@@ -18,25 +16,6 @@ IP_DIR        = config.get('pollster', 'heartbeat_dir')
 REPORT_PATH   = config.get('pollster', 'results')
 SOCK_TIMEOUT  = config.get('pollster', 'poll_timeout')
 
-class PointSubmitter(threading.Thread):
-	''' Pulls point allocations from the queue and submits them. '''
-	def __init__(self, point_queue):
-		threading.Thread.__init__(self)
-		self.point_queue = point_queue
-		self.sock = pointscli.makesock('localhost')
-
-	def run(self):
-		# loop forever
-		while(True):
-			cat, team, score = self.point_queue.get()
-			if None in [cat, team, score]:
-				continue
-
-			try:
-				pointscli.submit(cat, team, score, sock=self.sock)
-			except ValueError:
-				print('pollster: error submitting score (%s, %s, %d)' % (cat, team, score))
-				traceback.print_exc()
 
 def socket_poll(ip, port, msg, prot, max_recv=1):
 	''' Connect via socket to the specified <ip>:<port> using the
@@ -147,24 +126,19 @@ def poll_tftpd(ip):
 	resp = resp.split(b'\n')[0]
 
 	# ack
-	resp = socket_poll(ip, 69, b'\x00\x04' + resp[2:4], socket.SOCK_DGRAM, 0)
+	_ = socket_poll(ip, 69, b'\x00\x04' + resp[2:4], socket.SOCK_DGRAM, 0)
 
 	return resp[4:].strip(b'\r\n')
 
 # PUT POLL FUNCTIONS IN HERE OR THEY WONT BE POLLED
 POLLS = {
 	'fingerd'  : poll_fingerd,
-	'noted'    : poll_noted,
+	'noted'	   : poll_noted,
 	'catcgi'   : poll_catcgi,
-	'tftpd'    : poll_tftpd,
+	'tftpd'	   : poll_tftpd,
 }
 
 ip_re = re.compile('(\d{1,3}\.){3}\d{1,3}')
-
-# start point submitter thread
-point_queue = queue.Queue()
-t = PointSubmitter(point_queue)
-t.start()
 
 # loop forever
 while True:
@@ -188,7 +162,7 @@ while True:
 	except Exception as e:
 		out = None
 
-        out.write(config.start_html('Team Service Availability'))
+	out.write(config.start_html('Team Service Availability'))
 	for ip in ips:
 		# check file name format is ip
 		if ip_re.match(ip) is None:
@@ -213,7 +187,7 @@ while True:
 
 		# perform polls
 		for service,func in POLLS.items():
-			team = str(func(ip))
+			team = func(ip).decode('utf-8')
 			if team is None:
 				team = 'dirtbags'
 
@@ -223,7 +197,7 @@ while True:
 			if out is not None:
 				out.write('<tr><td>%s</td><td>%s</td>\n' % (service, team))
 
-			point_queue.put((service, team, 1))
+			pointscli.submit(service, team, 1)
 
 		if out is not None:
 			out.write('</table>\n')
@@ -236,7 +210,7 @@ while True:
 	sleep_time = POLL_INTERVAL - exec_time
 
 	if out is not None:
-                out.write(config.end_html())
+		out.write(config.end_html())
 		out.close()
 
 	# sleep until its time to poll again
