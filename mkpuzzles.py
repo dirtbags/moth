@@ -51,6 +51,34 @@ for cat in os.listdir(opts.puzzles):
   <head>
     <title>%(title)s</title>
     <link rel="stylesheet" href="%(css)s" type="text/css" />
+	<script type="text/javascript">
+		function readCookie(key) {
+			var s = key + '=';
+			var toks = document.cookie.split(';');
+			for (var i = 0; i < toks.length; i++) {
+				var tok = toks[i];
+				while (tok.charAt(0) == ' ') {
+					tok = tok.substring(1, tok.length);
+				}
+				if (tok.indexOf(s) == 0) {
+					return tok.substring(s.length, tok.length);
+				}
+			}
+			return null;
+		}
+		
+		function getTeamInfo() {
+			team = readCookie('team');
+			passwd = readCookie('passwd');
+			if (team != null) {
+				document.getElementById("form").t.value = team;
+			}
+			if (passwd != null) {
+				document.getElementById("form").w.value = passwd;
+			}
+		}
+		window.onload = getTeamInfo;
+	</script>
   </head>
   <body>
     <h1>%(title)s</h1>
@@ -66,7 +94,7 @@ for cat in os.listdir(opts.puzzles):
                     f.write('<li><a href="%s">%s</a></li>\n' % (fn, fn))
             f.write('</ul>\n')
         f.write('''
-    <form action="%(cgi)s" method="post">
+    <form id="form" action="%(cgi)s" method="post">
       <fieldset>
         <legend>Your answer:</legend>
         <input type="hidden" name="c" value="%(cat)s" />

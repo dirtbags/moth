@@ -1,7 +1,7 @@
 <HTML>
 <BODY>
-<B>You are doing a forensics evaluation of a linux box that you know has been compromised.  You find a binary on the system and assume it was used by the attackers to hide data on box that that was exfiltrated.  You dissamble the file and find the x86 assembly shown below (from Ida) - this function was used for obfuscation.   You also find a file obfuscated by this tool.  Using the key you find in this encoder code what is the unobfuscated first line of the file which starts with</B><PRE>8%%>p2pzpzp8%%>pe8%%>pe(#$e(+9"</PRE>
-<BR>  HINT: The function was orginally defined as void convert_buf(unsigned char * buf, int len).
+<B>You are doing a forensics evaluation of a linux box that you know has been compromised.  You find a binary on the system and assume it was used by the attackers to hide data on box that they were going to exfiltrate.  You dissamble the file and find the following lines of x86 assembly - this function was used to encode a buffer in place to obfuscate a file.  What is the 1 byte key used to obfuscate the data (in hex)?</B>
+<BR>  HINT: The function was orginally defined as void convert_buf(unsigned char * buf, int len).  You can solve this puzzle by writing some code, or by using some of the advanced functions of some of the hex editors out there.
 <BR>
 <PRE>
 .text:08048474 ; =============== S U B R O U T I N E =======================================
@@ -30,7 +30,7 @@
 .text:08048492                 mov     eax, [ebp+cnt]
 .text:08048495                 add     eax, [ebp+buf]
 .text:08048498                 movzx   eax, byte ptr [eax]
-.text:0804849B                 xor     eax, 4Ah
+.text:0804849B                 xor     eax, 4Ch
 .text:0804849E                 mov     [edx], al
 .text:080484A0                 add     [ebp+cnt], 1
 .text:080484A4
