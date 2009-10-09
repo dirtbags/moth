@@ -2,6 +2,7 @@
 
 import os
 import re
+import io
 import sys
 import time
 import socket
@@ -146,22 +147,9 @@ while True:
 	t_start = time.time()
 
 	# gather the list of IPs to poll
-	try:
-		ips = os.listdir(IP_DIR)
-	except Exception as e:
-		print('pollster: could not list dir %s (%s)' % (IP_DIR, e))
-		traceback.print_exc()
+        ips = os.listdir(IP_DIR)
 
-	try:
-		os.remove(REPORT_PATH)
-	except Exception as e:
-		pass
-
-	try:
-		out = open(REPORT_PATH, 'w')
-	except Exception as e:
-		out = None
-
+        out = io.StringIO()
 	out.write(config.start_html('Team Service Availability'))
 	for ip in ips:
 		# check file name format is ip
@@ -212,6 +200,8 @@ while True:
 	if out is not None:
 		out.write(config.end_html())
 		out.close()
+
+        open(REPORT_PATH, 'w').write(out.getvalue())
 
 	# sleep until its time to poll again
 	time.sleep(sleep_time)
