@@ -20,7 +20,9 @@ def chart(s):
 def reap():
     try:
         while True:
-            os.waitpid(0, os.WNOHANG)
+            pid, ret = os.waitpid(0, os.WNOHANG)
+            if not pid:
+                break
     except OSError:
         pass
 

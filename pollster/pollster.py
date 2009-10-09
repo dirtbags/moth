@@ -11,9 +11,9 @@ import traceback
 from ctf import config
 from ctf import pointscli
 
-DEBUG         = False
+DEBUG	      = False
 POLL_INTERVAL = config.get('pollster', 'poll_interval')
-IP_DIR        = config.get('pollster', 'heartbeat_dir')
+IP_DIR	      = config.get('pollster', 'heartbeat_dir')
 REPORT_PATH   = config.get('pollster', 'results')
 SOCK_TIMEOUT  = config.get('pollster', 'poll_timeout')
 
@@ -147,9 +147,9 @@ while True:
 	t_start = time.time()
 
 	# gather the list of IPs to poll
-        ips = os.listdir(IP_DIR)
+	ips = os.listdir(IP_DIR)
 
-        out = io.StringIO()
+	out = io.StringIO()
 	out.write(config.start_html('Team Service Availability'))
 	for ip in ips:
 		# check file name format is ip
@@ -199,9 +199,8 @@ while True:
 
 	if out is not None:
 		out.write(config.end_html())
-		out.close()
 
-        open(REPORT_PATH, 'w').write(out.getvalue())
+	open(REPORT_PATH, 'w').write(out.getvalue())
 
 	# sleep until its time to poll again
 	time.sleep(sleep_time)

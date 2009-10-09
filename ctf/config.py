@@ -96,10 +96,9 @@ def start_html(title, hdr='', cls='', links=[], links_title=None):
     <h1>%(title)s</h1>
     <div id="navigation">
       <ul>
-        <li><a href="%(base)s">Home</a></li>
         <li><a href="%(base)sintro.html">Intro/Rules</a></li>
         <li><a href="%(base)sservices.html">Svc flags</a></li>
-        <li><a href="%(base)s/tanks/results.cgi">Tanks</a></li>
+        <li><a href="%(base)stanks/results.cgi">Tanks</a></li>
         <li><a href="%(base)spuzzler.cgi">Puzzles</a></li>
         <li><a href="%(base)sscoreboard.cgi">Scoreboard</a></li>
       </ul>
