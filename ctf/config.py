@@ -77,7 +77,7 @@ def datafile(filename):
 def url(path):
     return base_url + path
 
-def start_html(title, hdr='', cls=''):
+def start_html(title, hdr='', cls='', links=[], links_title=None):
     ret = []
     if os.environ.get('GATEWAY_INTERFACE'):
         ret.append('Content-type: text/html')
@@ -98,16 +98,24 @@ def start_html(title, hdr='', cls=''):
       <ul>
         <li><a href="%(base)s">Home</a></li>
         <li><a href="%(base)sintro.html">Intro/Rules</a></li>
-        <li><a href="%(base)sservices.html">Service flags</a></li>
+        <li><a href="%(base)sservices.html">Svc flags</a></li>
+        <li><a href="%(base)s/tanks/results.cgi">Tanks</a></li>
         <li><a href="%(base)spuzzler.cgi">Puzzles</a></li>
         <li><a href="%(base)sscoreboard.cgi">Scoreboard</a></li>
       </ul>
-    </div>
 ''' % {'title': title,
        'css': css,
        'hdr': hdr,
        'base': base_url,
        'class': cls})
+    if links:
+        if links_title:
+            ret.append('<h3>%s</h3>' % links_title)
+        else:
+            ret.append('<hr/>')
+        for url, name in links:
+            ret.append('<li><a href="%s">%s</a></li>' % (url, name))
+    ret.append('    </div>')
     return '\n'.join(ret)
 
 def end_html():

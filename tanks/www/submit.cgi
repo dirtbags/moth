@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-print("Content-Type: text/html\n\n")
-print("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN">\n\n""")
 import cgi
 import cgitb; cgitb.enable()
 import os
@@ -20,15 +18,18 @@ except:
     path = '/home/pflarr/repos/gctf/'
     sys.path.append(path)
     from ctf import teams
+from ctf import config
 teams.build_teams()
 
-head = open('head.html').read() % "Submission Results"
-print(head)
-print("<H1>Results</H1>")
-print(open('links.html').read())
+print(config.start_html('Tanks Submission',
+                        links_title='Tanks',
+                        links=[('docs.cgi', 'Docs'),
+                               ('results.cgi', 'Results'),
+                               ('submit.html', 'Submit'),
+                               ('errors.cgi', 'My Errors')]))
 
 def done():
-    print('</body></html>')
+    print(config.end_html())
     sys.exit(0)
 
 fields = cgi.FieldStorage()
@@ -36,23 +37,23 @@ team = fields.getfirst('team', '').strip()
 passwd = fields.getfirst('passwd', '').strip()
 code = fields.getfirst('code', '')
 if not team:
-    print('<p>No team specified'); done()
+    print('<p>No team specified</p>'); done()
 elif not passwd:
-    print('<p>No password given'); done()
+    print('<p>No password given</p>'); done()
 elif not code:
-    print('<p>No program given.'); done()
+    print('<p>No program given.</p>'); done()
 
 if team not in teams.teams:
-    print('<p>Team is not registered.'); done()
+    print('<p>Team is not registered.</p>'); done()
 
 if passwd != teams.teams[team][0]:
-    print('<p>Invalid password.'); done()
+    print('<p>Invalid password.</p>'); done()
 
 path = os.path.join(Config.DATA_PATH, 'ai/players', quote(team) )
 file = open(path, 'w')
 file.write(code)
 file.close()
 
-print("<P>Submission Successful")
+print("<p>Submission successful.</p>")
 
 done()

@@ -7,7 +7,7 @@ html {
 body {
     font-family: sans-serif;
     color: #fff;
-    margin: 50px 0 0 100px;
+    margin: 50px 0 0 110px;
     padding: 10px;
     max-width: 700px;
 }
@@ -33,12 +33,17 @@ h1:first-child:before {
 /*** left side bar ***/
 
 #navigation {
-  position: fixed;
+  position: absolute;
   background: #222;
   opacity: 0.9;
   top: 80px;
   left: 0px;
   padding: 0;
+}
+
+#navigation h3 {
+  font-size: 100%;
+  border-bottom: 2px solid #444;
 }
 
 #navigation ul {
@@ -112,6 +117,27 @@ p {
     margin-bottom: 20px;
     color: #f4f4f4;
 }
+
+hr {
+    border: 1px solid #444;
+}
+
+dt {
+    white-space: pre;
+    background-color: #333;
+    padding: 5px;
+    border: 2px solid green;
+    border-bottom: none;
+    font-weight: bold;
+}
+
+dd {
+    border: 2px solid green;
+    margin: 0px;
+    padding: 5px;
+    background-color: #282828;
+}
+
 
 /**** special cases ****/
 

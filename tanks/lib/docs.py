@@ -4,9 +4,8 @@ def mkDocTable(objects):
     objects.sort(lambda o1, o2: cmp(o1.__doc__, o2.__doc__))
 
     for object in objects:
-        print '<table class="docs">'
         if object.__doc__ is None:
-            print '<tr><th>%s<tr><td colspan=2>Bad object' % \
+            print '<table><tr><th>%s<tr><td colspan=2>Bad object</table>' % \
                   xml.sax.saxutils.escape(str(object))
             continue
         text = object.__doc__
@@ -23,5 +22,5 @@ def mkDocTable(objects):
         body = '\n'.join(body)
         print '<DL><DT><DIV class="tab">%s</DIV></DT><DD>%s</DD></DL>' % (head, body)
         #print '<tr><th>%s<th>Intentionally blank<th><tr><td colspan=3>%s' % (head, body)
-        print '</table>'
+
 

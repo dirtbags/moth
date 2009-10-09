@@ -26,6 +26,10 @@ target: $(PYC)
 	$(INSTALL) -d $(PYCDIR)/ctf
 	$(INSTALL) $(PYC) $(PYCDIR)/ctf
 
+	$(INSTALL) -d $(DESTDIR)/usr/lib/python2.6/site-packages/ctf
+	$(INSTALL) ctf/__init__.py $(DESTDIR)/usr/lib/python2.6/site-packages/ctf
+	$(INSTALL) ctf/config.py $(DESTDIR)/usr/lib/python2.6/site-packages/ctf
+
 	$(INSTALL) -d $(DESTDIR)/usr/sbin
 	$(INSTALL) ctfd.py $(DESTDIR)/usr/sbin
 	$(INSTALL) new-contest $(DESTDIR)/usr/sbin
