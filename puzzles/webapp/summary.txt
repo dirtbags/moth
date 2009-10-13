@@ -8,3 +8,5 @@
 50:		change the quantity value (hidden form field) to something greater than the
 		stated quantity limit. the key is in the resulting traceback. entering non-
 		integers is caught and handled, so that no longer works.
+60:		the key is in the cookie. note the javascript that reads a value from the
+		cookie, hopefully causing the player to take a look at the cookie.
