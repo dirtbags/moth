@@ -15,6 +15,11 @@ rm -f /var/lib/ctf/flags/* || true
 
 sv restart /var/service/ctf
 
+echo "Removing tanks history"
+rm -f /var/lib/tanks/ai/players/*
+rm -rf /var/lib/tanks/results/*
+rm -f /var/lib/tanks/winner
+
 echo "Things you may want to tweak:"
 find /var/lib/ctf/disabled
 find /var/lib/kevin/tokens
