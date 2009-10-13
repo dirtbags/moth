@@ -3,7 +3,7 @@ html,body {
 	min-height: 100%;
 	background-color: #000000;
 	background-image: url(",binary.png");
-	background-repeat: repeat-x repeat-y;
+	background-repeat: repeat;
 	margin: 0;
 	padding: 0;
 }
