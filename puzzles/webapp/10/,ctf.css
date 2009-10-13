@@ -52,3 +52,11 @@ h1,h2,h3,h4 {
 	margin: 2em auto 2em auto;
 	border-bottom: 1px dotted #222;
 }
+
+.error {
+	padding: 1em;
+	background: #fff;
+	color: red;
+	border: 1px solid red;
+	font-weight: bold;
+}

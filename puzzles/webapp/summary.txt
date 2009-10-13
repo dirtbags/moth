@@ -5,4 +5,6 @@
 		resulting traceback.
 40:		change the value in the POST request to a non-integer. the key is in the
 		resulting traceback.
-
+50:		change the quantity value (hidden form field) to something greater than the
+		stated quantity limit. the key is in the resulting traceback. entering non-
+		integers is caught and handled, so that no longer works.
