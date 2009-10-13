@@ -10,3 +10,5 @@
 		integers is caught and handled, so that no longer works.
 60:		the key is in the cookie. note the javascript that reads a value from the
 		cookie, hopefully causing the player to take a look at the cookie.
+70:		modify the cookie's content_name field to something invalid, reload the page
+		and the key will be printed on the page.
