@@ -1,11 +1,16 @@
 #!/usr/bin/python3
 
-plaintext = [b'I wonderr if they'll try doing a frequency count again? '
-             b'It should work this time as well.  Hopefully messing around '
-             b'with simple cyphers like
+import crypto
 
+alice = b'''Do you think they'll try another frequency count?  It might be better if they just looked for patterns.'''
+bob = b'''You'd be amazed at how often this is used in lieu of real crypto.  It's about as effective as a ceasar cypher.  chronic failure'''
 
-for p in plaintext:
-    c = sbox(text, key)
-    assert c == sbox(c, ikey), 'Failure'
-    print(c)
+key = 0xac
+
+def encode(text):
+    out = bytearray()
+    for t in text:
+        out.append(t ^ key)
+    return bytes(out)
+
+crypto.mkIndex(encode, encode, alice, bob, crypto.hexFormat)

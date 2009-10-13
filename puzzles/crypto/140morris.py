@@ -34,7 +34,7 @@ morris = {'a': '.-',
           'x': '-..-',
           'y': '-.--',
           'z': '--..',
-          '.': '._._._',
+          '.': '.-.-.-',
           ',': '--..--',
           ':': '---...'}
 
@@ -42,32 +42,45 @@ imorris = {}
 for k in morris:
     imorris[morris[k]] = k            
 
-plaintext = [b'It is fun to make up bizarre cyphers, but the next one is '
+plaintext = [b'it is fun to make up bizarre cyphers, but the next one is '
              b'something a little more standard.',
-             b'All I have to say is: giant chickens.']
+             b'all i have to say is: giant chickens.']
+
 
 
 def encode(text):
     out = bytearray()
     for t in text:
         if t == ord(' '):
-            out.append('  ')
+            out.extend(b'  ')
         else:
             for bit in morris[chr(t)]:
                 if bit == '.':
                     out.append(random.choice(dots))
                 else:
                     out.append(random.choice(dashes))
-            out.append(' ')
-    return bytes(out)
+            out.append(ord(' '))
+    return bytes(out[:-1])
 
 def decode(text):
-    text = text.replace(b'  ', b'&')
+    text = text.replace(b'   ', b'&')
+#    print(text)
     words = text.split(b'&')
     out = bytearray()
     for word in words:
-        for c in word.split(' '):
-            
+#        print(word)
+        word = word.strip()
+        for parts in word.split(b' '):
+            code = []
+            for part in parts:
+                if part in dots:
+                    code.append('.')
+                else:
+                    code.append('-')
+            code = ''.join(code)
+            out.append(ord(imorris[code]))
+        out.append(ord(' '))
+    return bytes(out[:-1])
 
 c = encode(plaintext[0])
 print('<dl><dt>Alice<dd>', str(c, 'utf-8'))
