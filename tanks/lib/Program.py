@@ -7,7 +7,7 @@ skills at designing those wits to survive.
 
 <H2>Programming Your Tank</H2>
 Your tanks are programmed using the Super Useful Command and Kontrol language,
-the very best in laser tank AI languages.  It includes amazing feature such 
+the very best in laser tank AI languages.  It includes amazing features such 
 as comments (Started by a #, ended at EOL), logic, versatility, and 
 semi-colons (all lines must end in one).  As with all new military systems 
 it utilizes only integers; we must never rest in our

@@ -3,7 +3,7 @@ html,body {
 	min-height: 100%;
 	background-color: #000000;
 	background-image: url(",binary.png");
-	background-repeat: repeat-x repeat-y;
+	background-repeat: repeat;
 	margin: 0;
 	padding: 0;
 }
@@ -51,4 +51,12 @@ h1,h2,h3,h4 {
 	padding: 0;
 	margin: 2em auto 2em auto;
 	border-bottom: 1px dotted #222;
+}
+
+.error {
+	padding: 1em;
+	background: #fff;
+	color: red;
+	border: 1px solid red;
+	font-weight: bold;
 }

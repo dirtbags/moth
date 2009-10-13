@@ -20,12 +20,11 @@ def chart(s):
 def reap():
     try:
         while True:
-            os.waitpid(0, os.WNOHANG)
+            pid, ret = os.waitpid(0, os.WNOHANG)
+            if not pid:
+                break
     except OSError:
         pass
-
-def sigchld(signum, frame):
-    do_reap = True
 
 def main():
     p = optparse.OptionParser()
@@ -39,13 +38,11 @@ def main():
     pointsrv = pointsd.start()
     flagsrv = flagd.start()
 
-    signal.signal(signal.SIGCHLD, sigchld)
     s = pointsrv.store
     slen = 0
     while True:
-        if do_reap:
-            reap()
         asyncore.loop(timeout=30, use_poll=True, count=1)
+        reap()
         if len(s) > slen:
             slen = len(s)
             chart(s)

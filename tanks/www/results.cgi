@@ -2,16 +2,16 @@
 
 import cgitb; cgitb.enable()
 import os
+from ctf import config
 
 import Config
 
-print """Content-Type: text/html\n\n"""
-print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n\n"""
-head = open('head.html').read() % "Pflanzarr Results"
-print head
-print "<H1>Results</H1>"
-print open('links.html').read()
-
+print(config.start_html('Tanks Results',
+                        links_title='Tanks',
+                        links=[('docs.cgi', 'Docs'),
+                               ('results.cgi', 'Results'),
+                               ('submit.html', 'Submit'),
+                               ('errors.cgi', 'My Errors')]))
 try:
     winner = open(os.path.join(Config.DATA_PATH, 'winner')).read()
 except:
@@ -52,4 +52,4 @@ for num in gameNums:
     print '<a href="results/%d/game.avi">v</a>' % num,
     print '<a href="results/%d/results.html">r</a>' % num
 
-print '</body></html>'
+print(config.end_html())

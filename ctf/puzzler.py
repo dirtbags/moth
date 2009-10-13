@@ -66,9 +66,10 @@ def start_html(title):
         if passwd:
             c['passwd'] = passwd
         print(c)
-    config.start_html(title)
+    print(config.start_html(title))
 
-end_html = config.end_html
+def end_html():
+    print(config.end_html())
 
 def safe_join(*args):
     safe = list(args[:1])
@@ -156,7 +157,7 @@ def main():
         # Show available puzzles in category
         show_puzzles(cat, cat_dir)
     else:
-        thekey = get_key(cat, points)
+        thekeys = get_key(cat, points)
         if not teams.chkpasswd(team, passwd):
             start_html('Wrong password')
             end_html()

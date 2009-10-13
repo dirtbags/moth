@@ -59,12 +59,13 @@ set xtics nomirror
 set ytics nomirror
 set nokey
 set terminal png transparent size 640,200 x000000 xffffff
-set output "%(pngout)s"
+set output "%(pngout)s,tmp"
 plot %(plot)s\n''' % {'plot': ','.join(plotparts),
                       'pngout': pngout})
     instructions.flush()
 
     gp = os.system('gnuplot %s 2>/dev/null </dev/null' % instructions.name)
+    os.rename("%s,tmp" % pngout, pngout)
 
 if __name__ == '__main__':
     main()

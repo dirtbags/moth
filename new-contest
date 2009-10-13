@@ -13,6 +13,8 @@ rotate /var/lib/ctf/scores.dat
 rotate /var/lib/ctf/passwd
 rm -f /var/lib/ctf/flags/* || true
 
+sv restart /var/service/ctf
+
 echo "Things you may want to tweak:"
 find /var/lib/ctf/disabled
 find /var/lib/kevin/tokens

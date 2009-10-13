@@ -28,27 +28,33 @@ if 'home' in os.environ.get('SCRIPT_FILENAME', ''):
               }
 else:
     # An actual installation
-    config = {'global':
-                  {'data_dir': '/var/lib/ctf',
-                   'base_url': '/',
-                   'css_url': '/ctf.css',
-                   'disabled_dir': '/var/lib/ctf/disabled',
-                   'flags_dir': '/var/lib/ctf/flags',
-                   'house_team': 'dirtbags',
-                   'passwd': '/var/lib/ctf/passwd',
-                   'team_colors': team_colors,
-				   'poll_interval': 60,
-				   'poll_timeout': 0.5,
-				   'heartbeat_dir': '/var/lib/pollster',
-				   'poll_dir': '/var/lib/www',
-                   },
-              'puzzler':
-                  {'dir': '/usr/lib/www/puzzler',
-                   'cgi_url': '/puzzler.cgi',
-                   'base_url': '/puzzler',
-                   'keys_file': '/usr/lib/ctf/puzzler.keys',
-                   },
-              }
+    config = {
+        'global':
+            {
+            'data_dir': '/var/lib/ctf',
+            'base_url': '/',
+            'css_url': '/ctf.css',
+            'disabled_dir': '/var/lib/ctf/disabled',
+            'flags_dir': '/var/lib/ctf/flags',
+            'house_team': 'dirtbags',
+            'passwd': '/var/lib/ctf/passwd',
+            'team_colors': team_colors,
+            },
+        'pollster':
+            {
+            'poll_interval': 60,
+            'poll_timeout': 0.5,
+            'heartbeat_dir': '/var/lib/pollster',
+            'results': '/var/lib/pollster/status.html',
+            },
+        'puzzler':
+            {
+            'dir': '/usr/lib/www/puzzler',
+            'cgi_url': '/puzzler.cgi',
+            'base_url': '/puzzler',
+            'keys_file': '/usr/lib/ctf/puzzler.keys',
+            },
+        }
 
 def get(section, key):
     return config[section][key]
@@ -71,22 +77,45 @@ def datafile(filename):
 def url(path):
     return base_url + path
 
-def start_html(title):
+def start_html(title, hdr='', cls='', links=[], links_title=None):
+    ret = []
     if os.environ.get('GATEWAY_INTERFACE'):
-        print('Content-type: text/html')
-        print()
-    print('''<?xml version="1.0" encoding="UTF-8"?>
+        ret.append('Content-type: text/html')
+        ret.append('')
+    ret.append('''<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC
   "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>%s</title>
-    <link rel="stylesheet" href="%s" type="text/css" />
+    <title>%(title)s</title>
+    <link rel="stylesheet" href="%(css)s" type="text/css" />
+    %(hdr)s
   </head>
-  <body>
-    <h1>%s</h1>
-''' % (title, css, title))
+  <body class="%(class)s">
+    <h1>%(title)s</h1>
+    <div id="navigation">
+      <ul>
+        <li><a href="%(base)sintro.html">Intro/Rules</a></li>
+        <li><a href="%(base)sservices.html">Svc flags</a></li>
+        <li><a href="%(base)stanks/results.cgi">Tanks</a></li>
+        <li><a href="%(base)spuzzler.cgi">Puzzles</a></li>
+        <li><a href="%(base)sscoreboard.cgi">Scoreboard</a></li>
+      </ul>
+''' % {'title': title,
+       'css': css,
+       'hdr': hdr,
+       'base': base_url,
+       'class': cls})
+    if links:
+        if links_title:
+            ret.append('<h3>%s</h3>' % links_title)
+        else:
+            ret.append('<hr/>')
+        for url, name in links:
+            ret.append('<li><a href="%s">%s</a></li>' % (url, name))
+    ret.append('    </div>')
+    return '\n'.join(ret)
 
 def end_html():
-    print('</body></html>')
+    return '</body></html>'

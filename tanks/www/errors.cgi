@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-print("""Content-Type: text/html\n\n""")
-print("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN">\n\n""")
 import cgi
 import cgitb; cgitb.enable()
 import sys
@@ -20,15 +18,18 @@ except:
     path = '/home/pflarr/repos/gctf/'
     sys.path.append(path)
     from ctf import teams
+from ctf import config
 teams.build_teams()
 
-head = open('head.html').read() % "Error Report"
-print(head)
-print('<H1>Your Errors</H1>')
-print(open('links.html').read())
+print(config.start_html('Tanks Errors',
+                        links_title='Tanks',
+                        links=[('docs.cgi', 'Docs'),
+                               ('results.cgi', 'Results'),
+                               ('submit.html', 'Submit'),
+                               ('errors.cgi', 'My Errors')]))
 
 def done():
-    print('</body></html>')
+    print(config.end_html())
     sys.exit(0)
 
 fields = cgi.FieldStorage()

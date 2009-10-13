@@ -7,26 +7,7 @@ import string
 from . import teams
 from . import config
 
-def head(title):
-    return '''<?xml version="1.0" encoding="UTF-8" ?>
-    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-      <head>
-        <title>Team Registration</title>
-        <link rel="stylesheet" href="%s" type="text/css" />
-      </head>
-      <body>
-        <h1>%s</h1>
-''' % (config.css, title)
-
-def foot():
-    return '''</body></html>'''
-
 def main():
-    print('Content-type: text/html')
-    print()
-
     f = cgi.FieldStorage()
 
     team = f.getfirst('team', '')

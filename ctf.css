@@ -7,7 +7,7 @@ html {
 body {
     font-family: sans-serif;
     color: #fff;
-    margin: 50px 0 0 100px;
+    margin: 50px 0 0 110px;
     padding: 10px;
     max-width: 700px;
 }
@@ -29,6 +29,54 @@ h1:first-child:before {
    letter-spacing: -0.1em;
    content: "Capture The Flag: ";
 }
+
+/*** left side bar ***/
+
+#navigation {
+  position: absolute;
+  background: #222;
+  opacity: 0.9;
+  top: 80px;
+  left: 0px;
+  padding: 0;
+}
+
+#navigation h3 {
+  font-size: 100%;
+  border-bottom: 2px solid #444;
+}
+
+#navigation ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#navigation li a {
+  display: block;
+  height: 25px;
+  width: 90px;
+  padding: 5px;
+  margin: 5px;
+  background: inherit;
+  border-right: 4px solid #444;
+  color: #999;
+  text-transform: lowercase;
+  font-size: 0.9em;
+}
+
+#navigation li a:hover {
+  color: #f4f4f4;
+  background: #333;
+  border-right: 4px solid #2a2;
+}
+
+#navigation li .active {
+  color: #999;
+  background: #333;
+  border-right: 4px solid #444;
+}
+
 
 /**** body ****/
 
@@ -64,6 +112,39 @@ th, td {
     vertical-align: top;
 }
 
+p {
+    line-height: 1.4em;
+    margin-bottom: 20px;
+    color: #f4f4f4;
+}
+
+hr {
+    border: 1px solid #444;
+}
+
+dt {
+    white-space: pre;
+    background-color: #333;
+    padding: 5px;
+    border: 2px solid green;
+    border-bottom: none;
+    font-weight: bold;
+}
+
+dd {
+    border: 2px solid green;
+    margin: 0px;
+    padding: 5px;
+    background-color: #282828;
+}
+
+
+/**** special cases ****/
+
+.wide {
+    max-width: inherit;
+}
+
 .scoreboard {
     background: #222;
 }
@@ -72,24 +153,20 @@ th, td {
     height: 400px;
 }
 
-p {
-    line-height: 1.4em;
-    margin-bottom: 20px;
-    color: #f4f4f4;
-}
-
 .solved {
     text-decoration: line-through;
 }
 
 table.pollster {
-	margin-left: 5em;
+    margin-left: 5em;
 }
 
 table.pollster td {
-	padding: 2px 1em 2px 5px;
+    padding: 2px 1em 2px 5px;
 }
 
 table.pollster thead {
-	font-weight: bold;
+    font-weight: bold;
 }
+
+
