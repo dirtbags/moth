@@ -12,3 +12,6 @@
 		cookie, hopefully causing the player to take a look at the cookie.
 70:		modify the cookie's content_name field to something invalid, reload the page
 		and the key will be printed on the page.
+80:		an sql query is being constructed in javascript from form fields. change the
+		form fields such that the query is SELECT * FROM key LIMIT 6 and the key will
+		be displayed.
