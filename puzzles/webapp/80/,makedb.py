@@ -4,6 +4,7 @@ import os
 import sys
 import sqlite3
 import base64
+import stat
 
 # new db
 if os.path.exists(',zomg.sqlite3'):
@@ -41,3 +42,4 @@ db.commit()
 cur.close()
 db.close()
 
+os.chmod(',zomg.sqlite3', stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
