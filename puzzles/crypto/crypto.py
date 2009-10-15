@@ -31,4 +31,16 @@ def groups(text, perLine=5, format='{0:c}'):
         i = i + 1
 
     return ''.join(out)
-    
+   
+def strip(text):
+    """Strip any unicode from the given text, and return it as a bytes 
+    object."""
+
+    b = bytearray()
+    for t in text:
+        if ord(t) > 255:
+            t = ' '
+
+        b.append(ord(t))
+
+    return bytes(b)
