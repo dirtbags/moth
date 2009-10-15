@@ -4,6 +4,7 @@ many different possible characters.  The 'encryption key' is the set of
 characters that represent dots, and the set that represents dashes."""
 
 import random
+import crypto
 
 dots =   b'acdfhkjnpsrtx'
 dashes = b'begilmoquvwyz'

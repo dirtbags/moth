@@ -3,13 +3,14 @@
 the binary.'''
 
 import random
+import crypto
 
 lower = b'abcdefghijklmnopqrstuvwxyz'
 upper = lower.upper()
 
-plaintext = [b'The next one is in Morris Code.  Unlike the previous two, '
-             b'they will actually need to determine some sort of key.',
-             b'Morris code with a key?  That sounds bizarre. probable cause']
+alice = b'The next one is in Morris Code.  Unlike the previous two, '\
+        b'they will actually need to determine some sort of key.'
+bob = b'Morris code with a key?  That sounds bizarre. probable cause'
 
 def encode(text):
     out = bytearray()
@@ -52,9 +53,4 @@ def decode(text):
         out.append(c)
     return bytes(out)
 
-c = encode(plaintext[0])
-print('<dl><dt>Alice<dd>', str(c, 'utf-8'))
-assert decode(c) == plaintext[0]
-c = encode(plaintext[1])
-print('<dt>Bob<dd>', str(c, 'utf-8'), '</dl>')
-assert decode(c) == plaintext[1]
+crypto.mkIndex(encode, decode, alice, bob, crypto.groups)

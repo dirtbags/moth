@@ -4,6 +4,7 @@ binary with one character per binary bit.  Lower case characters are 1's,
 and upper case is 0.  The letters are chosen at random.  Tricky, eh?"""
 
 import random
+import crypto
 
 lower = b'abcdefghijklmnopqrstuvwxyz'
 upper = lower.upper()
@@ -40,9 +41,4 @@ def decode(text):
         out.append(c)
     return bytes(out)
 
-c = encode(plaintext[0])
-print('<dl><dt>Alice<dd>', str(c, 'utf-8'))
-assert decode(c) == plaintext[0]
-c = encode(plaintext[1])
-print('<dt>Bob<dd>', str(c, 'utf-8'), '</dl>')
-assert decode(c) == plaintext[1]
+crypto.mkIndex(encode, decode, plaintext[0], plaintext[1], crypto.groups)
