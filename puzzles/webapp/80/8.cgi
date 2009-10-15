@@ -32,7 +32,7 @@ if q is not None:
 		print '</table>'
 			
 	except Exception:
-		print '<p class="error">Invlaid query: %s</p>' % q
+		print '<p class="error">Invalid query: %s</p>' % q
 
 else:
 	print 'Content-Type: text/html\n'
