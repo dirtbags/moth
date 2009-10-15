@@ -157,11 +157,7 @@ while True:
 			continue
 
 		# remove the file
-		try:
-			os.remove(os.path.join(IP_DIR, ip))
-		except Exception as e:
-			print('pollster: could not remove %s' % os.path.join(IP_DIR, ip))
-			traceback.print_exc()
+		os.remove(os.path.join(IP_DIR, ip))
 
 		results = {}
 
