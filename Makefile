@@ -1,21 +1,18 @@
 DESTDIR = target
 
-PYCDIR = $(DESTDIR)/usr/lib/python3.1/site-packages
+PYDIR = $(DESTDIR)/usr/lib/python3.1/site-packages
 CTFDIR = $(DESTDIR)/usr/lib/ctf
 WWWDIR = $(DESTDIR)/usr/lib/www
 
 FAKE = fakeroot -s fake -i fake
 INSTALL = $(FAKE) install
 
-PYC  = __init__.pyc
-PYC += config.pyc points.pyc teams.pyc
-PYC += register.pyc scoreboard.pyc puzzler.pyc
-PYC += flagd.pyc pointsd.pyc pointscli.pyc
-PYC += histogram.pyc irc.pyc
-
 all: ctf.tce
 
-target: $(PYC)
+push: ctf.tce
+	netcat -l -q 0 -p 3333 < ctf.tce
+
+target: 
 	$(INSTALL) -d --mode=0755 --owner=100 $(DESTDIR)/var/lib/ctf
 
 	$(INSTALL) -d --mode=0755 --owner=100 $(DESTDIR)/var/lib/ctf/survey
@@ -23,8 +20,8 @@ target: $(PYC)
 	$(INSTALL) -d $(DESTDIR)/var/lib/ctf/disabled
 	touch $(DESTDIR)/var/lib/ctf/disabled/survey
 
-	$(INSTALL) -d $(PYCDIR)/ctf
-	$(INSTALL) $(PYC) $(PYCDIR)/ctf
+	$(INSTALL) -d $(PYDIR)/ctf
+	$(INSTALL) ctf/*.py $(PYDIR)/ctf
 
 	$(INSTALL) -d $(DESTDIR)/usr/lib/python2.6/site-packages/ctf
 	$(INSTALL) ctf/__init__.py $(DESTDIR)/usr/lib/python2.6/site-packages/ctf
@@ -55,7 +52,7 @@ ctf.tce: target
 
 clean:
 	rm -rf target
-	rm -f fake ctf.tce $(PYC)
+	rm -f fake ctf.tce 
 
 ctf/%.pyc: ctf/%.py
 	python3 -c 'from ctf import $(notdir $*)'

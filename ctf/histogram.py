@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import fcntl
 import time
 import os
 import tempfile
@@ -64,8 +65,18 @@ plot %(plot)s\n''' % {'plot': ','.join(plotparts),
                       'pngout': pngout})
     instructions.flush()
 
-    gp = os.system('gnuplot %s 2>/dev/null </dev/null' % instructions.name)
-    os.rename("%s,tmp" % pngout, pngout)
+    lock = open('%s,lock' % pngout, 'a')
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except:
+        return
+
+    try:
+        gp = os.system('gnuplot %s 2>/dev/null </dev/null' % instructions.name)
+        os.rename("%s,tmp" % pngout, pngout)
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+
 
 if __name__ == '__main__':
     main()

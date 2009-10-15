@@ -157,7 +157,7 @@ def main():
         # Show available puzzles in category
         show_puzzles(cat, cat_dir)
     else:
-        thekeys = get_key(cat, points)
+        thekey = get_key(cat, points)
         if not teams.chkpasswd(team, passwd):
             start_html('Wrong password')
             end_html()

@@ -3,7 +3,7 @@
 import os
 import shutil
 import optparse
-import config
+from ctf import config
 
 p = optparse.OptionParser()
 p.add_option('-p', '--puzzles', dest='puzzles', default='puzzles',
@@ -83,7 +83,11 @@ for cat in os.listdir(opts.puzzles):
         if files:
             f.write('<ul>\n')
             for fn, path in files:
-                shutil.copy(path, outdir)
+                if os.path.isdir(path):
+                    shutil.copytree(path, os.path.join(outdir, fn))
+                else:
+                    shutil.copy(path, outdir)
+
                 if not fn.startswith(','):
                     f.write('<li><a href="%s">%s</a></li>\n' % (fn, fn))
             f.write('</ul>\n')
