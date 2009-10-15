@@ -10,17 +10,6 @@ bob = bob.replace(b' ', b'_').lower()
 map = [6, 3, 0, 5, 2, 7, 4, 1]
 imap = [2, 7, 4, 1, 6, 3, 0, 5] 
 
-def transform(text, map):
-    assert len(text) % 8 == 0, 'Text must be multiple of 8 in length.  '\
-                               '%d more chars needed.' % (8 - len(text) % 8)
-
-    out = bytearray()
-    i = 0
-    while i < len(text):
-        for j in range(8):
-            out.append( text[i + map[j]] )
-        i = i+8
-    return bytes(out)
 
 encode = lambda t : transform(t, map)
 decode = lambda t : transform(t, imap)
