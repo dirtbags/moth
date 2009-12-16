@@ -49,7 +49,7 @@ if team not in teams.teams:
 if passwd != teams.teams[team][0]:
     print('<p>Invalid password.</p>'); done()
 
-path = os.path.join(Config.DATA_PATH, 'ai/players', quote(team) )
+path = os.path.join(Config.DATA_PATH, 'ai/players', quote(team, safe='') )
 file = open(path, 'w')
 file.write(code)
 file.close()

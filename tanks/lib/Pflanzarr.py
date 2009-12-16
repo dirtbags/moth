@@ -40,7 +40,7 @@ class Pflanzarr:
         tmpPlayers = os.listdir(self._playerDir)
         players = []
         for p in tmpPlayers:
-            p = unquote(p)
+            p = unquote(p, safe='')
             if not (p.startswith('.') or p.endswith('#') or p.endswith('~'))\
                and p in colors:
                 players.append(p)
@@ -401,7 +401,7 @@ class Pflanzarr:
         colors = {}
         for line in file:
             try:
-                team, passwd, color = map(unquote, line.split('\t'))
+                team, passwd, color = map(unquote, line.split('\t'),['']*3)
                 colors[team] = '#%s' % color
             except:
                 colors[team] = errorColor
