@@ -179,7 +179,7 @@ class Gyopi(irc.Bot):
                 self._tellFlag(forum)
             elif cmd.startswith('h'):
                 # Help
-                forum.msg('Goal: Help me with my math homework, FROM ANOTHER DIMENSION!')
+                forum.msg('''Goal: Help me with my math homework, FROM ANOTHER DIMENSION!  Order of operations is always left to right in that dimension, but the operators are alien.''')
                 forum.msg('Order of operations is always left to right.')
                 #forum.msg('Goal: The current winner gets to control the contest music.')
                 forum.msg('Commands: !help, !flag, !register [TEAM], !solve SOLUTION,!? EQUATION, !ops, !problem, !who')
@@ -189,6 +189,8 @@ class Gyopi(irc.Bot):
                 # Solve
                 team = self._affiliations.get(who)
                 lastAttempt = time.time() - self._lastAttempt.get(team, 0)
+                #UN-COMMENT AFTER NMT CTF
+#                self._lastAttempt[team] = time.time()
                 answer = badmath.solve(self._key, self._puzzle)
                 try:
                     attempt = int(''.join(args).strip())
@@ -227,6 +229,7 @@ class Gyopi(irc.Bot):
 
                 if len(tokens) > 3:
                     forum.msg('%s: You can only test one op at a time.' % who)
+                    return
 
                 for num in self._banned:
                     if num in tokens:
@@ -237,8 +240,8 @@ class Gyopi(irc.Bot):
                 try:
                     result = badmath.solve(self._key, tokens)
                     forum.msg('%s: %s -> %d' % (who, ''.join(args), result)) 
-                except:
-                    forum.msg("%s: That doesn't work at all." % who)
+                except Exception as msg:
+                    forum.msg("%s: That doesn't work at all: %s" % (who, msg))
 
             elif cmd == 'birdzerk':
                 self._saveState()

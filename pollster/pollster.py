@@ -140,7 +140,7 @@ POLLS = {
 }
 
 ip_re = re.compile('(\d{1,3}\.){3}\d{1,3}')
-
+poll_no = 0
 # loop forever
 while True:
 
@@ -157,7 +157,11 @@ while True:
 			continue
 
 		# remove the file
-		os.remove(os.path.join(IP_DIR, ip))
+		try:
+			os.remove(os.path.join(IP_DIR, ip))
+		except Exception as e:
+			print('pollster: could not remove %s' % os.path.join(IP_DIR, ip))
+			traceback.print_exc()
 
 		results = {}
 
@@ -171,8 +175,9 @@ while True:
 
 		# perform polls
 		for service,func in POLLS.items():
-			team = func(ip).decode('utf-8')
-			if team is None:
+			try:
+				team = func(ip).decode('utf-8')
+			except:
 				team = 'dirtbags'
 
 			if DEBUG is True:
@@ -188,6 +193,9 @@ while True:
 
 	if DEBUG is True:
 		print('+-----------------------------------------+')
+
+	out.write('<p>Poll number: %d</p>' % poll_no)
+	poll_no += 1
 
 	t_end = time.time()
 	exec_time = int(t_end - t_start)
