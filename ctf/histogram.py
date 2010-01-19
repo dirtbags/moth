@@ -21,7 +21,9 @@ def main(s=None):
 
     catscores = {}
     for cat in s.categories():
-        catscores[cat] = s.cat_points(cat)
+        score = s.cat_points(cat)
+        if score:
+            catscores[cat] = score
 
     scoresfile = tempfile.NamedTemporaryFile('w')
     fn = scoresfile.name
@@ -38,6 +40,8 @@ def main(s=None):
         scoresfile.write('\n')
 
     for when, cat, team, score in s.log:
+        if not cat in catscores:
+            continue
         if when > now:
             if now:
                 write_scores(now)
@@ -59,7 +63,7 @@ set border 3
 set xtics nomirror
 set ytics nomirror
 set nokey
-set terminal png transparent size 640,200 x000000 xffffff
+set terminal png transparent size 1200,400 x000000 xffffff
 set output "%(pngout)s,tmp"
 plot %(plot)s\n''' % {'plot': ','.join(plotparts),
                       'pngout': pngout})

@@ -14,7 +14,7 @@ Sensors are numbered, starting at 0, in the order they are added.
 <p>
 range - The range of the sensor, as a percent of the tanks max range.
 angle - The angle of the center of the sensor, in degrees.
-width - The width of the sensor, in percent (100 is a full circle).
+width - The width of the sensor, in degrees.
 turretAttached - Normally, the angle is relative to the front of the
 tank.  When this is set, the angle is relative to the current turret 
 direction.
@@ -53,7 +53,7 @@ starting at 0.
         if len(tank.toggles) >= tank.SENSOR_LIMIT:
             raise ValueError('You can not have more than 10 toggles.')
 
-        tank.toggles.append[self._state]
+        tank.toggles.append(self._state)
 
 class AddTimer(Function.Function):
     """addtimer(timeout)

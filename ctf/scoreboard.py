@@ -3,6 +3,7 @@
 import cgitb; cgitb.enable()
 import os
 import sys
+from cgi import escape as quote
 from . import config
 from . import teams
 from . import points
@@ -14,6 +15,7 @@ def main():
     s = points.Storage()
 
     categories = [(cat, s.cat_points(cat)) for cat in s.categories()]
+    categories = [(c, p) for (c, p) in categories if p > 0]
 
     print('Refresh: 10')
     print(config.start_html('Scoreboard', cls='wide'))
@@ -28,7 +30,7 @@ def main():
             team = open(fn).read() or house_team
             print('  <br/>')
             print('  <!-- flag: %s --> <span style="color: #%s" title="flag holder">%s</span>'
-                  % (cat, teams.color(team), team))
+                  % (cat, teams.color(team), quote(team[:15])))
         except IOError:
             pass
         print('</th>')
@@ -41,16 +43,20 @@ def main():
         total = s.team_points(team)
         totals.append((total, team))
     for total, team in sorted(totals, reverse=True):
+        if total < 0.1:
+            break
         print('<li><span style="color: #%s;">%s (%0.3f)</span></li>'
-              % (teams.color(team), team, total))
+              % (teams.color(team), quote(team[:15]), total))
     print('</ol></td>')
     for cat, total in categories:
         print('<td>')
         scores = sorted([(s.team_points_in_cat(cat, team), team) for team in s.teams])
         for score, team in scores:
+            if not score:
+                continue
             color = teams.color(team)
             print('<div style="height: %f%%; overflow: hidden; background: #%s; color: black;">' % (float(score * 100)/total, color))
-            print('<!-- category: %s --> %s: %d' % (cat, team, score))
+            print('<!-- category: %s --> %s: %d' % (cat, quote(team[:15]), score))
             print('</div>')
         print('</td>')
     print('</tr>')

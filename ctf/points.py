@@ -167,6 +167,8 @@ class Storage:
     def team_points(self, team):
         points = 0
         for cat, tot in self.points_by_cat.items():
+            if not tot:
+                continue
             team_points = self.team_points_in_cat(cat, team)
             points += team_points / float(tot)
         return points

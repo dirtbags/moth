@@ -31,7 +31,7 @@ Returns True if the given toggle is set, False otherwise. """
     def __init__(self, toggle):
         self._toggle = toggle
     def __call__(self, tank):
-        return tank.toggles[toggle]
+        return tank.toggles[self._toggle]
 
 class TimerCheck(Function.Function):
     """timer(#, [invert])

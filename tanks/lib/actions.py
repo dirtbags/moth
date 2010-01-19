@@ -57,7 +57,8 @@ class TurretSet(Function.Function):
 
 class Fire(Function.Function):
     """fire()
-    Attempt to fire the tanks laser cannon."""
+    Attempt to fire the tanks laser cannon.  
+    It's range is 50% of your sensor range."""
 
     def __call__(self, tank):
         tank.setFire()

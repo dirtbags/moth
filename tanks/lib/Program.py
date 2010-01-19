@@ -29,20 +29,36 @@ functions.  If all the conditions are satisfactory (true), all of the actions
 are given as orders.  Conditions are separated by ampersands, actions separated 
 by periods. Here are some examples of AI commands:
 <pre class="docs">
-sensor(1) & sensor(2) & fireready() : fire();
-sensor(0,0)&sin(5): move(40, 30) . turretcw(50);
-sensor(4) & random(4,5) : led(1).settoggle(0,1);</pre>
+sense(1) & sense(2) & fireready() : fire();
+sense(0,0)&sin(5): move(40, 30) . turretcw(50);
+sense(4) & random(4,5) : led(1).settoggle(0,1);</pre>
 
-Your tank will check its program each turn, and attempt to the best of its
+Your tank will execute its program each turn(frame), and attempt to 
+the best of its
 abilities to carry out its orders (or die trying).  Like any military mind, 
 your tank may receive a plethora of often conflicting orders and information.  
 This a SMART TANK, however.  It knows that the proper thing to do with each
 subsystem is to have that subsystem follow only the last order given each turn.
+
+<pre class="docs">
+#Setup commands define your tank when your program compiles
+>addsensor(50, 0, 5, 1); # 0-Fire Sensor
+>addsensor(30, 0, 180); # 1-Anti-collision sensor
+
+# These commands execute each frame.  
+# Blank condition sections are true.
+         : move(90, 100).
+           turretset(0);
+sense(0) : fire();
+sense(1) : move(-100, 100)
+</pre>
 """
 
 import conditions
 import actions
 import setup
+
+import traceback
 
 class Statement(object):
     """Represents a single program statement.  If all the condition Functions
@@ -82,8 +98,8 @@ class Program(object):
             try:
                 action(tank)
             except Exception, msg:
-                self.errors.append("Bad setup action, line %d, msg: %s" % \
-                                   (action.lineNum, msg))
+                self.errors.append("Bad setup action, line %d, msg: %s, %s" % \
+                    (action.lineNum, msg, traceback.format_exc()))
 
     def __call__(self, tank):
         """Execute this program on the given tank."""

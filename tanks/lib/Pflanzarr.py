@@ -40,20 +40,23 @@ class Pflanzarr:
         tmpPlayers = os.listdir(self._playerDir)
         players = []
         for p in tmpPlayers:
-            p = unquote(p, safe='')
+            p = unquote(p)
             if not (p.startswith('.') or p.endswith('#') or p.endswith('~'))\
                and p in colors:
                 players.append(p)
 
         AIs = {}
         for player in players:
-            AIs[player] = open(os.path.join(self._playerDir, player)).read()
+            qPlayer = quote(player)
+            AIs[player] = open(os.path.join(self._playerDir, qPlayer)).read()
         defaultAIs = self._getDefaultAIs(dir, difficulty)
 
-        assert len(players) >= 1, "There must be at least one player."
+        if not players:
+            self._tanks = []
+            return 
 
         # The one is added to ensure that there is at least one #default bot.
-        cols = math.sqrt(len(players) + 1)
+        cols = math.sqrt(len(players) + 3)
         if int(cols) != cols:
             cols = cols + 1
 
@@ -61,7 +64,7 @@ class Pflanzarr:
         if cols < 2:
             cols = 2
 
-        rows = len(players)/cols
+        rows = (len(players) + 3)/cols
         if len(players) % cols != 0:
             rows = rows + 1
 
@@ -97,7 +100,11 @@ class Pflanzarr:
 
     def run(self, maxTurns=None):
     
-        print "Starting new game with %d players." % len(self._tanks)
+
+        if self._tanks:
+            print "Starting new game with %d players." % len(self._tanks)
+        else:
+            return
 
         kills = {}
         for tank in self._tanks:
@@ -229,7 +236,7 @@ class Pflanzarr:
 
         # Write a blank file if the winner is a default tank..
         if winner.name != None:
-            winnerFile.write(tanks[0].name)
+            winnerFile.write(winner.name)
         winnerFile.close()
 
         resultsFile.write('\n'.join(html))
@@ -396,12 +403,12 @@ class Pflanzarr:
         try:
             file = open(self.TEAMS_FILE)
         except:
-            return {}.fromkeys(players, errorColor)
+            return {}
 
         colors = {}
         for line in file:
             try:
-                team, passwd, color = map(unquote, line.split('\t'),['']*3)
+                team, passwd, color = map(unquote, line.split('\t'))
                 colors[team] = '#%s' % color
             except:
                 colors[team] = errorColor
