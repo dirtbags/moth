@@ -7,6 +7,7 @@ import sys
 import time
 import socket
 import traceback
+import urllib.request
 
 from ctf import config
 from ctf import pointscli
@@ -22,7 +23,7 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 	''' Connect via socket to the specified <ip>:<port> using the
 	specified <prot>, send the specified <msg> and return the
 	response or None if something went wrong. <max_recvs> specifies
-	how many times to read from the socket (default to once). '''
+	how many times to read from the socket (defaults to once). '''
 
 	# create a socket
 	try:
@@ -95,25 +96,14 @@ def poll_noted(ip):
 
 def poll_catcgi(ip):
 	''' Poll the cat.cgi web service. Returns None or a team name. '''
-	request = bytes('GET /cat.cgi/flag HTTP/1.1\r\nHost: %s\r\n\r\n' % ip, 'ascii')
-	resp = socket_poll(ip, 80, request, socket.SOCK_STREAM, 3)
-	if resp is None:
-		return None
-
-	content = resp.split(b'\r\n\r\n')
-	if len(content) < 3:
-		return None
-
-	content = content[1].split(b'\r\n')
-
+	
 	try:
-		content_len = int(content[0])
-	except Exception as e:
+		url = urllib.request.urlopen('http://%s/cat.cgi/flag' % ip, timeout=SOCK_TIMEOUT)
+	except:
 		return None
-
-	if content_len <= 0:
-		return None
-	return content[1].strip(b'\r\n')
+	
+	resp = url.read()
+	return resp.strip(b'\r\n')
 
 def poll_tftpd(ip):
 	''' Poll the tftp service. Returns None or a team name. '''
