@@ -7,19 +7,57 @@ import sys
 import time
 import socket
 import traceback
-import urllib.request
+import subprocess
+import random
+import http.client
 
 from ctf import config
 from ctf import pointscli
 
-DEBUG	      = False
-POLL_INTERVAL = config.get('pollster', 'poll_interval')
-IP_DIR	      = config.get('pollster', 'heartbeat_dir')
-REPORT_PATH   = config.get('pollster', 'results')
-SOCK_TIMEOUT  = config.get('pollster', 'poll_timeout')
+DEBUG	        = False
+POLL_INTERVAL   = config.get('pollster', 'poll_interval')
+IP_DIR	        = config.get('pollster', 'heartbeat_dir')
+REPORT_PATH     = config.get('pollster', 'results')
+SOCK_TIMEOUT    = config.get('pollster', 'poll_timeout')
+POLL_IFACE      = config.get('pollster', 'poll_iface')
+POLL_MAC_VENDOR = config.get('pollster', 'poll_mac_vendor')
 
+class BoundHTTPConnection(http.client.HTTPConnection):
+	''' http.client.HTTPConnection doesn't support binding to a particular
+	address, which is something we need. '''
+	
+	def __init__(self, bindip, host, port=None, strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+		http.client.HTTPConnection.__init__(self, host, port, strict, timeout)
+		self.bindip = bindip
+	
+	def connect(self):
+		''' Connect to the host and port specified in __init__, but
+		also bind first. '''
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.sock.bind((self.bindip, 0))
+		self.sock.settimeout(self.timeout)
+		self.sock.connect((self.host, self.port))
 
-def socket_poll(ip, port, msg, prot, max_recv=1):
+		if self._tunnel_host:
+			self._tunnel()
+
+def random_mac():
+	''' Set a random mac on the poll interface. '''
+	mac = ':'.join([POLL_MAC_VENDOR] + ['%02x' % random.randint(0,255) for i in range(3)])
+	retcode = subprocess.call(('ifconfig', POLL_IFACE, 'hw', 'ether', mac)) 
+
+def dhcp_request():
+	''' Request a new IP on the poll interface. '''
+	retcode = subprocess.call(('dhclient', POLL_IFACE))
+
+def get_ip():
+	''' Return the IP of the poll interface. '''
+	path = os.path.join(os.getcwd(), 'get_ip.sh')
+	p = subprocess.Popen((path, POLL_IFACE), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	(out, err) = p.communicate()
+	return out.strip(b'\r\n').decode('utf-8')
+
+def socket_poll(srcip, ip, port, msg, prot, max_recv=1):
 	''' Connect via socket to the specified <ip>:<port> using the
 	specified <prot>, send the specified <msg> and return the
 	response or None if something went wrong. <max_recvs> specifies
@@ -33,6 +71,7 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 		traceback.print_exc()
 		return None
 
+	sock.bind((srcip, 0))
 	sock.settimeout(SOCK_TIMEOUT)
 
 	# connect
@@ -80,34 +119,41 @@ def socket_poll(ip, port, msg, prot, max_recv=1):
 #  Each function should take an IP address and return a team name or None
 #  if (a) the service is not up, (b) it doesn't return a valid team name.
 
-def poll_fingerd(ip):
+def poll_fingerd(srcip, ip):
 	''' Poll the fingerd service. Returns None or a team name. '''
-	resp = socket_poll(ip, 79, b'flag\n', socket.SOCK_STREAM)
+	resp = socket_poll(srcip, ip, 79, b'flag\n', socket.SOCK_STREAM)
 	if resp is None:
 		return None
 	return resp.strip(b'\r\n')
 
-def poll_noted(ip):
+def poll_noted(srcip, ip):
 	''' Poll the noted service. Returns None or a team name. '''
-	resp = socket_poll(ip, 4000, b'rflag\n', socket.SOCK_STREAM)
+	resp = socket_poll(srcip, ip, 4000, b'rflag\n', socket.SOCK_STREAM)
 	if resp is None:
 		return None
 	return resp.strip(b'\r\n')
 
-def poll_catcgi(ip):
+def poll_catcgi(srcip, ip):
 	''' Poll the cat.cgi web service. Returns None or a team name. '''
 	
 	try:
-		url = urllib.request.urlopen('http://%s/cat.cgi/flag' % ip, timeout=SOCK_TIMEOUT)
+		conn = BoundHTTPConnection(srcip, ip, timeout=SOCK_TIMEOUT)
+		conn.request('GET', '/cat.cgi/flag')
 	except:
 		return None
-	
-	resp = url.read()
-	return resp.strip(b'\r\n')
 
-def poll_tftpd(ip):
+	resp = conn.getresponse()
+	if resp.status != 200:
+		conn.close()
+		return None
+	
+	data = resp.read()
+	conn.close()
+	return data.strip(b'\r\n')
+
+def poll_tftpd(srcip, ip):
 	''' Poll the tftp service. Returns None or a team name. '''
-	resp = socket_poll(ip, 69, b'\x00\x01' + b'flag' + b'\x00' + b'octet' + b'\x00', socket.SOCK_DGRAM)
+	resp = socket_poll(srcip, ip, 69, b'\x00\x01' + b'flag' + b'\x00' + b'octet' + b'\x00', socket.SOCK_DGRAM)
 	if resp is None:
 		return None
 
@@ -117,7 +163,7 @@ def poll_tftpd(ip):
 	resp = resp.split(b'\n')[0]
 
 	# ack
-	_ = socket_poll(ip, 69, b'\x00\x04' + resp[2:4], socket.SOCK_DGRAM, 0)
+	_ = socket_poll(srcip, ip, 69, b'\x00\x04' + resp[2:4], socket.SOCK_DGRAM, 0)
 
 	return resp[4:].strip(b'\r\n')
 
@@ -133,6 +179,11 @@ ip_re = re.compile('(\d{1,3}\.){3}\d{1,3}')
 poll_no = 0
 # loop forever
 while True:
+
+	random_mac()
+	dhcp_request()
+
+	srcip = get_ip()
 
 	t_start = time.time()
 
@@ -166,7 +217,9 @@ while True:
 		# perform polls
 		for service,func in POLLS.items():
 			try:
-				team = func(ip).decode('utf-8')
+				team = func(srcip, ip).decode('utf-8')
+				if len(team) == 0:
+					team = 'dirtbags'
 			except:
 				team = 'dirtbags'
 

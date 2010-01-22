@@ -46,6 +46,8 @@ else:
             'poll_timeout': 0.5,
             'heartbeat_dir': '/var/lib/pollster',
             'results': '/var/lib/pollster/status.html',
+			'poll_iface' : 'eth1',
+			'poll_mac_vendor' : '00:01:c0'
             },
         'puzzler':
             {
