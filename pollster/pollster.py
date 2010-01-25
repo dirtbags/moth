@@ -176,7 +176,6 @@ POLLS = {
 }
 
 ip_re = re.compile('(\d{1,3}\.){3}\d{1,3}')
-poll_no = 0
 # loop forever
 while True:
 
@@ -237,8 +236,16 @@ while True:
 	if DEBUG is True:
 		print('+-----------------------------------------+')
 
-	out.write('<p>Poll number: %d</p>' % poll_no)
-	poll_no += 1
+	time_str = time.strftime('%a, %d %b %Y %H:%M:%S %Z')
+	out.write('''
+		<p>This page was generated on %s. That was <span id="diff">?</span> seconds ago.</p>
+		<script type="text/javascript">
+			var gen_time = new Date(%f);
+			var cur_time = new Date();
+			var diff = (cur_time.getTime() - gen_time.getTime())/1000;
+			document.getElementById("diff").innerHTML = diff;
+		</script>
+		''' % (time_str, time.time()*1000))
 
 	t_end = time.time()
 	exec_time = int(t_end - t_start)
