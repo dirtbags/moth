@@ -163,7 +163,7 @@ def poll_tftpd(srcip, ip):
 	resp = resp.split(b'\n')[0]
 
 	# ack
-	_ = socket_poll(srcip, ip, 69, b'\x00\x04' + resp[2:4], socket.SOCK_DGRAM, 0)
+	_ = socket_poll(srcip, ip, 69, b'\x00\x04\x00\x01' + '\x00' * 14, socket.SOCK_DGRAM, 0)
 
 	return resp[4:].strip(b'\r\n')
 
