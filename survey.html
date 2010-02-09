@@ -1,0 +1,344 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-GB">
+<head>
+	<title>CyberTracer Collaboration Survey</title>
+	<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+	<link rel="stylesheet" href="survey.css" type="text/css" />
+
+	<script type="text/javascript">
+		function appendError(errorbox, txt) {
+			errorbox.appendChild(document.createTextNode(txt));
+			errorbox.appendChild(document.createElement("br"));
+		}
+
+		function hasSelection(radio) {
+			for(var i=0;i<radio.length;i++) {
+				if (radio[i].checked) {
+					return radio[i].value; 
+				}
+			}
+			return false;
+		}
+
+		function validate(form) {
+			var f = document.survey;
+			var errorbox = document.createElement("p");
+			errorbox.className="error";
+			var errorCount = 0;
+			
+			if (!hasSelection(f.affiliation)) {
+				appendError(errorbox, "No selection made for question 1.");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.hostforensics)) {
+				appendError(errorbox, "No selection made for question 2 (host forensics).");
+				errorCount++;
+			}
+			
+			if (!hasSelection(f.netforensics)) {
+				appendError(errorbox, "No selection made for question 2 (network forensics).");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.reversing)) {
+				appendError(errorbox, "No selection made for question 2 (reverse engineering).");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.regularcollab)) {
+				appendError(errorbox, "No selection made for question 3.");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.collab)) {
+				appendError(errorbox, "No selection made for question 4.");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.incident)) {
+				appendError(errorbox, "No selection made for question 5.");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.channels)) {
+				appendError(errorbox, "No selection made for question 6.");
+				errorCount++;
+			}
+
+			var rankArray = [];
+
+			var sel = hasSelection(f.helpfulone);
+			if (!sel) {
+				appendError(errorbox, "No selection made for question 7 (rank 1).");
+				errorCount++;
+			} else {
+				rankArray.push(sel);
+			}
+
+			sel = hasSelection(f.helpfultwo);
+			if (!sel) {
+				appendError(errorbox, "No selection made for question 7 (rank 2).");
+				errorCount++;
+			} else if (rankArray.indexOf(sel) != -1) {
+				appendError(errorbox, "One item given multiple ranks in question 7.");
+				errorCount++;
+			} else {
+				rankArray.push(sel);
+			}
+
+			sel = hasSelection(f.helpfulthree);
+			if (!sel) {
+				appendError(errorbox, "No selection made for question 7 (rank 3).");
+				errorCount++;
+			} else if (rankArray.indexOf(sel) != -1) {
+				appendError(errorbox, "One item given multiple ranks in question 7.");
+				errorCount++;
+			} else {
+				rankArray.push(sel);
+			}
+
+			sel = hasSelection(f.helpfulfour);
+			if (!sel) {
+				appendError(errorbox, "No selection made for question 7 (rank 4).");
+				errorCount++;
+			} else if (rankArray.indexOf(sel) != -1) {
+				appendError(errorbox, "One item given multiple ranks in question 7.");
+				errorCount++;
+			} else {
+				rankArray.push(sel);
+			}
+
+			sel = hasSelection(f.helpfulfive);
+			if (!sel) {
+				appendError(errorbox, "No selection made for question 7 (rank 5).");
+				errorCount++;
+			} else if (rankArray.indexOf(sel) != -1) {
+				appendError(errorbox, "One item given multiple ranks in question 7.");
+				errorCount++;
+			} else {
+				rankArray.push(sel);
+			}
+
+			if (!hasSelection(f.toolset)) {
+				appendError(errorbox, "No selection made for question 8.");
+				errorCount++;
+			}
+
+			if (!hasSelection(f.overall)) {
+				appendError(errorbox, "No selection made for question 9.");
+				errorCount++;
+			}
+
+			if (errorCount != 0) {
+				errorbox.appendChild(document.createElement("br"));
+				appendError(errorbox, errorCount + " error(s) were encountered. Please correct them and resubmit.");
+				var d = document.getElementById("errordiv");
+				while(d.childNodes.length) {
+					d.removeChild(d.childNodes[0]);
+				}
+				d.appendChild(errorbox);
+				window.scrollTo(0,0);
+				return false;
+			}
+			return true;
+		}
+	</script>
+
+</head>
+<body>
+	<div id="wrapper">
+
+		<div id="header">
+			<h1>Cyber Security Collaboration Survey &mdash; Tracer FIRE II</h1>
+		</div>
+
+		<div id="content">
+
+			<p>Please take a few minutes to fill out and submit this survey. One of
+			the primary goals of the Cyber Tracer Team, the people behind Tracer FIRE,
+			is to improve the existing collaboration environment between NNSA sites
+			and other stakeholders. The information you provide in this survey will help
+			us to accomplish that goal.</p>
+
+			<div id="errordiv"></div>
+
+			<div class="sep"></div>
+
+			<form name="survey" action="survey.py" method="GET" onsubmit="return validate(this);">
+				
+				<p class="question">1. What is your affiliation?</p>
+				<input type="radio" name="affiliation" value="nnsa" />NNSA<br />
+				<input type="radio" name="affiliation" value="doe" />DOE<br />
+				<input type="radio" name="affiliation" value="dod" />DOD<br />
+				<input type="radio" name="affiliation" value="otherfed" />Other Federal government<br />
+				<input type="radio" name="affiliation" value="state" />State government<br />
+				<input type="radio" name="affiliation" value="private" />Private sector<br />
+				<input type="radio" name="affiliation" value="other" />Other
+
+				<div class="sep"></div>
+
+				<p class="question">2. For each skill area listed, select the option that best describes the situation
+				at your site or within your organization.</p>
+				<ul>
+					<li>Host forensics<br />
+						<input type="radio" name="hostforensics" value="has" />have an advanced capability in this area<br />
+						<input type="radio" name="hostforensics" value="doesnt_have_can_get" />don't have an advanced capability in this area, but
+				<span style="font-style: italic;">can</span> obtain help from other sites<br />
+						<input type="radio" name="hostforensics" value="doesnt_have_cant_get" />don't have an advanced 
+						capability in this area, and <span style="font-style: italic;">cannot</span>
+						obtain help from other sites
+					</li>
+					<li>Network forensics<br />
+						<input type="radio" name="netforensics" value="has" />have an advanced capability in this area<br />
+						<input type="radio" name="netforensics" value="doesnt_have_can_get" />don't have an advanced capability in this area, but
+				<span style="font-style: italic;">can</span> obtain help from other sites<br />
+						<input type="radio" name="netforensics" value="doesnt_have_cant_get" />don't have an advanced 
+						capability in this area, and <span style="font-style: italic;">cannot</span>
+						obtain help from other sites
+					</li>
+					<li>Reverse engineering<br />
+						<input type="radio" name="reversing" value="has" />have an advanced capability in this area<br />
+						<input type="radio" name="reversing" value="doesnt_have_can_get" />don't have an advanced capability in this area, but
+				<span style="font-style: italic;">can</span> obtain help from other sites<br />
+						<input type="radio" name="reversing" value="doesnt_have_cant_get" />don't have an advanced
+						capability in this area, and <span style="font-style: italic;">cannot</span>
+						obtain help from other sites
+					</li>
+				</ul>
+				
+				<div class="sep"></div>
+
+				<p class="question">3. How many other sites or organizations do you
+				<span style="font-style: italic;">regularly</span> collaborate with? "Regular" collaboration
+				is defined as collaboration that is frequent or part of standard operation procedure.</p>
+				<input type="radio" name="regularcollab" value="0" />0
+				<input type="radio" name="regularcollab" value="1" />1
+				<input type="radio" name="regularcollab" value="2" />2
+				<input type="radio" name="regularcollab" value="3" />3
+				<input type="radio" name="regularcollab" value="4" />4
+				<input type="radio" name="regularcollab" value="5+" />5+
+
+				<div class="sep"></div>
+
+				<p class="question">4. How many other sites or organizations did you collaborate
+				with in all of FY09?</p>
+				<input type="radio" name="collab" value="0" />0
+				<input type="radio" name="collab" value="1" />1
+				<input type="radio" name="collab" value="2" />2
+				<input type="radio" name="collab" value="3" />3
+				<input type="radio" name="collab" value="4" />4
+				<input type="radio" name="collab" value="5+" />5+
+
+				<div class="sep"></div>
+
+				<p class="question">5. If there were a serious cyber security incident at your site, 
+				how many organizations would you feel comfortable calling for help?</p>
+				<input type="radio" name="incident" value="0" />0
+				<input type="radio" name="incident" value="1" />1
+				<input type="radio" name="incident" value="2" />2
+				<input type="radio" name="incident" value="3" />3
+				<input type="radio" name="incident" value="4" />4
+				<input type="radio" name="incident" value="5+" />5+
+
+				<div class="sep"></div>
+			
+				<p class="question">6. Would you prefer to use official channels (e.g., make a request to a team dedicated to
+				vetting and fielding incident responders from around the complex) or unofficial channels (e.g., pick up the
+				phone and call the reverse engineering expert you exchanged business cards with at Tracer FIRE) to request
+				help with an incident?</p>
+				<input type="radio" name="channels" value="official" />Official channels
+				<input type="radio" name="channels" value="unofficial" />Unofficial channels
+
+				<div class="sep"></div>
+
+				<p class="question">7. Rank the items listed below from least to most helpful (1 = least helpful,
+				5 = most helpful) for establishing trust relationships and fostering collaboration between sites.</p>
+				<table>
+					<tr>
+						<td>Tracer FIRE</td>
+						<td>
+							<input type="radio" name="helpfulone" value="tracer" />1
+							<input type="radio" name="helpfultwo" value="tracer" />2
+							<input type="radio" name="helpfulthree" value="tracer" />3
+							<input type="radio" name="helpfulfour" value="tracer" />4
+							<input type="radio" name="helpfulfive" value="tracer" />5
+						</td>
+					</tr>
+					<tr>
+						<td>Cyber security conferences</td>
+						<td>
+							<input type="radio" name="helpfulone" value="cons" />1
+							<input type="radio" name="helpfultwo" value="cons" />2
+							<input type="radio" name="helpfulthree" value="cons" />3
+							<input type="radio" name="helpfulfour" value="cons" />4
+							<input type="radio" name="helpfulfive" value="cons" />5
+						</td>
+					</tr>
+					<tr>
+						<td>Video teleconferencing</td>
+						<td>
+							<input type="radio" name="helpfulone" value="vtc" />1
+							<input type="radio" name="helpfultwo" value="vtc" />2
+							<input type="radio" name="helpfulthree" value="vtc" />3
+							<input type="radio" name="helpfulfour" value="vtc" />4
+							<input type="radio" name="helpfulfive" value="vtc" />5
+						</td>
+					</tr>
+					<tr>
+						<td>Teleconferencing</td>
+						<td>
+							<input type="radio" name="helpfulone" value="tc" />1
+							<input type="radio" name="helpfultwo" value="tc" />2
+							<input type="radio" name="helpfulthree" value="tc" />3
+							<input type="radio" name="helpfulfour" value="tc" />4
+							<input type="radio" name="helpfulfive" value="tc" />5
+						</td>
+					</tr>
+					<tr>
+						<td>SILC or IRC</td>
+						<td>
+							<input type="radio" name="helpfulone" value="irc" />1
+							<input type="radio" name="helpfultwo" value="irc" />2
+							<input type="radio" name="helpfulthree" value="irc" />3
+							<input type="radio" name="helpfulfour" value="irc" />4
+							<input type="radio" name="helpfulfive" value="irc" />5
+						</td>
+					</tr>
+				</table>
+				
+				<div class="sep"></div>
+
+				<p class="question">8. How effective is the toolset (hardware and software) that is available to you 
+				for cyber collaboration?</p>
+				<input type="radio" name="toolset" value="0" />Not effective at all
+				<input type="radio" name="toolset" value="1" />Somewhat effective
+				<input type="radio" name="toolset" value="2" />Sufficient
+				<input type="radio" name="toolset" value="3" />Very effective
+				<input type="radio" name="toolset" value="4" />Couldn't be better
+
+				<div class="sep"></div>
+
+				<p class="question">9. How effective is the existing collaboration environment between NNSA sites 
+				and other stakeholders?</p>
+				<input type="radio" name="overall" value="0" />Not effective at all
+				<input type="radio" name="overall" value="1" />Somewhat effective
+				<input type="radio" name="overall" value="2" />Sufficient
+				<input type="radio" name="overall" value="3" />Very effective
+				<input type="radio" name="overall" value="4" />Couldn't be better
+
+				<div class="sep"></div>
+				<p class="question">10. Do you have any suggestions or ideas for improving the cyber collaboration
+				environment between NNSA sites and other stakeholders? Please be brief.</p>
+				<textarea name="comments" rows="5"></textarea>
+
+				<div class="submit">
+					<input type="submit" value="Submit" />
+				</div>
+
+			</form>
+		</div>
+	</div>
+</body>
+</html>
+
