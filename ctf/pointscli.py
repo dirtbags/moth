@@ -6,9 +6,9 @@ import socket
 import time
 from . import points
 
-def makesock(host):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect((host, 6667))
+def makesock(host, port=6667):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port))
     return s
 
 def submit(cat, team, score, sock=None):
@@ -32,10 +32,10 @@ def submit(cat, team, score, sock=None):
             # Ignore wrong ID
             continue
         if txt == 'OK':
+			sock.close()
             return
         else:
             raise ValueError(txt)
-
 
 def main():
     p = optparse.OptionParser(usage='%prog CATEGORY TEAM SCORE')
