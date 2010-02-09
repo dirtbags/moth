@@ -32,7 +32,7 @@ def submit(cat, team, score, sock=None):
             # Ignore wrong ID
             continue
         if txt == 'OK':
-			sock.close()
+            sock.close()
             return
         else:
             raise ValueError(txt)
