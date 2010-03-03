@@ -171,7 +171,7 @@ function start(game) {
     }
 
     function update() {
-        var idx = frame % (turns.length + 0);
+        var idx = frame % (turns.length + 20);
         var turn;
 
         frame += 1;
