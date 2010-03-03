@@ -1,6 +1,6 @@
 Title: Counting in different bases
 
-<table>
+<table style="background-color: #444;">
 <tr><th>Base</th></tr>
 <tr>
 <th>2</th>
