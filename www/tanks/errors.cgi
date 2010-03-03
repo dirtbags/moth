@@ -7,9 +7,9 @@ import os
 
 from urllib import quote
 
-from ctf import teams, html
+from ctf import teams, html, paths
 
-basedir = '/var/lib/ctf/tanks'
+basedir = os.path.join(paths.VAR, 'tanks')
 
 links = '''
       <h3>Tanks</h3>
