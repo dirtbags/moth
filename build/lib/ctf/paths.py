@@ -1,6 +1,0 @@
-VAR = "/opt/ctf/var"
-WWW = "/opt/ctf/www"
-LIB = "/opt/ctf/lib"
-BIN = "/opt/ctf/bin"
-SBIN = "/opt/ctf/sbin"
-BASE_URL = "/"

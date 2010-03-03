@@ -1,5 +1,7 @@
 import math
 
+pi2 = math.pi * 2
+
 def rotatePoint(point, angle):
     """Assuming 0,0 is the center, rotate the given point around it."""
 
@@ -120,19 +122,14 @@ center is the origin. Take into account wrapping round the limits of the board.
     r = math.sqrt(dx**2 + dy**2)
     theta = math.acos(dx/r)
     if dy < 0:
-        theta = 2*math.pi - theta
+        theta = pi2 - theta
 
     return r, theta
 
 def reduceAngle(angle):
     """Reduce the angle such that it is in 0 <= angle < 2pi"""
 
-    while angle >= math.pi*2:
-        angle = angle - math.pi*2
-    while angle < 0:
-        angle = angle + math.pi*2
-
-    return angle
+    return angle % pi2
 
 def angleDiff(angle1, angle2):
     """Returns the difference between the two angles.  They are assumed 
@@ -142,17 +139,7 @@ to be in radians, and must be in the range 0 <= angle < 2*pi.
           is negative if angle2 leads angle1 (clockwise)..
     """
 
-    for angle in angle1, angle2:
-        assert angle < 2*math.pi and angle >= 0, \
-               'angleDiff: bad angle %s' % angle
-
-    diff = angle2 - angle1
-    if diff > math.pi:
-        diff = diff - 2*math.pi
-    elif diff < -math.pi:
-        diff = diff + 2*math.pi
-
-    return diff
+    return (angle2 - angle1) % pi2
 
 def getDist(point1, point2):
     """Returns the distance between point1 and point2."""
