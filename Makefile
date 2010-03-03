@@ -58,8 +58,6 @@ install: base-install $(INSTALL_TARGETS)
 
 
 base-install:
-	id $(USERNAME) || useradd --system --shell /bin/false --home $(VAR) \
-		--comment "Capture The Flag" $(USERNAME)
 	install --directory $(LIB) $(BIN) $(SBIN)
 	install --directory --owner=$(USERNAME) $(VAR)
 	install --directory --owner=$(USERNAME) $(WWW)
