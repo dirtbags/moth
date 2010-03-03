@@ -116,8 +116,13 @@ pre {
 }
 
 
-th, td {
+th {
     vertical-align: top;
+    text-align: center;
+}
+td {
+    vertical-align: top;
+    text-align: right;
 }
 
 p {
