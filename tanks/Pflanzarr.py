@@ -33,7 +33,6 @@ class Pflanzarr:
         AIs = {}
         for fn in tmpPlayers:
             p = unquote(fn)
-            print (p, fn)
             if (not (p.startswith('.')
                      or p.endswith('#')
                      or p.endswith('~'))
