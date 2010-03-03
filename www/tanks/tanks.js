@@ -15,6 +15,7 @@ function Tank(ctx, width, height, color, sensors) {
     var craterStroke = torgba(color, 0.5);
     var craterFill = torgba(color, 0.2);
     var sensorStroke = torgba(color, 0.4);
+    var maxlen = 0;
 
     this.x = 0;
     this.y = 0;
@@ -31,6 +32,9 @@ function Tank(ctx, width, height, color, sensors) {
         this.sensors[i][1] = s[1] - (s[2]/2);
         this.sensors[i][2] = s[1] + (s[2]/2);
         this.sensors[i][3] = s[3]?1:0;
+        if (s[0] > maxlen) {
+            maxlen = s[0];
+        }
     }
 
     // Set up our state, for later interleaved draw requests
