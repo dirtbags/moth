@@ -11,7 +11,7 @@ function torgba(color, alpha) {
     return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
 }
 
-function Tank(ctx, color, sensors) {
+function Tank(ctx, width, height, color, sensors) {
     var craterStroke = torgba(color, 0.5);
     var craterFill = torgba(color, 0.2);
     var sensorStroke = torgba(color, 0.4);
@@ -121,6 +121,23 @@ function Tank(ctx, color, sensors) {
 
         ctx.restore();
     }
+
+    this.draw_wrap_sensors = function() {
+        var orig_x = this.x;
+        var orig_y = this.y;
+        for (x = this.x - width; x < width + maxlen; x += width) {
+            for (y = this.y - height; y < height + maxlen; y += height) {
+                if ((-maxlen < x) && (x < width + maxlen) &&
+                    (-maxlen < y) && (y < height + maxlen)) {
+                    this.x = x;
+                    this.y = y;
+                    this.draw_sensors();
+                }
+            }
+        }
+        this.x = orig_x;
+        this.y = orig_y;
+    }
 }
 
 function start(game) {
@@ -137,7 +154,7 @@ function start(game) {
     var tanks = new Array();
     for (i in game[2]) {
         var desc = game[2][i];
-        tanks[i] = new Tank(ctx, desc[0], desc[1]);
+        tanks[i] = new Tank(ctx, game[0], game[1], desc[0], desc[1]);
     }
 
     var frame = 0;
@@ -174,7 +191,7 @@ function start(game) {
             if (t) {
                 // Surely there's a better way to do this.
                 tanks[i].set_state(t[0], t[1], t[2], t[3], t[4], t[5]);
-                tanks[i].draw_sensors();
+                tanks[i].draw_wrap_sensors();
             }
         }
         // Then tanks
