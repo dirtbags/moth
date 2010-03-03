@@ -1,0 +1,174 @@
+#! /usr/bin/python
+
+import sys
+import codecs
+import time
+import optparse
+import string
+import os
+from urllib import unquote
+from ctf import teams, html, paths
+from codecs import open
+from sets import Set as set
+from cgi import escape
+
+flags_dir = os.path.join(paths.VAR, 'flags')
+sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+
+def incdict(dict, key, amt=1):
+    dict[key] = dict.get(key, 0) + amt
+
+class Chart:
+    def __init__(self):
+        self.points_by_cat = {}
+        self.points_by_cat_team = {}
+        self.high_score = 0.001
+        self.teams = set()
+        self.cats = set()
+        self.log = []
+
+    def add_points(self, when, cat, team, points):
+        self.log.append((when, cat, team, points))
+        self.teams.add(team)
+        self.cats.add(cat)
+        incdict(self.points_by_cat, cat, points)
+        incdict(self.points_by_cat_team, (cat, team), points)
+
+    def team_points(self, team):
+        points = 0
+        for cat, tot in self.points_by_cat.items():
+            if not tot:
+                continue
+            team_points = self.team_points_in_cat(cat, team)
+            points += team_points / float(tot)
+        return points
+
+    def team_points_in_cat(self, cat, team):
+        return self.points_by_cat_team.get((cat, team), 0)
+
+    def write_js(self, f):
+        start = self.log[0][0]
+        end = self.log[-1][0]
+
+        # Calculate high score
+        high_score = reduce(max, [self.team_points(t) for t in self.teams])
+
+        width = end - start
+        height = high_score * 1.1
+
+        f.write('function draw(id) {\n')
+        f.write('  p = new Plot(id, %d, %.3f);\n' % (width, height))
+        for team in self.teams:
+            f.write('  p.line("#%s",[' % teams.color(team))
+            score = 0
+            for when, cat, t, points in self.log:
+                if t == team:
+                    cat_points = self.points_by_cat[cat]
+                    if not cat_points:
+                        continue
+                    pct = float(points) / cat_points
+                    score += pct
+                    f.write('[%d,%.2f],' % (when - start, score))
+            f.write(']); // %s\n' % team)
+        f.write('}')
+
+    def make_table(self):
+        body = []
+        body.append('<table class="scoreboard">')
+        body.append('<tr>')
+        body.append('<th>Overall</th>')
+        for cat in self.cats:
+            points = self.points_by_cat[cat]
+            if not points:
+                continue
+            body.append('<th>')
+            body.append('  %s (%d)' % (cat, points))
+            try:
+                fn = os.path.join(flags_dir, cat)
+                team = open(fn).read().strip() or teams.house
+                body.append('  <br/>')
+                body.append('  <span style="color: #%s" title="flag holder">' % teams.color(team))
+                body.append('  <!-- flag: %s --> %s\n' % (cat, escape(team[:15])))
+                body.append('  </span>')
+            except IOError:
+                pass
+            body.append('</th>')
+        body.append('</tr>')
+
+        body.append('<tr>')
+        body.append('<td><ol>')
+        totals = []
+        for team in self.teams:
+            total = self.team_points(team)
+            totals.append((total, team))
+        totals.sort()
+        totals.reverse()
+        for total, team in totals:
+            if total < 0.1:
+                break
+            body.append('<li><span style="color: #%s;">%s (%0.3f)</span></li>'
+                  % (teams.color(team), escape(team[:15]), total))
+        body.append('</ol></td>')
+        for cat in self.cats:
+            total = self.points_by_cat[cat]
+            if not total:
+                continue
+            body.append('<td>')
+            scores = sorted([(self.team_points_in_cat(cat, team), team) for team in self.teams])
+            for score, team in scores:
+                if not score:
+                    continue
+                color = teams.color(team)
+                body.append('<div style="height: %f%%; overflow: hidden; background: #%s; color: black;">' % (float(score * 100)/total, color))
+                body.append('<!-- category: %s --> %s: %d' % (cat, escape(team[:15]), score))
+                body.append('</div>')
+            body.append('</td>')
+        body.append('</tr>')
+        body.append('</table>')
+
+        return '\n'.join(body)
+
+def main():
+    p = optparse.OptionParser(usage='%prog [options] < logfile')
+    p.add_option('-t', '--html', dest='html', default=None,
+                 help='Write a web page to HTML')
+    p.add_option('-j', '--javascript', dest='js', default=None,
+                 help='Write javascript params to JS')
+
+    opts, args = p.parse_args()
+    if args:
+        return p.print_help()
+
+    chart = Chart()
+    for line in sys.stdin:
+        line = line.strip()
+        try:
+            date, qcat, qteam, points = line.split('\t')
+        except ValueError:
+            print 'Possible line corruption: %s' % (repr(line)[:40])
+        cat = unquote(qcat)
+        team = unquote(qteam)
+        when = time.strptime(date, '%Y-%m-%dT%H:%M:%S')
+        chart.add_points(time.mktime(when),
+                         cat,
+                         team,
+                         int(points))
+
+    if opts.html:
+        hdr = ('<script type="application/javascript" src="plot.js"></script>'
+               '<script type="application/javascript" src="myplot.js"></script>'
+               '<meta http-equiv="refresh" content="60" />')
+        body = chart.make_table()
+        body += '\n<canvas id="history"></canvas>'
+        html.write(opts.html,
+                   'Scoreboard',
+                   body,
+                   hdr=hdr,
+                   body_class='wide',
+                   onload="draw('history')")
+    if opts.js:
+        f = open(opts.js, 'w', encoding='utf-8')
+        chart.write_js(f)
+
+if __name__ == '__main__':
+    main()

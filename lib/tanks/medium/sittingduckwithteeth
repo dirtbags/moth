@@ -1,0 +1,9 @@
+>addsensor(50, 0, 10, 1); # 0-Fire Sensor
+>addsensor(100, 90, 150, 1);
+>addsensor(100, 270, 150, 1);
+
+: turretcw(75);
+sense(0): fire();
+sense(1): turretcw();
+sense(2): turretccw();
+

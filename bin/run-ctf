@@ -1,0 +1,33 @@
+#! /bin/sh
+
+POINTS=var/points/log
+
+cd $(dirname $0)/..
+
+while true; do
+    # Timestamp
+    start=$(date +%s)
+    next=$(expr $start + 60)
+
+    # If enabled, run tanks
+    if ! [ -f var/disabled/tanks ]; then
+        sbin/run-tanks -1 var/tanks
+    fi
+
+    # Collect any new points
+    for fn in var/points/cur/*; do
+        [ -f $fn ] || continue
+        cat $fn >> $POINTS || break
+        rm $fn
+    done
+
+    if [ -f $POINTS ]; then
+        sbin/scoreboard -t www/scoreboard.html -j www/myplot.js < $POINTS
+    fi
+
+    # Wait until the next minute
+    now=$(date +%s)
+    if [ $now -lt $next ]; then
+        sleep $(expr $next - $now)
+    fi
+done

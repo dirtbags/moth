@@ -1,0 +1,125 @@
+html {
+	background: #454545;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	border-right: 1px solid #000;
+	border-bottom: 1px solid #000;
+	width: 100%;
+	height: 100%;
+	background: #fff;
+	max-width: 800px;
+	color: #000;
+	font-size: 0.7em;
+	font-family: Tahoma, Arial, sans-serif;
+}
+
+#wrapper {
+	padding: 5em;
+}
+
+#header {
+	border-bottom: 1px solid #373737;
+}
+
+#content {
+	padding: 1em 0;
+}
+
+p {
+	margin: 0;
+	padding: 2px 0 2px 0;
+}
+
+a { color: #369; }
+a:hover {
+	color: #fff;
+	background: #369;
+	text-decoration: none;
+}
+
+img {
+	padding: 0;
+	margin: 0;
+	border: none;
+	vertical-align: top;
+}
+
+table {
+	margin: 0.5em;
+	padding: 0;
+	border: 1px solid #373737;
+	border-collapse: collapse;
+}
+thead {
+	font-weight: bold;
+	background: #fff;
+	border-bottom-style: double;
+}
+tr {
+	padding: 0;
+	margin: 0;
+	border: 1px solid #373737;
+}
+td {
+	margin: 0;
+	padding: 2px 5px 2px 5px;
+	border: 1px dotted #c0c0c0;
+}
+
+h1, h2, h3, h4 { margin: .5em 0 .2em 0; }
+h1 { font-size: 150%; }
+h2 { font-size: 120%; }
+h3 { font-size: 110%; }
+h4 { font-size: 100%; }
+
+fieldset { margin-top: 1em; }
+input {
+	font-size: 100%;
+	margin: .25em .25em 0 .5em;
+}
+
+textarea {
+	width: 97%;
+	margin: .25em .25em 0 .5em;
+}
+
+.sep {
+	height:1px;
+	margin: 1em 0 1em 0;
+	border-bottom: 1px dashed #c0c0c0;
+}
+
+.question {
+	font-weight: bold;
+	margin-bottom: .5em;
+}
+
+ul {
+	margin: .25em .25em 0 .5em;
+	padding: 0 1.25em;
+}
+
+li {
+	margin-bottom: 1em;
+}
+
+.submit {
+	text-align: right;
+	margin-top: 1em;
+	border-top: 1px solid #373737;
+	padding-top: 1em;
+}
+
+.error {
+	margin: 1em 0;
+	padding: 1em;
+	border: 1px solid red;
+	background: #ffaaaa;
+	color: #000;
+	font-weight: bold;
+}
+

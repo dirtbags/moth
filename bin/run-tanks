@@ -1,0 +1,59 @@
+#! /usr/bin/python
+
+import optparse
+import os
+import shutil
+import socket
+import time
+from ctf import pointscli, teams, paths
+from tanks import Pflanzarr
+
+MAX_HIST = 30
+HIST_STEP = 100
+
+running = True
+
+def run_tanks(basedir, turns):
+    try:
+        p = Pflanzarr.Pflanzarr(basedir)
+        p.run(turns)
+        winner = p.winner
+    except Pflanzarr.NotEnoughPlayers:
+        winner = teams.house
+    pointscli.award('tanks', winner, 1)
+
+    winnerFile = open(os.path.join(basedir, 'winner'),'w')
+    winnerFile.write(winner or teams.house)
+    winnerFile.close()
+
+    # Fake being a flag, so the most recent winner shows up on the
+    # scoreboard.
+    try:
+        open(os.path.join(paths.VAR, 'flags', 'tanks'), 'w').write(winner or teams.house)
+    except IOError:
+        pass
+
+
+def main():
+    parser = optparse.OptionParser('%prog [options] DATA_DIR')
+    parser.add_option('-1', '--once',
+                      action='store_true', dest='once',
+                      help='Run only once')
+    parser.add_option('-t', '--max-turns',
+                      type='int', dest='turns', default=500,
+                      help='Maximum number of turns per round')
+    parser.add_option('-s', '--sleep-time',
+                      type='int', dest='sleep', default=60,
+                      help='Wait SLEEP seconds between turns (default %default)')
+    opts, args = parser.parse_args()
+    if (len(args) != 1):
+        parser.error('Wrong number of arguments')
+
+    while running:
+        run_tanks(args[0], opts.turns)
+        if opts.once:
+            break
+        time.sleep(opts.sleep)
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,95 @@
+Decimal
+=======
+
+Decimal (Greek “deca-”, meaning “ten”), or base ten, is the counting
+system most people use regularly, consisting of ten digits:
+
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+To count past nine, one must use the “tens place”, starting by placing a
+1 in the “tens place”:
+
+    10, 11, 12, 13, 14, 15, …
+
+The presence of a 1 in the “tens place” means “add ten one time”.  2 in
+the “tens place” would mean “add ten two times", and so on.  The decimal
+number:
+
+   372
+
+Reads “three times one hundred, plus seven times ten, plus two”.
+
+A “hundreds place” and “thousands place” can exist as well, and so on
+for any nth digit representing the place for ten times itself n times,
+or 10ⁿ.
+
+
+Octal
+=====
+
+Octal (Greek “okta-” meaning “eight”), or base eight, is a method of
+counting with only eight digits.  In the interest of making it obvious
+when a number is octal, all octal numbers on this page will be preceded
+by the number “0”.  The digits are thus:
+
+    00, 01, 02, 03, 04, 05, 06, 07
+
+Octal features an “eights place”, a “sixty-fours place”, a “five hundred
+twelves place”, and so on.  Counting from zero to ten in octal would
+therefore go like so:
+
+    00, 01, 02, 03, 04, 05, 06, 07, 010, 011, 012
+
+Where “010” means “one times eight” (eight), “011” means “one times
+eight plus one” (nine), and “012” means “one times eight plus two”
+(ten).
+
+The octal number:
+
+    0372
+
+Reads “three times sixty-four, plus seven times eight, plus two”, or two
+hundred thirty four.
+
+In general, the nth digit of an octal number represents the place for
+eight times itself n times, or 8ⁿ.
+
+
+Hexadecimal
+===========
+
+Hexadecimal (Greek “hexa-”, meaning “six”; plus “deca-”, meaning ten),
+or base sixteen, is a method of counting with sixteen digits (preceded
+by “0x” on this page):
+
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF
+
+Hexadecimal (or “hex”) features a “sixteens place”, a “two hundred fifty
+sixes place”, and so on.  Counting from zero to twenty in hex therefore
+would go like so:
+
+    0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF,
+    0x10, 0x11, 0x12, 0x13, 0x14
+
+Where “0xA” means “ten”, “0xB” means “eleven”, “0xF” means “fifteen”, “0x10”
+means “one times sixteen”, “0x11” means “one times sixteen plus one”, et
+cetera.
+
+The hexadecimal number:
+
+    0x372
+
+Reads “three times two hundred fifty six, plus seven times sixteen, plus
+two”, or eight hundred eighty-two.
+
+
+
+Question
+========
+
+The key for this page is the decimal representation of the following
+sum:
+
+    12 + 072 + 0x5D

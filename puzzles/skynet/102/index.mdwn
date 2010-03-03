@@ -1,0 +1,13 @@
+This category contains live samples of real malware. If you participate
+in this category, you agree to take all proper precautions: running in
+a virtual machine, properly cleaning your system afterwards, and not
+exposing any networks to these samples.
+
+YOU HAVE BEEN WARNED!
+
+A user complains that their computer is slow and that all of their
+email contacts are receving junk email from them. You find a file on
+their system. Reverse engineer this file and answer the following
+question:
+
+What is the agent string sent to the call-home website?

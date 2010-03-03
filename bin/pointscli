@@ -1,0 +1,5 @@
+#! /usr/bin/python
+
+from ctf import pointscli
+
+pointscli.main()

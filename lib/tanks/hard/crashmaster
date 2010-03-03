@@ -1,0 +1,57 @@
+#                              3
+#                        000    33
+#                                 2
+#                                  2
+#                                   2
+#                       11111        4
+#                                    4
+#                                     4
+#                        @@/
+#                        @@@
+#                        @@@
+#
+#
+#
+#
+
+
+>addsensor(50, 0, 05, 1);     # 0 Fire Sensor
+>addsensor(30, 0, 50);        # 1 Anti-collision sensor
+>addsensor(50, 0, 10);        # 2 Anti-collision sensor
+>addsensor(100, 315, 100, 1); # 3 Turret ccw
+>addsensor(100,  45, 100, 1); # 4 Turret cw
+>addsensor(60, 180, 180, 0);  # 5 Ass
+
+##
+## Add "ears" so the tank is easy to pick out.
+##
+>addsensor(20, 90, 30, 0);
+>addsensor(20, 270, 30, 0);
+
+# Can't fire
+            : led(0) . move(80, 80) . turretset(0);
+random(1, 3): led(0) . move(60, 80) . turretset(0);
+random(2, 3): led(0) . move(80, 60) . turretset(0);
+
+sense(0)           : led(0) . move(10, 20) . turretset(0);
+sense(1)           : led(0) . move(10, 10) . turretset(0);
+sense(2)           : led(0) . move(10, 20) . turretset(0);
+sense(3)           : led(0) . move(70, 50) . turretset(0);
+sense(4)           : led(0) . move(50, 70) . turretset(0);
+sense(3) & sense(4): led(0) . move(-100, 20) . turretset(0);
+sense(5)           : led(0) . move(100, 50) . turretset(0);
+
+
+# Can fire
+fireready()                : led(1) . move(70, 70) . turretset(0);
+fireready() & random(2, 40): led(1) . move(40, 70) . turretset(0);
+fireready() & random(1, 40): led(1) . move(70, 40) . turretset(0);
+
+fireready() & sense(3)           : led(1) . move(0, 60) . turretccw(50);
+fireready() & sense(4)           : led(1) . move(60, 0) . turretcw(50);
+fireready() & sense(3) & sense(4): led(1) . move(100, 100) . turretset();
+fireready() & sense(1)           : led(1) . turretset(0) . move(10, 10);
+fireready() & sense(2)           : led(1) . turretset(0) . move(10, 10);
+fireready() & sense(0)           : led(1) . turretset()  . fire();
+
+fireready() & sense(5)           : led(1) . move(100, 40);

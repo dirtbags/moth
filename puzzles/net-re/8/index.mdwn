@@ -1,0 +1,172 @@
+XOR Masks
+=========
+
+Exclusive or (XOR, ⊕) is the binary operation “one or the other but not
+both”.   The following table demonstrates how a binary XOR works:
+
+    p  q  p⊕q
+    ---------
+    0  0   0
+    0  1   1
+    1  0   1
+    1  1   0
+
+To XOR two multi-bit numbers, one must simply XOR each bit individually:
+
+      11110000
+    ⊕ 10101010
+    ==========
+      01011010
+
+
+Reversing XOR
+-------------
+
+XOR has the peculiar property that `(p⊕q)⊕q = p` for any value of `p` or `q`:
+
+    p  q  p⊕q  (p⊕q)⊕q
+    ------------------
+    0  0   0      0
+    0  1   1      0
+    1  0   1      1
+    1  1   0      1
+
+This also works for multi-bit numbers:
+
+      11110000  (0xF0)
+    ⊕ 10101010  (0xAA)
+    ==========
+      01011010  (0x9A)
+
+      01011010  (0x9A)
+    ⊕ 10101010  (0xAA)
+    ==========
+      11110000  (0xF0)
+
+
+XOR in encryption
+-----------------
+
+XOR is used extensively in many encryption algorithms.  One reason it is
+popular is because it is easy to implement in hardware, since there is
+no possibility for overflow or underflow, there are no “carry” bits as
+in addition, and XOR is one of the basic logic gates used in
+electronics.  For these reasons, it is also one of the quickest
+operations most CPUs can carry out.
+
+One of the most basic ways to use XOR in encryption is to XOR the
+plaintext (the thing to be encrypted) against the key:
+
+      ATTACK AT DAWN
+    ⊕ keykeykeykeyke
+    ================
+      *1-*&2K$-K!8<+
+
+Because of the reversible nature of XOR, the same key can be applied to
+decrypt the ciphertext:
+
+      *1-*&2K$-K!8<+
+    ⊕ keykeykeykeyke
+    ================
+      ATTACK AT DAWN
+
+
+Doing XOR on strings in Python
+------------------------------
+
+The following function in Python 3:
+
+    def xor(n, b):
+        return bytes(c ^ n for c in b)
+
+Will take a byte array, and return it XORed with n.
+
+Let's try an example:
+
+    >>> def xor(n, b):
+    ...     return bytes(c ^ n for c in b)
+    ... 
+    >>> xor(22, b'hello')
+    b'~szzy'
+    >>> xor(22, b'~szzy')
+    b'hello'
+    >>> xor(22, bytes([0, 1, 2, 3, 4]))
+    b'\x16\x17\x14\x15\x12'
+    >>> 
+
+We will use this last method of invoking xor in the following sections,
+to work with hex dumps.
+
+
+Converting hex strings to byte arrays
+-------------------------------------
+
+The following Python 3 function will take an ASCII representation of hex
+octets, and convert it to a byte array:
+
+    >>> def unhex(s):
+    ...    import binascii
+    ...    return binascii.unhexlify(s.replace(' ', '').replace('\n', ''))
+
+
+Known-plaintext attacks against XOR encryption
+----------------------------------------------
+
+We have intercepted a coded message.  We suspect the plaintext to
+consist solely of ASCII characters.  The hex dump of the message is:
+
+
+    00000000  69 62 65 0a 7d 6f 0a 78  0a 79 7f 61 0a 6c 63 72  ┆ibe◙}o◙x◙y⌂a◙lcr┆
+    00000010  0a 67 19 0a 6d 1a 6b 7e  70                       ┆◙g↓◙m→k~p┆
+    00000019
+
+Right away we can see that the character ◙ (`0x0A`) occurs fairly
+frequently.  We will first guess that `0x0A` represents the letter “e”,
+which is the most common letter in English.  To find the XOR key needed
+to turn turn “e” (`0x65`) into `0x0A`, we can simply XOR the two values:
+
+      0x65 (e)
+    ⊕ 0x0A (◙)
+    ======
+      0x6F (o)
+
+Let’s try applying the XOR key `0x6F` to the ciphertext.  First, we will
+load the hex octets into a Python 3 byte array using our `unhex`
+function from the previous section:
+
+    >>> a = unhex('69 62 65 0a 7d 6f 0a 78  0a 79 7f 61 0a 6c 63 72') + \
+    ...     unhex('0a 67 19 0a 6d 1a 6b 7e  70')
+    >>> a
+    b'ibe\n}o\nx\ny\x7fa\nlcr\ng\x19\nm\x1ak~p'
+
+Now, we'll xor it with our guess of `0x6F`:
+    >>> xor(0x6F, a)
+    b'\x06\r\ne\x12\x00e\x17e\x16\x10\x0ee\x03\x0c\x1de\x08ve\x02u\x04\x11\x1f'
+
+That doesn't look right.  Let's try another guess, maybe ◙ represents a space:
+
+      0x20 ( )
+    ⊕ 0x0A (◙)
+    ======
+      0x2A (*)
+
+Now we apply this key:
+
+    >>> xor(0x2A, a)
+    b'CHO WE R SUK FIX M3 G0ATZ'
+
+This is clearly English text, although possibly some sort of code.  In
+any case, we have broken the code with the key `0x2A`.
+
+
+Question
+========
+
+Use the known-plaintext attack technique against this XORed cyphertext:
+
+    00000000  01 2d 2c 25 30 23 36 37  2e 23 36 2b 2d 2c 31 62  ┆☺-,%0#67.#6+-,1b┆
+    00000010  2d 2c 62 3b 2d 37 30 62  20 30 27 23 29 6c 62 62  ┆-,b;-70b␣0'#)lbb┆
+    00000020  16 2a 27 62 29 27 3b 62  24 2d 30 62 36 2a 2b 31  ┆▬*'b)';b$-0b6*+1┆
+    00000030  62 32 23 25 27 62 2b 31  62 60 20 23 21 2d 2c 60  ┆b2#%'b+1b`␣#!-,`┆
+    00000040  6c                                                ┆l┆
+    00000041
