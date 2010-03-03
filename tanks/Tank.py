@@ -433,6 +433,16 @@ class Tank(object):
         while self._angle > math.pi * 2:
             self._angle = self._angle - math.pi * 2
 
+    def describe(self, f):
+        """Output a description of this tank"""
+
+        f.write('  ["%s",[' % self.color)
+        for i in range(len(self._sensors)):
+            dist, sensorAngle, width, tSens = self._sensors[i]
+
+            f.write('[%d,%.2f,%.2f,%d],' % (dist, sensorAngle, width, tSens))
+        f.write(']],\n')
+
     def draw(self, f):
         """Output this tank's state as JSON.
 
@@ -440,40 +450,16 @@ class Tank(object):
 
         """
 
-        f.write(' [')
-        f.write(str(int(self.isDead)));
-        f.write(',')
-        f.write(repr(self.color))
-        f.write(',')
-        f.write('%d' % self.pos[0])
-        f.write(',')
-        f.write('%d' % self.pos[1])
-        f.write(',')
-        f.write('%.2f' % self._angle)
-        f.write(',')
-        f.write('%.2f' % self._tAngle)
-        f.write(',')
-        f.write(str(int(self.led)))
-        f.write(',')
-        f.write('%d' % (self._fired and self.FIRE_RANGE) or 0)
-        if not self.isDead:
-            f.write(',[')
-            for i in range(len(self._sensors)):
-                dist, sensorAngle, width, tSens = self._sensors[i]
-
-                # If the angle is tied to the turret, add that.
-                if tSens:
-                    sensorAngle = sensorAngle + self._tAngle
-
-                f.write('[')
-                f.write(str(int(dist)))
-                f.write(',')
-                f.write('%.2f' % (sensorAngle - width/2));
-                f.write(',')
-                f.write('%.2f' % (sensorAngle + width/2));
-                f.write(',')
-                f.write(str(int(self._sensorState[i])))
-                f.write('],')
-            f.write(']')
-
-        f.write('],\n')
+        if self.isDead:
+            f.write(' 0,\n')
+        else:
+            flags = (self._fired << 0) | (self.led << 1)
+            sensors = 0
+            for i in range(len(self._sensorState)):
+                sensors |= self._sensorState[i] << i
+            f.write(' [%d,%d,%.2f,%.2f,%d,%d],\n' % (self.pos[0],
+                                                     self.pos[1],
+                                                     self._angle,
+                                                     self._tAngle,
+                                                     flags,
+                                                     sensors))

@@ -30,17 +30,16 @@ class Pflanzarr:
 
         tmpPlayers = os.listdir(self._playerDir)
         players = []
-        for p in tmpPlayers:
-            p = unquote(p)
+        AIs = {}
+        for fn in tmpPlayers:
+            p = unquote(fn)
+            print (p, fn)
             if (not (p.startswith('.')
                      or p.endswith('#')
                      or p.endswith('~'))
                 and teams.exists(p)):
                 players.append(p)
-
-        AIs = {}
-        for player in players:
-            AIs[player] = open(os.path.join(self._playerDir, player)).read()
+                AIs[p] = open(os.path.join(self._playerDir, fn)).read()
         defaultAIs = self._getDefaultAIs(dir)
 
         if len(players) < 1:
@@ -48,16 +47,10 @@ class Pflanzarr:
 
         # The one is added to ensure that there is at least one house
         # bot.
-        cols = math.sqrt(len(players) + 1)
-        if int(cols) != cols:
-            cols = cols + 1
-
-        cols = int(cols)
+        cols = int(math.ceil(math.sqrt(len(players) + 1)))
         cols = max(cols, 2)
 
-        rows = len(players)/cols
-        if len(players) % cols != 0:
-            rows = rows + 1
+        rows = int(math.ceil(len(players)/float(cols)))
         rows = max(rows, 2)
 
         self._board = (cols*self.SPACING, rows*self.SPACING)
@@ -96,8 +89,13 @@ class Pflanzarr:
         hdr = StringIO()
         hdr.write('<script type="application/javascript" src="../tanks.js"></script>\n'
                   '<script type="application/javascript">\n')
-        hdr.write('turns = [\n')
+        hdr.write('turns = [%d, %d,[\n' % self._board)
 
+        # Describe tanks
+        for tank in self._tanks:
+            tank.describe(hdr)
+        hdr.write('],\n')
+        hdr.write('[\n')
         turn = 0
         lastTurns = 3
         while ((maxTurns is None) or turn < maxTurns) and lastTurns > 0:
@@ -105,8 +103,6 @@ class Pflanzarr:
                 lastTurns = lastTurns - 1
 
             near = self._getNear()
-            deadThisTurn = set()
-
             liveTanks = set(self._tanks).difference(self._deadTanks)
 
             for tank in liveTanks:
@@ -122,16 +118,8 @@ class Pflanzarr:
                 self._killTanks(dead, 'Collision')
 
             hdr.write(' [\n')
-
-            # Draw the explosions
-            for tank in self._deadTanks:
+            for tank in self._tanks:
                 tank.draw(hdr)
-
-            # Draw the live tanks.
-            for tank in self._tanksByX:
-                # Have the tank run its program, move, etc.
-                tank.draw(hdr)
-
             hdr.write(' ],\n')
 
             # Have the live tanks do their turns
@@ -148,7 +136,7 @@ class Pflanzarr:
         for tank in self._tanks:
             self._outputErrors(tank)
 
-        hdr.write('];\n')
+        hdr.write(']];\n')
         hdr.write('</script>\n')
 
         # Decide on the winner
