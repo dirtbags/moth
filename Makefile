@@ -4,7 +4,8 @@ WWW = $(BASE)/www
 LIB = $(BASE)/lib
 BIN = $(BASE)/bin
 SBIN = $(BASE)/sbin
-BASE_URL = /ctf/
+BASE_URL = /
+USERNAME = www-data
 
 TEMPLATE = $(CURDIR)/template.html
 MDWNTOHTML = $(CURDIR)/mdwntohtml.py --template=$(TEMPLATE) --base=$(BASE_URL)
@@ -16,12 +17,12 @@ INSTALL_TARGETS = $(addsuffix -install, $(SUBDIRS))
 include $(addsuffix /*.mk, $(SUBDIRS))
 
 install: base-install $(INSTALL_TARGETS)
-	install --directory --owner=ctf $(VAR)/tanks
-	install --directory --owner=ctf $(VAR)/tanks/results
-	install --directory --owner=ctf $(VAR)/tanks/errors
-	install --directory --owner=ctf $(VAR)/tanks/ai
-	install --directory --owner=ctf $(VAR)/tanks/ai/players
-	install --directory --owner=ctf $(VAR)/tanks/ai/house
+	install --directory --owner=$(USERNAME) $(VAR)/tanks
+	install --directory --owner=$(USERNAME) $(VAR)/tanks/results
+	install --directory --owner=$(USERNAME) $(VAR)/tanks/errors
+	install --directory --owner=$(USERNAME) $(VAR)/tanks/ai
+	install --directory --owner=$(USERNAME) $(VAR)/tanks/ai/players
+	install --directory --owner=$(USERNAME) $(VAR)/tanks/ai/house
 
 	echo 'VAR = "$(VAR)"' > ctf/paths.py
 	echo 'WWW = "$(WWW)"' >> ctf/paths.py
@@ -57,16 +58,16 @@ install: base-install $(INSTALL_TARGETS)
 
 
 base-install:
-	id ctf || useradd --system --shell /bin/false --home $(VAR) \
-		--comment "Capture The Flag" ctf
+	id $(USERNAME) || useradd --system --shell /bin/false --home $(VAR) \
+		--comment "Capture The Flag" $(USERNAME)
 	install --directory $(LIB) $(BIN) $(SBIN)
-	install --directory --owner=ctf $(VAR)
-	install --directory --owner=ctf $(WWW)
-	install --directory --owner=ctf $(WWW)/puzzler
-	install --directory --owner=ctf $(VAR)/points
-	install --directory --owner=ctf $(VAR)/points/tmp
-	install --directory --owner=ctf $(VAR)/points/cur
-	install --directory --owner=ctf $(VAR)/flags
+	install --directory --owner=$(USERNAME) $(VAR)
+	install --directory --owner=$(USERNAME) $(WWW)
+	install --directory --owner=$(USERNAME) $(WWW)/puzzler
+	install --directory --owner=$(USERNAME) $(VAR)/points
+	install --directory --owner=$(USERNAME) $(VAR)/points/tmp
+	install --directory --owner=$(USERNAME) $(VAR)/points/cur
+	install --directory --owner=$(USERNAME) $(VAR)/flags
 
 
 uninstall:
