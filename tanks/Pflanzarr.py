@@ -196,11 +196,21 @@ class Pflanzarr:
                         cgi.escape(tank.deathReason)))
         body.write('  </table>\n')
 
+        links='''<h3>Tanks</h3>
+<ul>
+  <li><a href="docs.html">Docs</a></li>
+  <li><a href="results.cgi">Results</a></li>
+  <li><a href="submit.html">Submit</a></li>
+  <li><a href="errors.cgi">My Errors</a></li>
+</ul>
+'''
+
         # Write everything out
         html.write(self.gameFilename,
                    'Tanks round %d' % self.gameNum,
                    body.getvalue(),
                    hdr=hdr.getvalue(),
+                   links=links,
                    onload='start(turns);')
 
 

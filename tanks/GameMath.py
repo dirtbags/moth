@@ -139,7 +139,10 @@ to be in radians, and must be in the range 0 <= angle < 2*pi.
           is negative if angle2 leads angle1 (clockwise)..
     """
 
-    return (angle2 - angle1) % pi2
+    ret = (angle2 - angle1) % pi2
+    if ret > math.pi:
+        ret -= pi2
+    return ret
 
 def getDist(point1, point2):
     """Returns the distance between point1 and point2."""
