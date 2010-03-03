@@ -1,0 +1,14 @@
+Title: Tanks Submission
+
+<form action="submit.cgi" method="post">
+  <fieldset>
+    <legend>Your program:</legend>
+    Team:
+    <input type="text" name="team"/><br/>
+    Password:
+    <input type="password" name="passwd"/><br/>
+    <textarea cols="80" rows="30" name="code"></textarea><br/>
+  
+    <button type="submit">Submit</button>
+  </fieldset>
+</form>

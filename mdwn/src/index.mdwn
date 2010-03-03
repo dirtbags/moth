@@ -1,0 +1,15 @@
+Title: Welcome
+
+Welcome to Caf&eacute; Scientifique Capture The Flag.
+
+1. [Register](register.cgi) your team
+2. [View the score board](scoreboard.html)
+3. Check out the [base conversion table](table.html)
+4. Start playing
+
+The following categories exist for this version of CTF:
+
+* [Sequence](puzzler.cgi?c=sequence)
+* [Code Breaking](puzzler.cgi?c=codebreaking)
+* [Webapp](puzzler.cgi?c=webapp)
+* [Tanks](tanks/results.html)

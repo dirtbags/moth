@@ -23,7 +23,9 @@ body = []
 fields = cgi.FieldStorage()
 team = fields.getfirst('team', '').strip()
 passwd = fields.getfirst('passwd', '').strip()
-if teams.chkpasswd(team, passwd):
+if not team:
+    pass
+elif teams.chkpasswd(team, passwd):
     path = os.path.join(basedir, 'errors', quote(team))
     if os.path.isfile(path):
         body.append('<p>Your latest errors:</p>')

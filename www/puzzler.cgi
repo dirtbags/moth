@@ -92,7 +92,7 @@ def dump_file(fn):
         sys.stdout.buffer.write(d)
 
 def disabled(cat):
-    return os.path.exists(os.path.join(paths.LIB, 'disabled', cat))
+    return os.path.exists(os.path.join(paths.VAR, 'disabled', cat))
 
 def show_cats():
     out = StringIO()
