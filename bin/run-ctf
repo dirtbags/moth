@@ -11,7 +11,7 @@ while true; do
 
     # If enabled, run tanks
     if ! [ -f var/disabled/tanks ]; then
-        sbin/run-tanks -1 var/tanks
+        sbin/run-tanks --no-barren-points --once var/tanks
     fi
 
     # Collect any new points
@@ -21,6 +21,7 @@ while true; do
         rm $fn
     done
 
+    # Update the scoreboard
     if [ -f $POINTS ]; then
         sbin/scoreboard -t www/scoreboard.html -j www/myplot.js < $POINTS
     fi
