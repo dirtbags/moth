@@ -30,7 +30,6 @@ install: base-install $(INSTALL_TARGETS)
 	echo 'BIN = "$(BIN)"' >> ctf/paths.py
 	echo 'SBIN = "$(SBIN)"' >> ctf/paths.py
 	echo 'BASE_URL = "$(BASE_URL)"' >> ctf/paths.py
-	python setup.py install
 
 	install bin/pointscli $(BIN)
 	install bin/in.pointsd bin/in.flagd \
@@ -55,6 +54,8 @@ install: base-install $(INSTALL_TARGETS)
 	touch $(VAR)/disabled/net-re
 	touch $(VAR)/disabled/skynet
 	touch $(VAR)/disabled/survey
+
+	python setup.py install
 
 
 base-install:
