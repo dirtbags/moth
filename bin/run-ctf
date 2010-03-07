@@ -1,13 +1,17 @@
 #! /bin/sh
 
+# First argument is seconds between running everything
+cycle=${1:-60}
+
 POINTS=var/points/log
 
 cd $(dirname $0)/..
 
+
 while true; do
     # Timestamp
     start=$(date +%s)
-    next=$(expr $start + 60)
+    next=$(expr $start + $cycle)
 
     # If enabled, run tanks
     if ! [ -f var/disabled/tanks ]; then
