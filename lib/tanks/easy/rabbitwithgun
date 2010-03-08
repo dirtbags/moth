@@ -1,8 +1,31 @@
->addsensor(50, 0, 0, 1);
->addsensor(70, 0, 50);   # 1-Anti-collision sensor
+Name: Rabbit With Gun
+Author: Neale
+Sensor: 50 0 0 1
+Sensor: 70 0 50 0
 
-            : move(100, 100) . turretset(180);
-random(1, 8): move(70, 100);
-random(1, 8): move(100, 70);
-sense(0)    : fire();
-sense(1)    : move(-0, 100);
+100 100 move
+
+( Always set turret to 180 degrees )
+180 setturret
+
+( Vary walk 1/8 of the time )
+8 random
+0 =
+{
+  2 random
+  0 =
+  { 70 100 move }
+  { 100 70 move }
+  ifelse
+}
+if
+
+( If you see something, shoot it )
+0 sensoractive
+{ fire }
+if
+
+( Turn, if trouble lies ahead )
+1 sensoractive
+{ 0 100 move }
+if

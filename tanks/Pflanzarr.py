@@ -66,11 +66,11 @@ class Pflanzarr:
                 players.remove(player)
                 color = '#' + teams.color(player)
                 tank = Tank.Tank( player, (startX, startY), color,
-                                  self._board, testMode=True)
+                                  self._board)
                 if player == None:
-                    tank.program(random.choice(defaultAIs))
+                    tank.set_program(random.choice(defaultAIs))
                 else:
-                    tank.program(AIs[player])
+                    tank.set_program(AIs[player])
                 self._tanks.append(tank)
 
         # We only want to make these once, so we do it here.
@@ -247,19 +247,15 @@ class Pflanzarr:
 
     def _outputErrors(self, tank):
         """Output errors for each team."""
+
+        out = tank.program.get_output()
+        print 'Errors %r: %r' % (tank, out)
+
         if tank.name == None:
             return
 
-        if tank._program.errors:
-            print tank.name, 'has errors'
-
-
         fileName = os.path.join(self._errorDir, quote(tank.name, ''))
-        file = open(fileName, 'w')
-        for error in tank._program.errors:
-            file.write(error)
-            file.write('\n')
-        file.close()
+        open(fileName, 'w').write(tank.program.get_output())
 
     def _getNear(self):
         """A dictionary of the set of tanks nearby each tank.  Nearby is
@@ -354,21 +350,21 @@ class Pflanzarr:
         # Setup all the directories we'll need.
         self._resultsDir = os.path.join(dir, 'results')
         self._errorDir = os.path.join(dir, 'errors')
-        self._playerDir = os.path.join(dir, 'ai', 'players')
+        self._playerDir = os.path.join(dir, 'players')
 
     def _getDefaultAIs(self, basedir):
         """Load all the house bot AIs."""
         defaultAIs = []
 
-        path = os.path.join(basedir, 'ai', 'house')
+        path = os.path.join(basedir, 'house')
         files = os.listdir(path)
         for fn in files:
             if fn.startswith('.'):
                 continue
 
             fn = os.path.join(path, fn)
-            file = open(fn)
-            defaultAIs.append(file.read())
+            f = open(fn)
+            defaultAIs.append(f.read())
 
         return defaultAIs
 

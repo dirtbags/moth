@@ -84,7 +84,7 @@ function Tank(ctx, width, height, color, sensors) {
             var s = this.sensors[i];
             var adj = this.turret * s[3];
 
-            if (self.sensor_state & (1 << i)) {
+            if (this.sensor_state & (1 << i)) {
                 // Sensor is triggered
                 ctx.strokeStyle = "#000";
             } else {

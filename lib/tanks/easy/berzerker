@@ -1,5 +1,18 @@
-random(1,10): move(50, 100);
-random(1,10): move(100, 50);
-random(1,10): turretcw();
-random(1,10): turretccw();
-random(1,30): fire();
+Name: berzerker
+Author: Neale
+
+2 random
+0 =
+{ 50 100 move }
+{ 100 50 move }
+ifelse
+
+4 random
+0 =
+{ 360 random  setturret }
+if
+
+30 random
+0 =
+{ fire }
+if

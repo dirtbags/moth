@@ -4,6 +4,7 @@ from sets import Set as set
 
 import GameMath as gm
 import Program
+from cStringIO import StringIO
 
 class Tank(object):
 
@@ -15,9 +16,9 @@ class Tank(object):
     # This is what is used for collision and hit detection.
     RADIUS = 7.5
     # Max speed, in pixels
-    SPEED = 7.0
+    MAXSPEED = 7.0
     # Max acceleration, as a fraction of speed.
-    ACCEL = 35
+    MAXACCEL = 35
     # Sensor range, in pixels
     SENSOR_RANGE = 90.0
     # Max turret turn rate, in radians
@@ -26,8 +27,7 @@ class Tank(object):
     # The max number of sensors/timers/toggles
     SENSOR_LIMIT = 10
 
-    def __init__(self, name, pos, color, boardSize, angle=None, tAngle=None,
-                       testMode=True):
+    def __init__(self, name, pos, color, boardSize, angle=None, tAngle=None):
         """Create a new tank.
 @param name: The name name of the tank.  Stored in self.name.
 @param pos: The starting position of the tank (x,y)
@@ -35,16 +35,9 @@ class Tank(object):
 @param boardSize: The size of the board. (maxX, maxY)
 @param angle: The starting angle of the tank, defaults to random.
 @param tAngle: The starting turretAngle of the tank, defaults to random.
-@param testMode: When True, extra debugging information is displayed.  Namely,
-                 arcs for each sensor are drawn, which turn white when
-                 activated.
         """
 
-        # Keep track of what turn number it is for this tank.
-        self._turn = 0
-
         self.name = name
-        self._testMode = testMode
 
         assert len(pos) == 2 and pos[0] > 0 and pos[1] > 0, \
                'Bad starting position: %s' % str(pos)
@@ -100,17 +93,16 @@ class Tank(object):
 
         # Is this tank dead?
         self.isDead = False
-        # The frame of the death animation.
-        self._deadFrame = 10
+
         # Death reason
         self.deathReason = 'survived'
 
+        # Something to log to
+        self.stdout = StringIO()
+
+
     def __repr__(self):
         return '<tank: %s, (%d, %d)>' % (self.name, self.pos[0], self.pos[1])
-
-    def get_turn(self):
-        return self._turn
-    turn = property(get_turn)
 
     def fire(self, near):
         """Shoots, if ordered to and able.  Returns the set of tanks
@@ -143,7 +135,7 @@ class Tank(object):
         """Add a sensor to this tank.
 @param angle: The angle, from the tanks front and going clockwise,
               of the center of the sensor. (radians)
-@param width: The width of the sensor (percent).
+@param width: The width of the sensor (radians).
 @param range: The range of the sensor (percent)
 @param attachedTurret: If set, the sensor moves with the turret.
         """
@@ -170,6 +162,9 @@ class Tank(object):
 
         self._nextMove = left, right
 
+    def getTurretAngle(self):
+        return self._tAngle
+
     def setTurretAngle(self, angle=None):
         """Set the desired angle of the turret. No angle means the turret
     should remain stationary."""
@@ -187,59 +182,25 @@ class Tank(object):
         """Returns True if the tank can fire now."""
         return self._fireReady == 0
 
-    def addTimer(self, period):
-        """Add a timer with timeout period 'period'."""
+    def setLED(self):
+        self.led = True
 
-        if len(self._timers) >= self.SENSOR_LIMIT:
-            raise ValueError('You can only have 10 timers')
-
-        self._timers.append(None)
-        self._timerPeriods.append(period)
-
-    def resetTimer(self, key):
-        """Reset, and start the given timer, but only if it is inactive.
-    If it is active, raise a ValueError."""
-        if self._timer[key] is None:
-            self._timer[key] = self._timerPeriods[key]
-        else:
-            raise ValueError("You can't reset an active timer (#%d)" % key)
-
-    def clearTimer(self, key):
-        """Clear the timer."""
-        self._timer[key] = None
-
-    def checkTimer(self, key):
-        """Returns True if the timer has expired."""
-        return self._timer[key] == 0
-
-    def _manageTimers(self):
-        """Decrement each active timer."""
-        for i in range(len(self._timers)):
-            if self._timers[i] is not None and \
-               self._timers[i] > 0:
-                self._timers[i] = self._timers[i] - 1
-
-    def program(self, text):
+    def set_program(self, text):
         """Set the program for this tank."""
 
-        self._program = Program.Program(text)
-        self._program.setup(self)
+        self.program = Program.Program(self, text)
 
     def execute(self):
         """Execute this tanks program."""
 
-        # Decrement the active timers
-        self._manageTimers()
         self.led = False
 
-        self._program(self)
+        self.program.run()
 
         self._move(self._nextMove[0], self._nextMove[1])
         self._moveTurret()
         if self._fireReady > 0:
             self._fireReady = self._fireReady - 1
-
-        self._turn = self._turn + 1
 
     def sense(self, near):
         """Detect collisions and trigger sensors.  Returns the set of
@@ -324,24 +285,24 @@ class Tank(object):
 
         # Handle acceleration
         if self._lastSpeed[0] < lSpeed and \
-           self._lastSpeed[0] + self.ACCEL < lSpeed:
-            lSpeed = self._lastSpeed[0] + self.ACCEL
+           self._lastSpeed[0] + self.MAXACCEL < lSpeed:
+            lSpeed = self._lastSpeed[0] + self.MAXACCEL
         elif self._lastSpeed[0] > lSpeed and \
-           self._lastSpeed[0] - self.ACCEL > lSpeed:
-            lSpeed = self._lastSpeed[0] - self.ACCEL
+           self._lastSpeed[0] - self.MAXACCEL > lSpeed:
+            lSpeed = self._lastSpeed[0] - self.MAXACCEL
 
         if self._lastSpeed[1] < rSpeed and \
-           self._lastSpeed[1] + self.ACCEL < rSpeed:
-            rSpeed = self._lastSpeed[1] + self.ACCEL
+           self._lastSpeed[1] + self.MAXACCEL < rSpeed:
+            rSpeed = self._lastSpeed[1] + self.MAXACCEL
         elif self._lastSpeed[1] > rSpeed and \
-           self._lastSpeed[1] - self.ACCEL > rSpeed:
-            rSpeed = self._lastSpeed[1] - self.ACCEL
+           self._lastSpeed[1] - self.MAXACCEL > rSpeed:
+            rSpeed = self._lastSpeed[1] - self.MAXACCEL
 
         self._lastSpeed = lSpeed, rSpeed
 
         # The simple case
         if lSpeed == rSpeed:
-            fSpeed = self.SPEED*lSpeed/100
+            fSpeed = self.MAXSPEED*lSpeed/100
             x = fSpeed*math.cos(self._angle)
             y = fSpeed*math.sin(self._angle)
             # Adjust our position
@@ -354,9 +315,9 @@ class Tank(object):
         # around the circle varies with the speed of each tread, and is
         # such that each side of the tank moves an equal angle around the
         # circle.
-        L = self.SPEED * lSpeed/100.0
-        R = self.SPEED * rSpeed/100.0
-        friction = .75 * abs(L-R)/(2.0*self.SPEED)
+        L = self.MAXSPEED * lSpeed/100.0
+        R = self.MAXSPEED * rSpeed/100.0
+        friction = .75 * abs(L-R)/(2.0*self.MAXSPEED)
         L = L * (1 - friction)
         R = R * (1 - friction)
 
