@@ -1,0 +1,5 @@
+1       base 10 counting
+2       base 2
+3       base 8
+4       base 16
+5       powers of 2

@@ -1,0 +1,24 @@
+1       base math
+2       ASCII, Base64
+3       Application protocols 1
+4       MIME
+5       PCAP files and Wireshark
+6       Application protocols 2
+7       IP, TCP
+8       XOR masks
+10      Examine pcap
+20      Reconstruct image from HTTP in pcap
+30      Reconstruct image from FTP in pcap
+100     Hex decode
+200     Base64 decode
+250     Pull email out of pcap
+300     More pulling things out of pcap
+400     Still more pulling things out of pcap
+700	Base64, then xor
+800     DNS packet; you're going to have to do some research
+1000    16-byte xor key, but can be obtained with 1-byte
+1200    Another 16-byte xor key, can't be obtained with 1-byte
+2000    Paul's covert channel thingy
+3000    ICMP tunnel
+5000    ICMP tunnel, with xor
+25000   ICMP tunnel, with xor, multiplexed transfers
