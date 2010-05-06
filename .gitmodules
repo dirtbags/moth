@@ -1,0 +1,3 @@
+[submodule "puzzles"]
+	path = puzzles
+	url = cfl:/var/projects/ctf-puzzles

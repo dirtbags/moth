@@ -1,3 +1,0 @@
-Give the <b>entire sequence</b>.  The symbols are here, in no particular order, for you to copy and paste.<br />
-Make sure to include spaces between symbols (but no leading or trailing spaces).<br /><br />
-&#9685; &#9873; &#9829; &#9698; &#9733;

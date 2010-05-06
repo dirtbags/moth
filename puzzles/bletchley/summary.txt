@@ -1,9 +1,0 @@
-100     gzip 20G
-150     bz2recover
-200     scytale
-250     png as integer
-300     panzerfaust (word, letter)
-350     filenames of each gzip segment
-500     fast audio
-900     exif type
-1000    ???

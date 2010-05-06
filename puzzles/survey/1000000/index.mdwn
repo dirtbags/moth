@@ -1,8 +1,0 @@
-Thanks for playing Capture The Flag!  We would like to know what you
-think of the game; please fill out this survey and you will
-recieve a key redeemable for **ONE MILLION POINTS**.
-
-<object data=",survey.html" type="text/html"
-        style="width: 100%; height: 40em;">
-  <a href=",survey.html">Survey</a>
-</object>
