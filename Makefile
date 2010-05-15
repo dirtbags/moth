@@ -19,7 +19,8 @@ CLEAN_TARGETS = $(addsuffix -clean, $(TARGETS))
 INSTALL_TARGETS = $(addsuffix -install, $(TARGETS))
 .PHONY: $(CLEAN_TARGETS) $(INSTALL_TARGETS)
 
-puzzles:
+puzzles: puzzles/.git
+puzzles/.git:
 	git submodule update --init
 
 puzzles-build: puzzles
