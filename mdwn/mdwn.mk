@@ -6,6 +6,8 @@ MDWN_SRC += $(wildcard $(MDWN_DIR)/src/*/*/*.mdwn)
 
 MDWN_OUT = $(subst $(MDWN_DIR)/src/, $(WWW)/, $(MDWN_SRC:.mdwn=.html))
 
+mdwn:
+
 mdwn-install: $(MDWN_OUT)
 
 $(WWW)/%.html: $(MDWN_DIR)/src/%.mdwn
@@ -14,3 +16,5 @@ $(WWW)/%.html: $(MDWN_DIR)/src/%.mdwn
 
 mdwn-clean:
 	rm -f $(MDWN_OUT)
+
+TARGETS += mdwn

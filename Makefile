@@ -5,24 +5,74 @@ LIB = $(BASE)/lib
 BIN = $(BASE)/bin
 SBIN = $(BASE)/sbin
 BASE_URL = /
-USERNAME = www-data
+
+BUILD_DIR = build
 
 TEMPLATE = $(CURDIR)/template.html
 MDWNTOHTML = $(CURDIR)/mdwntohtml.py --template=$(TEMPLATE) --base=$(BASE_URL)
 
 default: install
 
-SUBDIRS = mdwn
-INSTALL_TARGETS = $(addsuffix -install, $(SUBDIRS))
-include $(addsuffix /*.mk, $(SUBDIRS))
+TARGETS = tanks puzzles
+include $(wildcard */*.mk)
+CLEAN_TARGETS = $(addsuffix -clean, $(TARGETS))
+INSTALL_TARGETS = $(addsuffix -install, $(TARGETS))
+.PHONY: $(CLEAN_TARGETS) $(INSTALL_TARGETS)
 
-install: base-install $(INSTALL_TARGETS)
-	install --directory --owner=$(USERNAME) $(VAR)/tanks
-	install --directory --owner=$(USERNAME) $(VAR)/tanks/results
-	install --directory --owner=$(USERNAME) $(VAR)/tanks/errors
-	install --directory --owner=$(USERNAME) $(VAR)/tanks/ai
-	install --directory --owner=$(USERNAME) $(VAR)/tanks/ai/players
-	install --directory --owner=$(USERNAME) $(VAR)/tanks/ai/house
+puzzles:
+	git submodule update --init
+
+puzzles-build: puzzles
+	mkdir -p $(BUILD_DIR)/puzzles
+	$(MAKE) -C puzzles BUILD_DIR=$(abspath $(BUILD_DIR)/puzzles)
+
+puzzles-install: puzzles-build
+	./mkpuzzles.py --base=$(BASE_URL) --puzzles=$(BUILD_DIR)/puzzles \
+		--htmldir=$(WWW)/puzzler --keyfile=$(LIB)/puzzler.keys
+
+puzzles-clean:
+	rm -rf $(BUILD_DIR)/puzzles $(WWW)/puzzler $(LIB)/puzzler.keys
+
+tanks-install:
+	install --directory $(VAR)/tanks
+	install --directory $(VAR)/tanks/results
+	install --directory $(VAR)/tanks/errors
+	install --directory $(VAR)/tanks/ai
+	install --directory $(VAR)/tanks/ai/players
+	install --directory $(VAR)/tanks/ai/house
+
+	ln -sf $(VAR)/tanks/results $(WWW)/tanks/results
+
+	install bin/run-tanks $(SBIN)
+
+tanks-clean:
+	rm -rf $(VAR)/tanks
+	rm -rf $(WWW)/tanks
+
+install: puzzles-install tanks-install $(INSTALL_TARGETS)
+	install bin/pointscli $(BIN)
+	install bin/in.pointsd bin/in.flagd \
+		bin/scoreboard \
+		bin/run-ctf $(SBIN)
+	cp -r lib/* $(LIB)
+	cp -r www/* $(WWW)
+	cp template.html $(LIB)
+
+	install --directory $(VAR)/disabled
+
+	python setup.py install --prefix=$(BASE)
+
+
+$(INSTALL_TARGETS): base-install
+base-install:
+	install --directory $(LIB) $(BIN) $(SBIN)
+	install --directory $(VAR)
+	install --directory $(WWW)
+	install --directory $(WWW)/puzzler
+	install --directory $(VAR)/points
+	install --directory $(VAR)/points/tmp
+	install --directory $(VAR)/points/cur
+	install --directory $(VAR)/flags
 
 	echo 'VAR = "$(VAR)"' > ctf/paths.py
 	echo 'WWW = "$(WWW)"' >> ctf/paths.py
@@ -31,47 +81,11 @@ install: base-install $(INSTALL_TARGETS)
 	echo 'SBIN = "$(SBIN)"' >> ctf/paths.py
 	echo 'BASE_URL = "$(BASE_URL)"' >> ctf/paths.py
 
-	install bin/pointscli $(BIN)
-	install bin/in.pointsd bin/in.flagd \
-		bin/scoreboard bin/run-tanks \
-		bin/run-ctf $(SBIN)
-	cp -r lib/* $(LIB)
-	cp -r www/* $(WWW)
-	rm -f $(WWW)/tanks/results
-	ln -s $(VAR)/tanks/results $(WWW)/tanks/results
-	cp template.html $(LIB)
-
-	./mkpuzzles.py --base=$(BASE_URL) --puzzles=puzzles \
-		--htmldir=$(WWW)/puzzler --keyfile=$(LIB)/puzzler.keys
-
-	install --directory $(VAR)/disabled
-	touch $(VAR)/disabled/bletchley
-	touch $(VAR)/disabled/compaq
-	touch $(VAR)/disabled/crypto
-	touch $(VAR)/disabled/forensics
-	touch $(VAR)/disabled/hackme
-	touch $(VAR)/disabled/hispaniola
-	touch $(VAR)/disabled/net-re
-	touch $(VAR)/disabled/skynet
-	touch $(VAR)/disabled/survey
-
-	python setup.py install
-
-
-base-install:
-	install --directory $(LIB) $(BIN) $(SBIN)
-	install --directory --owner=$(USERNAME) $(VAR)
-	install --directory --owner=$(USERNAME) $(WWW)
-	install --directory --owner=$(USERNAME) $(WWW)/puzzler
-	install --directory --owner=$(USERNAME) $(VAR)/points
-	install --directory --owner=$(USERNAME) $(VAR)/points/tmp
-	install --directory --owner=$(USERNAME) $(VAR)/points/cur
-	install --directory --owner=$(USERNAME) $(VAR)/flags
-
-
 uninstall:
 	rm -rf $(VAR) $(WWW) $(LIB) $(BIN) $(SBIN)
 	rmdir $(BASE) || true
 
 
-clean: $(addsuffix -clean, $(SUBDIRS))
+clean: $(CLEAN_TARGETS)
+	$(MAKE) -C puzzles BUILD_DIR=$(abspath $(BUILD_DIR)/puzzles) clean
+
