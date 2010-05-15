@@ -53,7 +53,7 @@ tanks-clean:
 install: $(INSTALL_TARGETS)
 	install bin/pointscli $(BIN)
 	install bin/in.pointsd bin/in.flagd \
-VAR		bin/scoreboard \
+		bin/scoreboard \
 		bin/run-ctf $(SBIN)
 	cp -r lib/* $(LIB)
 	cp -r www/* $(WWW)
