@@ -49,10 +49,10 @@ tanks-clean:
 	rm -rf $(VAR)/tanks
 	rm -rf $(WWW)/tanks
 
-install: puzzles-install tanks-install $(INSTALL_TARGETS)
+install: $(INSTALL_TARGETS)
 	install bin/pointscli $(BIN)
 	install bin/in.pointsd bin/in.flagd \
-		bin/scoreboard \
+VAR		bin/scoreboard \
 		bin/run-ctf $(SBIN)
 	cp -r lib/* $(LIB)
 	cp -r www/* $(WWW)
