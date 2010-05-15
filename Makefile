@@ -6,6 +6,7 @@ BIN = $(BASE)/bin
 SBIN = $(BASE)/sbin
 BASE_URL = /
 
+PYTHON = python
 BUILD_DIR = build
 
 TEMPLATE = $(CURDIR)/template.html
@@ -61,7 +62,7 @@ install: $(INSTALL_TARGETS)
 
 	install --directory $(VAR)/disabled
 
-	python setup.py install --prefix=$(BASE)
+	$(PYTHON) setup.py install --prefix=$(BASE)
 
 
 $(INSTALL_TARGETS): base-install
