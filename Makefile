@@ -30,35 +30,36 @@ puzzles-build: puzzles
 
 puzzles-install: puzzles-build
 	./mkpuzzles.py --base=$(BASE_URL) --puzzles=$(BUILD_DIR)/puzzles \
-		--htmldir=$(WWW)/puzzler --keyfile=$(LIB)/puzzler.keys
+		--htmldir=$(DESTDIR)$(WWW)/puzzler \
+		--keyfile=$(DESTDIR)$(LIB)/puzzler.keys
 
 puzzles-clean:
-	rm -rf $(BUILD_DIR)/puzzles $(WWW)/puzzler $(LIB)/puzzler.keys
+	rm -rf $(BUILD_DIR)/puzzles $(DESTDIR)$(WWW)/puzzler $(DESTDIR)$(LIB)/puzzler.keys
 
 tanks-install:
-	install --directory $(VAR)/tanks
-	install --directory $(VAR)/tanks/results
-	install --directory $(VAR)/tanks/errors
-	install --directory $(VAR)/tanks/ai
-	install --directory $(VAR)/tanks/ai/players
-	install --directory $(VAR)/tanks/ai/house
+	install --directory $(DESTDIR)$(VAR)/tanks
+	install --directory $(DESTDIR)$(VAR)/tanks/results
+	install --directory $(DESTDIR)$(VAR)/tanks/errors
+	install --directory $(DESTDIR)$(VAR)/tanks/ai
+	install --directory $(DESTDIR)$(VAR)/tanks/ai/players
+	install --directory $(DESTDIR)$(VAR)/tanks/ai/house
 
-	ln -sf $(VAR)/tanks/results $(WWW)/tanks/results
+	ln -sf $(VAR)/tanks/results $(DESTDIR)$(WWW)/tanks/results
 
-	install bin/run-tanks $(SBIN)
+	install bin/run-tanks $(DESTDIR)$(SBIN)
 
 tanks-clean:
-	rm -rf $(VAR)/tanks
-	rm -rf $(WWW)/tanks
+	rm -rf $(DESTDIR)$(VAR)/tanks
+	rm -rf $(DESTDIR)$(WWW)/tanks
 
 install: $(INSTALL_TARGETS)
-	install bin/pointscli $(BIN)
+	install bin/pointscli $(DESTDIR)$(BIN)
 	install bin/in.pointsd bin/in.flagd \
 		bin/scoreboard \
-		bin/run-ctf $(SBIN)
-	cp -r lib/* $(LIB)
-	cp -r www/* $(WWW)
-	cp template.html $(LIB)
+		bin/run-ctf $(DESTDIR)$(SBIN)
+	cp -r lib/* $(DESTDIR)$(LIB)
+	cp -r www/* $(DESTDIR)$(WWW)
+	cp template.html $(DESTDIR)$(LIB)
 
 	install --directory $(VAR)/disabled
 
@@ -67,14 +68,14 @@ install: $(INSTALL_TARGETS)
 
 $(INSTALL_TARGETS): base-install
 base-install:
-	install --directory $(LIB) $(BIN) $(SBIN)
-	install --directory $(VAR)
-	install --directory $(WWW)
-	install --directory $(WWW)/puzzler
-	install --directory $(VAR)/points
-	install --directory $(VAR)/points/tmp
-	install --directory $(VAR)/points/cur
-	install --directory $(VAR)/flags
+	install --directory $(DESTDIR)$(LIB) $(DESTDIR)$(BIN) $(DESTDIR)$(SBIN)
+	install --directory $(DESTDIR)$(VAR)
+	install --directory $(DESTDIR)$(WWW)
+	install --directory $(DESTDIR)$(WWW)/puzzler
+	install --directory $(DESTDIR)$(VAR)/points
+	install --directory $(DESTDIR)$(VAR)/points/tmp
+	install --directory $(DESTDIR)$(VAR)/points/cur
+	install --directory $(DESTDIR)$(VAR)/flags
 
 	echo 'VAR = "$(VAR)"' > ctf/paths.py
 	echo 'WWW = "$(WWW)"' >> ctf/paths.py
@@ -84,8 +85,9 @@ base-install:
 	echo 'BASE_URL = "$(BASE_URL)"' >> ctf/paths.py
 
 uninstall:
-	rm -rf $(VAR) $(WWW) $(LIB) $(BIN) $(SBIN)
-	rmdir $(BASE) || true
+	rm -rf $(DESTDIR)$(VAR) $(DESTDIR)$(WWW) $(DESTDIR)$(LIB)
+	rm -rf $(DESTDIR)$(BIN) $(DESTDIR)$(SBIN)
+	rmdir $(DESTDIR)$(BASE) || true
 
 
 clean: $(CLEAN_TARGETS)
