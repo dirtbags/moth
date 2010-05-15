@@ -55,6 +55,7 @@ tanks-clean:
 install: $(INSTALL_TARGETS)
 	install bin/pointscli $(DESTDIR)$(BIN)
 	install bin/in.pointsd bin/in.flagd \
+		bin/kevin bin/badmathbot \
 		bin/scoreboard \
 		bin/run-ctf $(DESTDIR)$(SBIN)
 	cp -r lib/* $(DESTDIR)$(LIB)
