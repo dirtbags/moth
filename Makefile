@@ -61,7 +61,7 @@ install: $(INSTALL_TARGETS)
 	cp -r www/* $(DESTDIR)$(WWW)
 	cp template.html $(DESTDIR)$(LIB)
 
-	install --directory $(VAR)/disabled
+	install --directory $(DESTDIR)$(VAR)/disabled
 
 	$(PYTHON) setup.py install --prefix=$(BASE)
 
