@@ -63,7 +63,7 @@ install: $(INSTALL_TARGETS)
 
 	install --directory $(DESTDIR)$(VAR)/disabled
 
-	$(PYTHON) setup.py install --prefix=$(BASE)
+	$(PYTHON) setup.py install --prefix=$(DESTDIR)$(BASE)
 
 
 $(INSTALL_TARGETS): base-install
