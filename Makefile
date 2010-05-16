@@ -14,7 +14,7 @@ MDWNTOHTML = $(CURDIR)/mdwntohtml.py --template=$(TEMPLATE) --base=$(BASE_URL)
 
 default: install
 
-TARGETS = tanks puzzles
+TARGETS = puzzles
 include $(wildcard */*.mk)
 CLEAN_TARGETS = $(addsuffix -clean, $(TARGETS))
 INSTALL_TARGETS = $(addsuffix -install, $(TARGETS))
@@ -35,22 +35,6 @@ puzzles-install: puzzles-build
 
 puzzles-clean:
 	rm -rf $(BUILD_DIR)/puzzles $(DESTDIR)$(WWW)/puzzler $(DESTDIR)$(LIB)/puzzler.keys
-
-tanks-install:
-	install --directory $(DESTDIR)$(VAR)/tanks
-	install --directory $(DESTDIR)$(VAR)/tanks/results
-	install --directory $(DESTDIR)$(VAR)/tanks/errors
-	install --directory $(DESTDIR)$(VAR)/tanks/ai
-	install --directory $(DESTDIR)$(VAR)/tanks/ai/players
-	install --directory $(DESTDIR)$(VAR)/tanks/ai/house
-
-	ln -sf $(VAR)/tanks/results $(DESTDIR)$(WWW)/tanks/results
-
-	install bin/run-tanks $(DESTDIR)$(SBIN)
-
-tanks-clean:
-	rm -rf $(DESTDIR)$(VAR)/tanks
-	rm -rf $(DESTDIR)$(WWW)/tanks
 
 install: $(INSTALL_TARGETS)
 	install bin/pointscli $(DESTDIR)$(BIN)

@@ -8,4 +8,4 @@ setup(name='ctf',
       author='Neale Pickett',
       author_email='neale@lanl.gov',
       url='http://dirtbags.net/ctf/',
-      packages=['ctf', 'tanks'])
+      packages=['ctf'])
