@@ -1,15 +1,13 @@
 Title: Welcome
 
-Welcome to Caf&eacute; Scientifique Capture The Flag.
+Welcome to the DOE CSC Tracer FIRE demonstration game
+
+This is a sample of the training categories available during a real
+LANL/Sandia Capture The Flag exercise.  All points are open in
+all categories.
+
+To get started:
 
 1. [Register](register.cgi) your team
 2. [View the score board](scoreboard.html)
-3. Check out the [base conversion table](table.html)
-4. Start playing
-
-The following categories exist for this version of CTF:
-
-* [Sequence](puzzler.cgi?c=sequence)
-* [Code Breaking](puzzler.cgi?c=codebreaking)
-* [Webapp](puzzler.cgi?c=webapp)
-* [Tanks](tanks/results.html)
+3. Start playing by clicking on a category to the left
