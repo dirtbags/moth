@@ -7,7 +7,7 @@ import socket
 import asyncore
 from urllib import quote_plus as quote
 
-import irc
+from ctf import irc
 from ctf.flagger import Flagger
 
 nobody = '\002[nobody]\002'

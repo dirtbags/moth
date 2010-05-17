@@ -6,7 +6,7 @@ import os
 import traceback
 import pickle
 
-import irc
+from ctf import irc
 from ctf import teams
 from ctf.flagger import Flagger
 
