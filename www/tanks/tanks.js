@@ -43,7 +43,9 @@ function Tank(ctx, width, height, color, sensors) {
         this.y = y;
         this.rotation = rotation;
         this.turret = turret;
-        this.fire = flags & 1;
+        if (flags & 1) {
+            this.fire = 5;
+        }
         this.led = flags & 2;
         this.sensor_state = sensor_state;
     }
@@ -112,8 +114,9 @@ function Tank(ctx, width, height, color, sensors) {
         ctx.fillRect(-7,  4, 15, 5);
         ctx.rotate(this.turret);
         if (this.fire) {
-            ctx.fillStyle = color;
+            ctx.fillStyle = ("rgba(68,204,68," + this.fire/5 +")");
             ctx.fillRect(0, -1, 45, 2);
+            this.fire -= 1;
         } else {
             if (this.led) {
                 ctx.fillStyle = "#f00";
