@@ -31,7 +31,7 @@ elif not code:
 else:
     path = os.path.join(basedir, 'players', quote(team, safe=''))
     file = open(path, 'w')
-    file.write('Team: %s\n' % quote(team))
+    file.write('Team: %s\n' % team)
     file.write('Color: #%s\n' % teams.color(team))
     file.write('Content-Type: text/x-tanks-bullet\n')
     file.write('\n')
