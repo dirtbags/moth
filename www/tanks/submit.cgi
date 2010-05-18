@@ -29,7 +29,7 @@ if not teams.chkpasswd(team, passwd):
 elif not code:
     body = '<p>No program given.</p>'
 else:
-    path = os.path.join(basedir, 'ai/players', quote(team, safe=''))
+    path = os.path.join(basedir, 'players', quote(team, safe=''))
     file = open(path, 'w')
     file.write('Team: %s\n' % quote(team))
     file.write('Color: #%s\n' % teams.color(team))
