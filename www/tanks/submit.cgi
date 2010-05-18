@@ -31,6 +31,9 @@ elif not code:
 else:
     path = os.path.join(basedir, 'ai/players', quote(team, safe=''))
     file = open(path, 'w')
+    file.write('Team: %s\n' % quote(team))
+    file.write('Color: #%s\n' % teams.color(team))
+    file.write('\n')
     file.write(code)
     file.close()
 
