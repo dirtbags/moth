@@ -33,6 +33,7 @@ else:
     file = open(path, 'w')
     file.write('Team: %s\n' % quote(team))
     file.write('Color: #%s\n' % teams.color(team))
+    file.write('Content-Type: text/x-tanks-bullet\n')
     file.write('\n')
     file.write(code)
     file.close()
