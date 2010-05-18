@@ -19,7 +19,6 @@ def substitute(title, body, base=base, hdr='', body_class='', onload='', links='
                                body_class=body_class,
                                base=base,
                                links=links,
-                               onload=onload,
                                body=body)
 
 def serve(title, body, **kwargs):
