@@ -5,6 +5,7 @@ import shutil
 import optparse
 import string
 import markdown
+import rfc822
 from codecs import open
 
 p = optparse.OptionParser()
@@ -80,6 +81,15 @@ for cat in os.listdir(opts.puzzles):
                     keys.append((cat, points, key))
             elif fn == 'hint':
                 pass
+            elif fn == 'index.exe':
+                p = os.popen(path)
+                m = rfc822.Message(p)
+                for key in m.getallmatchingheaders('Key'):
+                    print key
+                    keys.append((cat, points, key))
+                readme = m.fp.read()
+                if m.get('Content-Type', 'text/markdown') == 'text/markdown':
+                    readme = markdown.markdown(readme)
             elif fn == 'index.html':
                 readme = open(path, encoding='utf-8').read()
             elif fn == 'index.mdwn':
