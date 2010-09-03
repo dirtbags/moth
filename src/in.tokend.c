@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <errno.h>
 #include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -139,16 +140,30 @@ main(int argc, char *argv[])
     int          ret;
     struct flock lock;
 
-    fd = open(tokenlog, O_WRONLY | O_CREAT, 0644);
-    if (-1 == fd) {
-      write(1, "!write", 6);
+    do {
+      fd = open(tokenlog, O_WRONLY | O_CREAT, 0644);
+      if (-1 == fd) break;
+
+      ret = lockf(fd, F_LOCK, 0);
+      if (-1 == ret) break;
+
+      ret = lseek(fd, 0, SEEK_END);
+      if (-1 == ret) break;
+
+      ret = write(fd, token, tokenlen);
+      if (-1 == ret) break;
+
+      ret = write(fd, "\n", 1);
+      if (-1 == ret) break;
+
+      ret = close(fd);
+      if (-1 == ret) break;
+    } while (0);
+
+    if (-1 == ret) {
+      printf("!%s", strerror(errno));
       return 0;
     }
-    lockf(fd, F_LOCK, 0);
-    lseek(fd, 0, SEEK_END);
-    write(fd, token, tokenlen);
-    write(fd, "\n", 1);
-    close(fd);
   }
 
   /* Encrypt the token.  Note that now tokenlen is in uint32_ts, not
