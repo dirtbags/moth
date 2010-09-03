@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,7 +12,7 @@
 #define itokenlen 3
 
 char const *keydir = "/var/lib/ctf/tokend/keys";
-char const *tokendir = "/var/lib/ctf/tokend/tokens";
+char const *tokenlog = "/var/lib/ctf/tokend/tokens.log";
 
 char const consonants[] = "bcdfghklmnprstvz";
 char const vowels[]     = "aeiouy";
@@ -82,7 +83,7 @@ main(int argc, char *argv[])
     size_t len;
     int    i;
 
-    len = fread(service, 1, sizeof(service) - 1, stdin);
+    len = read(0, service, sizeof(service) - 1);
     for (i = 0; (i < len) && isalnum(service[i]); i += 1);
     service[i] = '\0';
   }
@@ -90,25 +91,25 @@ main(int argc, char *argv[])
   /* Read in that service's key. */
   {
     char    path[100];
-    FILE   *f = NULL;
+    int     fd;
     size_t  len;
     int     ret;
 
     ret = snprintf(path, sizeof(path),
-                   "%s/%s", keydir, service);
+                   "%s/%s.key", keydir, service);
     if (ret < sizeof(path)) {
-      f = fopen(path, "r");
+      fd = open(path, O_RDONLY);
     }
-    if (! f) {
-      printf("!Unregistered service");
+    if (-1 == fd) {
+      write(1, "!nosvc", 6);
       return 0;
     }
 
-    len = fread(&key, sizeof(uint32_t), 4, f);
-    fclose(f);
+    len = read(fd, &key, 16);
+    close(fd);
 
-    if (4 != len) {
-      printf("!Key file too short");
+    if (16 != len) {
+      write(1, "!shortkey", 9);
       return 0;
     }
   }
@@ -134,19 +135,20 @@ main(int argc, char *argv[])
 
   /* Write that token out now. */
   {
-    char    path[100];
-    FILE   *f = NULL;
-    int     ret;
+    int          fd;
+    int          ret;
+    struct flock lock;
 
-    ret = snprintf(path, sizeof(path),
-                   "%s/%s", tokendir, token);
-    f = fopen(path, "w");
-    if (f) {
-      fclose(f);
-    } else {
-      printf("!Unable to write token");
+    fd = open(tokenlog, O_WRONLY | O_CREAT, 0644);
+    if (-1 == fd) {
+      write(1, "!write", 6);
       return 0;
     }
+    lockf(fd, F_LOCK, 0);
+    lseek(fd, 0, SEEK_END);
+    write(fd, token, tokenlen);
+    write(fd, "\n", 1);
+    close(fd);
   }
 
   /* Encrypt the token.  Note that now tokenlen is in uint32_ts, not
@@ -159,7 +161,7 @@ main(int argc, char *argv[])
 
   /* Send it back.  If there's an error here, it's okay.  Better to have
      unclaimed tokens than unclaimable ones. */
-  fwrite(token, tokenlen, sizeof(uint32_t), stdout);
+  write(1, token, tokenlen * sizeof(uint32_t));
 
   return 0;
 }

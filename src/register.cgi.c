@@ -86,7 +86,7 @@ main(int argc, char *argv[])
               "The full path to the team hash file is too long.\n"));
       return 0;
     }
-    fd = creat(filename, 0444);
+    fd = open(filename, 0444, O_WRONLY | O_CREAT | O_EXCL);
     if (-1 == fd) {
       page("Bad team name",
            ("<p>Either that team name is already in use, or you "
