@@ -10,6 +10,8 @@
 
 #define itokenlen 3
 
+char const *keydir = "/var/lib/ctf/tokend/keys";
+char const *tokendir = "/var/lib/ctf/tokend/tokens";
 
 char const consonants[] = "bcdfghklmnprstvz";
 char const vowels[]     = "aeiouy";
@@ -71,10 +73,11 @@ main(int argc, char *argv[])
   uint32_t key[4];
   size_t   tokenlen;
 
-  /* This ought to be unpredictable enough for a contest */
+  /* Seed the random number generator.  This ought to be unpredictable
+     enough for a contest. */
   srand((int)time(NULL) * (int)getpid());
 
-  /* Read service name */
+  /* Read service name. */
   {
     size_t len;
     int    i;
@@ -84,13 +87,20 @@ main(int argc, char *argv[])
     service[i] = '\0';
   }
 
-  /* Read in that service's key */
+  /* Read in that service's key. */
   {
-    FILE   *f = fopen(service, "r");
+    char    path[100];
+    FILE   *f = NULL;
     size_t  len;
+    int     ret;
 
+    ret = snprintf(path, sizeof(path),
+                   "%s/%s", keydir, service);
+    if (ret < sizeof(path)) {
+      f = fopen(path, "r");
+    }
     if (! f) {
-      printf("Unregistered service");
+      printf("!Unregistered service");
       return 0;
     }
 
@@ -98,38 +108,57 @@ main(int argc, char *argv[])
     fclose(f);
 
     if (4 != len) {
-      printf("Key file screwed up");
+      printf("!Key file too short");
       return 0;
     }
   }
 
-  /* Create the token */
+  /* Create the token. */
   {
     uint8_t crap[itokenlen];
-    char digest[bubblebabble_len(itokenlen)];
-    int  i;
+    char    digest[bubblebabble_len(itokenlen)];
+    int     i;
 
-    /* Digest some random junk */
+    /* Digest some random junk. */
     for (i = 0; i < itokenlen; i += 1) {
       crap[i] = (uint8_t)random();
     }
     bubblebabble(digest, crap, itokenlen);
 
-    /* Append digest to service name */
+    /* Append digest to service name.  I use . as a separator because it
+       won't be URL encoded. */
     tokenlen = (size_t)snprintf(token, sizeof(token),
-                                "%s:%s",
+                                "%s.%s",
                                 service, digest);
   }
 
-  /* Encrypt the token */
-  /* Note that now tokenlen is in uint32_ts, not chars! */
+  /* Write that token out now. */
+  {
+    char    path[100];
+    FILE   *f = NULL;
+    int     ret;
+
+    ret = snprintf(path, sizeof(path),
+                   "%s/%s", tokendir, token);
+    f = fopen(path, "w");
+    if (f) {
+      fclose(f);
+    } else {
+      printf("!Unable to write token");
+      return 0;
+    }
+  }
+
+  /* Encrypt the token.  Note that now tokenlen is in uint32_ts, not
+     chars! */
   {
     tokenlen = (tokenlen + (tokenlen % 4)) / 4;
 
     tea_encode(key, (uint32_t *)token, tokenlen);
   }
 
-  /* Send it back */
+  /* Send it back.  If there's an error here, it's okay.  Better to have
+     unclaimed tokens than unclaimable ones. */
   fwrite(token, tokenlen, sizeof(uint32_t), stdout);
 
   return 0;
