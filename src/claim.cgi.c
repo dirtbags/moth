@@ -2,10 +2,9 @@
 #include <unistd.h>
 #include <time.h>
 #include "cgi.h"
-#include "pointscli.h"
+#include "common.h"
 
 char const *tokenlog = "/var/lib/ctf/tokend/tokens.log";
-char const *teamdir = "/var/lib/ctf/teams";
 char const *claimlog = "/var/lib/ctf/tokend/claim.log";
 
 int
@@ -29,6 +28,9 @@ main(int argc, char *argv[])
   size_t teamlen;
   char   token[100];
   size_t tokenlen;
+
+  /* XXX: This code needs to be tested */
+  abort();
 
   if (-1 == cgi_init()) {
     return 0;
@@ -69,7 +71,7 @@ main(int argc, char *argv[])
     }
   }
 
-  if (! pointscli_isteam(team)) {
+  if (! team_exists(team)) {
     cgi_page("No such team", "");
   }
 
@@ -78,7 +80,7 @@ main(int argc, char *argv[])
     FILE *f;
     int   valid = 0;
 
-    f = fopen(filelog, "r");
+    f = fopen(claimlog, "r");
     if (f) {
       while (1) {
         char line[100];
@@ -113,6 +115,7 @@ main(int argc, char *argv[])
     sprintf(needle, "%s %s", team, token);
     while (1) {
       char line[100];
+      char *p;
       int  pos;
 
       if (NULL == fgets(line, sizeof(line), f)) {
@@ -120,9 +123,9 @@ main(int argc, char *argv[])
       }
 
       /* Skip to past first space */
-      for (; (*line && (*line != ' ')); line += 1);
+      for (p = line; (*p && (*p != ' ')); p += 1);
 
-      if (0 == mystrcmp(line, needle)) {
+      if (0 == mystrcmp(p, needle)) {
         claimed = 1;
         break;
       }
@@ -143,7 +146,7 @@ main(int argc, char *argv[])
       }
       category[i] = '\0';
 
-      pointscli_award(team, category, points);
+      award_points(team, category, 1);
     }
 
     /* Finally, append an entry to the log file.  I figure it's better
