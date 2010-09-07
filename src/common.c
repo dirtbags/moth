@@ -8,25 +8,6 @@
 #include "common.h"
 
 int
-timestamp(char *now, size_t nowlen)
-{
-  time_t    t;
-  struct tm tmp;
-
-  time(&t);
-  if (NULL == gmtime_r(&t, &tmp)) {
-    perror("gmtime_r");
-    return -1;
-  }
-
-  if (0 == strftime(now, nowlen, "%Y-%m-%dT%H:%M:%SZ", &tmp)) {
-    return -1;
-  }
-
-  return 0;
-}
-
-int
 team_exists(char *teamhash)
 {
   struct stat buf;
@@ -60,23 +41,18 @@ team_exists(char *teamhash)
 int
 award_points(char *teamhash, char *category, int points)
 {
-  char now[40];
-  char line[100];
-  int  linelen;
-  int  fd;
-  int  ret;
+  char   line[100];
+  int    linelen;
+  int    fd;
+  int    ret;
 
   if (! team_exists(teamhash)) {
     return -2;
   }
 
-  ret = timestamp(now, sizeof(now));
-  if (-1 == ret) {
-    return -3;
-  }
   linelen = snprintf(line, sizeof(line),
-                     "%s %s %s %d\n",
-                     now, teamhash, category, points);
+                     "%u %s %s %d\n",
+                     time(NULL), teamhash, category, points);
   if (sizeof(line) == linelen) {
     return -1;
   }
