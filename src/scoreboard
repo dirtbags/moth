@@ -1,0 +1,38 @@
+#! /usr/bin/awk -f
+
+function output() {
+    for (c in points_by_cat) {
+        for (t in teams) {
+            printf("%d %s %f\n", 
+                   (lasttime - start) / 600,
+                    t,
+                   points_by_cat_team[c, t] / points_by_cat[c]);
+        }
+    }
+}
+
+{
+    time = $1
+    team = $2
+    cat = $3
+    points = int($4)
+
+    if (! start) {
+        start = time
+    }
+
+    # Every 10 minutes
+    if (time > (outtime + 600)) {
+        outtime = time
+        output()
+    }
+    lasttime = time
+
+    teams[team] = team
+    points_by_cat[cat] += points
+    points_by_cat_team[cat, team] += points
+}
+
+END {
+    output()
+}
