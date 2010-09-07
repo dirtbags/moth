@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include "cgi.h"
 
 static size_t inlen = 0;
@@ -62,7 +63,7 @@ read_hex()
    outside of boundaries, we can use the same function for both.
 */
 size_t
-read_item(char *str, size_t maxlen)
+cgi_item(char *str, size_t maxlen)
 {
   int    c;
   size_t pos = 0;
@@ -87,4 +88,41 @@ read_item(char *str, size_t maxlen)
       pos += 1;
     }
   }
+}
+
+void
+cgi_page(char *title, char *fmt, ...)
+{
+  FILE    *p;
+  va_list  ap;
+
+  printf("Content-type: text/html\r\n"
+         "\r\n");
+  fflush(stdout);
+  p = popen("./template", "w");
+  if (NULL == p) {
+    printf("<h1>%s</h1>\n", title);
+    p = stdout;
+  } else {
+    fprintf(p, "Title: %s\n", title);
+  }
+  va_start(ap, fmt);
+  vfprintf(p, fmt, ap);
+  va_end(ap);
+  fclose(p);
+  exit(0);
+}
+
+void
+cgi_error(char *fmt, ...)
+{
+  va_list ap;
+
+  printf("500 Internal Error\r\n"
+         "Content-type: text/plain\r\n"
+         "\r\n");
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+  exit(0);
 }

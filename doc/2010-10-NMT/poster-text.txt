@@ -1,0 +1,7 @@
+2010 Capture The Flag
+A computer security competition
+Presented by LANL & NMT CS Dept.
+Fri & Sat, October 20-30
+
+http://dirtbags.net/ctf/
+

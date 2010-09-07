@@ -1,0 +1,76 @@
+LANL Capture The Flag
+=====================
+
+The LANL CTF training and exercise is designed to train novice to expert
+analysts in new techniques and tools.  Course material is in a tutorial
+format, which is bundled into the exercise.  
+
+The class portion proceeds as a lecture style, although participants are
+encouraged to work at their own pace, soliciting assistance from
+instructors during the lab sections of the lecture.  A Capture-The-Flag
+style exercise follows the training as a mechanism to reinforce concepts
+the participants have just learned, as well as introduce new concepts,
+and to help participants learn how to deal with an actual security
+incident.  In the exercise portion, participants form into teams which
+compete against each other to gain points in a broad spectrum of
+categories.
+
+Event categories and training topics are easily customized to better
+meet each site's requirements for training.
+
+
+Key Features
+------------
+
+Portable: Hardware for up to 80 participants fits into a single
+suitcase, and the exercise portion can be conducted by a single
+organizer for up to 100 participants.
+
+Flexible: Exercise or Training can be run standalone, and can last
+anywhere from 2 hours to 5 days.
+
+Lasting: Exercise portion reinforces concepts learned during training.
+
+Modular: Categories can be cherry-picked from an ever-growing list,
+creating a custom-tailored training and exercise.
+
+Extensible: New modules can be added quickly.
+
+
+Categories currently available: (September 2010)
+------------------------------------------------
+
+* Base arithmetic
+* Introductory computer programming / logical thinking
+* Host forensics
+* Malware reverse-engineering
+* Network reverse-engineering
+  * Packet capture and analysis tools
+  * Reconstruction of session data
+  * Protocol reverse-engineering
+  * Custom tool development skills
+* Linux systems programming
+  * Using strace, ltrace, gdb
+  * Understanding race conditions
+  * Programming securely
+* Web application development
+  * Cross-site scripting attacks
+  * Input validation
+  * SQL Injection
+  * Security vs. obscurity
+* Cryptography and codebreaking
+* Steganography detection and extraction
+* Social engineering
+* Binary file formats
+* General puzzle-solving skills
+
+
+Categories in development
+-------------------------
+
+* Securing SCADA devices
+* Network traffic monitoring
+* Log file analysis
+* HTML / Javascript reverse-engineering
+* Your request goes here!
+

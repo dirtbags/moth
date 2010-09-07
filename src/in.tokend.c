@@ -127,10 +127,9 @@ main(int argc, char *argv[])
     }
     bubblebabble(digest, crap, itokenlen);
 
-    /* Append digest to service name.  I use . as a separator because it
-       won't be URL encoded. */
+    /* Append digest to service name. */
     tokenlen = (size_t)snprintf(token, sizeof(token),
-                                "%s.%s",
+                                "%s:%s",
                                 service, digest);
   }
 
@@ -138,7 +137,6 @@ main(int argc, char *argv[])
   {
     int          fd;
     int          ret;
-    struct flock lock;
 
     do {
       fd = open(tokenlog, O_WRONLY | O_CREAT, 0644);

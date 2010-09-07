@@ -1,0 +1,11 @@
+Ideas for puzzles
+=================
+* Hide something in a .docx zip file
+
+
+Network treasure hunt
+---------------------
+* DHCP option
+* Single TCP RST with token in payload
+* Multiple TCP RST with different payloads
+* 
