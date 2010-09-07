@@ -1,14 +1,25 @@
 #! /usr/bin/awk -f
 
+BEGIN {
+    # Every 2.5 minutes
+    interval = 150
+    tslen = 0
+}
+
 function output() {
-    for (c in points_by_cat) {
-        for (t in teams) {
-            printf("%d %s %f\n", 
-                   (lasttime - start) / 600,
-                    t,
-                   points_by_cat_team[c, t] / points_by_cat[c]);
+    for (t in teams) {
+        score = 0;
+        for (c in points_by_cat) {
+            score += points_by_cat_team[c, t] / points_by_cat[c];
+        }
+        if (score > maxscore) {
+            maxscore = score
+        }
+        if (score > 0.009) {
+            scores_by_team_time[t, lasttime] = score
         }
     }
+    timestamps[tslen++] = lasttime
 }
 
 {
@@ -21,8 +32,7 @@ function output() {
         start = time
     }
 
-    # Every 10 minutes
-    if (time > (outtime + 600)) {
+    if (time > (outtime + interval)) {
         outtime = time
         output()
     }
@@ -35,4 +45,12 @@ function output() {
 
 END {
     output()
+
+    for (i = 1; i < tslen; i += 1) {
+        time = timestamps[i]
+        print time
+        for (team in teams) {
+            printf("  %s: %f\n", team, scores_by_team_time[team, time])
+        }
+    }
 }
