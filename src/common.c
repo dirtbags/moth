@@ -43,8 +43,11 @@ award_points(char *teamhash, char *category, int points)
 {
   char   line[100];
   int    linelen;
+  char   filename[100];
+  int    filenamelen;
   int    fd;
   int    ret;
+  time_t now = time(NULL);
 
   if (! team_exists(teamhash)) {
     return -2;
@@ -52,25 +55,40 @@ award_points(char *teamhash, char *category, int points)
 
   linelen = snprintf(line, sizeof(line),
                      "%u %s %s %d\n",
-                     time(NULL), teamhash, category, points);
+                     now, teamhash, category, points);
   if (sizeof(line) == linelen) {
     return -1;
   }
 
-  fd = open(pointslog, O_WRONLY | O_CREAT, 0666);
+  /* At one time I had this writing to a single log file, using lockf.
+     This works, as long as nobody ever tries to edit the log file.
+     Editing the log file would require locking it, which would block
+     everything trying to score, effectively taking down the entire
+     contest.  If you can't lock it first (nothing in busybox lets you
+     do this), you have to bring down pretty much everything manually
+     anyway.
+
+     By putting new scores into new files and periodically appending
+     those files to the main log file, it is possible to stop the thing
+     that appends, edit the file at leisure, and then start the appender
+     back up, all without affecting things trying to score: they're
+     still able to record their score and move on.  You don't even
+     really need an appender, but it does make things look a little
+     nicer on the fs.
+
+     The fact that this makes the code simpler is just gravy.
+  */
+
+  filenamelen = snprintf(filename, sizeof(filename),
+                         "%s/%d.%d.%s.%s.%d",
+                         pointsdir, now, getpid(),
+                         teamhash, category, points);
+  if (sizeof(filename) == filenamelen) {
+    return -1;
+  }
+
+  fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
   if (-1 == fd) {
-    return -1;
-  }
-
-  ret = lockf(fd, F_LOCK, 0);
-  if (-1 == ret) {
-    close(fd);
-    return -1;
-  }
-
-  ret = lseek(fd, 0, SEEK_END);
-  if (-1 == ret) {
-    close(fd);
     return -1;
   }
 
