@@ -1,13 +1,41 @@
 #! /usr/bin/awk -f
 
-function output() {
+function qsort(A, left, right,   i, last) {
+    if (left >= right)
+        return
+    swap(A, left, left+int((right-left+1)*rand()))
+    last = left
+    for (i = left+1; i <= right; i++)
+        if (A[i] < A[left])
+            swap(A, ++last, i)
+    swap(A, left, last)
+    qsort(A, left, last-1)
+    qsort(A, last+1, right)
+}
+function swap(A, i, j,   t) {
+    t = A[i]; A[i] = A[j]; A[j] = t
+}
+
+function escape(s) {
+    gsub("&", "&amp;", s)
+    gsub("<", "&lt;", s)
+    gsub(">", "&gt;", s)
+    return s
+}
+
+function output(    t, c) {
     for (t in teams) {
         score = 0;
         for (c in points_by_cat) {
-            score += points_by_cat_team[c, t] / points_by_cat[c];
+            if (points_by_cat[c] > 0) {
+                score += points_by_cat_team[c, t] / points_by_cat[c];
+            }
         }
         if (score > maxscore) {
             maxscore = score
+        }
+        if (score > maxscores_by_team[t]) {
+            maxscores_by_team[t] = score
         }
         scores_by_team_time[t, lasttime] = score
     }
@@ -15,16 +43,19 @@ function output() {
 }
 
 BEGIN {
-    # High-contrast colors for accessibility
-    colors[0] = "e41a1c"
-    colors[1] = "377eb8"
-    colors[2] = "4daf4a"
-    colors[3] = "984ea3"
-    colors[4] = "ff7f00"
-    colors[5] = "ffff33"
-    colors[6] = "a65628"
-    colors[7] = "f781bf"
-
+    # It took me like 7 hours to find a color palette that worked for
+    # people with protanopia.  Don't change these colors.
+    colors[0] = "33cc33"
+    colors[1] = "863a3a"
+    colors[2] = "5c5ce6"
+    colors[3] = "bfbf4d"
+    colors[4] = "408080"
+    colors[5] = "b336b2"
+    colors[6] = "ffa500"
+    colors[7] = "00bfff"
+    colors[8] = "8db6cd"
+    ncolors = 9
+    
     # Every 2.5 minutes
     interval = 150
     tslen = 0
@@ -52,34 +83,138 @@ BEGIN {
 
     output()
 
+    # Get team colors and names
+    for (team in teams) {
+        fn = "/var/lib/ctf/teams/colors/" team ".color"
+        getline colors_by_team[team] < fn
+        close(fn)
+
+        fn = "/var/lib/ctf/teams/" team
+        getline names_by_team[team] < fn
+        close(fn)
+    }
+
+    # Get team names
+
     width = lasttime - start
     print "<!DOCTYPE html>"
     print "<html>"
     print "  <head>"
     print "    <title>foo</title>"
-    print "    <style type=\"text/css\">"
-    print "      body { background: black; }"
-    print "    </style>"
-    print "    <script type=\"application/javascript\" src=\"file:///home/neale/src/ctf/www/plot.js\"></script>"
+    print "    <link rel=\"stylesheet\" href=\"ctf.css\" type=\"text/css\">"
+    print "    <script type=\"application/javascript\" src=\"plot.js\"></script>"
     print "    <script type=\"application/javascript\">"
     print "function draw() {"
-    printf("p = new Plot(\"chart\", %d, %.2f)\n", width, maxscore * 1.1);
+    printf("plot(\"chart\", %d, %.2f, [\n", tslen, maxscore)
     c = 0
     for (team in teams) {
-        printf("p.line(\"#%s\",[", colors[c++ % 8])
+        if (maxscores_by_team[team] / maxscore < 0.01) continue
+        printf("[\"#%s\",[", colors_by_team[team])
         for (i = 1; i < tslen; i += 1) {
             time = timestamps[i]
             printf("[%d,%.2f],", 
-                   time - start, scores_by_team_time[team, time])
+                   i, scores_by_team_time[team, time])
         }
-        printf("]);\n");
+        printf("]],\n");
     }
+    print "]);"
     print "}"
     print "window.onload = draw;"
     print "    </script>"
+    print "    <style type=\"text/css\">"
+    for (team in teams) {
+        printf(".t%s { background-color: #%s; }\n",
+               team, colors_by_team[team])
+    }
+    print "    </style>"
     print "  </head>"
     print "  <body>"
-    print "    <canvas id=\"chart\"></canvas>"
+    print "    <h1>Scoreboard</h1>"
+    print "    <table class=\"scoreboard\">"
+    print "      <tr><th>Overall</th>"
+
+    # Sort categories
+    ncats = 0
+    for (cat in points_by_cat) {
+        cats[ncats++] = cat
+    }
+    qsort(cats, 0, ncats-1)
+
+    # Print out category names
+    for (i = 0; i < ncats; i += 1) {
+        cat = cats[i]
+        points = points_by_cat[cat]
+        if (0 == points) continue
+        printf("<th>%s (%d)</th>\n", cat, points)
+    }
+    print "      </tr>"
+
+    print "      <tr>"
+    print "        <td>"
+    print "          <ol>"
+
+    # Create a sorted list of scores
+    nteams = 0
+    for (team in teams) {
+        scores[nteams++] = scores_by_team_time[team, lasttime]
+    }
+    qsort(scores, 0, nteams-1)
+
+    # Print out teams, ranked by score
+    bottom = nteams - 10
+    if (bottom < 0) bottom = 0
+    for (i = nteams-1; i >= bottom; i -= 1) {
+        if (scores[i] == scores[i-1]) continue;
+        for (team in teams) {
+            if (scores[i] == scores_by_team_time[team, lasttime]) {
+                name = names_by_team[team]
+                printf("<li><span class=\"t%s\">%s (%.2f)</span></li>\n", 
+                       team, escape(name), scores[i])
+            }
+        }
+    }
+    print "          </ol>"
+    print "        </td>"
+    for (i = 0; i < ncats; i += 1) {
+        cat = cats[i]
+        points = points_by_cat[cat]
+        if (0 == points) break;
+
+        print "<td>"
+        
+        # Create sorted list of scores in this category
+        n = 0
+        for (team in teams) {
+            l[n++] = points_by_cat_team[cat, team];
+        }
+        qsort(l, 0, n)
+
+        # Print out teams, ranked by points
+        for (j = n; j > 0; j -= 1) {
+            if (l[j] == l[j-1]) continue;
+            if (0 == l[j]) break;
+            for (team in teams) {
+                points = points_by_cat_team[cat, team]
+                if (l[j] == points) {
+                    name = names_by_team[team]
+                    printf("<div class=\"t%s\" style=\"height: %.2f%%; overflow: hidden; color: black; border-top: \">\n",
+                           team,
+                           100 * points / points_by_cat[cat],
+                           colors_by_team[team])
+                    printf("<!-- category: %s --> %s: %d\n",
+                           cat, escape(name), points)
+                    printf("</div>\n")
+                }
+            }
+        }
+
+        print "</td>"
+    }
+    print "      </tr>"
+    print "    </table>"
+    
+        
+    print "    <canvas id=\"chart\" width=\"800\" height=\"400\"></canvas>"
     print "  </body>"
     print "</html>"
 }
