@@ -1,10 +1,9 @@
-TARGETS = in.tokend register.cgi claim.cgi pointscli
+TARGETS = in.tokend claim.cgi pointscli
 
 all: $(TARGETS)
 
 in.tokend: in.tokend.o xxtea.o
 
-register.cgi: register.cgi.o cgi.o
 claim.cgi: claim.cgi.o cgi.o common.o
 pointscli: common.o pointscli.o
 

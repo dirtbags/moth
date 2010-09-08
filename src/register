@@ -1,0 +1,13 @@
+#! /bin/sh -e
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 TEAM" 1>&2
+    exit 64
+fi
+
+# Don't overwrite files
+set -C
+
+hash=$(echo "$1" | md5sum | cut -b 1-8)
+echo "$1" > /var/lib/ctf/teams/$hash
+echo "Registered with hash $hash"
