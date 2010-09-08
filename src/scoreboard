@@ -1,11 +1,5 @@
 #! /usr/bin/awk -f
 
-BEGIN {
-    # Every 2.5 minutes
-    interval = 150
-    tslen = 0
-}
-
 function output() {
     for (t in teams) {
         score = 0;
@@ -15,42 +9,77 @@ function output() {
         if (score > maxscore) {
             maxscore = score
         }
-        if (score > 0.009) {
-            scores_by_team_time[t, lasttime] = score
-        }
+        scores_by_team_time[t, lasttime] = score
     }
     timestamps[tslen++] = lasttime
 }
 
-{
-    time = $1
-    team = $2
-    cat = $3
-    points = int($4)
+BEGIN {
+    # High-contrast colors for accessibility
+    colors[0] = "e41a1c"
+    colors[1] = "377eb8"
+    colors[2] = "4daf4a"
+    colors[3] = "984ea3"
+    colors[4] = "ff7f00"
+    colors[5] = "ffff33"
+    colors[6] = "a65628"
+    colors[7] = "f781bf"
 
-    if (! start) {
-        start = time
+    # Every 2.5 minutes
+    interval = 150
+    tslen = 0
+
+    while (1 == getline) {
+        time = $1
+        team = $2
+        cat = $3
+        points = int($4)
+
+        if (! start) {
+            start = time
+        }
+
+        if (time > (outtime + interval)) {
+            outtime = time
+            output()
+        }
+        lasttime = time
+
+        teams[team] = team
+        points_by_cat[cat] += points
+        points_by_cat_team[cat, team] += points
     }
 
-    if (time > (outtime + interval)) {
-        outtime = time
-        output()
-    }
-    lasttime = time
-
-    teams[team] = team
-    points_by_cat[cat] += points
-    points_by_cat_team[cat, team] += points
-}
-
-END {
     output()
 
-    for (i = 1; i < tslen; i += 1) {
-        time = timestamps[i]
-        print time
-        for (team in teams) {
-            printf("  %s: %f\n", team, scores_by_team_time[team, time])
+    width = lasttime - start
+    print "<!DOCTYPE html>"
+    print "<html>"
+    print "  <head>"
+    print "    <title>foo</title>"
+    print "    <style type=\"text/css\">"
+    print "      body { background: black; }"
+    print "    </style>"
+    print "    <script type=\"application/javascript\" src=\"file:///home/neale/src/ctf/www/plot.js\"></script>"
+    print "    <script type=\"application/javascript\">"
+    print "function draw() {"
+    printf("p = new Plot(\"chart\", %d, %.2f)\n", width, maxscore * 1.1);
+    c = 0
+    for (team in teams) {
+        printf("p.line(\"#%s\",[", colors[c++ % 8])
+        for (i = 1; i < tslen; i += 1) {
+            time = timestamps[i]
+            printf("[%d,%.2f],", 
+                   time - start, scores_by_team_time[team, time])
         }
+        printf("]);\n");
     }
+    print "}"
+    print "window.onload = draw;"
+    print "    </script>"
+    print "  </head>"
+    print "  <body>"
+    print "    <canvas id=\"chart\"></canvas>"
+    print "  </body>"
+    print "</html>"
 }
