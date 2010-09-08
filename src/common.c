@@ -92,7 +92,11 @@ award_points(char *teamhash, char *category, int points)
     return -1;
   }
 
-  write(fd, line, linelen);
+  if (-1 == write(fd, line, linelen)) {
+    close(fd);
+    return -1;
+  }
+
   close(fd);
   return 0;
 }
