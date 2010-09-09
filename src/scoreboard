@@ -30,7 +30,7 @@ function escape(s) {
 }
 
 function print_bar(cat, team, n, d) {
-    printf("<div class=\"b%s score\""               \
+    printf("<div class=\"t%s score\""               \
            "     style=\"height: %.2f%%;\""         \
            "     onmouseover=\"highlight('%s')\""   \
            "     onmouseout=\"restore('%s')\">\n"   \
@@ -63,19 +63,6 @@ function output(    t, c) {
 }
 
 BEGIN {
-    # It took me like 7 hours to find a color palette that worked for
-    # people with protanopia.  Don't change these colors.
-    colors[0] = "33cc33"
-    colors[1] = "863a3a"
-    colors[2] = "5c5ce6"
-    colors[3] = "bfbf4d"
-    colors[4] = "408080"
-    colors[5] = "b336b2"
-    colors[6] = "ffa500"
-    colors[7] = "00bfff"
-    colors[8] = "8db6cd"
-    ncolors = 9
-
     # Only display two decimal places
     CONVFMT = "%.2f"
     
@@ -112,7 +99,7 @@ BEGIN {
         getline colors_by_team[team] < fn
         close(fn)
 
-        fn = "/var/lib/ctf/teams/" team
+        fn = "/var/lib/ctf/teams/names/" team
         getline names_by_team[team] < fn
         close(fn)
     }
@@ -165,7 +152,7 @@ BEGIN {
     print "      body { width: 100%; }"
     print "      .score { overflow: hidden; color: black; }"
     for (team in teams) {
-        printf("      .b%s { background-color: #%s; }\n",
+        printf("      .t%s { background-color: #%s; }\n",
                team, colors_by_team[team])
     }
     print "    </style>"
@@ -235,7 +222,7 @@ BEGIN {
     print "      </tr>"
 
     print "    </table>"
-    print "    <canvas id=\"chart\" width=\"800\" height=\"200\"></canvas>"
+    print "    <canvas id=\"chart\" width=\"800\" height=\"400\"></canvas>"
     print "  </body>"
     print "</html>"
 }

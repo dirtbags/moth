@@ -4,11 +4,15 @@ function dbg(o) {
 }
 
 function torgba(color, alpha) {
-    var r = parseInt(color.substring(1,3), 16);
-    var g = parseInt(color.substring(3,5), 16);
-    var b = parseInt(color.substring(5,7), 16);
+    if (color.substring(0, 1) == "#") {
+        var r = parseInt(color.substring(1,3), 16);
+        var g = parseInt(color.substring(3,5), 16);
+        var b = parseInt(color.substring(5,7), 16);
 
-    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+        return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+    } else {
+        return color;
+    }
 }
 
 function Chart(id, width, height, lines) {
@@ -30,7 +34,7 @@ function Chart(id, width, height, lines) {
     function draw(color, values) {
         var lasty = 0;
 
-        ctx.strokeStyle = torgba(color, 0.99);
+        ctx.strokeStyle = color;
         ctx.lineWidth = 4;
         ctx.beginPath();
         moveTo(values[0][0], 0);
@@ -81,8 +85,8 @@ function getElementsByClass( searchClass, domNode, tagName) {
 }
 
 function highlight(cls, color) {
-    if (! color) color = "#ffff00";
-    elements = getElementsByClass("b" + cls);
+    if (! color) color = "#ffffff";
+    elements = getElementsByClass("t" + cls);
     for (i in elements) {
         e = elements[i];
         e.style.borderColor = e.style.backgroundColor;
@@ -92,7 +96,7 @@ function highlight(cls, color) {
 }
 
 function restore(cls) {
-    elements = getElementsByClass("b" + cls);
+    elements = getElementsByClass("t" + cls);
     for (i in elements) {
         e = elements[i];
         e.style.backgroundColor = e.style.borderColor;

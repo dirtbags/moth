@@ -8,6 +8,38 @@ fi
 # Don't overwrite files
 set -C
 
+# Assign a color.  I spent two days selecting this color pallette for
+# people with protanopia.  Please don't change these colors.
+nteams=$(ls /var/lib/ctf/teams/names/ | wc -l)
+case $(expr $nteams % 15) in
+    0) color=8c7a69 ;;
+    1) color=7f7062 ;;
+    2) color=79614b ;;
+    3) color=a59281 ;;
+    4) color=a59485 ;;
+    5) color=4a4f5e ;;
+    6) color=454955 ;;
+    7) color=343c52 ;;
+    8) color=696f82 ;;
+    9) color=6b7182 ;;
+    10) color=516b55 ;;
+    11) color=4b614f ;;
+    12) color=395d3f ;;
+    13) color=6d8c72 ;;
+    14) color=708c75 ;;
+    *)
+        echo 'ERROR ERROR' 1>&2
+        echo 'DOES NOT COMPUTE' 1>&2
+        exit 69
+        ;;
+esac
+
+# Compute hash of team name; they'll use this for everything in the
+# contest instead of their team name, which makes stuff much easier on
+# me since all team hashes are in the set /[0-9a-f]{8}/.
 hash=$(echo "$1" | md5sum | cut -b 1-8)
-echo "$1" > /var/lib/ctf/teams/$hash
+
+echo "$1" > /var/lib/ctf/teams/names/$hash
+echo "$color" > /var/lib/ctf/teams/colors/$hash
+
 echo "Registered with hash $hash"

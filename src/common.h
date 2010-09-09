@@ -1,7 +1,7 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#define teamdir "/var/lib/ctf/teams"
+#define teamdir "/var/lib/ctf/teams/names"
 #define pointsdir "/var/lib/ctf/points/new"
 
 int team_exists(char *teamhash);
