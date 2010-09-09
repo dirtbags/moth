@@ -151,6 +151,9 @@ BEGIN {
     print "window.onload = init;"
     print "    </script>"
 
+    # Reload every minute
+    print "    <meta http-equiv=\"refresh\" content=\"60\">"
+
     # Set up team colors and a few page-specific styles
     print "    <style type=\"text/css\">"
     print "      body { width: 100%; }"
