@@ -34,7 +34,7 @@ function print_bar(cat, team, n, d) {
            "     style=\"height: %.2f%%;\""         \
            "     onmouseover=\"highlight('%s')\""   \
            "     onmouseout=\"restore('%s')\">\n"   \
-           "<!-- %s --> %s: %.2f\n"                 \
+           "<!-- %s --> %s: %s\n"                   \
            "</div>", 
            team, 
            100 * n / d, 
@@ -75,6 +75,9 @@ BEGIN {
     colors[7] = "00bfff"
     colors[8] = "8db6cd"
     ncolors = 9
+
+    # Only display two decimal places
+    CONVFMT = "%.2f"
     
     # New point at least every 2.5 minutes
     interval = 150
