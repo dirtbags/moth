@@ -95,7 +95,7 @@ BEGIN {
 
     # Get team colors and names
     for (team in teams) {
-        fn = "/var/lib/ctf/teams/colors/" team ".color"
+        fn = "/var/lib/ctf/teams/colors/" team
         getline colors_by_team[team] < fn
         close(fn)
 
@@ -129,12 +129,12 @@ BEGIN {
 
     # Provide raw data for the chart
     print "    <script type=\"application/javascript\">"
-    print "function draw() {"
-    printf("plot(\"chart\", %d, %.2f, {\n", tslen, maxscore)
+    print "function init() {"
+    printf("  plot(\"chart\", %d, %.2f, {\n", tslen, maxscore)
     c = 0
     for (team in teams) {
         if (maxscores_by_team[team] / maxscore < 0.01) continue
-        printf("\"%s\": [\"#%s\",[", team, colors_by_team[team])
+        printf("    \"%s\": [\"#%s\",[", team, colors_by_team[team])
         for (i = 1; i < tslen; i += 1) {
             time = timestamps[i]
             printf("[%d,%.2f],",
@@ -142,9 +142,13 @@ BEGIN {
         }
         printf("]],\n");
     }
-    print "});"
+    print "  });"
+    print "  if (location.hash) {"
+    print "    cycle();"
+    print "    setInterval(cycle, 10000);"
+    print "  }"
     print "}"
-    print "window.onload = draw;"
+    print "window.onload = init;"
     print "    </script>"
 
     # Set up team colors and a few page-specific styles
@@ -161,7 +165,7 @@ BEGIN {
     print "  <body>"
     print "    <h1>Scoreboard</h1>"
     print "<p id=\"debug\"></p>"
-    print "    <table class=\"scoreboard\">"
+    print "    <table id=\"scoreboard\">"
     print "      <tr>"
     print "        <th>Overall</th>"
 

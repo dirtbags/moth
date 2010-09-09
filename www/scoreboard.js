@@ -105,3 +105,16 @@ function restore(cls) {
 }
 
 
+var state = 0;
+function cycle() {
+  if (state == 0) {
+    v = document.getElementById("scoreboard");
+    i = document.getElementById("chart");
+  } else {
+    v = document.getElementById("chart");
+    i = document.getElementById("scoreboard");
+  }
+  v.style.display = "block";
+  i.style.display = "none";
+  state = (state + 1) % 2;
+}
