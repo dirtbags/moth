@@ -157,8 +157,9 @@ BEGIN {
     print "window.onload = draw;"
     print "    </script>"
 
-    # Set up team colors
+    # Set up team colors and a few page-specific styles
     print "    <style type=\"text/css\">"
+    print "      body { width: 100%; }"
     print "      .score { overflow: hidden; color: black; }"
     for (team in teams) {
         printf("      .b%s { background-color: #%s; }\n",
