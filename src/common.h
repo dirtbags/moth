@@ -6,5 +6,6 @@
 
 int team_exists(char *teamhash);
 int award_points(char *teamhash, char *category, int point);
+int fgrepx(char const *needle, char const *filename);
 
 #endif

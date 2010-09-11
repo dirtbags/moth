@@ -8,20 +8,6 @@ char const *tokenlog = "/var/lib/ctf/tokend/tokens.log";
 char const *claimlog = "/var/lib/ctf/tokend/claim.log";
 
 int
-mystrcmp(char *a, char *b)
-{
-  while (*a == *b) {
-    a += 1;
-    b += 1;
-  }
-  if (((*a == '\0') || (*a == '\n')) &&
-      ((*b == '\0') || (*b == '\n'))) {
-    return 0;
-  }
-  return -1;
-}
-
-int
 main(int argc, char *argv[])
 {
   char   team[9];
@@ -75,31 +61,9 @@ main(int argc, char *argv[])
     cgi_page("No such team", "");
   }
 
-  /* Does the token exist? */
-  {
-    FILE *f;
-    int   valid = 0;
-
-    f = fopen(claimlog, "r");
-    if (f) {
-      while (1) {
-        char line[100];
-
-        if (NULL == fgets(line, sizeof(line), f)) {
-          break;
-        }
-        if (0 == mystrcmp(line, token)) {
-          valid = 1;
-          break;
-        }
-      }
-      fclose(f);
-    }
-
-    if (! valid) {
-      cgi_page("Invalid token",
-               "<p>Sorry, that token's no good.</p>");
-    }
+  if (! fgrepx(token, claimlog)) {
+    cgi_page("Invalid token",
+             "<p>Sorry, that token's no good.</p>");
   }
 
   /* If the token's unclaimed, award points and log the claim */

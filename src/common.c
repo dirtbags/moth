@@ -7,6 +7,44 @@
 #include <time.h>
 #include "common.h"
 
+#define EOL(c) ((EOF == (c)) || (0 == (c)) || ('\n' == (c)))
+
+int
+fgrepx(char const *needle, char const *filename)
+{
+  FILE       *f;
+  int         found = 0;
+  char const *p     = needle;
+
+  f = fopen(filename, "r");
+  if (f) {
+    while (1) {
+      int c = fgetc(f);
+
+      /* This list of cases would have looked so much nicer in OCaml.  I
+         apologize. */
+      if (EOL(c) && (0 == *p)) {
+        found = 1;
+        break;
+      } else if (EOF == c) {
+        break;
+      } else if ((0 == p) || (*p != c)) {
+        p = needle;
+        do {
+          c = fgetc(f);
+        } while (! EOL(c));
+      } else if ('\n' == c) {
+        p = needle;
+      } else {
+        p += 1;
+      }
+    }
+    fclose(f);
+  }
+
+  return found;
+}
+
 int
 team_exists(char *teamhash)
 {
