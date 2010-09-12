@@ -11,10 +11,10 @@ cgi_init()
   char *rm = getenv("REQUEST_METHOD");
 
   if (! (rm && (0 == strcmp(rm, "POST")))) {
-    printf("405 Method not allowed\n"
-           "Allow: POST\n"
-           "Content-type: text/html\n"
-           "\n"
+    printf("405 Method not allowed\r\n"
+           "Allow: POST\r\n"
+           "Content-type: text/html\r\n"
+           "\r\n"
            "<h1>Method not allowed</h1>\n"
            "<p>I only speak POST.  Sorry.</p>\n");
     return -1;
@@ -93,23 +93,25 @@ cgi_item(char *str, size_t maxlen)
 void
 cgi_page(char *title, char *fmt, ...)
 {
-  FILE    *p;
   va_list  ap;
 
-  printf("Content-type: text/html\r\n"
-         "\r\n");
-  fflush(stdout);
-  p = popen("./template", "w");
-  if (NULL == p) {
-    printf("<h1>%s</h1>\n", title);
-    p = stdout;
-  } else {
-    fprintf(p, "Title: %s\n", title);
-  }
+  printf(("Content-type: text/html\r\n"
+          "\r\n"
+          "<!DOCTYPE html>\n"
+          "<html>\n"
+          "  <head>\n"
+          "    <title>%s</title>\n"
+          "    <link rel=\"stylesheet\" href=\"ctf.css\" type=\"text/css\">\n"
+          "  </head>\n"
+          "  <body>\n"
+          "    <h1>%s</h1>\n"),
+         title, title);
   va_start(ap, fmt);
-  vfprintf(p, fmt, ap);
+  vprintf(fmt, ap);
   va_end(ap);
-  fclose(p);
+  printf("\n"
+         "  </body>\n"
+         "</html>\n");
   exit(0);
 }
 

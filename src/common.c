@@ -2,9 +2,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
+#include "cgi.h"
 #include "common.h"
 
 #define EOL(c) ((EOF == (c)) || (0 == (c)) || ('\n' == (c)))
@@ -46,7 +48,24 @@ fgrepx(char const *needle, char const *filename)
 }
 
 int
-team_exists(char *teamhash)
+my_snprintf(char *buf, size_t buflen, char *fmt, ...)
+{
+  int     len;
+  va_list ap;
+
+  va_start(ap, fmt);
+  len = vsnprintf(buf, buflen - 1, fmt, ap);
+  va_end(ap);
+  if (len >= 0) {
+    buf[len] = '\0';
+    return len;
+  } else {
+    return -1;
+  }
+}
+
+int
+team_exists(char const *teamhash)
 {
   struct stat buf;
   char        filename[100];
@@ -63,7 +82,7 @@ team_exists(char *teamhash)
   /* Build filename. */
   ret = snprintf(filename, sizeof(filename),
                  "%s/%s", teamdir, teamhash);
-  if (sizeof(filename) == ret) {
+  if (sizeof(filename) <= ret) {
     return 0;
   }
 
@@ -77,7 +96,9 @@ team_exists(char *teamhash)
 }
 
 int
-award_points(char *teamhash, char *category, int points)
+award_points(char const *teamhash,
+             char const *category,
+             int points)
 {
   char   line[100];
   int    linelen;
@@ -94,7 +115,7 @@ award_points(char *teamhash, char *category, int points)
   linelen = snprintf(line, sizeof(line),
                      "%u %s %s %d\n",
                      now, teamhash, category, points);
-  if (sizeof(line) == linelen) {
+  if (sizeof(line) <= linelen) {
     return -1;
   }
 
@@ -102,8 +123,8 @@ award_points(char *teamhash, char *category, int points)
      This works, as long as nobody ever tries to edit the log file.
      Editing the log file would require locking it, which would block
      everything trying to score, effectively taking down the entire
-     contest.  If you can't lock it first (nothing in busybox lets you
-     do this), you have to bring down pretty much everything manually
+     contest.  If you can't lock it first--and nothing in busybox lets
+     you do this--you have to bring down pretty much everything manually
      anyway.
 
      By putting new scores into new files and periodically appending
@@ -115,13 +136,20 @@ award_points(char *teamhash, char *category, int points)
      nicer on the fs.
 
      The fact that this makes the code simpler is just gravy.
+
+     Note that doing this means there's a little time between when a
+     score's written and when the scoreboard (which only reads the log
+     file) picks it up.  It's not a big deal for the points log, but
+     this situation makes this technique unsuitable for writing log
+     files that prevent people from double-scoring, like the puzzler or
+     token log.
   */
 
   filenamelen = snprintf(filename, sizeof(filename),
                          "%s/%d.%d.%s.%s.%d",
                          pointsdir, now, getpid(),
                          teamhash, category, points);
-  if (sizeof(filename) == filenamelen) {
+  if (sizeof(filename) <= filenamelen) {
     return -1;
   }
 
@@ -137,4 +165,55 @@ award_points(char *teamhash, char *category, int points)
 
   close(fd);
   return 0;
+}
+
+void
+award_and_log_uniquely(char const *team,
+                       char const *category,
+                       int points,
+                       char const *logfile,
+                       char const *fmt, ...)
+{
+  char    line[100];
+  int     len;
+  int     ret;
+  int     fd;
+  va_list ap;
+
+  /* Make sure they haven't already claimed these points */
+  /* Leave room for a newline later on */
+  va_start(ap, fmt);
+  len = vsnprintf(line, sizeof(line)-1, fmt, ap);
+  va_end(ap);
+  if (sizeof(line) <= len) {
+    cgi_error("Log line too long");
+  }
+  if (fgrepx(line, logfile)) {
+    cgi_page("Already claimed",
+             "<p>Your team has already claimed these points.</p>");
+  }
+
+  /* Open and lock logfile */
+  fd = open(logfile, O_WRONLY | O_CREAT, 0666);
+  if (-1 == fd) {
+    cgi_error("Unable to open log");
+  }
+  if (-1 == lockf(fd, F_LOCK, 0)) {
+    cgi_error("Unable to lock log");
+  }
+
+  /* Award points */
+  if (0 != award_points(team, category, points)) {
+    cgi_error("Unable to award points");
+  }
+
+  /* Log that we did so */
+  /* We can turn that trailing NUL into a newline now since write
+     doesn't use C strings */
+  line[len] = '\n';
+  lseek(fd, 0, SEEK_END);
+  if (-1 == write(fd, line, len+1)) {
+    cgi_error("Unable to log your award");
+  }
+  close(fd);
 }
