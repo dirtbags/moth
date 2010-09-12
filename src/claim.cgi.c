@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <time.h>
-#include "cgi.h"
+#include <stdlib.h>
 #include "common.h"
 
 char const *tokenlog = "/var/lib/ctf/tokend/tokens.log";

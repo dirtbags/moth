@@ -1,10 +1,5 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
-#include "cgi.h"
 
 char const *logfile = "/var/lib/ctf/puzzler.log";
 

@@ -1,6 +1,14 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <stddef.h>
+
+int cgi_init();
+size_t cgi_item(char *str, size_t maxlen);
+void cgi_page(char *title, char *fmt, ...);
+void cgi_error(char *fmt, ...);
+
+
 #define teamdir "/var/lib/ctf/teams/names"
 #define pointsdir "/var/lib/ctf/points/new"
 
