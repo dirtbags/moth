@@ -1,7 +1,7 @@
 #! /bin/sh -e
 
 die () {
-    echo "$*"
+    echo "ERROR ERROR: $*"
     exit 1
 }
 
