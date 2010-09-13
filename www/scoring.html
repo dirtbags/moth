@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>About scoring</title>
+    <link rel="stylesheet" href="ctf.css" type="text/css">
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <h1>About scoring</h1>
+    <p>
+      The contest is made up of multiple categories.  Each category is
+      worth one point toward the total score; the percentage of the
+      total points held by your team is the percentage of one point your
+      team has for that category.  The team that has 30% of the points
+      in each of five categories has 1.5 points, whereas the team that
+      has 80% of the points in only one category has 0.8 points.  It is
+      typically better to have a few points in many categories, than
+      many points in a few categories.
+    </p>
+
+    <p>
+      There are two main ways to make points: <em>puzzles</em>
+      and <em>tokens</em>.  Your contest may have other ways to make
+      points: these will either be automatic, or explained elsewhere.
+    </p>
+
+
+    <h2>Puzzles</h2>
+    <p>
+      Many of the categories are in the form of
+      multiple <em>puzzles</em>: for each puzzle presented, a
+      case-sensitive answer must be found to recieve the amount of
+      points that puzzle is worth.  Any team may answer any puzzle
+      question at any time.  A new puzzle is revealed when a team
+      correctly answers the highest-valued puzzle in that category.
+    </p>
+
+
+    <h2>Tokens</h2>
+    <p>
+      Tokens are strings redeemable once for a single point each.  A
+      token for the "example" category might look like this:
+    </p>
+
+    <pre>example:xenon-codex</pre>
+
+    <p>
+      Tokens are typically associated with "live" categories, such as a
+      network-based service or a treasure hunt.  Tokens can be submitted
+      with the form on the <a href="index.html">welcome page</a>, or you
+      can write your own script to automate token submission.
+    </p>
+
+    <p>
+      Some tokens change periodically, typically once a minute.  If you
+      find a token, it's worth looking in the same place again later to
+      see if the token changes.
+    </p>
+
+    <h2>Reading the scoreboard</h2>
+    <p>
+      The <a href="scoreboard.html">scoreboard</a> shows total score on
+      the left, and scores within each category.  If you have a smaller
+      or more novice team, you may wish to ignore total rankings and
+      strive to do well within only a few categories.
+    </p>
+
+    <p>
+      If your browser supports the HTML5 canvas (Firefox, Safari,
+      Chrome, Opera, iPhone, Android) and JavaScript, the scoreboard
+      will also have a graph of scores over time.  Additionally,
+      JavaScript-enabled browsers will highlight all point blocks
+      belonging to a team, and a team's line on the graph, when the
+      mouse cursor is over a point block.
+    </p>
+
+
+    <h2>About time</h2>
+    <p>
+      Many Capture The Flag contests attempt to reward teams who answer
+      quickly with more points, by adding a "quick answer" bonus or
+      decaying point values over time.  Our contest doesn't work this
+      way.
+    </p>
+    <p>
+      We believe that given enough things to work on, quick-moving teams
+      will emerge with more points by answering more questions; while
+      providing novice teams a realistic picture of how they're doing.
+      In addition, when the game infrastructure goes down—which seems to
+      happen a lot in anybody's CTF—there's no losing points while the
+      organizers struggle to get things back up.
+    </p>
+  </body>
+</html>
