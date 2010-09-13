@@ -13,6 +13,7 @@
  * CGI
  */
 static size_t inlen = 0;
+static int is_cgi = 0;
 
 int
 cgi_init()
@@ -30,6 +31,7 @@ cgi_init()
   }
 
   inlen = atoi(getenv("CONTENT_LENGTH"));
+  is_cgi = 1;
 
   return 0;
 }
@@ -102,9 +104,10 @@ cgi_item(char *str, size_t maxlen)
 void
 cgi_head(char *title)
 {
-  printf(("Content-type: text/html\r\n"
-          "\r\n"
-          "<!DOCTYPE html>\n"
+  if (is_cgi) {
+    printf("Content-type: text/html\r\n\r\n");
+  }
+  printf(("<!DOCTYPE html>\n"
           "<html>\n"
           "  <head>\n"
           "    <title>%s</title>\n"

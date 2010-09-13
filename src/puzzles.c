@@ -59,19 +59,7 @@ main(int argc, char *argv[])
   int i;
   DIR *srv;
 
-#if 0
-  if (! cgi_init()) {
-    return 0;
-  }
-#endif
-
   read_points_by_cat();
-
-#if 0
-  for (i = 0; i < ncats; i += 1) {
-    printf("%s: %ld\n", points_by_cat[i].cat, points_by_cat[i].points);
-  }
-#endif
 
   /* Open /srv/ */
   srv = opendir("/srv");
