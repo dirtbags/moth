@@ -74,7 +74,10 @@ main(int argc, char *argv)
                          logfile, "%s %s %ld", team, category, points);
 
   cgi_page("Points awarded",
-           "<p>%d points for %s.</p>", points, team);
+           ("<p>%d points for %s.</p>\n"
+            "<p>Patience please: it may be up to 1 minute before "
+            "the next puzzle opens in this category.</p>"),
+           points, team);
 
   return 0;
 }
