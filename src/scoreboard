@@ -63,6 +63,11 @@ function output(    t, c) {
 }
 
 BEGIN {
+    base = ENVIRON["CTF_BASE"]
+    if (! base) {
+        base = "/srv/ctf"
+    }
+
     # Only display two decimal places
     CONVFMT = "%.2f"
     
@@ -95,11 +100,11 @@ BEGIN {
 
     # Get team colors and names
     for (team in teams) {
-        fn = "/var/lib/ctf/teams/colors/" team
+        fn = base "/teams/colors/" team
         getline colors_by_team[team] < fn
         close(fn)
 
-        fn = "/var/lib/ctf/teams/names/" team
+        fn = base "/teams/names/" team
         getline names_by_team[team] < fn
         close(fn)
     }

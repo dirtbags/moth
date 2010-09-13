@@ -8,9 +8,11 @@ fi
 # Don't overwrite files
 set -C
 
+base=${CTF_BASE:-/srv/ctf}
+
 # Assign a color.  I spent two days selecting this color pallette for
 # people with protanopia.  Please don't change these colors.
-nteams=$(ls /var/lib/ctf/teams/names/ | wc -l)
+nteams=$(ls $base/teams/names/ | wc -l)
 case $(expr $nteams % 15) in
     0) color=8c7a69 ;;
     1) color=7f7062 ;;
@@ -39,7 +41,7 @@ esac
 # me since all team hashes are in the set /[0-9a-f]{8}/.
 hash=$(echo "$1" | md5sum | cut -b 1-8)
 
-echo "$1" > /var/lib/ctf/teams/names/$hash
-echo "$color" > /var/lib/ctf/teams/colors/$hash
+echo "$1" > $base/teams/names/$hash
+echo "$color" > $base/teams/colors/$hash
 
-echo "Registered with hash $hash"
+echo "Registered with hash: $hash"

@@ -1,18 +1,21 @@
 #include <stdlib.h>
 #include "common.h"
 
-char const *logfile = "/var/lib/ctf/puzzler.log";
 
 int
-main(int argc, char *argv)
+main(int argc, char *argv[])
 {
   char team[TEAM_MAX];
   char category[CAT_MAX];
   char points_str[5];
   char answer[500];
-  long points;
+  long points = 0;
 
-  if (-1 == cgi_init()) {
+  team[0]     = 0;
+  category[0] = 0;
+  answer[0]   = 0;
+
+  if (-1 == cgi_init(argv)) {
     return 0;
   }
 
@@ -58,26 +61,24 @@ main(int argc, char *argv)
 
   /* Check answer (also assures category exists) */
   {
-    char filename[100];
     char needle[400];
 
-    my_snprintf(filename, sizeof(filename),
-                "/srv/%s/answers.txt", category);
     my_snprintf(needle, sizeof(needle),
                 "%ld %s", points, answer);
-    if (! fgrepx(needle, filename)) {
+    if (! fgrepx(needle,
+                 srv_path("packages/%s/answers.txt", category))) {
       cgi_page("Wrong answer", "");
     }
   }
 
   award_and_log_uniquely(team, category, points,
-                         logfile, "%s %s %ld", team, category, points);
+                         "puzzler.db",
+                         "%s %s %ld", team, category, points);
 
   cgi_page("Points awarded",
-           ("<p>%d points for %s.</p>\n"
-            "<p>Patience please: it may be up to 1 minute before "
-            "the next puzzle opens in this category.</p>"),
-           points, team);
+           ("<p>%d points for %s.</p>"
+            "<!-- awarded %d -->"),
+           points, team, points);
 
   return 0;
 }

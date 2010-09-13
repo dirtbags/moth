@@ -27,7 +27,7 @@ int ncats = 0;
 void
 read_points_by_cat()
 {
-  FILE *f = fopen("/var/lib/ctf/puzzler.log", "r");
+  FILE *f = fopen(srv_path("puzzler.db"), "r");
   char  cat[CAT_MAX];
   long  points;
   int   i;
@@ -59,10 +59,13 @@ main(int argc, char *argv[])
   int i;
   DIR *srv;
 
+  if (-1 == cgi_init(argv)) {
+    return 0;
+  }
+
   read_points_by_cat();
 
-  /* Open /srv/ */
-  srv = opendir("/srv");
+  srv = opendir(srv_path("packages"));
   if (NULL == srv) {
     cgi_error("Cannot opendir(\"/srv\")");
   }
@@ -75,7 +78,6 @@ main(int argc, char *argv[])
     struct dirent *e          = readdir(srv);
     char          *cat        = e->d_name;
     DIR           *puzzles;
-    char           path[PATH_MAX];
     long           catpoints[PUZZLES_MAX];
     size_t         ncatpoints = 0;
 
@@ -84,9 +86,8 @@ main(int argc, char *argv[])
     /* We have to lstat anyway to see if it's a directory; may as
        well just barge ahead and watch for errors. */
 
-    /* Open /srv/$cat/puzzles/ */
-    my_snprintf(path, sizeof(path), "/srv/%s/puzzles", cat);
-    puzzles = opendir(path);
+    /* Open /srv/ctf/$cat/puzzles/ */
+    puzzles = opendir(srv_path("packages/%s/puzzles", cat));
     if (NULL == puzzles) {
       continue;
     }

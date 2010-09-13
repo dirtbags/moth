@@ -1,19 +1,16 @@
 #include <stdlib.h>
 #include "common.h"
 
-char const *tokenlog = "/var/lib/ctf/tokend/tokens.log";
-char const *claimlog = "/var/lib/ctf/tokend/claim.log";
-
 int
 main(int argc, char *argv[])
 {
   char   team[9];
   char   token[100];
 
-  /* XXX: This code needs to be tested */
-  return 1;
+  team[0]  = 0;
+  token[0] = 0;
 
-  if (-1 == cgi_init()) {
+  if (-1 == cgi_init(argv)) {
     return 0;
   }
 
@@ -53,7 +50,7 @@ main(int argc, char *argv[])
 
 
   /* Does the token exist? */
-  if (! fgrepx(token, tokenlog)) {
+  if (! fgrepx(token, srv_path("tokens.db"))) {
     cgi_page("Token does not exist", "");
   }
 
@@ -69,7 +66,8 @@ main(int argc, char *argv[])
     category[i] = '\0';
 
     award_and_log_uniquely(team, category, 1,
-                           claimlog, "%s %s", team, token);
+                           "tokens.db",
+                           "%s %s", team, token);
   }
 
 

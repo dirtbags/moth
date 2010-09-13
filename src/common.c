@@ -6,44 +6,108 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <values.h>
 #include <time.h>
 #include "common.h"
 
 /*
  * CGI
  */
-static size_t inlen = 0;
-static int is_cgi = 0;
+static int is_cgi  = 0;
+static char **argv = NULL;
 
-int
-cgi_init()
+static int
+read_char_argv()
 {
-  char *rm = getenv("REQUEST_METHOD");
+  static int   arg = 0;
+  static char *p;
 
-  if (! (rm && (0 == strcmp(rm, "POST")))) {
-    printf("405 Method not allowed\r\n"
-           "Allow: POST\r\n"
-           "Content-type: text/html\r\n"
-           "\r\n"
-           "<h1>Method not allowed</h1>\n"
-           "<p>I only speak POST.  Sorry.</p>\n");
-    return -1;
+  if (NULL == argv) {
+    return EOF;
   }
 
-  inlen = atoi(getenv("CONTENT_LENGTH"));
-  is_cgi = 1;
+  if (0 == arg) {
+    arg = 1;
+    p = argv[1];
+  }
 
-  return 0;
+  if (! p) {
+    return EOF;
+  } else if (! *p) {
+    arg += 1;
+    p = argv[arg];
+    return '&';
+  }
+
+  return *(p++);
 }
 
 static int
-read_char()
+read_char_stdin()
 {
+  static int inlen = -1;
+
+  if (-1 == inlen) {
+    char *p = getenv("CONTENT_LENGTH");
+    if (p) {
+      inlen = atoi(p);
+    } else {
+      inlen = 0;
+    }
+  }
+
   if (inlen) {
     inlen -= 1;
     return getchar();
   }
   return EOF;
+}
+
+static int
+read_char_query_string()
+{
+  static char *p = (char *)-1;
+
+  if ((char *)-1 == p) {
+    p = getenv("QUERY_STRING");
+  }
+
+  if (! p) {
+    return EOF;
+  } else if (! *p) {
+    return EOF;
+  } else {
+    return *(p++);
+  }
+}
+
+static int (* read_char)() = read_char_argv;
+
+int
+cgi_init(char *global_argv[])
+{
+  char *rm = getenv("REQUEST_METHOD");
+
+  if (! rm) {
+    read_char = read_char_argv;
+    argv = global_argv;
+  } else if (0 == strcmp(rm, "POST")) {
+    read_char = read_char_stdin;
+    is_cgi = 1;
+  } else if (0 == strcmp(rm, "GET")) {
+    read_char = read_char_query_string;
+    is_cgi = 1;
+  } else {
+    printf(("405 Method not allowed\r\n"
+            "Allow: GET, POST\r\n"
+            "Content-type: text/plain\r\n"
+            "\r\n"
+            "%s is not allowed.\n"),
+           rm);
+    return -1;
+  }
+
+  return 0;
 }
 
 static char
@@ -207,21 +271,47 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
   va_start(ap, fmt);
   len = vsnprintf(buf, buflen - 1, fmt, ap);
   va_end(ap);
-  if (len >= 0) {
-    buf[len] = '\0';
-    return len;
+  buf[buflen] = '\0';
+  if (len >= buflen) {
+    return buflen - 1;
   } else {
-    return -1;
+    return len;
   }
+}
+
+char *
+srv_path(char const *fmt, ...)
+{
+  char         relpath[PATH_MAX];
+  static char  path[PATH_MAX];
+  char        *srv;
+  int          len;
+  va_list      ap;
+
+  va_start(ap, fmt);
+  len = vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
+  va_end(ap);
+  relpath[sizeof(relpath) - 1] = '\0';
+
+  srv = getenv("CTF_BASE");
+  if (! srv) {
+    srv = "/srv/ctf";
+  }
+
+  my_snprintf(path, sizeof(path), "%s/%s", srv, relpath);
+  return path;
 }
 
 int
 team_exists(char const *teamhash)
 {
   struct stat buf;
-  char        filename[100];
   int         ret;
   int         i;
+
+  if ((! teamhash) || (! *teamhash)) {
+    return 0;
+  }
 
   /* Check for invalid characters. */
   for (i = 0; teamhash[i]; i += 1) {
@@ -230,15 +320,8 @@ team_exists(char const *teamhash)
     }
   }
 
-  /* Build filename. */
-  ret = snprintf(filename, sizeof(filename),
-                 "%s/%s", teamdir, teamhash);
-  if (sizeof(filename) <= ret) {
-    return 0;
-  }
-
   /* lstat seems to be the preferred way to check for existence. */
-  ret = lstat(filename, &buf);
+  ret = lstat(srv_path("teams/names/%s", teamhash), &buf);
   if (-1 == ret) {
     return 0;
   }
@@ -253,8 +336,7 @@ award_points(char const *teamhash,
 {
   char   line[100];
   int    linelen;
-  char   filename[100];
-  int    filenamelen;
+  char   *filename;
   int    fd;
   int    ret;
   time_t now = time(NULL);
@@ -296,13 +378,9 @@ award_points(char const *teamhash,
      token log.
   */
 
-  filenamelen = snprintf(filename, sizeof(filename),
-                         "%s/%d.%d.%s.%s.%ld",
-                         pointsdir, now, getpid(),
-                         teamhash, category, points);
-  if (sizeof(filename) <= filenamelen) {
-    return -1;
-  }
+  filename = srv_path("points.new/%d.%d.%s.%s.%ld",
+                      now, getpid(),
+                      teamhash, category, points);
 
   fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
   if (-1 == fd) {
@@ -322,14 +400,15 @@ void
 award_and_log_uniquely(char const *team,
                        char const *category,
                        long points,
-                       char const *logfile,
+                       char const *dbfile,
                        char const *fmt, ...)
 {
-  char    line[200];
-  int     len;
-  int     ret;
-  int     fd;
-  va_list ap;
+  char    *dbpath = srv_path(dbfile);
+  char     line[200];
+  int      len;
+  int      ret;
+  int      fd;
+  va_list  ap;
 
   /* Make sure they haven't already claimed these points */
   va_start(ap, fmt);
@@ -338,13 +417,13 @@ award_and_log_uniquely(char const *team,
   if (sizeof(line) <= len) {
     cgi_error("Log line too long");
   }
-  if (fgrepx(line, logfile)) {
+  if (fgrepx(line, dbpath)) {
     cgi_page("Already claimed",
              "<p>Your team has already claimed these points.</p>");
   }
 
   /* Open and lock logfile */
-  fd = open(logfile, O_WRONLY | O_CREAT, 0666);
+  fd = open(dbpath, O_WRONLY | O_CREAT, 0666);
   if (-1 == fd) {
     cgi_error("Unable to open log");
   }

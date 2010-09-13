@@ -1,11 +1,11 @@
-TARGETS = in.tokend claim.cgi puzzler.cgi pointscli puzzles
+TARGETS = in.tokend pointscli claim.cgi puzzler.cgi puzzles.cgi
 
 all: $(TARGETS)
 
-in.tokend: in.tokend.o xxtea.o
-puzzles: puzzles.o common.o
+in.tokend: in.tokend.o xxtea.o common.o
 pointscli: pointscli.o common.o
 
+puzzles.cgi: puzzles.cgi.o common.o
 claim.cgi: claim.cgi.o common.o
 puzzler.cgi: puzzler.cgi.o common.o
 

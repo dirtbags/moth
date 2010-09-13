@@ -8,12 +8,10 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <ctype.h>
+#include "common.h"
 #include "xxtea.h"
 
 #define itokenlen 3
-
-char const *keydir = "/var/lib/ctf/tokend/keys";
-char const *tokenlog = "/var/lib/ctf/tokend/tokens.log";
 
 char const consonants[] = "bcdfghklmnprstvz";
 char const vowels[]     = "aeiouy";
@@ -91,16 +89,10 @@ main(int argc, char *argv[])
 
   /* Read in that service's key. */
   {
-    char    path[100];
     int     fd;
     size_t  len;
-    int     ret;
 
-    ret = snprintf(path, sizeof(path),
-                   "%s/%s.key", keydir, service);
-    if (ret < sizeof(path)) {
-      fd = open(path, O_RDONLY);
-    }
+    fd = open(srv_path("token.keys/%s", service), O_RDONLY);
     if (-1 == fd) {
       write(1, "!nosvc", 6);
       return 0;
@@ -139,7 +131,7 @@ main(int argc, char *argv[])
     int          ret;
 
     do {
-      fd = open(tokenlog, O_WRONLY | O_CREAT, 0644);
+      fd = open(srv_path("tokens.db"), O_WRONLY | O_CREAT, 0644);
       if (-1 == fd) break;
 
       ret = lockf(fd, F_LOCK, 0);
