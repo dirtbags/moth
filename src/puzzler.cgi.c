@@ -6,11 +6,11 @@ char const *logfile = "/var/lib/ctf/puzzler.log";
 int
 main(int argc, char *argv)
 {
-  char team[9];
-  char category[30];
+  char team[TEAM_MAX];
+  char category[CAT_MAX];
   char points_str[5];
   char answer[500];
-  int  points;
+  long points;
 
   if (-1 == cgi_init()) {
     return 0;
@@ -32,7 +32,7 @@ main(int argc, char *argv)
         break;
       case 'p':
         cgi_item(points_str, sizeof(points_str));
-        points = atoi(points_str);
+        points = atol(points_str);
         break;
       case 'a':
         cgi_item(answer, sizeof(answer));
@@ -59,19 +59,19 @@ main(int argc, char *argv)
   /* Check answer (also assures category exists) */
   {
     char filename[100];
-    char needle[100];
+    char needle[400];
 
     my_snprintf(filename, sizeof(filename),
                 "/srv/%s/answers.txt", category);
     my_snprintf(needle, sizeof(needle),
-                "%d %s", points, answer);
+                "%ld %s", points, answer);
     if (! fgrepx(needle, filename)) {
       cgi_page("Wrong answer", "");
     }
   }
 
   award_and_log_uniquely(team, category, points,
-                         logfile, "%s %s %d", team, category, points);
+                         logfile, "%s %s %ld", team, category, points);
 
   cgi_page("Points awarded",
            "<p>%d points for %s.</p>", points, team);

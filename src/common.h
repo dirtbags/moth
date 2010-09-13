@@ -3,8 +3,13 @@
 
 #include <stddef.h>
 
+#define TEAM_MAX 40
+#define CAT_MAX 40
+
 int cgi_init();
 size_t cgi_item(char *str, size_t maxlen);
+void cgi_head(char *title);
+void cgi_foot();
 void cgi_page(char *title, char *fmt, ...);
 void cgi_error(char *fmt, ...);
 
@@ -16,10 +21,10 @@ int fgrepx(char const *needle, char const *filename);
 int team_exists(char const *teamhash);
 int award_points(char const *teamhash,
                  char const *category,
-                 int point);
+                 long point);
 void award_and_log_uniquely(char const *team,
                             char const *category,
-                            int points,
+                            long points,
                             char const *logfile,
                             char const *fmt, ...);
 

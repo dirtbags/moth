@@ -100,10 +100,8 @@ cgi_item(char *str, size_t maxlen)
 }
 
 void
-cgi_page(char *title, char *fmt, ...)
+cgi_head(char *title)
 {
-  va_list  ap;
-
   printf(("Content-type: text/html\r\n"
           "\r\n"
           "<!DOCTYPE html>\n"
@@ -115,12 +113,26 @@ cgi_page(char *title, char *fmt, ...)
           "  <body>\n"
           "    <h1>%s</h1>\n"),
          title, title);
-  va_start(ap, fmt);
-  vprintf(fmt, ap);
-  va_end(ap);
+}
+
+void
+cgi_foot()
+{
   printf("\n"
          "  </body>\n"
          "</html>\n");
+}
+
+void
+cgi_page(char *title, char *fmt, ...)
+{
+  va_list  ap;
+
+  cgi_head(title);
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+  cgi_foot();
   exit(0);
 }
 
@@ -135,6 +147,7 @@ cgi_error(char *fmt, ...)
   va_start(ap, fmt);
   vprintf(fmt, ap);
   va_end(ap);
+  printf("\n");
   exit(0);
 }
 
@@ -233,7 +246,7 @@ team_exists(char const *teamhash)
 int
 award_points(char const *teamhash,
              char const *category,
-             int points)
+             long points)
 {
   char   line[100];
   int    linelen;
@@ -248,7 +261,7 @@ award_points(char const *teamhash,
   }
 
   linelen = snprintf(line, sizeof(line),
-                     "%u %s %s %d\n",
+                     "%u %s %s %ld\n",
                      now, teamhash, category, points);
   if (sizeof(line) <= linelen) {
     return -1;
@@ -281,7 +294,7 @@ award_points(char const *teamhash,
   */
 
   filenamelen = snprintf(filename, sizeof(filename),
-                         "%s/%d.%d.%s.%s.%d",
+                         "%s/%d.%d.%s.%s.%ld",
                          pointsdir, now, getpid(),
                          teamhash, category, points);
   if (sizeof(filename) <= filenamelen) {
@@ -305,11 +318,11 @@ award_points(char const *teamhash,
 void
 award_and_log_uniquely(char const *team,
                        char const *category,
-                       int points,
+                       long points,
                        char const *logfile,
                        char const *fmt, ...)
 {
-  char    line[100];
+  char    line[200];
   int     len;
   int     ret;
   int     fd;
