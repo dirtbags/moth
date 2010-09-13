@@ -1,0 +1,2 @@
+src-%:
+	$(MAKE) -C src $*

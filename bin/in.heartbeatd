@@ -1,5 +1,0 @@
-#! /bin/sh
-
-ip=$(echo $UDPREMOTEADDR | cut -d: -f1)
-touch $1/$ip
-echo 'Hello.'

@@ -1,6 +1,8 @@
 TARGETS = in.tokend pointscli claim.cgi puzzler.cgi puzzles.cgi
 
-all: $(TARGETS)
+all: build
+
+build: $(TARGETS)
 
 in.tokend: in.tokend.o xxtea.o common.o
 pointscli: pointscli.o common.o

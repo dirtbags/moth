@@ -1,174 +1,240 @@
-#! /usr/bin/python
+#! /usr/bin/awk -f
 
-import sys
-import codecs
-import time
-import optparse
-import string
-import os
-from urllib import unquote
-from ctf import teams, html, paths
-from codecs import open
-from sets import Set as set
-from cgi import escape
+##
+##
+## I'm not happy with how this code looks.  I've
+##
+##
 
-flags_dir = os.path.join(paths.VAR, 'flags')
-sys.stdin = codecs.getreader('utf-8')(sys.stdin)
+function qsort(A, left, right,   i, last) {
+    if (left >= right)
+        return
+    swap(A, left, left+int((right-left+1)*rand()))
+    last = left
+    for (i = left+1; i <= right; i++)
+        if (A[i] < A[left])
+            swap(A, ++last, i)
+    swap(A, left, last)
+    qsort(A, left, last-1)
+    qsort(A, last+1, right)
+}
+function swap(A, i, j,   t) {
+    t = A[i]; A[i] = A[j]; A[j] = t
+}
 
-def incdict(dict, key, amt=1):
-    dict[key] = dict.get(key, 0) + amt
+function escape(s) {
+    gsub("&", "&amp;", s)
+    gsub("<", "&lt;", s)
+    gsub(">", "&gt;", s)
+    return s
+}
 
-class Chart:
-    def __init__(self):
-        self.points_by_cat = {}
-        self.points_by_cat_team = {}
-        self.high_score = 0.001
-        self.teams = set()
-        self.cats = set()
-        self.log = []
+function print_bar(cat, team, n, d) {
+    printf("<div class=\"t%s score\""               \
+           "     style=\"height: %.2f%%;\""         \
+           "     onmouseover=\"highlight('%s')\""   \
+           "     onmouseout=\"restore('%s')\">\n"   \
+           "<!-- %s --> %s: %s\n"                   \
+           "</div>", 
+           team, 
+           100 * n / d, 
+           team,
+           team,
+           cat, escape(names_by_team[team]), n)
+}
 
-    def add_points(self, when, cat, team, points):
-        self.log.append((when, cat, team, points))
-        self.teams.add(team)
-        self.cats.add(cat)
-        incdict(self.points_by_cat, cat, points)
-        incdict(self.points_by_cat_team, (cat, team), points)
+function output(    t, c) {
+    for (t in teams) {
+        score = 0;
+        for (c in points_by_cat) {
+            if (points_by_cat[c] > 0) {
+                score += points_by_cat_team[c, t] / points_by_cat[c];
+            }
+        }
+        if (score > maxscore) {
+            maxscore = score
+        }
+        if (score > maxscores_by_team[t]) {
+            maxscores_by_team[t] = score
+        }
+        scores_by_team_time[t, lasttime] = score
+    }
+    timestamps[tslen++] = lasttime
+}
 
-    def team_points(self, team):
-        points = 0
-        for cat, tot in self.points_by_cat.items():
-            if not tot:
-                continue
-            team_points = self.team_points_in_cat(cat, team)
-            points += team_points / float(tot)
-        return points
+BEGIN {
+    base = ENVIRON["CTF_BASE"]
+    if (! base) {
+        base = "/srv/ctf"
+    }
 
-    def team_points_in_cat(self, cat, team):
-        return self.points_by_cat_team.get((cat, team), 0)
+    # Only display two decimal places
+    CONVFMT = "%.2f"
+    
+    # New point at least every 2.5 minutes
+    interval = 150
+    tslen = 0
 
-    def write_js(self, f):
-        start = self.log[0][0]
-        end = self.log[-1][0]
+    while (1 == getline) {
+        time = $1
+        team = $2
+        cat = $3
+        points = int($4)
 
-        # Calculate high score
-        high_score = reduce(max, [self.team_points(t) for t in self.teams])
+        if (! start) {
+            start = time
+        }
 
-        width = end - start
-        height = high_score * 1.1
+        if (time > (outtime + interval)) {
+            outtime = time
+            output()
+        }
+        lasttime = time
 
-        f.write('function draw(id) {\n')
-        f.write('  p = new Plot(id, %d, %.3f);\n' % (width, height))
-        for team in self.teams:
-            f.write('  p.line("#%s",[' % teams.color(team))
-            score = 0
-            for when, cat, t, points in self.log:
-                if t == team:
-                    cat_points = self.points_by_cat[cat]
-                    if not cat_points:
-                        continue
-                    pct = float(points) / cat_points
-                    score += pct
-                    f.write('[%d,%.2f],' % (when - start, score))
-            f.write(']); // %s\n' % team)
-        f.write('}')
+        teams[team] = team
+        points_by_cat[cat] += points
+        points_by_cat_team[cat, team] += points
+    }
 
-    def make_table(self):
-        body = []
-        body.append('<table class="scoreboard">')
-        body.append('<tr>')
-        body.append('<th>Overall</th>')
-        for cat in self.cats:
-            points = self.points_by_cat[cat]
-            if not points:
-                continue
-            body.append('<th>')
-            body.append('  %s (%d)' % (cat, points))
-            try:
-                fn = os.path.join(flags_dir, cat)
-                team = open(fn).read().strip() or teams.house
-                body.append('  <br/>')
-                body.append('  <span style="color: #%s" title="flag holder">' % teams.color(team))
-                body.append('  <!-- flag: %s --> %s\n' % (cat, escape(team[:15])))
-                body.append('  </span>')
-            except IOError:
-                pass
-            body.append('</th>')
-        body.append('</tr>')
+    output()
 
-        body.append('<tr>')
-        body.append('<td><ol>')
-        totals = []
-        for team in self.teams:
-            total = self.team_points(team)
-            totals.append((total, team))
-        totals.sort()
-        totals.reverse()
-        for total, team in totals:
-            if total < 0.1:
-                break
-            body.append('<li><span style="color: #%s;">%s (%0.3f)</span></li>'
-                  % (teams.color(team), escape(team[:15]), total))
-        body.append('</ol></td>')
-        for cat in self.cats:
-            total = self.points_by_cat[cat]
-            if not total:
-                continue
-            body.append('<td>')
-            scores = sorted([(self.team_points_in_cat(cat, team), team) for team in self.teams])
-            for score, team in scores:
-                if not score:
-                    continue
-                color = teams.color(team)
-                body.append('<div style="height: %f%%; overflow: hidden; background: #%s; color: black;">' % (float(score * 100)/total, color))
-                body.append('<!-- category: %s --> %s: %d' % (cat, escape(team[:15]), score))
-                body.append('</div>')
-            body.append('</td>')
-        body.append('</tr>')
-        body.append('</table>')
+    # Get team colors and names
+    for (team in teams) {
+        fn = base "/teams/colors/" team
+        getline colors_by_team[team] < fn
+        close(fn)
 
-        return '\n'.join(body)
+        fn = base "/teams/names/" team
+        getline names_by_team[team] < fn
+        close(fn)
+    }
 
-def main():
-    p = optparse.OptionParser(usage='%prog [options] < logfile')
-    p.add_option('-t', '--html', dest='html', default=None,
-                 help='Write a web page to HTML')
-    p.add_option('-j', '--javascript', dest='js', default=None,
-                 help='Write javascript params to JS')
+    # Sort categories
+    ncats = 0
+    for (cat in points_by_cat) {
+        cats[ncats++] = cat
+    }
+    qsort(cats, 0, ncats-1)
 
-    opts, args = p.parse_args()
-    if args:
-        return p.print_help()
+    # Create a sorted list of scores
+    nteams = 0
+    for (team in teams) {
+        scores[nteams++] = scores_by_team_time[team, lasttime]
+    }
+    qsort(scores, 0, nteams-1)
 
-    chart = Chart()
-    for line in sys.stdin:
-        line = line.strip()
-        try:
-            date, qcat, qteam, points = line.split('\t')
-        except ValueError:
-            print 'Possible line corruption: %s' % (repr(line)[:40])
-        cat = unquote(qcat)
-        team = unquote(qteam)
-        when = time.strptime(date, '%Y-%m-%dT%H:%M:%S')
-        chart.add_points(time.mktime(when),
-                         cat,
-                         team,
-                         int(points))
 
-    if opts.html:
-        hdr = ('<script type="application/javascript" src="plot.js"></script>'
-               '<script type="application/javascript" src="myplot.js"></script>'
-               '<meta http-equiv="refresh" content="60" />')
-        body = chart.make_table()
-        body += '\n<canvas id="history"></canvas>'
-        html.write(opts.html,
-                   'Scoreboard',
-                   body,
-                   hdr=hdr,
-                   body_class='wide',
-                   onload="draw('history')")
-    if opts.js:
-        f = open(opts.js, 'w', encoding='utf-8')
-        chart.write_js(f)
+    # Now we can start writing the document
+    print "<!DOCTYPE html>"
+    print "<html>"
+    print "  <head>"
+    print "    <title>Scoreboard</title>"
+    print "    <link rel=\"stylesheet\" href=\"ctf.css\" type=\"text/css\">"
+    print "    <script type=\"application/javascript\" src=\"scoreboard.js\"></script>"
 
-if __name__ == '__main__':
-    main()
+    # Provide raw data for the chart
+    print "    <script type=\"application/javascript\">"
+    print "function init() {"
+    printf("  plot(\"chart\", %d, %.2f, {\n", tslen, maxscore)
+    c = 0
+    for (team in teams) {
+        if (maxscores_by_team[team] / maxscore < 0.01) continue
+        printf("    \"%s\": [\"#%s\",[", team, colors_by_team[team])
+        for (i = 1; i < tslen; i += 1) {
+            time = timestamps[i]
+            printf("[%d,%.2f],",
+                   i, scores_by_team_time[team, time])
+        }
+        printf("]],\n");
+    }
+    print "  });"
+    print "  if (location.hash) {"
+    print "    cycle();"
+    print "    setInterval(cycle, 10000);"
+    print "  }"
+    print "}"
+    print "window.onload = init;"
+    print "    </script>"
+
+    # Reload every minute
+    print "    <meta http-equiv=\"refresh\" content=\"60\">"
+
+    # Set up team colors and a few page-specific styles
+    print "    <style type=\"text/css\">"
+    print "      body { width: 100%; }"
+    print "      .score { overflow: hidden; color: black; }"
+    for (team in teams) {
+        printf("      .t%s { background-color: #%s; }\n",
+               team, colors_by_team[team])
+    }
+    print "    </style>"
+
+    print "  </head>"
+    print "  <body>"
+    print "    <h1>Scoreboard</h1>"
+    print "<p id=\"debug\"></p>"
+    print "    <table id=\"scoreboard\">"
+    print "      <tr>"
+    print "        <th>Overall</th>"
+
+    # Print out category names
+    for (i = 0; i < ncats; i += 1) {
+        cat = cats[i]
+        points = points_by_cat[cat]
+        if (0 == points) continue
+        printf("<th>%s (%d)</th>\n", cat, points)
+    }
+
+    print "      </tr>"
+    print "      <tr>"
+
+    # Print out teams, ranked by score
+    print "        <td>"
+    for (i = 0; i < nteams; i += 1) {
+        if (scores[i] == scores[i-1]) continue;
+        for (team in teams) {
+            if (scores[i] == scores_by_team_time[team, lasttime]) {
+                name = names_by_team[team]
+                print_bar("total", team, scores[i], ncats)
+            }
+        }
+    }
+    print "        </td>"
+
+    # Print out scores within each category
+    for (i = 0; i < ncats; i += 1) {
+        cat = cats[i]
+        points = points_by_cat[cat]
+        if (0 == points) break;
+
+        print "<td>"
+        
+        # Create sorted list of scores in this category
+        n = 0
+        for (team in teams) {
+            l[n++] = points_by_cat_team[cat, team];
+        }
+        qsort(l, 0, n-1)
+
+        # Print out teams, ranked by points
+        for (j = 0; j < n; j += 1) {
+            if (l[j] == l[j-1]) continue;
+            if (0 == l[j]) break;
+            for (team in teams) {
+                points = points_by_cat_team[cat, team]
+                if (l[j] == points) {
+                    name = names_by_team[team]
+                    print_bar(cat, team, points, points_by_cat[cat])
+                }
+            }
+        }
+
+        print "</td>"
+    }
+    print "      </tr>"
+
+    print "    </table>"
+    print "    <canvas id=\"chart\" width=\"800\" height=\"400\"></canvas>"
+    print "  </body>"
+    print "</html>"
+}

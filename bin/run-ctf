@@ -1,36 +1,35 @@
 #! /bin/sh
 
 # First argument is seconds between running everything
-cycle=${1:-60}
+period=${1:-60}
 
-POINTS=var/points/log
+CTF_BASE=${CTF_BASE:-/srv/ctf} export CTF_BASE
 
-cd $(dirname $0)/..
-
+POINTS=$CTF_BASE/points.log
+SCOREBOARD=$CTF_BASE/www/scoreboard.html
+PUZZLES=$CTF_BASE/www/puzzles.html
 
 while true; do
-    # Timestamp
     start=$(date +%s)
-    next=$(expr $start + $cycle)
-
-    # If enabled, run tanks
-    if ! [ -f var/disabled/tanks ]; then
-        sbin/run-tanks --no-barren-points --once var/tanks
-    fi
+    next=$(expr $start + $period)
 
     # Collect any new points
-    for fn in var/points/cur/*; do
+    for fn in $CTF_BASE/points.new/*; do
         [ -f $fn ] || continue
         cat $fn >> $POINTS || break
         rm $fn
     done
 
-    # Update the scoreboard
-    if [ -f $POINTS ]; then
-        sbin/scoreboard -t www/scoreboard.html -j www/myplot.js < $POINTS
+    if [ $POINTS -nt $SCOREBOARD ]; then
+        $CTF_BASE/sbin/scoreboard < $POINTS > $SCOREBOARD.new
+        mv $SCOREBOARD.new $SCOREBOARD
     fi
 
-    # Wait until the next minute
+    if [ $CTF_BASE/puzzler.db -nt $PUZZLES ]; then
+        $CTF_BASE/sbin/puzzles.cgi > $PUZZLES.new
+        mv $PUZZLES.new $PUZZLES
+    fi
+
     now=$(date +%s)
     if [ $now -lt $next ]; then
         sleep $(expr $next - $now)
