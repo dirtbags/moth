@@ -4,11 +4,8 @@
 int
 main(int argc, char *argv[])
 {
-  char   team[9];
-  char   token[100];
-
-  team[0]  = 0;
-  token[0] = 0;
+  char   team[TEAM_MAX]   = {0};
+  char   token[TOKEN_MAX] = {0};
 
   if (-1 == cgi_init(argv)) {
     return 0;
@@ -65,9 +62,14 @@ main(int argc, char *argv[])
     }
     category[i] = '\0';
 
-    award_and_log_uniquely(team, category, 1,
-                           "tokens.db",
-                           "%s %s", team, token);
+    {
+      char line[TEAM_MAX + TOKEN_MAX + 1];
+
+      my_snprintf(line, sizeof(line),
+                  "%s %s", team, token);
+      award_and_log_uniquely(team, category, 1,
+                             "tokens.db", line);
+    }
   }
 
 

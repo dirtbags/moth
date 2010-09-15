@@ -1,19 +1,14 @@
 #include <stdlib.h>
 #include "common.h"
 
-
 int
 main(int argc, char *argv[])
 {
-  char team[TEAM_MAX];
-  char category[CAT_MAX];
-  char points_str[5];
-  char answer[500];
-  long points = 0;
-
-  team[0]     = 0;
-  category[0] = 0;
-  answer[0]   = 0;
+  char team[TEAM_MAX]    = {0};
+  char category[CAT_MAX] = {0};
+  char points_str[11]    = {0};
+  char answer[500]       = {0};
+  long points            = 0;
 
   if (-1 == cgi_init(argv)) {
     return 0;
@@ -71,9 +66,14 @@ main(int argc, char *argv[])
     }
   }
 
-  award_and_log_uniquely(team, category, points,
-                         "puzzler.db",
-                         "%s %s %ld", team, category, points);
+  {
+    char line[TEAM_MAX + CAT_MAX + sizeof(points_str) + 2];
+
+    my_snprintf(line, sizeof(line),
+               "%s %s %ld", team, category, points);
+    award_and_log_uniquely(team, category, points,
+                           "puzzler.db", line);
+  }
 
   cgi_page("Points awarded",
            ("<p>%d points for %s.</p>"

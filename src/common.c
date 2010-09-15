@@ -10,6 +10,21 @@
 #include <time.h>
 #include "common.h"
 
+#ifdef NODUMP
+#  define DUMPf(fmt, args...)
+#else
+#  define DUMPf(fmt, args...) fprintf(stderr, "%s:%s:%d " fmt "\n", __FILE__, __FUNCTION__, __LINE__, ##args)
+#endif
+#define DUMP() DUMPf("")
+#define DUMP_d(v) DUMPf("%s = %d", #v, v)
+#define DUMP_x(v) DUMPf("%s = 0x%x", #v, v)
+#define DUMP_s(v) DUMPf("%s = %s", #v, v)
+#define DUMP_c(v) DUMPf("%s = '%c' (0x%02x)", #v, v, v)
+#define DUMP_p(v) DUMPf("%s = %p", #v, v)
+
+
+#define POST_MAX 1024
+
 /*
  * CGI
  */
@@ -51,6 +66,9 @@ read_char_stdin()
     char *p = getenv("CONTENT_LENGTH");
     if (p) {
       inlen = atoi(p);
+      if (inlen > POST_MAX) {
+        inlen = POST_MAX;
+      }
     } else {
       inlen = 0;
     }
@@ -224,7 +242,7 @@ cgi_error(char *fmt, ...)
  */
 
 
-#define EOL(c) ((EOF == (c)) || (0 == (c)) || ('\n' == (c)))
+#define EOL(c) ((EOF == (c)) || ('\n' == (c)))
 
 int
 fgrepx(char const *needle, char const *filename)
@@ -240,19 +258,20 @@ fgrepx(char const *needle, char const *filename)
 
       /* This list of cases would have looked so much nicer in OCaml.  I
          apologize. */
-      if (EOL(c) && (0 == *p)) {
+      if (EOL(c) && ('\0' == *p)) {
         found = 1;
         break;
-      } else if (EOF == c) {
+      } else if (EOF == c) {    /* End of file */
         break;
-      } else if ((0 == p) || (*p != c)) {
+      } else if (('\0' == p) || (*p != c)) {
         p = needle;
+        /* Discard the rest of the line */
         do {
           c = fgetc(f);
         } while (! EOL(c));
-      } else if ('\n' == c) {
+      } else if (EOL(c)) {
         p = needle;
-      } else {
+      } else {                  /* It matched */
         p += 1;
       }
     }
@@ -271,7 +290,7 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
   va_start(ap, fmt);
   len = vsnprintf(buf, buflen - 1, fmt, ap);
   va_end(ap);
-  buf[buflen] = '\0';
+  buf[buflen - 1] = '\0';
   if (len >= buflen) {
     return buflen - 1;
   } else {
@@ -320,8 +339,8 @@ team_exists(char const *teamhash)
     }
   }
 
-  /* lstat seems to be the preferred way to check for existence. */
-  ret = lstat(srv_path("teams/names/%s", teamhash), &buf);
+  /* stat seems to be the preferred way to check for existence. */
+  ret = stat(srv_path("teams/names/%s", teamhash), &buf);
   if (-1 == ret) {
     return 0;
   }
@@ -396,27 +415,23 @@ award_points(char const *teamhash,
   return 0;
 }
 
+/** Award points iff they haven't been logged.
+
+    If [line] is not in [dbfile], append it and give [points] to [team]
+    in [category].
+*/
 void
 award_and_log_uniquely(char const *team,
                        char const *category,
                        long points,
                        char const *dbfile,
-                       char const *fmt, ...)
+                       char const *line)
 {
   char    *dbpath = srv_path(dbfile);
-  char     line[200];
-  int      len;
   int      ret;
   int      fd;
-  va_list  ap;
 
   /* Make sure they haven't already claimed these points */
-  va_start(ap, fmt);
-  len = vsnprintf(line, sizeof(line), fmt, ap);
-  va_end(ap);
-  if (sizeof(line) <= len) {
-    cgi_error("Log line too long");
-  }
   if (fgrepx(line, dbpath)) {
     cgi_page("Already claimed",
              "<p>Your team has already claimed these points.</p>");
@@ -437,11 +452,11 @@ award_and_log_uniquely(char const *team,
   }
 
   /* Log that we did so */
-  /* We can turn that trailing NUL into a newline now since write
-     doesn't use C strings */
-  line[len] = '\n';
   lseek(fd, 0, SEEK_END);
-  if (-1 == write(fd, line, len+1)) {
+  if (-1 == write(fd, line, strlen(line))) {
+    cgi_error("Unable to append log");
+  }
+  if (-1 == write(fd, "\n", 1)) {
     cgi_error("Unable to append log");
   }
   close(fd);

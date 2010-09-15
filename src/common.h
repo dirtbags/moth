@@ -5,6 +5,7 @@
 
 #define TEAM_MAX 40
 #define CAT_MAX 40
+#define TOKEN_MAX 40
 
 int cgi_init(char *global_argv[]);
 size_t cgi_item(char *str, size_t maxlen);
@@ -24,6 +25,6 @@ void award_and_log_uniquely(char const *team,
                             char const *category,
                             long points,
                             char const *logfile,
-                            char const *fmt, ...);
+                            char const *line);
 
 #endif

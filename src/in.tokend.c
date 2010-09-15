@@ -120,18 +120,18 @@ main(int argc, char *argv[])
     bubblebabble(digest, crap, itokenlen);
 
     /* Append digest to service name. */
-    tokenlen = (size_t)snprintf(token, sizeof(token),
-                                "%s:%s",
-                                service, digest);
+    tokenlen = (size_t)my_snprintf(token, sizeof(token),
+                                   "%s:%s",
+                                   service, digest);
   }
 
   /* Write that token out now. */
   {
-    int          fd;
-    int          ret;
+    int fd;
+    int ret;
 
     do {
-      fd = open(srv_path("tokens.db"), O_WRONLY | O_CREAT, 0644);
+      fd = open(srv_path("tokens.db"), O_WRONLY | O_CREAT, 0666);
       if (-1 == fd) break;
 
       ret = lockf(fd, F_LOCK, 0);
@@ -150,16 +150,18 @@ main(int argc, char *argv[])
       if (-1 == ret) break;
     } while (0);
 
-    if (-1 == ret) {
+    if ((-1 == fd) || (-1 == ret)) {
       printf("!%s", strerror(errno));
       return 0;
     }
   }
 
   /* Encrypt the token.  Note that now tokenlen is in uint32_ts, not
-     chars! */
+     chars!  Also remember that token must be big enough to hold a
+     multiple of 4 chars, since tea will go ahead and jumble them up for
+     you.  If the compiler aligns words this shouldn't be a problem. */
   {
-    tokenlen = (tokenlen + (tokenlen % 4)) / 4;
+    tokenlen = (tokenlen + (tokenlen % sizeof(uint32_t))) / sizeof(uint32_t);
 
     tea_encode(key, (uint32_t *)token, tokenlen);
   }

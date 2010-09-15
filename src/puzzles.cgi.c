@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "common.h"
 
+
 int
 longcmp(long *a, long *b)
 {
@@ -15,13 +16,13 @@ longcmp(long *a, long *b)
   return 0;
 }
 
-#define PUZZLES_MAX 500
+#define PUZZLES_MAX 100
 
 /** Keeps track of the most points yet awarded in each category */
 struct {
   char cat[CAT_MAX];
   long points;
-} points_by_cat[100];
+} points_by_cat[PUZZLES_MAX];
 int ncats = 0;
 
 void
@@ -37,14 +38,19 @@ read_points_by_cat()
   }
 
   while (1) {
-    if (2 != fscanf(f, "%*s %s %ld\n", &cat, &points)) {
+    /* XXX: tokenize like cgi_item */
+    if (2 != fscanf(f, "%*s %s %ld\n", cat, &points)) {
       break;
     }
     for (i = 0; i < ncats; i += 1) {
       if (0 == strcmp(cat, points_by_cat[i].cat)) break;
     }
     if (i == ncats) {
-      strcpy(points_by_cat[i].cat, cat);
+      if (PUZZLES_MAX == ncats) {
+        continue;
+      }
+      strncpy(points_by_cat[i].cat, cat, sizeof(points_by_cat[i].cat));
+      points_by_cat[i].points = 0;
       ncats += 1;
     }
     if (points > points_by_cat[i].points) {
@@ -76,12 +82,14 @@ main(int argc, char *argv[])
   /* For each file in /srv/ ... */
   while (1) {
     struct dirent *e          = readdir(srv);
-    char          *cat        = e->d_name;
+    char          *cat;
     DIR           *puzzles;
     long           catpoints[PUZZLES_MAX];
     size_t         ncatpoints = 0;
 
     if (! e) break;
+
+    cat = e->d_name;
     if ('.' == cat[0]) continue;
     /* We have to lstat anyway to see if it's a directory; may as
        well just barge ahead and watch for errors. */

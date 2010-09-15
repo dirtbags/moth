@@ -17,7 +17,15 @@
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.0">
   <defs
-     id="defs2569" />
+     id="defs2569">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 495 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="765 : 495 : 1"
+       inkscape:persp3d-origin="382.5 : 330 : 1"
+       id="perspective2545" />
+  </defs>
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -703,7 +711,7 @@
          sodipodi:role="line"
          x="381.88013"
          y="787.68048"
-         id="tspan2823">and NMT ACS chapter</tspan><tspan
+         id="tspan2823">and NMT ACM chapter</tspan><tspan
          sodipodi:role="line"
          x="381.88013"
          y="811.68048"

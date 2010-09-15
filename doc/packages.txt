@@ -1,0 +1,49 @@
+CTF Packages
+============
+
+Packages are squashfs files.  
+
+A hypothetical package named pkgname.sfs will be mounted under
+/srv/pkgname.  The following top-level files and directories are
+significant:
+
+* /www/         -  Will appear as http://host/pkgname/, CGI can be run
+* /bin/         -  Will be added to $PATH
+* /puzzles/     -  Will appear as a puzzle category (see "Puzzles" below)
+* /answers.txt  -  Puzzle answers for category pkgname (see "Puzzles" below)
+
+
+Puzzles
+-------
+
+To expose puzzles, place them in the /puzzles/ directory, like so:
+
+    /puzzles/10/index.html
+    /puzzles/20/index.html
+    /puzzles/20/script.cgi
+    /puzzles/30/index.html
+    /puzzles/30/something.jpg
+    /puzzles/40/index.html
+
+where the second directory is the point value of the puzzle.  This means
+that no two puzzles in a category can have the same point value.
+
+Files will be served up from the web server, and CGI scripts will be
+executed.
+
+Store answers to your puzzles in /answers.txt.  Answers are one per
+line, with the point value appearing first, followed by a space, then
+the answer.  Answers are case sensitive.  You may have multiple answers
+for each point value.
+
+
+    10 zip file
+    10 zip
+    10 ZIP
+    10 pkzip
+    10 PKZIP
+    20 varname
+    30 JFIF
+    40 0x8040fe67
+    40 8040FE67
+    40 8040fe67
