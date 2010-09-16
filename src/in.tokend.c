@@ -70,9 +70,10 @@ int
 main(int argc, char *argv[])
 {
   char     service[50];
+  size_t   servicelen;
   char     token[80];
-  uint32_t key[4];
   size_t   tokenlen;
+  uint32_t key[4];
 
   /* Seed the random number generator.  This ought to be unpredictable
      enough for a contest. */
@@ -80,12 +81,12 @@ main(int argc, char *argv[])
 
   /* Read service name. */
   {
-    size_t len;
-    int    i;
+    ssize_t len;
 
     len = read(0, service, sizeof(service) - 1);
-    for (i = 0; (i < len) && isalnum(service[i]); i += 1);
-    service[i] = '\0';
+    for (servicelen = 0;
+         (servicelen < len) && isalnum(service[servicelen]);
+         servicelen += 1);
   }
 
   /* Read in that service's key. */
@@ -121,9 +122,9 @@ main(int argc, char *argv[])
     bubblebabble(digest, (char *)crap, itokenlen);
 
     /* Append digest to service name. */
-    tokenlen = (size_t)my_snprintf(token, sizeof(token),
-                                   "%s:%s",
-                                   service, digest);
+    tokenlen = (size_t)snprintf(token, sizeof(token),
+                               "%*s:%s",
+                                servicelen, service, digest);
   }
 
   /* Write that token out now. */
