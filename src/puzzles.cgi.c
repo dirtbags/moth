@@ -25,37 +25,25 @@ struct {
 } points_by_cat[PUZZLES_MAX];
 int ncats = 0;
 
-void
-read_points_by_cat()
+size_t
+read_until_char(FILE *f, char *buf, size_t buflen, char delim)
 {
-  FILE *f = fopen(srv_path("puzzler.db"), "r");
-  char  cat[CAT_MAX];
-  long  points;
-  int   i;
-
-  if (! f) {
-    return;
-  }
+  size_t i = 0;
 
   while (1) {
-    /* XXX: tokenize like cgi_item */
-    if (2 != fscanf(f, "%*s %s %ld\n", cat, &points)) {
-      break;
-    }
-    for (i = 0; i < ncats; i += 1) {
-      if (0 == strcmp(cat, points_by_cat[i].cat)) break;
-    }
-    if (i == ncats) {
-      if (PUZZLES_MAX == ncats) {
-        continue;
+    int c = fgetc(f);
+
+    if ((EOF == c) || delim == c) {
+      if (buf) {
+        buf[i] = '\0';
       }
-      strncpy(points_by_cat[i].cat, cat, sizeof(points_by_cat[i].cat));
-      points_by_cat[i].points = 0;
-      ncats += 1;
+      return i;
     }
-    if (points > points_by_cat[i].points) {
-      points_by_cat[i].points = points;
+
+    if (i + 1 < buflen) {
+      buf[i] = c;
     }
+    i += 1;
   }
 }
 
@@ -69,7 +57,39 @@ main(int argc, char *argv[])
     return 0;
   }
 
-  read_points_by_cat();
+  {
+    FILE *f = fopen(srv_path("puzzler.db"), "r");
+    char  cat[CAT_MAX];
+    char  points_str[11];
+    long  points;
+    int   i;
+
+    while (f && (! feof(f))) {
+      read_until_char(f, NULL, 0, ' ');
+      read_until_char(f, cat, sizeof(cat), ' ');
+      read_until_char(f, points_str, sizeof(points_str), '\n');
+      points = atol(points_str);
+
+      printf("%s %ld\n", cat, points);
+
+      for (i = 0; i < ncats; i += 1) {
+        if (0 == strcmp(cat, points_by_cat[i].cat)) break;
+      }
+      if (i == ncats) {
+        if (PUZZLES_MAX == ncats) {
+          continue;
+        }
+        strncpy(points_by_cat[i].cat, cat, sizeof(points_by_cat[i].cat));
+        points_by_cat[i].points = 0;
+        ncats += 1;
+      }
+      if (points > points_by_cat[i].points) {
+        points_by_cat[i].points = points;
+      }
+    }
+
+    if (f) fclose(f);
+  }
 
   srv = opendir(srv_path("packages"));
   if (NULL == srv) {
@@ -137,7 +157,7 @@ main(int argc, char *argv[])
       printf("  <dt>%s</dt>\n", cat);
       printf("  <dd>\n");
       for (i = 0; i < ncatpoints; i += 1) {
-        printf("    <a href=\"/puzzles/%s/%d\">%d</a>\n",
+        printf("    <a href=\"/puzzles/%s/%ld\">%ld</a>\n",
                cat, catpoints[i], catpoints[i]);
         if (catpoints[i] > maxpoints) break;
       }
