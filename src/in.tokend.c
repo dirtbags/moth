@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <string.h>
 #include <ctype.h>
 #include "common.h"
 #include "xxtea.h"
@@ -117,7 +118,7 @@ main(int argc, char *argv[])
     for (i = 0; i < itokenlen; i += 1) {
       crap[i] = (uint8_t)random();
     }
-    bubblebabble(digest, crap, itokenlen);
+    bubblebabble(digest, (char *)crap, itokenlen);
 
     /* Append digest to service name. */
     tokenlen = (size_t)my_snprintf(token, sizeof(token),

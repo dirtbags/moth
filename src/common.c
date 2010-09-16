@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include <values.h>
 #include <time.h>
@@ -357,7 +358,6 @@ award_points(char const *teamhash,
   int    linelen;
   char   *filename;
   int    fd;
-  int    ret;
   time_t now = time(NULL);
 
   if (! team_exists(teamhash)) {
@@ -365,8 +365,8 @@ award_points(char const *teamhash,
   }
 
   linelen = snprintf(line, sizeof(line),
-                     "%u %s %s %ld\n",
-                     now, teamhash, category, points);
+                     "%lu %s %s %ld\n",
+                     (unsigned long)now, teamhash, category, points);
   if (sizeof(line) <= linelen) {
     return -1;
   }
@@ -428,7 +428,6 @@ award_and_log_uniquely(char const *team,
                        char const *line)
 {
   char    *dbpath = srv_path(dbfile);
-  int      ret;
   int      fd;
 
   /* Make sure they haven't already claimed these points */

@@ -1,4 +1,4 @@
-CFLAGS = -Wall
+CFLAGS = -Wall -Werror
 TARGETS = in.tokend pointscli claim.cgi puzzler.cgi puzzles.cgi
 
 all: build

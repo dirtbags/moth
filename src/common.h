@@ -16,6 +16,7 @@ void cgi_error(char *fmt, ...);
 
 
 int fgrepx(char const *needle, char const *filename);
+int my_snprintf(char *buf, size_t buflen, char *fmt, ...);
 char *srv_path(char const *fmt, ...);
 int team_exists(char const *teamhash);
 int award_points(char const *teamhacsh,
