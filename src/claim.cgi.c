@@ -64,7 +64,7 @@ main(int argc, char *argv[])
     category[i] = '\0';
 
     {
-      char line[TEAM_MAX + TOKEN_MAX + 1];
+      char line[200];
 
       my_snprintf(line, sizeof(line),
                   "%s %s", team, token);

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "common.h"
-#include "xxtea.h"
+#include "arc4.h"
 
 #define itokenlen 3
 
@@ -69,11 +69,12 @@ bubblebabble(char *out, char const *in, const size_t inlen)
 int
 main(int argc, char *argv[])
 {
-  char     service[50];
-  size_t   servicelen;
-  char     token[80];
-  size_t   tokenlen;
-  uint32_t key[4];
+  char    service[50];
+  size_t  servicelen;
+  char    token[80];
+  size_t  tokenlen;
+  uint8_t key[256];
+  size_t  keylen;
 
   /* Seed the random number generator.  This ought to be unpredictable
      enough for a contest. */
@@ -83,7 +84,7 @@ main(int argc, char *argv[])
   {
     ssize_t len;
 
-    len = read(0, service, sizeof(service) - 1);
+    len = read(0, service, sizeof(service));
     for (servicelen = 0;
          (servicelen < len) && isalnum(service[servicelen]);
          servicelen += 1);
@@ -91,22 +92,23 @@ main(int argc, char *argv[])
 
   /* Read in that service's key. */
   {
-    int     fd;
-    size_t  len;
+    int fd;
+    int ret;
 
-    fd = open(srv_path("token.keys/%s", service), O_RDONLY);
+    fd = open(srv_path("token.keys/%*s", servicelen, service), O_RDONLY);
     if (-1 == fd) {
       write(1, "!nosvc", 6);
       return 0;
     }
 
-    len = read(fd, &key, 16);
-    close(fd);
-
-    if (16 != len) {
-      write(1, "!shortkey", 9);
+    ret = read(fd, &key, sizeof(key));
+    if (-1 == ret) {
+      write(1, "!read", 5);
       return 0;
     }
+    keylen = (size_t)ret;
+
+    close(fd);
   }
 
   /* Create the token. */
@@ -158,19 +160,14 @@ main(int argc, char *argv[])
     }
   }
 
-  /* Encrypt the token.  Note that now tokenlen is in uint32_ts, not
-     chars!  Also remember that token must be big enough to hold a
-     multiple of 4 chars, since tea will go ahead and jumble them up for
-     you.  If the compiler aligns words this shouldn't be a problem. */
+  /* Encrypt the token. */
   {
-    tokenlen = (tokenlen + (tokenlen % sizeof(uint32_t))) / sizeof(uint32_t);
-
-    tea_encode(key, (uint32_t *)token, tokenlen);
+    arc4_crypt_buffer(key, keylen, (uint8_t *)token, tokenlen);
   }
 
   /* Send it back.  If there's an error here, it's okay.  Better to have
      unclaimed tokens than unclaimable ones. */
-  write(1, token, tokenlen * sizeof(uint32_t));
+  write(1, token, tokenlen);
 
   return 0;
 }

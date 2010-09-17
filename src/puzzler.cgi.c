@@ -68,7 +68,7 @@ main(int argc, char *argv[])
   }
 
   {
-    char line[TEAM_MAX + CAT_MAX + sizeof(points_str) + 2];
+    char line[200];
 
     my_snprintf(line, sizeof(line),
                "%s %s %ld", team, category, points);

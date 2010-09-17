@@ -19,11 +19,12 @@ longcmp(long *a, long *b)
 #define PUZZLES_MAX 100
 
 /** Keeps track of the most points yet awarded in each category */
+int    ncats = 0;
 struct {
   char cat[CAT_MAX];
   long points;
 } points_by_cat[PUZZLES_MAX];
-int ncats = 0;
+
 
 size_t
 read_until_char(FILE *f, char *buf, size_t buflen, char delim)
@@ -69,8 +70,6 @@ main(int argc, char *argv[])
       read_until_char(f, cat, sizeof(cat), ' ');
       read_until_char(f, points_str, sizeof(points_str), '\n');
       points = atol(points_str);
-
-      printf("%s %ld\n", cat, points);
 
       for (i = 0; i < ncats; i += 1) {
         if (0 == strcmp(cat, points_by_cat[i].cat)) break;

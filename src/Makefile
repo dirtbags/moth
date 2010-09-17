@@ -5,7 +5,7 @@ all: build
 
 build: $(TARGETS)
 
-in.tokend: in.tokend.o xxtea.o common.o
+in.tokend: in.tokend.o arc4.o common.o
 pointscli: pointscli.o common.o
 
 puzzles.cgi: puzzles.cgi.o common.o
