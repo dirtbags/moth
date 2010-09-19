@@ -2,6 +2,7 @@
 #define __COMMON_H__
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define TEAM_MAX 40
 #define CAT_MAX 40
@@ -16,6 +17,7 @@ void cgi_error(char *fmt, ...);
 
 
 int fgrepx(char const *needle, char const *filename);
+int32_t my_random();
 int my_snprintf(char *buf, size_t buflen, char *fmt, ...);
 char *srv_path(char const *fmt, ...);
 int team_exists(char const *teamhash);

@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <ctype.h>
+#include <sysexits.h>
 #include "common.h"
 #include "arc4.h"
 
@@ -76,15 +77,12 @@ main(int argc, char *argv[])
   uint8_t key[256];
   size_t  keylen;
 
-  /* Seed the random number generator.  This ought to be unpredictable
-     enough for a contest. */
-  srand((int)time(NULL) * (int)getpid());
-
   /* Read service name. */
   {
     ssize_t len;
 
     len = read(0, service, sizeof(service));
+    if (0 >= len) return 0;
     for (servicelen = 0;
          (servicelen < len) && isalnum(service[servicelen]);
          servicelen += 1);
@@ -97,13 +95,13 @@ main(int argc, char *argv[])
 
     fd = open(srv_path("token.keys/%.*s", servicelen, service), O_RDONLY);
     if (-1 == fd) {
-      write(1, "!nosvc", 6);
+      perror("Open key");
       return 0;
     }
 
     ret = read(fd, &key, sizeof(key));
     if (-1 == ret) {
-      write(1, "!read", 5);
+      perror("Read key");
       return 0;
     }
     keylen = (size_t)ret;
@@ -111,17 +109,27 @@ main(int argc, char *argv[])
     close(fd);
   }
 
+  /* Send a nonce, expect it back encrypted */
+  {
+    int32_t nonce = my_random();
+    int32_t enonce = 0;
+
+    write(1, &nonce, sizeof(nonce));
+    arc4_crypt_buffer(key, keylen, (uint8_t *)&nonce, sizeof(nonce));
+    read(0, &enonce, sizeof(enonce));
+    if (nonce != enonce) {
+      write(1, ":<", 2);
+      return 0;
+    }
+  }
+
   /* Create the token. */
   {
-    uint8_t crap[itokenlen];
+    int32_t crap = my_random();
     char    digest[bubblebabble_len(itokenlen)];
-    int     i;
 
     /* Digest some random junk. */
-    for (i = 0; i < itokenlen; i += 1) {
-      crap[i] = (uint8_t)random();
-    }
-    bubblebabble(digest, (char *)crap, itokenlen);
+    bubblebabble(digest, (char *)&crap, itokenlen);
 
     /* Append digest to service name. */
     tokenlen = (size_t)snprintf(token, sizeof(token),

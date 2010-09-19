@@ -282,6 +282,29 @@ fgrepx(char const *needle, char const *filename)
   return found;
 }
 
+int32_t
+my_random()
+{
+  static int urandom = -2;
+  int        len;
+  int32_t    ret;
+
+  if (-2 == urandom) {
+    urandom = open("/dev/urandom", O_RDONLY);
+    srandom(time(NULL) * getpid());
+  }
+  if (-1 == urandom) {
+    return (int32_t)random();
+  }
+
+  len = read(urandom, &ret, sizeof(ret));
+  if (len != sizeof(ret)) {
+    return (int32_t)random();
+  }
+
+  return ret;
+}
+
 int
 my_snprintf(char *buf, size_t buflen, char *fmt, ...)
 {
