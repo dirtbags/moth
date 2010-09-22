@@ -4,6 +4,12 @@
 
 #define swap(a, b) do {int _swap=a; a=b, b=_swap;} while (0)
 
+struct arc4_ctx {
+  uint8_t S[256];
+  uint8_t i;
+  uint8_t j;
+};
+
 void
 arc4_init(struct arc4_ctx *ctx, uint8_t const *key, size_t keylen)
 {
@@ -22,25 +28,24 @@ arc4_init(struct arc4_ctx *ctx, uint8_t const *key, size_t keylen)
   ctx->j = 0;
 }
 
+uint8_t
+arc4_pad(struct arc4_ctx *ctx)
+{
+  ctx->i = (ctx->i + 1) % 256;
+  ctx->j = (ctx->j + ctx->S[ctx->i]) % 256;
+  swap(ctx->S[ctx->i], ctx->S[ctx->j]);
+  return ctx->S[(ctx->S[ctx->i] + ctx->S[ctx->j]) % 256];
+}
+
 void
 arc4_crypt(struct arc4_ctx *ctx,
            uint8_t *obuf, uint8_t const *ibuf, size_t buflen)
 {
-  int    i = ctx->i;
-  int    j = ctx->j;
   size_t k;
 
   for (k = 0; k < buflen; k += 1) {
-    uint8_t mask;
-
-    i = (i + 1) % 256;
-    j = (j + ctx->S[i]) % 256;
-    swap(ctx->S[i], ctx->S[j]);
-    mask = ctx->S[(ctx->S[i] + ctx->S[j]) % 256];
-    obuf[k] = ibuf[k] ^ mask;
+    obuf[k] = ibuf[k] ^ arc4_pad(ctx);
   }
-  ctx->i = i;
-  ctx->j = j;
 }
 
 void
