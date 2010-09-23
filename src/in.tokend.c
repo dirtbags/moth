@@ -93,7 +93,7 @@ main(int argc, char *argv[])
     int fd;
     int ret;
 
-    fd = open(srv_path("token.keys/%.*s", servicelen, service), O_RDONLY);
+    fd = open(srv_path("var/token.keys/%.*s", servicelen, service), O_RDONLY);
     if (-1 == fd) {
       perror("Open key");
       return 0;
@@ -143,7 +143,7 @@ main(int argc, char *argv[])
     int ret;
 
     do {
-      fd = open(srv_path("tokens.db"), O_WRONLY | O_CREAT, 0666);
+      fd = open(srv_path("var/tokens.db"), O_WRONLY | O_CREAT, 0666);
       if (-1 == fd) break;
 
       ret = lockf(fd, F_LOCK, 0);

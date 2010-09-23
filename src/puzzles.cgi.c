@@ -59,7 +59,7 @@ main(int argc, char *argv[])
   }
 
   {
-    FILE *f = fopen(srv_path("puzzler.db"), "r");
+    FILE *f = fopen(srv_path("var/puzzler.db"), "r");
     char  cat[CAT_MAX];
     char  points_str[11];
     long  points;

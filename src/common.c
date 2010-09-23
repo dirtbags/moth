@@ -364,7 +364,7 @@ team_exists(char const *teamhash)
   }
 
   /* stat seems to be the preferred way to check for existence. */
-  ret = stat(srv_path("teams/names/%s", teamhash), &buf);
+  ret = stat(srv_path("var/teams/names/%s", teamhash), &buf);
   if (-1 == ret) {
     return 0;
   }
@@ -420,7 +420,7 @@ award_points(char const *teamhash,
      token log.
   */
 
-  filename = srv_path("points.new/%d.%d.%s.%s.%ld",
+  filename = srv_path("var/points.new/%d.%d.%s.%s.%ld",
                       now, getpid(),
                       teamhash, category, points);
 
