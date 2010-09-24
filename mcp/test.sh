@@ -11,6 +11,7 @@ mkdir $CTF_BASE
 
 # Some skeletal structure
 mkdir -p $CTF_BASE/points.new
+mkdir -p $CTF_BASE/points.tmp
 
 # Set up some packages
 for cat in cat1 cat2 cat3; do

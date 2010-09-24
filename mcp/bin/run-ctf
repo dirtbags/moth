@@ -10,17 +10,6 @@ STATE=${CTF_BASE:-/var/lib/ctf}
 NEWPOINTS=$STATE/points.new
 POINTS=$STATE/points.log
 SCOREBOARD=$WWW/scoreboard.html
-PUZZLES=$WWW/puzzles.html
-TEAMS=$WWW/teams.html
-
-install -u ctf -m 0644 /dev/null $STATE/tokens.db
-install -u ctf -m 0644 /dev/null $STATE/claim.db
-install -u root -m 0644 /dev/null $POINTS
-
-install -u ctf -d $NEWPOINTS
-install -u root -d $STATE/teams/names
-install -u root -d $STATE/teams/colors
-install -u root -d $STATE/token.keys
 
 if ! [ -f $SCOREBOARD ]; then
     $BIN/scoreboard < $POINTS > $SCOREBOARD
@@ -40,16 +29,6 @@ while true; do
     # Render scoreboard
     if [ $POINTS -nt $SCOREBOARD ]; then
         $BIN/scoreboard < $POINTS > $SCOREBOARD.new && mv $SCOREBOARD.new $SCOREBOARD
-    fi
-
-    # Render puzzles list
-    if [ $STATE/puzzler.db -nt $PUZZLES ]; then
-        $WWW/puzzles.cgi > $PUZZLES.new && mv $PUZZLES.new $PUZZLES
-    fi
-
-    # Render team names
-    if [ $STATE/teams/names -nt $TEAMS ]; then
-        $BIN/teams.sh > $TEAMS.new && mv $TEAMS.new $TEAMS
     fi
 
     now=$(date +%s)

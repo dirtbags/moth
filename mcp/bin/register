@@ -5,10 +5,15 @@ if [ $# -ne 1 ]; then
     exit 64
 fi
 
+escape () {
+    sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+}
+
 # Don't overwrite files
 set -C
 
 base=${CTF_BASE:-/var/lib/ctf}
+www=${CTF_BASE:-/var/www}
 
 # Assign a color.  I spent two days selecting this color pallette for
 # people with protanopia.  Please don't change these colors.
@@ -45,3 +50,6 @@ echo "$1" > $base/teams/names/$hash
 echo "$color" > $base/teams/colors/$hash
 
 echo "Registered with hash: $hash"
+
+# Write teams.html if it's an actual contest
+/opt/mcp/bin/teams.sh > $www/teams.html.new && mv $www/teams.html.new $www/teams.html

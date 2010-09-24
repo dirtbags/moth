@@ -1,8 +1,20 @@
 #! /bin/sh
 
-## Set up this package
+## Set up the MCP (Master Control Program) server
 
 hostname mcp
 
-cp -r service/* /var/service
-cp -r www /var
+cp -r service/* /var/service/
+cp -r www /var/
+
+install -o ctf -m 0644 /dev/null /var/lib/ctf/tokens.db
+install -o ctf -m 0644 /dev/null /var/lib/ctf/claim.db
+install -o ctf -m 0644 /dev/null /var/lib/ctf/puzzles.db
+install -o root -m 0644 /dev/null /var/lib/ctf/points.log
+
+install -o ctf -d /var/lib/ctf/points.new
+install -o ctf -d /var/lib/ctf/points.tmp
+install -o root -d /var/lib/ctf/teams/names
+install -o root -d /var/lib/ctf/teams/colors
+install -o root -d /var/lib/ctf/token.keys
+

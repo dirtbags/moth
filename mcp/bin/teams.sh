@@ -1,6 +1,6 @@
 #! /bin/sh
 
-cd /var/lib/ctf/teams/names
+cd ${CTF_BASE:-/var/lib/ctf}/teams/names
 
 escape () {
     sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
@@ -21,7 +21,7 @@ EOF
 
 echo "<table>"
 echo "<tr><th>Team Name</th><th>Token</th></tr>"
-for i in ??????; do
+for i in *; do
     echo "<tr><td>"
     escape < $i
     echo "</td><td><samp>$i</samp></td></tr>"

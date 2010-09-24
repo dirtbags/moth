@@ -12,12 +12,14 @@ $(PACKAGE): build
 	cp setup $(PKGDIR)
 
 	find bin -not -name '*~' | cpio -p $(PKGDIR)
-	cp src/in.tokend src/tokencli src/pointscli $(PKGDIR)/bin
+	cp src/in.tokend $(PKGDIR)/bin
+	cp src/tokencli src/pointscli $(PKGDIR)/bin
+	cp src/puzzles.cgi $(PKGDIR)/bin
 
 	find service -not -name '*~' -not -name '#*' | cpio -p $(PKGDIR)
 
 	find www -not -name '*~' -not -name '#*' | cpio -p $(PKGDIR)
-	cp src/puzzler.cgi src/puzzles.cgi src/claim.cgi $(PKGDIR)/www
+	cp src/puzzler.cgi src/claim.cgi $(PKGDIR)/www
 
 	mksquashfs $(PKGDIR) $(PACKAGE) -all-root -noappend
 

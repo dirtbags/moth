@@ -66,7 +66,7 @@ function output(    t, c) {
 BEGIN {
     base = ENVIRON["CTF_BASE"]
     if (! base) {
-        base = "/srv/ctf"
+        base = "/var/lib/ctf"
     }
 
     # Only display two decimal places
@@ -101,13 +101,19 @@ BEGIN {
 
     # Get team colors and names
     for (team in teams) {
-        fn = base "/teams/colors/" team
-        getline colors_by_team[team] < fn
-        close(fn)
+        # Busybox awk segfaults if you try to close a file that didn't
+        # exist.  We work around it by calling cat.
+        cmd = sprintf("cat %s/teams/colors/%s", base, team)
+        cmd | getline color
+        if (! color) color = "cccccc";
+        colors_by_team[team]  = color
+        close(cmd)
 
-        fn = base "/teams/names/" team
-        getline names_by_team[team] < fn
-        close(fn)
+        cmd = sprintf("cat %s/teams/names/%s", base, team)
+        cmd | getline name
+        if (! name) name = team
+        names_by_team[team] = name
+        close(cmd)
     }
 
     # Sort categories

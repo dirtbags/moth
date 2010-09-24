@@ -442,7 +442,7 @@ award_points(char const *teamhash,
      token log.
   */
 
-  filename = state_path("points.new/%d.%d.%s.%s.%ld",
+  filename = state_path("points.tmp/%d.%d.%s.%s.%ld",
                         now, getpid(),
                         teamhash, category, points);
 
@@ -457,6 +457,18 @@ award_points(char const *teamhash,
   }
 
   close(fd);
+
+  /* Rename into points.new */
+  {
+    char ofn[PATH_MAX];
+
+    strncpy(ofn, filename, sizeof(ofn));
+    filename = state_path("points.new/%d.%d.%s.%s.%ld",
+                          now, getpid(),
+                          teamhash, category, points);
+    rename(ofn, filename);
+  }
+
   return 0;
 }
 
