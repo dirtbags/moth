@@ -81,20 +81,6 @@ hr {
     border: 1px solid #ddc;
 }
 
-dt {
-    white-space: pre;
-    padding: 5px;
-    border: 2px solid #b71;
-    border-bottom: none;
-    font-weight: bold;
-}
-
-dd {
-    border: 2px solid #b71;
-    margin: 0px;
-    padding: 5px;
-}
-
 
 
 /*** left side bar ***/

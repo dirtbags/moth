@@ -1,0 +1,22 @@
+Kolejne modele Panzerfausta, odpowiednio: 60, 100, 150, różnił
+kaliber głowicy i wielkość ładunku miotającego. Konstrukcja i
+mechanizm nie ulegał istotnym zmianom, z racji wzrastania zasięgu
+broni modyfikacjom ulegały nastawy celowników. Jedynie we wzorze 150
+wprowadzono (a był to już początek 1945 roku) wielokrotne użycie
+wyrzutni rurowej. Osiągnięto to przez umieszczenie ładunku
+miotającego w głowicy oraz przez wzmocnienie rury. W wyniku problemu z
+transportem model ów nie wszedł do walki. Model 250 (o teoretycznym
+zasięgu 250 m) z racji zakończenia wojny nie opuścił desek
+kreślarskich nigdy nie wchodząc nawet w fazę prototypową.
+
+    (61, 4)
+    (47, 8)
+    (19, 4)
+    (37, 1)
+    (51, 3)
+    (67, 5)
+    (9, 2)
+    (26, 1)
+    (2, 2)
+    (26, 3)
+    (50, 2)

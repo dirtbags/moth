@@ -72,7 +72,7 @@ main(int argc, char *argv[])
     my_snprintf(line, sizeof(line),
                "%s %s %ld", team, category, points);
     award_and_log_uniquely(team, category, points,
-                           state_path("puzzler.db"), line);
+                           state_path("puzzles.db"), line);
   }
 
   cgi_page("Points awarded",

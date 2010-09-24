@@ -1,0 +1,87 @@
+More Application Protocols
+==========================
+
+Several popular application-layer protocols are what's referred to as
+“binary protocols”, meaning their communications are not easily readable
+by humans.  They are still readable, though, if you know how to read
+them.
+
+
+Secure Shell (SSH)
+------------------
+
+Although SSH is a binary protocol, the first message sent by both client
+and server is typically an ASCII banner announcing the version:
+
+    S: SSH-1.99-OpenSSH_5.1p1 Debian-5
+    C: SSH-2.0-OpenSSH_3.9p1
+
+In SSH, the server speaks first.
+
+
+
+Transport Layer Security (TLS)
+------------------------------
+
+TLS (formerly known as Secure Sockets Layer or SSL) is a protocol for
+encrypting communications over TCP.  While the contents of an SSL
+session are encrypted, we can at least identify it as such by looking at
+the beginning few bytes:
+
+<dl>
+<dt>Hex</dt>
+<dd><code>C: <b>16</b> <i>03 01</i> 00 8a 01 00 01 00 00 86 <i>03
+01</i>…</code><br/>
+<code>S: <b>16</b> <i>03 01</i> 00 4a 02 00 00 46 <i>03
+01</i>…</code></dd>
+<dt>ASCII</dt>
+<dd><code>C: <b>^V</b><i>^C^A</i>^@\e212^A^@^A^@^@\e206<i>^C^A</i>…</code><br/>
+<code>S: <b>^V</b><i>^C^A</i>^@\e112^B^@^@\e106<i>^C^A</i>…</code></dd>
+</dl>
+
+The primary indicator of SSL is that both sides of the conversation send
+hex value 0x16 (`^V`) as their first byte.  A secondary indicator is a
+repeated version number (0x03 0x01).
+
+In TLS, the client speaks first.
+
+
+
+Domain Name Service (DNS)
+-------------------------
+
+DNS, a very frequently-occuring protocol, can be identified by the
+combination of its port (53) and its typical payload.  Examples follow:
+
+<dl>
+<dt>Hex</dt>
+<dd><code>3a fb <b>01 00</b> 00 01 00 00 00 00 00 00 <b>07 65 78 61 6d 70 6c
+65</b> </b>03 63 6f 6d</b> 00</code></dd>
+<dt>ASCII</dt>
+<dd><code>H\e373<b>^A^@</b>^@^A^@^@^@^@^@^@<b>^Gexample</b><b>^Ccom^A</b>^@</code>
+</dl>
+
+The first highlighted part, with the *opcode* (1, an “A record request”,
+which asks for an IP given a name), and the name to be resolved
+(example.com).
+
+The name is encoded by preceding it by a byte count, and then than many
+bytes.  Breaking this name apart, we can see:
+
+    \x07 “example”
+    \x03 “com”
+    \x00
+
+The protocol is decoded by first reading in the length, then that number
+of bytes.  This continues until a length of 0 is encountered.  This
+method of encoding strings is very common in binary protocols.
+
+
+
+Question
+========
+
+The following is an extract of a DNS packet.  What does this decode to?
+
+    087768617465766572076578616d706c65036e657400
+

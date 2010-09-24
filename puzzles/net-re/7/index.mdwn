@@ -1,0 +1,210 @@
+More Binary Protocols
+=====================
+
+The previous page introduced you to decoding binary protocols by showing
+how DNS encodes text.  We will now examine Ethernet, IP, and TCP, to
+better understand binary protocols.
+
+Generally, you will use tools like wireshark or tcpdump to decode IP and
+TCP, but understanding how these work will help you decode other unknown
+binary protocols and file formats in the future.
+
+In this page, we will dissect the following captured network frame:
+
+    00 11 bc 56 5f 00 00 01 e8 13 0c 89 08 00 45 00 
+    00 3c 13 b3 36 3a 3f 06 13 be 6a 56 5e af ef c9
+    b0 04 17 af 00 50 cf 16 e8 db 00 00 00 00 a0 02
+    16 d0 ec 87 00 00 02 04 05 b4 04 02 08 0a 93 40
+    fb 68 00 00 00 00 01 03 03 07
+
+
+Octets
+------
+
+This page introduces the new term “octet” to refer to 8 bits.  The words
+“octet” and “byte” are usually interchangeable, but in some cases a byte
+may be 7 bits, 6 bits, 16 bits, or something else.  Networking documents
+usually refer to “octets” in order to avoid any confusion about the
+number of bits.
+
+
+Ethernet
+--------
+
+Ethernet consists of:
+
+* Destination address (6 octets)
+* Source address (6 octets)
+* EtherType (2 octets)
+* Data
+* CRC Checksum (4 octets)
+
+Let’s examine the first 14 octets of our captured ethernet frame:
+
+    00 11 bc 56 5f 00 00 01 e8 13 0c 89 08 00
+
+This can be broken down into the two 6-octet addresses and the EtherType:
+
+    dst: 00:11:bc:56:5f:00
+    src: 00:01:e8:13:0c:89
+    typ: 0800
+
+The destination and source should be recognizable as “MAC addresses”.
+An EtherType of 0x0800 indicates the data is an IPv4 packet.  Most
+frames you encounter will have an EtherType of 0x0800.
+
+
+Internet Protocol (IP version 4)
+--------------------------------
+
+IP introduces to us the notion of 4-bit and 13-bit integers.  The
+following chart from RFC 971 shows the fields of an IP header.  The
+numbers at the top are the *bit* offset of each field.
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |Version|  IHL  |Type of Service|          Total Length         |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |         Identification        |Flags|      Fragment Offset    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Time to Live |    Protocol   |         Header Checksum       |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                       Source Address                          |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Destination Address                        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Options                    |    Padding    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The next few octets of our network frame are:
+
+    __ __ __ __ __ __ __ __ __ __ __ __ __ __ 45 00
+    00 3c 13 b3 36 3a 3f 06 13 be 6a 56 5e af ef c9
+    b0 04 17 af 00 50 cf 16 e8 db 00 00
+
+Let’s begin to break this down.  The first two fields are 4-bit
+integers: half-octets, also called nybbles (because they are half a
+byte).  These are easy to extract from hex, since one hex digit is
+exactly 4 bits.  Similarly, one octet is 8 bits, and two hex digits.
+Two octets is 16 bits, and four hex digits.
+
+    Version: 0x4
+    IHL:     0x4
+    TOS:     0x00
+    Length:  0x003c
+    ID:      0x13b3
+
+Leaving our undecoded snippet as follows:
+
+    __ __ __ __ 36 3a 3f 06 13 be 6a 56 5e af ef c9
+    b0 04 17 af 00 50 cf 16 e8 db 00 00
+
+The next field, “Flags”, is a *3-bit* field, leaving 13 bits for
+“Fragment Offset”.  Let’s look at the next 16 bits:
+
+       3    6    3    A
+    0011 0110 0011 1010
+
+Now let’s split that up after the first three bits:
+
+      1     1    6    3    A
+    001     1 0110 0011 1010
+
+Therefore, our first three bits are the hex value bits are the hex value
+`0x1`, and the remaining 16 bits are the hex value `0x163A`.
+
+    Flags:           0x1
+    Fragment Offset: 0x163A
+
+The next few fields are relatively simple:
+
+    TTL:             0x3F
+    Protocol:        0x06
+    Header Checksum: 0x13BE
+
+Now our snippet is:
+
+    __ __ __ __ __ __ __ __ __ __ 6a 56 5e af ef c9
+    b0 04 17 af 00 50 cf 16 e8 db 00 00
+
+Finally, we get to the IP addresses:
+
+    Src: 6a.56.5e.af  (106.86.94.175)
+    Dst: ef.c9.b0.04  (239.201.176.4)
+
+We have now decoded 20 octets, or 4 words.  The IHL field contains the
+length of the IP header in words.  Since IHL in this frame is 4, this IP
+header has no options, and we are done decoding it.  All remaining data
+belongs to the TCP protocol (protocol 6).
+
+
+Transmission Control Protocol (TCP)
+-----------------------------------
+
+     0                   1                   2                   3
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |          Source Port          |       Destination Port        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                        Sequence Number                        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Acknowledgment Number                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Data |           |U|A|P|R|S|F|                               |
+    | Offset| Reserved  |R|C|S|S|Y|I|            Window             |
+    |       |           |G|K|H|T|N|N|                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |           Checksum            |         Urgent Pointer        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Options                    |    Padding    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                             data                              |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+After parsing the Ethernet and IP headers, our frame’s unparsed octets
+are:
+
+    __ __ 17 af 00 50 cf 16 e8 db 00 00 00 00 a0 02
+    16 d0 ec 87 00 00 02 04 05 b4 04 02 08 0a 93 40
+    fb 68 00 00 00 00 01 03 03 07
+
+The first 4 fields are decoded just like previous fields:
+
+    Src: 0x17AF (6063)
+    Dst: 0x0050 (80)
+    Seq: 0xcf16e8db
+    Ack: 0x00000000
+
+We can now examine the next 2 octets to extract Data Offset and the
+flags:
+
+    a    0    0    2
+    1000 0000 0000 0010
+    offs|reserv UA PRSF
+                RC SSYI
+                GK HTNN
+
+Decoding to:
+
+    Data Offset: 0xA
+    Flags:       SYN
+
+Then, carrying on:
+
+    Window:   0x16D0
+    Checksum: 0xEC87
+    Urgent:   0x0000
+
+There follows 20 bytes of options, and no data.
+
+
+Question
+========
+
+The key for this page is the source IP in the following frame:
+
+    00 11 bc 56 5f 00 00 01 e8 13 0c 89 08 00 45 00
+    00 2c 00 00 40 00 3d 06 aa 51 3c 00 0d 41 4d 01
+    08 30 c6 d6 d2 e6 06 57 7b 2d 00 76 d2 c9 60 12
+    16 d0 84 c5 00 00 02 04 05 b4 00 00

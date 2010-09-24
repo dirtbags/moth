@@ -1,0 +1,109 @@
+#! /bin/sh -e
+
+indir=$1; shift
+outdir=$1; shift
+
+escape () {
+    sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+}
+
+template () {
+    cat="$1"; shift
+    points="$1"; shift
+
+    cat <<EOF
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>$cat $points</title>
+    <link rel="stylesheet" href="/ctf.css" type="text/css">
+  </head>
+  <body>
+    <h1>$cat for $points points</h1>
+EOF
+
+    echo "    <div class=\"readme\">"
+    cat
+    echo "    </div>"
+
+    if [ $# -gt 0 ]; then
+        echo "    <p>Associated files:</p>"
+        echo "    <ul>"
+        while [ $# -gt 0 ]; do
+            fn="$1"; shift
+            efn="$(echo $fn | escape)"
+            echo "      <li><a href=\"$fn\">$efn</a></li>"
+        done
+        echo "    </ul>"
+    fi
+
+    cat <<EOF
+    <form action="/puzzler.cgi" method="post">
+      <input type="hidden" name="c" value="$cat">
+      <input type="hidden" name="p" value="$points">
+      Team:<input name="t" size="8">
+      Answer:<input name="a" size="20">
+      <input type="submit" value="submit">
+    </form>
+  </body>
+</html>
+EOF
+}
+
+cat=$(basename $indir)
+uanswers=$outdir/answers.unsorted
+
+if [ -f $indir/summary.txt ]; then
+    cp $indir/summary.txt $outdir/
+fi
+> $uanswers
+
+for dn in $indir/[0-9]*; do
+    [ -d $dn ] || continue
+    points=$(basename $dn)
+
+    echo $dn
+
+    tgt=$outdir/puzzles/$points
+    mkdir -p $tgt
+
+    for fn in $dn/*; do
+        case $(basename $fn) in
+            key)
+                while read answer; do
+                    echo $points $answer
+                done < $fn >> $uanswers
+                ;;
+            index.mdwn)
+                # Handle this later
+                ;;
+            *~|"#"*)
+                # Don't copy temporary or backup files
+                ;;
+            ,*)
+                # Copy but don't list
+                cp $fn $tgt/
+                ;;
+            *)
+                cp $fn $tgt/
+                files="$files $(basename $fn)"
+                ;;
+        esac
+    done
+
+    # Generate index now that we have a list of files
+    if [ -f $dn/index.mdwn ]; then
+        markdown --html4tags $dn/index.mdwn
+    fi | template $cat $points $files > $tgt/index.html
+done
+
+sort -n $uanswers > $outdir/answers.txt
+rm $uanswers
+
+cat <<EOF > $outdir/setup
+#! /bin/sh
+
+mkdir -p /var/www
+ln -s /opt/$cat/puzzles /var/www/$cat
+EOF
+chmod +x $outdir/setup

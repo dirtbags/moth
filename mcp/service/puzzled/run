@@ -1,0 +1,8 @@
+#! /bin/sh
+
+exec 2>&1
+
+# Make an initial listing
+./puzzled
+
+exec inotifyd ./puzzled /var/lib/ctf/puzzles.db:w
