@@ -48,7 +48,7 @@ main(int argc, char *argv[])
 
 
   /* Does the token exist? */
-  if (! fgrepx(token, srv_path("tokens.db"))) {
+  if (! fgrepx(token, state_path("tokens.db"))) {
     cgi_page("Token does not exist", "");
   }
 
@@ -69,7 +69,7 @@ main(int argc, char *argv[])
       my_snprintf(line, sizeof(line),
                   "%s %s", team, token);
       award_and_log_uniquely(team, category, 1,
-                             "tokens.db", line);
+                             state_path("tokens.db"), line);
     }
   }
 

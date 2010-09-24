@@ -1,0 +1,55 @@
+#! /bin/sh
+
+# First argument is seconds between running everything
+period=${1:-60}
+
+BIN=${CTF_BASE:-/opt/mcp}/bin
+WWW=${CTF_BASE:-/var}/www
+STATE=${CTF_BASE:-/var/lib/ctf}
+
+NEWPOINTS=$STATE/points.new
+POINTS=$STATE/points.log
+SCOREBOARD=$WWW/scoreboard.html
+PUZZLES=$WWW/puzzles.html
+TEAMS=$WWW/teams.html
+
+mkdir -p $NEWPOINTS $STATE/teams/names $STATE/teams/colors
+touch $POINTS
+if ! [ -f $SCOREBOARD ]; then
+    $BIN/scoreboard < $POINTS > $SCOREBOARD
+done
+
+while true; do
+    start=$(date +%s)
+    next=$(expr $start + $period)
+
+    # Collect any new points
+    for fn in $NEWPOINTS/*; do
+        [ -f $fn ] || continue
+        cat $fn >> $POINTS || break
+        rm $fn
+    done
+
+    # Render scoreboard
+    if [ $POINTS -nt $SCOREBOARD ]; then
+        $BIN/scoreboard < $POINTS > $SCOREBOARD.new
+        mv $SCOREBOARD.new $SCOREBOARD
+    fi
+
+    # Render puzzles list
+    if [ $STATE/puzzler.db -nt $PUZZLES ]; then
+        $WWW/puzzles.cgi > $PUZZLES.new
+        mv $PUZZLES.new $PUZZLES
+    fi
+
+    # Render team names
+    if [ $STATE/teams/names -nt $TEAMS ]; then
+        $BIN/teams.sh > $TEAMS.new
+        mv $TEAMS.new $TEAMS
+    fi
+
+    now=$(date +%s)
+    if [ $now -lt $next ]; then
+        sleep $(expr $next - $now)
+    fi
+done

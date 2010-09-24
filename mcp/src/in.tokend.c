@@ -94,7 +94,7 @@ main(int argc, char *argv[])
     int     fd;
     size_t  len;
 
-    fd = open(srv_path("token.keys/%s", service), O_RDONLY);
+    fd = open(state_path("token.keys/%.*s", (int)servicelen, service), O_RDONLY);
     if (-1 == fd) {
       write(1, "!nosvc", 6);
       return 0;
@@ -123,8 +123,8 @@ main(int argc, char *argv[])
 
     /* Append digest to service name. */
     tokenlen = (size_t)snprintf(token, sizeof(token),
-                               "%*s:%s",
-                                servicelen, service, digest);
+                               "%.*s:%s",
+                                (int)servicelen, service, digest);
   }
 
   /* Write that token out now. */
@@ -133,7 +133,7 @@ main(int argc, char *argv[])
     int ret;
 
     do {
-      fd = open(srv_path("tokens.db"), O_WRONLY | O_CREAT, 0666);
+      fd = open(state_path("tokens.db"), O_WRONLY | O_CREAT, 0666);
       if (-1 == fd) break;
 
       ret = lockf(fd, F_LOCK, 0);

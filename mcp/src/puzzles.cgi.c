@@ -58,7 +58,7 @@ main(int argc, char *argv[])
   }
 
   {
-    FILE *f = fopen(srv_path("puzzler.db"), "r");
+    FILE *f = fopen(state_path("puzzler.db"), "r");
     char  cat[CAT_MAX];
     char  points_str[11];
     long  points;
@@ -91,7 +91,7 @@ main(int argc, char *argv[])
     if (f) fclose(f);
   }
 
-  srv = opendir(srv_path("packages"));
+  srv = opendir(package_path(""));
   if (NULL == srv) {
     cgi_error("Cannot opendir(\"/srv\")");
   }
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
        well just barge ahead and watch for errors. */
 
     /* Open /srv/ctf/$cat/puzzles/ */
-    puzzles = opendir(srv_path("packages/%s/puzzles", cat));
+    puzzles = opendir(package_path("%s/puzzles", cat));
     if (NULL == puzzles) {
       continue;
     }

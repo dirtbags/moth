@@ -299,28 +299,50 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
   }
 }
 
-char *
-srv_path(char const *fmt, ...)
+static char *
+mkpath(char const *base, char const *fmt, va_list ap)
 {
   char         relpath[PATH_MAX];
   static char  path[PATH_MAX];
-  char        *srv;
+  char const  *var;
   int          len;
-  va_list      ap;
 
-  va_start(ap, fmt);
   len = vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
-  va_end(ap);
   relpath[sizeof(relpath) - 1] = '\0';
 
-  srv = getenv("CTF_BASE");
-  if (! srv) {
-    srv = "/srv/ctf";
+  var = getenv("CTF_BASE");
+  if (! var) {
+    var = base;
   }
 
-  my_snprintf(path, sizeof(path), "%s/%s", srv, relpath);
+  my_snprintf(path, sizeof(path), "%s/%s", var, relpath);
   return path;
 }
+
+char *
+state_path(char const *fmt, ...)
+{
+  va_list  ap;
+  char    *ret;
+
+  va_start(ap, fmt);
+  ret = mkpath("/var/lib/ctf", fmt, ap);
+  va_end(ap);
+  return ret;
+}
+
+char *
+package_path(char const *fmt, ...)
+{
+  va_list  ap;
+  char    *ret;
+
+  va_start(ap, fmt);
+  ret = mkpath("/opt", fmt, ap);
+  va_end(ap);
+  return ret;
+}
+
 
 int
 team_exists(char const *teamhash)
@@ -341,7 +363,7 @@ team_exists(char const *teamhash)
   }
 
   /* stat seems to be the preferred way to check for existence. */
-  ret = stat(srv_path("teams/names/%s", teamhash), &buf);
+  ret = stat(state_path("teams/names/%s", teamhash), &buf);
   if (-1 == ret) {
     return 0;
   }
@@ -397,9 +419,9 @@ award_points(char const *teamhash,
      token log.
   */
 
-  filename = srv_path("points.new/%d.%d.%s.%s.%ld",
-                      now, getpid(),
-                      teamhash, category, points);
+  filename = state_path("points.new/%d.%d.%s.%s.%ld",
+                        now, getpid(),
+                        teamhash, category, points);
 
   fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
   if (-1 == fd) {
@@ -424,11 +446,10 @@ void
 award_and_log_uniquely(char const *team,
                        char const *category,
                        long points,
-                       char const *dbfile,
+                       char const *dbpath,
                        char const *line)
 {
-  char    *dbpath = srv_path(dbfile);
-  int      fd;
+  int   fd;
 
   /* Make sure they haven't already claimed these points */
   if (fgrepx(line, dbpath)) {

@@ -8,7 +8,7 @@ fi
 # Don't overwrite files
 set -C
 
-base=${CTF_BASE:-/srv/ctf}
+base=${CTF_BASE:-/var/lib/ctf}
 
 # Assign a color.  I spent two days selecting this color pallette for
 # people with protanopia.  Please don't change these colors.

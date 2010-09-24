@@ -1,5 +1,7 @@
 #! /bin/sh
 
+cd /var/lib/ctf/teams/names
+
 escape () {
     sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 }
@@ -27,6 +29,7 @@ done
 echo "</table>"
 
 cat <<EOF
+  <p>Use your team's token to claim points.</p>
   </body>
 </html>
 EOF

@@ -59,10 +59,9 @@ main(int argc, char *argv[])
   {
     char needle[400];
 
-    my_snprintf(needle, sizeof(needle),
-                "%ld %s", points, answer);
+    my_snprintf(needle, sizeof(needle), "%ld %s", points, answer);
     if (! fgrepx(needle,
-                 srv_path("packages/%s/answers.txt", category))) {
+                 package_path("%s/answers.txt", category))) {
       cgi_page("Wrong answer", "");
     }
   }
@@ -73,7 +72,7 @@ main(int argc, char *argv[])
     my_snprintf(line, sizeof(line),
                "%s %s %ld", team, category, points);
     award_and_log_uniquely(team, category, points,
-                           "puzzler.db", line);
+                           state_path("puzzler.db"), line);
   }
 
   cgi_page("Points awarded",

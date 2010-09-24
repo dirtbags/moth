@@ -1,0 +1,8 @@
+#! /bin/sh
+
+## Set up this package
+
+hostname mcp
+
+cp -r service/* /var/service
+cp -r www /var

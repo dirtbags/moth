@@ -14,14 +14,14 @@ mkdir -p $CTF_BASE/points.new
 
 # Set up some packages
 for cat in cat1 cat2 cat3; do
-    mkdir -p $CTF_BASE/packages/$cat
-    cat >$CTF_BASE/packages/$cat/answers.txt <<EOF
+    mkdir -p $CTF_BASE/$cat
+    cat >$CTF_BASE/$cat/answers.txt <<EOF
 10 ${cat}answer10
 20 ${cat}answer20
 30 ${cat}answer30
 EOF
     for i in 10 20 30; do
-        mkdir -p $CTF_BASE/packages/$cat/puzzles/$i
+        mkdir -p $CTF_BASE/$cat/puzzles/$i
     done
 done
 

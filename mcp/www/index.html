@@ -13,7 +13,10 @@
         <a href="scoreboard.html">Scoreboard</a>
       </li>
       <li>
-        <a href="puzzles.html">Puzzles</a>
+        <a href="puzzles.cgi">Puzzles</a>
+      </li>
+      <li>
+        <a href="teams.html">Teams</a>
       </li>
       <li>
         <a href="irc://10.0.0.1/ctf"
@@ -24,8 +27,9 @@
     <h2>Claim Token</h2>
     <form action="claim.cgi" method="post">
       <fieldset>
-        team: <input name="t" size="8"><br>
-        token: <input name="k" size="20">
+        team:<input name="t" size="8">
+        token:<input name="k" size="20">
+        <input type="submit" value="claim">
       </fieldset>
     </form>
 
