@@ -69,7 +69,7 @@ main(int argc, char *argv[])
       my_snprintf(line, sizeof(line),
                   "%s %s", team, token);
       award_and_log_uniquely(team, category, 1,
-                             state_path("tokens.db"), line);
+                             state_path("claim.db"), line);
     }
   }
 
