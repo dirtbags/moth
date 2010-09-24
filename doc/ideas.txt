@@ -1,11 +1,15 @@
 Ideas for puzzles
 =================
 * Hide something in a .docx zip file
-
-
-Network treasure hunt
----------------------
-* DHCP option
-* Single TCP RST with token in payload
-* Multiple TCP RST with different payloads
-* 
+* Bootable image with FreeDOS, Linux, Inferno? HURD?
+  * Bury puzzles in various weird locations within each OS
+  * Maybe put some in the boot loader, too
+  * Perhaps have some sort of network puzzle as well
+* Network treasure hunt
+  * DHCP option
+  * Single TCP RST with token in payload
+  * Multiple TCP RST with different payloads
+* PXE boot some sort of points-gathering client
+  * Init asks for a team hash, and starts awarding points
+  * Broken startup scripts, when fixed award more points
+  * Lots of remote exploits

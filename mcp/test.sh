@@ -88,8 +88,8 @@ fi
 mkdir -p $CTF_BASE/token.keys
 echo -n '0123456789abcdef' > $CTF_BASE/token.keys/tokencat
 
-# in.tokend uses a random number generator
-echo -n 'tokencat' | src/in.tokend > /dev/null
+mkfifo $CTF_BASE/nancy
+src/tokencli tokencat $CTF_BASE/token.keys/tokencat < $CTF_BASE/nancy 3>$CTF_BASE/t | src/in.tokend > $CTF_BASE/nancy
 
 if ! grep -q 'tokencat:x....-....x' $CTF_BASE/tokens.db; then
     die "in.tokend didn't write to database"
@@ -103,11 +103,11 @@ if src/claim.cgi t=$hash k=tokencat:xanax-xanax | grep -q success; then
     die "claim.cgi gave points for a bogus token"
 fi
 
-if ! src/claim.cgi t=$hash k=$(cat $CTF_BASE/tokens.db) | grep -q success; then
+if ! src/claim.cgi t=$hash k=$(cat $CTF_BASE/t) | grep -q success; then
     die "claim.cgi didn't give me any points"
 fi
 
-if src/claim.cgi t=$hash k=$(cat $CTF_BASE/tokens.db) | grep -q success; then
+if src/claim.cgi t=$hash k=$(cat $CTF_BASE/t) | grep -q success; then
     die "claim.cgi gave me points twice for the same token"
 fi
 

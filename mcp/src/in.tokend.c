@@ -9,8 +9,9 @@
 #include <stddef.h>
 #include <string.h>
 #include <ctype.h>
+#include <sysexits.h>
 #include "common.h"
-#include "xxtea.h"
+#include "arc4.h"
 
 #define itokenlen 3
 
@@ -69,21 +70,19 @@ bubblebabble(char *out, char const *in, const size_t inlen)
 int
 main(int argc, char *argv[])
 {
-  char     service[50];
-  size_t   servicelen;
-  char     token[80];
-  size_t   tokenlen;
-  uint32_t key[4];
-
-  /* Seed the random number generator.  This ought to be unpredictable
-     enough for a contest. */
-  srand((int)time(NULL) * (int)getpid());
+  char    service[50];
+  size_t  servicelen;
+  char    token[80];
+  size_t  tokenlen;
+  uint8_t key[256];
+  size_t  keylen;
 
   /* Read service name. */
   {
     ssize_t len;
 
-    len = read(0, service, sizeof(service) - 1);
+    len = read(0, service, sizeof(service));
+    if (0 >= len) return 0;
     for (servicelen = 0;
          (servicelen < len) && isalnum(service[servicelen]);
          servicelen += 1);
@@ -91,35 +90,46 @@ main(int argc, char *argv[])
 
   /* Read in that service's key. */
   {
-    int     fd;
-    size_t  len;
+    int fd;
+    int ret;
 
     fd = open(state_path("token.keys/%.*s", (int)servicelen, service), O_RDONLY);
     if (-1 == fd) {
-      write(1, "!nosvc", 6);
+      perror("Open key");
       return 0;
     }
 
-    len = read(fd, &key, 16);
-    close(fd);
+    ret = read(fd, &key, sizeof(key));
+    if (-1 == ret) {
+      perror("Read key");
+      return 0;
+    }
+    keylen = (size_t)ret;
 
-    if (16 != len) {
-      write(1, "!shortkey", 9);
+    close(fd);
+  }
+
+  /* Send a nonce, expect it back encrypted */
+  {
+    int32_t nonce = my_random();
+    int32_t enonce = 0;
+
+    write(1, &nonce, sizeof(nonce));
+    arc4_crypt_buffer(key, keylen, (uint8_t *)&nonce, sizeof(nonce));
+    read(0, &enonce, sizeof(enonce));
+    if (nonce != enonce) {
+      write(1, ":<", 2);
       return 0;
     }
   }
 
   /* Create the token. */
   {
-    uint8_t crap[itokenlen];
+    int32_t crap = my_random();
     char    digest[bubblebabble_len(itokenlen)];
-    int     i;
 
     /* Digest some random junk. */
-    for (i = 0; i < itokenlen; i += 1) {
-      crap[i] = (uint8_t)random();
-    }
-    bubblebabble(digest, (char *)crap, itokenlen);
+    bubblebabble(digest, (char *)&crap, itokenlen);
 
     /* Append digest to service name. */
     tokenlen = (size_t)snprintf(token, sizeof(token),
@@ -158,19 +168,14 @@ main(int argc, char *argv[])
     }
   }
 
-  /* Encrypt the token.  Note that now tokenlen is in uint32_ts, not
-     chars!  Also remember that token must be big enough to hold a
-     multiple of 4 chars, since tea will go ahead and jumble them up for
-     you.  If the compiler aligns words this shouldn't be a problem. */
+  /* Encrypt the token. */
   {
-    tokenlen = (tokenlen + (tokenlen % sizeof(uint32_t))) / sizeof(uint32_t);
-
-    tea_encode(key, (uint32_t *)token, tokenlen);
+    arc4_crypt_buffer(key, keylen, (uint8_t *)token, tokenlen);
   }
 
   /* Send it back.  If there's an error here, it's okay.  Better to have
      unclaimed tokens than unclaimable ones. */
-  write(1, token, tokenlen * sizeof(uint32_t));
+  write(1, token, tokenlen);
 
   return 0;
 }

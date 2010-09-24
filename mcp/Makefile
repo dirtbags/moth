@@ -12,7 +12,7 @@ $(PACKAGE): build
 	cp setup $(PKGDIR)
 
 	find bin -not -name '*~' | cpio -p $(PKGDIR)
-	cp src/in.tokend src/pointscli $(PKGDIR)/bin
+	cp src/in.tokend src/tokencli src/pointscli $(PKGDIR)/bin
 
 	find service -not -name '*~' -not -name '#*' | cpio -p $(PKGDIR)
 
