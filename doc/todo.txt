@@ -1,0 +1,4 @@
+Things That Need Fixin'
+=======================
+
+* puzzles.cgi really needs to cross out points your team has claimed.

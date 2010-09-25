@@ -20,7 +20,7 @@ cat <<EOF
 EOF
 
 echo "<table>"
-echo "<tr><th>Team Name</th><th>Token</th></tr>"
+echo "<tr><th>Team</th><th>ID</th></tr>"
 for i in *; do
     echo "<tr><td>"
     escape < $i
@@ -29,7 +29,10 @@ done
 echo "</table>"
 
 cat <<EOF
-  <p>Use your team's token to claim points.</p>
+  <p>
+    Team names are only used on this page and the scoreboard.
+    Use your team ID to claim points.
+  </p>
   </body>
 </html>
 EOF

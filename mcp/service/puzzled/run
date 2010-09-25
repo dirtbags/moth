@@ -2,6 +2,9 @@
 
 exec 2>&1
 
+# Give everybody a chance to mount
+sleep 5
+
 # Make an initial listing
 ./puzzled
 

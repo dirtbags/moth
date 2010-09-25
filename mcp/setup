@@ -4,6 +4,7 @@
 
 hostname mcp
 
+
 cp -r service/* /var/service/
 cp -r www /var/
 

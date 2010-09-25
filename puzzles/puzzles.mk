@@ -1,4 +1,5 @@
-PUZZLES = sequence codebreaking
+PUZZLES += basemath bletchley codebreaking compaq crypto
+PUZZLES += forensics hackme net-re sequence skynet webapp
 
 -include puzzles/*/*.mk
 

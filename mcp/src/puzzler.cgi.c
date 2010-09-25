@@ -76,7 +76,8 @@ main(int argc, char *argv[])
   }
 
   cgi_page("Points awarded",
-           ("<p>%d points for %s.</p>"
+           ("<p>%d points for %s.</p>\n"
+            "<p><a href=\"/puzzles.html\">Back to puzzles</a></p>\n"
             "<!-- awarded %d -->"),
            points, team, points);
 
