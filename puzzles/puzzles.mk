@@ -3,12 +3,17 @@ PUZZLES += forensics hackme net-re sequence skynet webapp
 
 -include puzzles/*/*.mk
 
-puzzles/%-package:
+puzzles/%-install:
 	mkdir -p build/$*
 	puzzles/mkpuzzles puzzles/$* build/$*
-	mksquashfs build/$* $*.pkg -all-root -noappend
+	touch $@
 
 puzzles/%-clean:
-	rm -rf build/$*
+	rm -rf build/$* puzzles/$*-install
 
-PACKAGES += $(addprefix puzzles/, $(PUZZLES))
+%.pkg: puzzles/%-install
+	mksquashfs build/$* $*.pkg -all-root -noappend
+
+packages: $(addsuffix .pkg, $(PUZZLES))
+install: $(patsubst %, puzzles/%-install, $(PUZZLES))
+clean: $(patsubst %, puzzles/%-clean, $(PUZZLES))

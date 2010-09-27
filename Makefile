@@ -10,7 +10,12 @@ endef
 
 include */*.mk
 
-packages: $(addsuffix -package, $(PACKAGES))
+packages: $(addsuffix .pkg, $(PACKAGES))
+
+install: $(addsuffix -install, $(PACKAGES))
 
 clean: $(addsuffix -clean, $(PACKAGES))
-	rm -rf build *.pkg
+	rm -rf build *.pkg *-install *-build
+
+%.pkg: %-install
+	mksquashfs build/$* $*.pkg -all-root -noappend

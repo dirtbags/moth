@@ -1,0 +1,11 @@
+#! /bin/sh
+
+exec 2>&1
+
+while true; do
+    for fn in /opt/*/*.tokenkey; do
+        cat=$(basename $fn .tokenkey)
+        echo "XXX: not implemented yet"
+    done
+    sleep 60
+done

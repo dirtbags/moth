@@ -1,0 +1,4 @@
+#! /bin/sh
+
+[ -f motd ] && cat motd
+exec chroot /mnt/pwnables-root login -f alice

@@ -1,9 +1,7 @@
 MCP_PKGDIR = build/mcp
 MCP_PACKAGE = mcp.pkg
 
-mcp-package: $(MCP_PACKAGE)
-
-$(MCP_PACKAGE): mcp-build
+mcp-install: mcp-build
 	mkdir -p $(MCP_PKGDIR)
 
 	cp mcp/setup $(MCP_PKGDIR)
@@ -20,8 +18,7 @@ $(MCP_PACKAGE): mcp-build
 	cp mcp/src/puzzler.cgi $(MCP_PKGDIR)/www/
 	cp mcp/src/claim.cgi $(MCP_PKGDIR)/www/
 
-	mksquashfs $(MCP_PKGDIR) $(MCP_PACKAGE) -all-root -noappend
-
+	touch $@
 
 mcp-test: mcp-build
 	mcp/test.sh
