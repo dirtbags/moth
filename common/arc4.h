@@ -4,7 +4,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-struct arc4_ctx;
+struct arc4_ctx {
+  uint8_t S[256];
+  uint8_t i;
+  uint8_t j;
+};
 
 void arc4_init(struct arc4_ctx *ctx, uint8_t const *key, size_t keylen);
 uint8_t arc4_pad(struct arc4_ctx *ctx);

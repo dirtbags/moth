@@ -15,21 +15,24 @@ if [ ! -x /mnt/pwnables-root/bin/busybox ]; then
 
     # Make some skeleton junk
     install -o root -m 0755 -d /mnt/pwnables-root/var/lib
+    install -o root -m 0755 -d /mnt/pwnables-root/var/lib/ctf
+    install -o root -m 0755 -d /mnt/pwnables-root/var/lib/ctf/tokens
     install -o root -m 0755 -d /mnt/pwnables-root/var/log
     install -o root -m 0755 -d /mnt/pwnables-root/var/spool
     install -o root -m 0755 -d /mnt/pwnables-root/var/cache
     install -o root -m 0777 -d /mnt/pwnables-root/var/run
     install -o root -m 0777 -d /mnt/pwnables-root/var/cache
 
+    # Install the pwnables
     install -o root -d /mnt/pwnables-root/home/alice/
-    install -o root -m 0111 bin/* /mnt/pwnables-root/home/alice/
+    install -o bob -m 0111 bin/gimmie /mnt/pwnables-root/home/alice/
 
     # ltrace needs to read the binary
-    chmod +r /mnt/pwnables-root/home/alice/ltraceme
+    install -o bob -m 0555 bin/ltraceme /mnt/pwnables-root/home/alice/
 
-    # strace needs to be suid
-    chown bob /mnt/pwnables-root/home/alice/straceme
-    chmod 04511 /mnt/pwnables-root/home/alice/straceme
+    # straceme and killme need to be suid, to prevent LD_PRELOAD
+    install -o bob -m 04111 bin/straceme /mnt/pwnables-root/home/alice/
+    install -o bob -m 04111 bin/killme /mnt/pwnables-root/home/alice/
 fi
 
 cp -r service/* /var/service/

@@ -30,7 +30,7 @@ done
 mkdir -p $CTF_BASE/teams/names
 mkdir -p $CTF_BASE/teams/colors
 for team in team1 team2 team3; do
-    hash=$(bin/register $team | awk '{print $NF;}')
+    hash=$(bin/addteam $team | awk '{print $NF;}')
 done
 
 
@@ -86,11 +86,11 @@ fi
 ## Token tests
 ##
 
-mkdir -p $CTF_BASE/token.keys
-echo -n '0123456789abcdef' > $CTF_BASE/token.keys/tokencat
+mkdir -p $CTF_BASE/mcp/tokend.keys
+echo -n '0123456789abcdef' > $CTF_BASE/mcp/tokend.keys/tokencat
 
 mkfifo $CTF_BASE/nancy
-src/tokencli tokencat $CTF_BASE/token.keys/tokencat < $CTF_BASE/nancy 3>$CTF_BASE/t | src/in.tokend > $CTF_BASE/nancy
+src/tokencli tokencat $CTF_BASE/mcp/tokend.keys/tokencat < $CTF_BASE/nancy 3>$CTF_BASE/t | src/in.tokend > $CTF_BASE/nancy
 
 if ! grep -q 'tokencat:x....-....x' $CTF_BASE/tokens.db; then
     die "in.tokend didn't write to database"

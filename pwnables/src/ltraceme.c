@@ -54,7 +54,7 @@ main(int argc, char *argv[])
    *   if (fmt[0] == 'T') write(1, buf, len);
    * }
    */
-  printf("Token length %u at %p.\n", tokenlen, token);
+  printf("Token length %u at %p.\n", (unsigned int)tokenlen, token);
 
   return 0;
 }

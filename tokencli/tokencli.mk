@@ -6,7 +6,10 @@ tokencli-install: tokencli-build
 
 	$(call COPYTREE, tokencli/service, $(TOKENCLI_PKGDIR)/service)
 
+	cp tokencli/setup $(TOKENCLI_PKGDIR)/
+
 	cp tokencli/src/tokencli $(TOKENCLI_PKGDIR)/bin/
+	cp tokencli/src/arc4 $(TOKENCLI_PKGDIR)/bin/
 
 tokencli-clean:
 	rm -rf $(TOKENCLI_PKGDIR) $(TOKENCLI_PACKAGE)

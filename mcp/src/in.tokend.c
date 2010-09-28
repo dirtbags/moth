@@ -93,7 +93,7 @@ main(int argc, char *argv[])
     int fd;
     int ret;
 
-    fd = open(state_path("token.keys/%.*s", (int)servicelen, service), O_RDONLY);
+    fd = open(package_path("mcp/tokend.keys/%.*s", (int)servicelen, service), O_RDONLY);
     if (-1 == fd) {
       perror("Open key");
       return 0;
