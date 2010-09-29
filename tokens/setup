@@ -1,3 +1,4 @@
 #! /bin/sh
 
 cp -r service/* /var/service
+mkdir -p /var/lib/ctf/tokens

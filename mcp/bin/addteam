@@ -15,6 +15,9 @@ set -C
 base=${CTF_BASE:-/var/lib/ctf}
 www=${CTF_BASE:-/var/www}
 
+mkdir -p $base/teams/names
+mkdir -p $base/teams/colors
+
 # Assign a color.  I spent two days selecting this color pallette for
 # people with protanopia.  Please don't change these colors.
 nteams=$(ls $base/teams/names/ | wc -l)

@@ -20,10 +20,10 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #endif
 
-uint8_t const key[] = {0x7d, 0x47, 0x84, 0x28,
-                       0x09, 0x87, 0xb5, 0xd2,
-                       0xd8, 0xab, 0x1c, 0xf3,
-                       0xf2, 0x96, 0xd6, 0x68};
+uint8_t const key[] = {0x99, 0x5f, 0xcb, 0xde,
+                       0xf9, 0x6d, 0x02, 0xf3,
+                       0x47, 0x60, 0x0a, 0xe0,
+                       0x0a, 0x25, 0x4d, 0x16};
 
 char const octopus[] =
   ("                        ___\n"
@@ -48,7 +48,7 @@ char const octopus[] =
 
 const char *friends[8] = {
   ("Help Olive Octopus visit all 8 of her friends to receive a prize!\n"
-   "Hurry though, things change quickly!\n"
+   "Hurry though, things change quickly in the ocean!\n"
    "Next friend: %08o\n"
    "%s"
    ),

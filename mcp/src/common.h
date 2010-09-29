@@ -6,7 +6,7 @@
 
 #define TEAM_MAX 40
 #define CAT_MAX 40
-#define TOKEN_MAX 40
+#define TOKEN_MAX 80
 
 
 int cgi_init(char *global_argv[]);
@@ -18,7 +18,7 @@ void cgi_error(char *fmt, ...);
 
 
 int fgrepx(char const *needle, char const *filename);
-int32_t my_random();
+void urandom(char *buf, size_t buflen);
 int my_snprintf(char *buf, size_t buflen, char *fmt, ...);
 char *state_path(char const *fmt, ...);
 char *package_path(char const *fmt, ...);

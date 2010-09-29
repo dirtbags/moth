@@ -42,7 +42,7 @@ main(int argc, char *argv[])
                         key, sizeof(key),
                         token, sizeof(token) - 1);
   if (-1 == tokenlen) {
-    printf("Unable to read token.\n");
+    write(1, "Something is broken\nI can't read my token.\n", 43);
     return 1;
   }
   token[tokenlen++] = '\0';

@@ -13,7 +13,7 @@
 #include "common.h"
 #include "arc4.h"
 
-#define itokenlen 3
+#define itokenlen 5
 
 char const consonants[] = "bcdfghklmnprstvz";
 char const vowels[]     = "aeiouy";
@@ -31,7 +31,9 @@ char const vowels[]     = "aeiouy";
  *     `Pineapple'       `xigak-nyryk-humil-bosek-sonax'
  */
 void
-bubblebabble(char *out, char const *in, const size_t inlen)
+bubblebabble(unsigned char *out,
+             unsigned char const *in,
+             const size_t inlen)
 {
   size_t pos  = 0;
   int    seed = 1;
@@ -70,38 +72,40 @@ bubblebabble(char *out, char const *in, const size_t inlen)
 int
 main(int argc, char *argv[])
 {
-  char    service[50];
-  size_t  servicelen;
-  char    token[80];
+  char    category[CAT_MAX];
+  size_t  categorylen;
+  char    token[TOKEN_MAX];
   size_t  tokenlen;
   uint8_t key[256];
   size_t  keylen;
 
-  /* Read service name. */
+  /* Read category name. */
   {
     ssize_t len;
 
-    len = read(0, service, sizeof(service));
+    len = read(0, category, sizeof(category));
     if (0 >= len) return 0;
-    for (servicelen = 0;
-         (servicelen < len) && isalnum(service[servicelen]);
-         servicelen += 1);
+    for (categorylen = 0;
+         (categorylen < len) && isalnum(category[categorylen]);
+         categorylen += 1);
   }
 
-  /* Read in that service's key. */
+  /* Read in that category's key. */
   {
     int fd;
     int ret;
 
-    fd = open(package_path("mcp/tokend.keys/%.*s", (int)servicelen, service), O_RDONLY);
+    fd = open(package_path("mcp/tokend.keys/%.*s", (int)categorylen, category), O_RDONLY);
     if (-1 == fd) {
-      perror("Open key");
+      fprintf(stderr, "Open key %.*s: %s\n",
+              (int)categorylen, category, strerror(errno));
       return 0;
     }
 
     ret = read(fd, &key, sizeof(key));
     if (-1 == ret) {
-      perror("Read key");
+      fprintf(stderr, "Read key %.*s: %s\n",
+              (int)categorylen, category, strerror(errno));
       return 0;
     }
     keylen = (size_t)ret;
@@ -111,9 +115,10 @@ main(int argc, char *argv[])
 
   /* Send a nonce, expect it back encrypted */
   {
-    int32_t nonce = my_random();
+    int32_t nonce;
     int32_t enonce = 0;
 
+    urandom((char *)&nonce, sizeof(nonce));
     write(1, &nonce, sizeof(nonce));
     arc4_crypt_buffer(key, keylen, (uint8_t *)&nonce, sizeof(nonce));
     read(0, &enonce, sizeof(enonce));
@@ -125,16 +130,18 @@ main(int argc, char *argv[])
 
   /* Create the token. */
   {
-    int32_t crap = my_random();
-    char    digest[bubblebabble_len(itokenlen)];
+    unsigned char crap[itokenlen];
+    unsigned char digest[bubblebabble_len(itokenlen)];
+
+    urandom((char *)crap, sizeof(crap));
 
     /* Digest some random junk. */
-    bubblebabble(digest, (char *)&crap, itokenlen);
+    bubblebabble(digest, (unsigned char *)&crap, itokenlen);
 
-    /* Append digest to service name. */
+    /* Append digest to category name. */
     tokenlen = (size_t)snprintf(token, sizeof(token),
                                "%.*s:%s",
-                                (int)servicelen, service, digest);
+                                (int)categorylen, category, digest);
   }
 
   /* Write that token out now. */

@@ -1,0 +1,21 @@
+#! /bin/sh
+
+mkdir -p /var/www
+cd /var/www
+
+# Link in puzzles and web pages
+for d in /opt/*; do
+    if [ -d $d/puzzles ]; then
+        ln -s $d/puzzles $(basename $d)
+    fi
+    if [ -d $d/www ]; then
+        ln -s $d/www/* .
+    fi
+done
+
+exec thttpd -D \
+    -nos \
+    -u ctf \
+    -c "**.cgi" \
+    -T "utf-8"
+

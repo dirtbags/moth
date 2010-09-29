@@ -2,8 +2,7 @@
 
 exec 2>&1
 
-# Give everybody a chance to mount
-sleep 5
+install -o ctf -m 0644 /dev/null /var/lib/ctf/puzzles.db
 
 # Make an initial listing
 ./puzzled

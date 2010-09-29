@@ -1,1 +1,1 @@
-../../tokencli/src/tokencli.c
+../../tokens/src/tokencli.c

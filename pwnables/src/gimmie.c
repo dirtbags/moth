@@ -16,7 +16,7 @@ main(int argc, char *argv[])
                         key, sizeof(key),
                         token, sizeof(token) - 1);
   if (-1 == tokenlen) {
-    write(1, "Something's broken: I can't read my token.\n", 43);
+    write(1, "Something is broken\nI can't read my token.\n", 43);
     return 69;
   }
 

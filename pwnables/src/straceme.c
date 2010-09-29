@@ -80,10 +80,12 @@ main(int argc, char *argv[])
 
     tokenlen = read_token(cat,
                           key, sizeof(key),
-                          token, sizeof(token));
+                          token, sizeof(token) - 1);
     if (-1 == tokenlen) {
-      return EX_NOINPUT;
+      write(1, "Something is broken\nI can't read my token.\n", 43);
+      return 69;
     }
+    token[tokenlen++] = '\n';
 
     write(1, token, tokenlen);
   }

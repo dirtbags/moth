@@ -282,27 +282,32 @@ fgrepx(char const *needle, char const *filename)
   return found;
 }
 
-int32_t
-my_random()
+void
+urandom(char *buf, size_t buflen)
 {
-  static int urandom = -2;
-  int        len;
-  int32_t    ret;
+  static int fd = -2;
 
-  if (-2 == urandom) {
-    urandom = open("/dev/urandom", O_RDONLY);
+  if (-2 == fd) {
     srandom(time(NULL) * getpid());
+    fd = open("/dev/urandom", O_RDONLY);
   }
-  if (-1 == urandom) {
-    return (int32_t)random();
+  if (-1 != fd) {
+    int len;
+
+    len = read(fd, buf, buflen);
+    if (len == buflen) {
+      return;
+    }
   }
 
-  len = read(urandom, &ret, sizeof(ret));
-  if (len != sizeof(ret)) {
-    return (int32_t)random();
-  }
+  /* Fall back to libc's crappy thing */
+  {
+    int i;
 
-  return ret;
+    for (i = 0; i < buflen; i += 1) {
+      buf[i] = (char)random();
+    }
+  }
 }
 
 int

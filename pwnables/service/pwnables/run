@@ -1,3 +1,38 @@
 #! /bin/sh -e
 
+# Set up chroot environment
+# We never umount any of this since it's all just in RAM
+mkdir -p /mnt/pwnables-root
+grep -q pwnables-root /proc/mounts || mount -o bind / /mnt/pwnables-root
+grep -q pwnables-var /proc/mounts  || mount -t tmpfs -o size=5m,mode=0755 pwnables-var /mnt/pwnables-root/var
+grep -q pwnables-tmp /proc/mounts  || mount -t tmpfs -o size=15k pwnables-tmp /mnt/pwnables-root/tmp
+grep -q pwnables-home /proc/mounts || mount -t tmpfs -o size=5m pwnables-home /mnt/pwnables-root/home
+
+# Make some skeleton junk
+install -o root -m 0755 -d /mnt/pwnables-root/var/lib
+install -o root -m 0755 -d /mnt/pwnables-root/var/lib/ctf
+install -o root -m 0755 -d /mnt/pwnables-root/var/lib/ctf/tokens
+install -o root -m 0755 -d /mnt/pwnables-root/var/log
+install -o root -m 0755 -d /mnt/pwnables-root/var/spool
+install -o root -m 0755 -d /mnt/pwnables-root/var/cache
+install -o root -m 0777 -d /mnt/pwnables-root/var/run
+install -o root -m 0777 -d /mnt/pwnables-root/var/cache
+
+# Install the pwnables
+install -o root -d /mnt/pwnables-root/home/alice/
+install -o bob -m 0111 /opt/pwnables/bin/gimmie /mnt/pwnables-root/home/alice/
+
+# ltrace needs to read the binary
+install -o bob -m 0555 /opt/pwnables/bin/ltraceme /mnt/pwnables-root/home/alice/
+
+# straceme and killme need to be suid, to prevent LD_PRELOAD
+install -o bob -m 04111 /opt/pwnables/bin/straceme /mnt/pwnables-root/home/alice/
+install -o bob -m 04111 /opt/pwnables/bin/killme /mnt/pwnables-root/home/alice/
+    
+# Set up links for tokens
+mkdir -p /var/lib/ctf/tokens
+for puzzle in gimmie ltraceme straceme killme; do
+    ln -sf /mnt/pwnables-root/var/lib/ctf/tokens/$puzzle /var/lib/ctf/tokens/$puzzle
+done
+
 exec tcpsvd -C 5:"Let's not be greedy" 0 23 /sbin/telnetd -l ./pwnie

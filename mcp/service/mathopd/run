@@ -1,3 +1,0 @@
-#! /bin/sh
-
-exec mathopd -n -f ./mathopd.conf >> /var/log/mathopd.log 2>> /var/log/mathopd.error.log

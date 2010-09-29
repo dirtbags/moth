@@ -1,0 +1,5 @@
+#! /bin/sh
+
+exec 2>&1
+install -o root -m 0755 -d /var/lib/ctf/tokens
+exec ./tokens

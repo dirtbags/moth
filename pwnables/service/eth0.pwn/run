@@ -1,0 +1,8 @@
+#! /bin/sh
+
+if ! [ -d /opt/mcp ]; then
+    hostname pwnables
+    ifconfig eth0 10.1.1.2 netmask 255.0.0.0
+fi
+
+exec inotifyd true $(pwd):x

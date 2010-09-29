@@ -4,12 +4,10 @@ PWNABLES_PACKAGE = pwnables.pkg
 pwnables-install: pwnables-build
 	mkdir -p $(PWNABLES_PKGDIR)
 
-	cp pwnables/setup $(PWNABLES_PKGDIR)
-
 	mkdir -p $(PWNABLES_PKGDIR)/bin/
 	$(MAKE) -C pwnables/src install DESTDIR=$(CURDIR)/$(PWNABLES_PKGDIR)
 
-	$(call COPYTREE, pwnables/tokencli, $(PWNABLES_PKGDIR)/tokencli)	
+	$(call COPYTREE, pwnables/tokens, $(PWNABLES_PKGDIR)/tokens)	
 
 	$(call COPYTREE, pwnables/service, $(PWNABLES_PKGDIR)/service)
 

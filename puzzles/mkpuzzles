@@ -99,11 +99,3 @@ done
 
 sort -n $uanswers > $outdir/answers.txt
 rm $uanswers
-
-cat <<EOF > $outdir/setup
-#! /bin/sh
-
-mkdir -p /var/www
-ln -s /opt/$cat/puzzles /var/www/$cat
-EOF
-chmod +x $outdir/setup
