@@ -1,0 +1,11 @@
+#! /bin/sh
+
+exec 2>&1
+
+# So I say to him, "Alex, what's a good high port number for a CTF category?"
+# And he says, "6"
+# And I say, "no, it has to be bigger than 1000"
+# And he says, "how about 9001, because that's bigger than 9000"
+# So, okay.
+
+exec tcpsvd 0 9001 ./run-printf

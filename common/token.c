@@ -72,14 +72,29 @@ arc4_crypt_buffer(uint8_t const *key, size_t keylen,
 
 
 ssize_t
-read_token(char *name,
+read_token_fd(int fd,
+              uint8_t const *key, size_t keylen,
+              char *buf, size_t buflen)
+{
+  ssize_t ret;
+
+  ret = read(fd, buf, buflen);
+  if (-1 != ret) {
+    arc4_crypt_buffer(key, keylen, (uint8_t *)buf, (size_t)ret);
+  }
+  return ret;
+}
+
+
+ssize_t
+read_token(char const *name,
            uint8_t const *key, size_t keylen,
            char *buf, size_t buflen)
 {
-  char     path[PATH_MAX];
-  int      pathlen;
-  int      fd;
-  ssize_t  ret;
+  char    path[PATH_MAX];
+  int     pathlen;
+  int     fd;
+  ssize_t ret;
 
   pathlen = snprintf(path, sizeof(path) - 1,
                      CTF_BASE "/tokens/%s", name);
@@ -87,11 +102,7 @@ read_token(char *name,
 
   fd = open(path, O_RDONLY);
   if (-1 == fd) return -1;
-
-  ret = read(fd, buf, buflen);
+  ret = read_token_fd(fd, key, keylen, buf, buflen);
   close(fd);
-  if (-1 != ret) {
-    arc4_crypt_buffer(key, keylen, (uint8_t *)buf, (size_t)ret);
-  }
   return ret;
 }
