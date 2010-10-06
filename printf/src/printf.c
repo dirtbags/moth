@@ -24,10 +24,8 @@ uint8_t const key[] = {0x98, 0x37, 0x92, 0x7d,
                        0xca, 0x97, 0xf8, 0xa5,
                        0xfe, 0x0f, 0xf6, 0xfc};
 
-#define NTOKENS 5
-
 /* Storage space for tokens */
-char token[NTOKENS][TOKEN_MAX];
+char token[5][TOKEN_MAX];
 
 /* Make this global so the stack isn't gigantic */
 char global_fmt[8000] = {0};
@@ -43,11 +41,10 @@ read_tokens()
   int     i;
   ssize_t len;
 
-  for (i = 0; i < NTOKENS; i += 1) {
+  for (i = 0; i < sizeof(token)/sizeof(*token); i += 1) {
     len = read_token_fd(i + 3, key, sizeof(key), token[i], sizeof(token[i]));
     if (len >= sizeof(token[i])) abort();
     token[i][len] = '\0';
-    printf("Token %d: %s\n", i, token[i]);
   }
 }
 

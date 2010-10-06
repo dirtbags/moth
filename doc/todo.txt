@@ -2,3 +2,5 @@ Things That Need Fixin'
 =======================
 
 * puzzles.cgi really needs to cross out points your team has claimed.
+* I really hate C.  Is it possible to use some other language (like
+  Haskell)?

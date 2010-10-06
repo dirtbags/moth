@@ -2,19 +2,177 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "obj.h"
+#include <stdint.h>
+#include <string.h>
+#include "token.h"
 
 #define NO_DEBUG
 #define PID_MAX 32768
 #define QSIZE 200
 #define MSGS_PER_SEC 10
 
-char const *token1 = "logger:token1";
+const uint8_t key[] = {0x99, 0xeb, 0xc0, 0xce,
+                       0xe0, 0xc9, 0xed, 0x5b,
+                       0xbd, 0xc8, 0xb5, 0xfd,
+                       0xdd, 0x0b, 0x03, 0x10};
+
+/* Storage space for tokens */
+char token[4][TOKEN_MAX];
+
+void
+read_tokens()
+{
+  int     i;
+  ssize_t len;
+  char    name[40];
+
+  for (i = 0; i < sizeof(token)/sizeof(*token); i += 1) {
+    /* This can't grow beyond 40.  Think about it. */
+    sprintf(name, "logger%d", i);
+
+    len = read_token(name, key, sizeof(key), token[i], sizeof(token[i]));
+    if (len >= sizeof(token[i])) abort();
+    token[i][len] = '\0';
+  }
+}
+
+
+/*
+ * Base 64 (GPL: see COPYING)
+ */
+
+/* C89 compliant way to cast 'char' to 'unsigned char'. */
+static inline unsigned char
+to_uchar (char ch)
+{
+  return ch;
+}
+
+/* Base64 encode IN array of size INLEN into OUT array of size OUTLEN.
+   If OUTLEN is less than BASE64_LENGTH(INLEN), write as many bytes as
+   possible.  If OUTLEN is larger than BASE64_LENGTH(INLEN), also zero
+   terminate the output buffer. */
+void
+base64_encode (const char *in, size_t inlen,
+               char *out, size_t outlen)
+{
+  static const char b64str[64] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  while (inlen && outlen) {
+    *out++ = b64str[(to_uchar(in[0]) >> 2) & 0x3f];
+    if (!--outlen)
+      break;
+    *out++ = b64str[((to_uchar(in[0]) << 4)
+                     + (--inlen ? to_uchar(in[1]) >> 4 : 0))
+                    & 0x3f];
+    if (!--outlen)
+      break;
+    *out++ = (inlen
+              ? b64str[((to_uchar(in[1]) << 2)
+                        + (--inlen ? to_uchar(in[2]) >> 6 : 0))
+                       & 0x3f]
+              : '=');
+    if (!--outlen)
+      break;
+    *out++ = inlen ? b64str[to_uchar(in[2]) & 0x3f] : '=';
+    if (!--outlen)
+      break;
+    if (inlen)
+      inlen--;
+    if (inlen)
+      in += 3;
+  }
+
+  if (outlen)
+    *out = '\0';
+}
+
+
+/*
+ * Bubble Babble
+ */
+char const consonants[] = "bcdfghklmnprstvz";
+char const vowels[]     = "aeiouy";
+
+#define bubblebabble_len(n) (6*(((n)/2)+1))
+
+/** Compute bubble babble for input buffer.
+ *
+ * The generated output will be of length 6*((inlen/2)+1), including the
+ * trailing NULL.
+ *
+ * Test vectors:
+ *     `' (empty string) `xexax'
+ *     `1234567890'      `xesef-disof-gytuf-katof-movif-baxux'
+ *     `Pineapple'       `xigak-nyryk-humil-bosek-sonax'
+ */
+void
+bubblebabble(unsigned char *out,
+             unsigned char const *in,
+             const size_t inlen)
+{
+  size_t pos  = 0;
+  int    seed = 1;
+  size_t i    = 0;
+
+  out[pos++] = 'x';
+  while (1) {
+    unsigned char c;
+
+    if (i == inlen) {
+      out[pos++] = vowels[seed % 6];
+      out[pos++] = 'x';
+      out[pos++] = vowels[seed / 6];
+      break;
+    }
+
+    c = in[i++];
+    out[pos++] = vowels[(((c >> 6) & 3) + seed) % 6];
+    out[pos++] = consonants[(c >> 2) & 15];
+    out[pos++] = vowels[((c & 3) + (seed / 6)) % 6];
+    if (i == inlen) {
+      break;
+    }
+    seed = ((seed * 5) + (c * 7) + in[i]) % 36;
+
+    c = in[i++];
+    out[pos++] = consonants[(c >> 4) & 15];
+    out[pos++] = '-';
+    out[pos++] = consonants[c & 15];
+  }
+
+  out[pos++] = 'x';
+  out[pos] = '\0';
+}
+
+
 
 int
 randint(int max)
 {
   return random() % max;
+}
+
+#define itokenlen 5
+
+char const *
+bogus_token()
+{
+  static char   token[TOKEN_MAX];
+  char          bb[bubblebabble_len(5)];
+  unsigned char crap[itokenlen];
+  unsigned char digest[bubblebabble_len(itokenlen)];
+  int           i;
+
+  for (i = 0; i < sizeof(crap); i += 1 ) {
+    crap[i] = (unsigned char)randint(256);
+  }
+  bubblebabble(digest, (unsigned char *)&crap, itokenlen);
+  snprintf(token, sizeof(token), "bogus:%s", digest);
+  token[sizeof(token) - 1] = '\0';
+
+  return token;
 }
 
 #define choice(a) (a[randint(sizeof(a)/sizeof(*a))])
@@ -24,6 +182,7 @@ char const *users[] = {"alice", "bob", "carol", "dave",
                        "isaac", "justin", "mallory",
                        "oscar", "pat", "steve",
                        "trent", "vanna", "walter", "zoe"};
+
 
 char const *
 user()
@@ -203,11 +362,7 @@ main(int argc, char *argv[])
   /* Now let's make some crap! */
   while (! feof(stdout)) {
     struct message *msg;
-#ifdef DEBUG
-    time_t          now = then + 1;
-#else
     time_t          now = time(NULL);
-#endif
     int             i, max;
 
     /* Print messages */
@@ -217,7 +372,7 @@ main(int argc, char *argv[])
 
       tm = gmtime(&msg->when);
       if (! tm) {
-        snprintf(ftime, sizeof(ftime), "%l", now);
+        snprintf(ftime, sizeof(ftime), "%ld", now);
       } else {
         strftime(ftime, sizeof(ftime), "%b %d %T", tm);
       }
@@ -226,14 +381,10 @@ main(int argc, char *argv[])
     fflush(stdout);
 
     /* Time for new tokens? */
-#ifdef DEBUG
-    then = now;
-#else
     if (then + 60 <= now) {
-      /* XXX: read in new tokens */
+      read_tokens();
       then = now;
     }
-#endif
 
     /* Make some messages */
     max = randint(MSGS_PER_SEC);
@@ -272,7 +423,7 @@ main(int argc, char *argv[])
             messages[0]->when = start;
             snprintf(messages[0]->text, sizeof(messages[0]->text),
                      "tokenserv[%d]: token is %s",
-                     pid, token1);
+                     pid, token[0]);
             enqueue_messages(messages, 1);
           }
           /* Always follow this with a couple lines of fluff so it's
@@ -281,19 +432,35 @@ main(int argc, char *argv[])
           break;
         case 2:
           /* IMAP */
-          if (-1 != get_many_messages(messages, 2)) {
-            char const *u = user();
+          {
+            char const *mytoken;
+            char const *u;
+            char btoken[TOKEN_MAX * 2];
 
-            messages[0]->when = start;
-            snprintf(messages[0]->text, sizeof(messages[0]->text),
-                     "imapd[%d]: Login: user=%s method=PLAIN",
-                     pid, u);
+            if (randint(5) == 0) {
+              mytoken = token[1];
+              u = "token";
+            } else {
+              mytoken = bogus_token();
+              u = user();
+            }
+            base64_encode(mytoken, strlen(mytoken), btoken, sizeof(btoken));
 
-            messages[1]->when = start + 2 + randint(60);
-            snprintf(messages[1]->text, sizeof(messages[1]->text),
-                     "imapd[%d]: Disconnected: Logged out");
+            if (-1 != get_many_messages(messages, 2)) {
+              const int offset=15;
 
-            enqueue_messages(messages, 2);
+              messages[0]->when = start;
+              snprintf(messages[0]->text, sizeof(messages[0]->text),
+                       "imapd[%d]: Login: user=%s method=PLAIN token1=%.*s",
+                       pid, u, offset, btoken);
+
+              messages[1]->when = start + 4 + randint(60);
+              snprintf(messages[1]->text, sizeof(messages[1]->text),
+                       "imapd[%d]: Disconnected: Logged out token2=%s",
+                       pid, btoken + offset);
+
+              enqueue_messages(messages, 2);
+            }
           }
         case 3:
           /* IRC */
@@ -364,7 +531,7 @@ main(int argc, char *argv[])
 
             messages[1]->when = messages[0]->when + randint(1);
             snprintf(messages[1]->text, sizeof(messages[1]->text),
-                     "smtp/smtpd[%d]: %08X: client=unknown[%d.%d.%d.%d]",
+                     "smtp/smtpd[%d]: %08lX: client=unknown[%d.%d.%d.%d]",
                      pid, mid, o1, o2, o3, o4);
 
             messages[2]->when = messages[1]->when + 2 + randint(3);
@@ -375,29 +542,29 @@ main(int argc, char *argv[])
             pid = (pid + 1 + randint(5)) % PID_MAX;
             messages[3]->when = messages[1]->when + 1 + randint(2);
             snprintf(messages[3]->text, sizeof(messages[3]->text),
-                     "smtp/cleanup[%d]: %08X: message-id=<%08x@junkmail.spam>",
+                     "smtp/cleanup[%d]: %08lX: message-id=<%08lx@junkmail.spam>",
                      pid, mid, mid2);
 
             pid = (pid + 1 + randint(5)) % PID_MAX;
             messages[4]->when = messages[3]->when + randint(1);
             snprintf(messages[4]->text, sizeof(messages[4]->text),
-                     "smtp/qmgr[%d]: %08X: from=<%s@junkmail.spam>, size=%d, nrcpt=1 (queue active)",
+                     "smtp/qmgr[%d]: %08lX: from=<%s@junkmail.spam>, size=%d, nrcpt=1 (queue active)",
                      pid, mid, user(), randint(6000));
 
             messages[5]->when = messages[4]->when + 2 + randint(2);
             snprintf(messages[5]->text, sizeof(messages[5]->text),
-                     "smtp/qmgr[%d]: %08X: removed",
+                     "smtp/qmgr[%d]: %08lX: removed",
                      pid, mid);
 
             messages[6]->when = messages[4]->when + randint(1);
             snprintf(messages[6]->text, sizeof(messages[6]->text),
-                     "smtp/deliver(%s): msgid=<%08x@junkmail.spam>: saved to INBOX",
+                     "smtp/deliver(%s): msgid=<%08lx@junkmail.spam>: saved to INBOX",
                      u, mid2);
 
             pid = (pid + 1 + randint(5)) % PID_MAX;
             messages[7]->when = messages[4]->when + randint(1);
             snprintf(messages[7]->text, sizeof(messages[7]->text),
-                     "smtp/local[%d]: %08X: to <%s@dirtbags.net>, relay=local, dsn=2.0.0, status=sent (delivered to command /usr/bin/deliver)",
+                     "smtp/local[%d]: %08lX: to <%s@dirtbags.net>, relay=local, dsn=2.0.0, status=sent (delivered to command /usr/bin/deliver)",
                      pid, mid, u);
 
             enqueue_messages(messages, 8);
@@ -422,9 +589,7 @@ main(int argc, char *argv[])
       }
     }
 
-#ifndef DEBUG
     sleep(1);
-#endif
   }
 
   return 0;

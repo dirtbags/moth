@@ -1,0 +1,16 @@
+#! /bin/sh -e
+
+# Reverse:
+# dd if=whatever bs=16 skip=1 | zcat
+
+key='vegetable multitude'
+
+echo $key > key
+
+dd if=src.mp3 bs=4 count=1 > out.mp3
+dd if=/dev/zero bs=4 count=3 >> out.mp3
+(cat noise.txt; echo; echo "The key is \"$key\".") | zip - - >> out.mp3
+cat src.mp3 >> out.mp3
+
+md5=$(md5sum out.mp3 | awk '{print $1;}')
+mv out.mp3 $md5
