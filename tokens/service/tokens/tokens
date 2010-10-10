@@ -5,7 +5,7 @@ while true; do
         [ -d $dn ] || continue
         puzzle=$(basename $dn)
         category=$(cat $dn/category)
-        busybox nc 10.0.0.1 1 \
+        busybox nc 10.0.0.2 1 \
             -e /opt/tokens/bin/tokencli $category $dn/category.key 3>&1 | \
             /opt/tokens/bin/arc4 $dn/enc.key > /var/lib/ctf/tokens/$puzzle
     done
