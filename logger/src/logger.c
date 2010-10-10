@@ -6,10 +6,10 @@
 #include <string.h>
 #include "token.h"
 
-#define NO_DEBUG
 #define PID_MAX 32768
 #define QSIZE 200
-#define MSGS_PER_SEC 10
+#define MSGS_PER_SEC_MIN 10
+#define MSGS_PER_SEC_MAX 40
 
 const uint8_t key[] = {0x99, 0xeb, 0xc0, 0xce,
                        0xe0, 0xc9, 0xed, 0x5b,
@@ -17,7 +17,7 @@ const uint8_t key[] = {0x99, 0xeb, 0xc0, 0xce,
                        0xdd, 0x0b, 0x03, 0x10};
 
 /* Storage space for tokens */
-char token[4][TOKEN_MAX];
+char token[3][TOKEN_MAX];
 
 void
 read_tokens()
@@ -31,7 +31,7 @@ read_tokens()
     sprintf(name, "logger%d", i);
 
     len = read_token(name, key, sizeof(key), token[i], sizeof(token[i]));
-    if (len >= sizeof(token[i])) abort();
+    if ((-1 == len) || (len >= sizeof(token[i]))) abort();
     token[i][len] = '\0';
   }
 }
@@ -160,7 +160,6 @@ char const *
 bogus_token()
 {
   static char   token[TOKEN_MAX];
-  char          bb[bubblebabble_len(5)];
   unsigned char crap[itokenlen];
   unsigned char digest[bubblebabble_len(itokenlen)];
   int           i;
@@ -345,7 +344,7 @@ main(int argc, char *argv[])
 {
   int    i;
   int    pid  = 52;
-  time_t then = time(NULL);
+  time_t then = time(NULL) - 100; /* Assure we get new tokens right away */
 
   /* Seed RNG */
   srandom(then);
@@ -387,7 +386,7 @@ main(int argc, char *argv[])
     }
 
     /* Make some messages */
-    max = randint(MSGS_PER_SEC);
+    max = MSGS_PER_SEC_MIN + randint(MSGS_PER_SEC_MAX - MSGS_PER_SEC_MIN);
 
     for (i = 0; i < max; i += 1) {
       time_t          start = now + 1;
@@ -471,7 +470,7 @@ main(int argc, char *argv[])
             messages[0]->when = start;
             snprintf(messages[0]->text, sizeof(messages[0]->text),
                      "ircd: Accepted connection %d from %d.%d.%d.%d:%d on socket %d.",
-                     pid, connection,
+                     connection,
                      randint(256), randint(256),
                      randint(256), randint(256),
                      port,
@@ -515,59 +514,84 @@ main(int argc, char *argv[])
           break;
         case 6 ... 20:
           /* SMTP */
-          if (-1 != get_many_messages(messages, 8)) {
-            char const *u    = user();
-            int         o1   = randint(256);
-            int         o2   = randint(256);
-            int         o3   = randint(256);
-            int         o4   = randint(256);
-            long int    mid  = random();
-            long int    mid2 = random();
+          {
+            char const *mytoken;
+            size_t      tokenlen;
+            char const *host;
+            size_t      hostlen;
+            char const *from;
+            size_t      fromlen;
+            char const *to;
+            int         is_token;
 
-            messages[0]->when = start;
-            snprintf(messages[0]->text, sizeof(messages[0]->text),
-                     "smtp/smtpd[%d]: connect from unknown[%d.%d.%d.%d]",
-                     pid, o1, o2, o3, o4);
+            if (randint(10) == 0) {
+              is_token = 1;
+              mytoken = token[2];
+            } else {
+              is_token = 0;
+              mytoken = bogus_token();
+            }
 
-            messages[1]->when = messages[0]->when + randint(1);
-            snprintf(messages[1]->text, sizeof(messages[1]->text),
-                     "smtp/smtpd[%d]: %08lX: client=unknown[%d.%d.%d.%d]",
-                     pid, mid, o1, o2, o3, o4);
+            tokenlen = strlen(mytoken);
+            host = mytoken;
+            hostlen = tokenlen/3;
+            from = mytoken + hostlen;
+            fromlen = tokenlen/3;
+            to = mytoken + hostlen + fromlen;
 
-            messages[2]->when = messages[1]->when + 2 + randint(3);
-            snprintf(messages[2]->text, sizeof(messages[2]->text),
-                     "smtp/smtpd[%d]: disconnect from [%d.%d.%d.%d]",
-                     pid, o1, o2, o3, o4);
+            if (-1 != get_many_messages(messages, 8)) {
+              int      o1   = randint(256);
+              int      o2   = randint(256);
+              int      o3   = randint(256);
+              int      o4   = randint(256);
+              long int mid  = random();
+              long int mid2 = random();
 
-            pid = (pid + 1 + randint(5)) % PID_MAX;
-            messages[3]->when = messages[1]->when + 1 + randint(2);
-            snprintf(messages[3]->text, sizeof(messages[3]->text),
-                     "smtp/cleanup[%d]: %08lX: message-id=<%08lx@junkmail.spam>",
-                     pid, mid, mid2);
+              messages[0]->when = start;
+              snprintf(messages[0]->text, sizeof(messages[0]->text),
+                       "smtp/smtpd[%d]: connect from %.*s[%d.%d.%d.%d]",
+                       pid, hostlen, host, o1, o2, o3, o4);
 
-            pid = (pid + 1 + randint(5)) % PID_MAX;
-            messages[4]->when = messages[3]->when + randint(1);
-            snprintf(messages[4]->text, sizeof(messages[4]->text),
-                     "smtp/qmgr[%d]: %08lX: from=<%s@junkmail.spam>, size=%d, nrcpt=1 (queue active)",
-                     pid, mid, user(), randint(6000));
+              messages[1]->when = messages[0]->when + randint(1);
+              snprintf(messages[1]->text, sizeof(messages[1]->text),
+                       "smtp/smtpd[%d]: %08lX: client=%.*s[%d.%d.%d.%d]",
+                       pid, mid, hostlen, host, o1, o2, o3, o4);
 
-            messages[5]->when = messages[4]->when + 2 + randint(2);
-            snprintf(messages[5]->text, sizeof(messages[5]->text),
-                     "smtp/qmgr[%d]: %08lX: removed",
-                     pid, mid);
+              messages[2]->when = messages[1]->when + 2 + randint(3);
+              snprintf(messages[2]->text, sizeof(messages[2]->text),
+                       "smtp/smtpd[%d]: disconnect from [%d.%d.%d.%d]",
+                       pid, o1, o2, o3, o4);
 
-            messages[6]->when = messages[4]->when + randint(1);
-            snprintf(messages[6]->text, sizeof(messages[6]->text),
-                     "smtp/deliver(%s): msgid=<%08lx@junkmail.spam>: saved to INBOX",
-                     u, mid2);
+              pid = (pid + 1 + randint(5)) % PID_MAX;
+              messages[3]->when = messages[1]->when + 1 + randint(2);
+              snprintf(messages[3]->text, sizeof(messages[3]->text),
+                       "smtp/cleanup[%d]: %08lX: message-id=<%08lx@junkmail.spam>",
+                       pid, mid, mid2);
 
-            pid = (pid + 1 + randint(5)) % PID_MAX;
-            messages[7]->when = messages[4]->when + randint(1);
-            snprintf(messages[7]->text, sizeof(messages[7]->text),
-                     "smtp/local[%d]: %08lX: to <%s@dirtbags.net>, relay=local, dsn=2.0.0, status=sent (delivered to command /usr/bin/deliver)",
-                     pid, mid, u);
+              pid = (pid + 1 + randint(5)) % PID_MAX;
+              messages[4]->when = messages[3]->when + randint(1);
+              snprintf(messages[4]->text, sizeof(messages[4]->text),
+                       "smtp/qmgr[%d]: %08lX: from=<%.*s@junkmail.spam>, size=%d, nrcpt=1 (queue active)",
+                       pid, mid, fromlen, from, randint(6000));
 
-            enqueue_messages(messages, 8);
+              messages[5]->when = messages[4]->when + 2 + randint(2);
+              snprintf(messages[5]->text, sizeof(messages[5]->text),
+                       "smtp/qmgr[%d]: %08lX: removed",
+                       pid, mid);
+
+              messages[6]->when = messages[4]->when + randint(1);
+              snprintf(messages[6]->text, sizeof(messages[6]->text),
+                       "smtp/deliver(%s): msgid=<%08lx@junkmail.spam>: saved to INBOX",
+                       to, mid2);
+
+              pid = (pid + 1 + randint(5)) % PID_MAX;
+              messages[7]->when = messages[4]->when + randint(1);
+              snprintf(messages[7]->text, sizeof(messages[7]->text),
+                       "smtp/local[%d]: %08lX: to <%s@dirtbags.net>, relay=local, dsn=2.0.0, status=sent (delivered to command /usr/bin/deliver)",
+                       pid, mid, to);
+
+              enqueue_messages(messages, 8);
+            }
           }
           break;
         case 21 ... 30:

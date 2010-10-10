@@ -1,21 +1,18 @@
 #! /bin/sh
 
-mkdir -p /var/www
-cd /var/www
+exec 2>&1
+
+install -d /var/www
 
 # Link in puzzles and web pages
 for d in /opt/*; do
     if [ -d $d/puzzles ]; then
-        ln -s $d/puzzles $(basename $d)
+        ln -sf $d/puzzles /var/www/$(basename $d)
     fi
     if [ -d $d/www ]; then
-        ln -s $d/www/* .
+        ln -sf $d/www/* /var/www/
     fi
 done
 
-exec thttpd -D \
-    -nos \
-    -u ctf \
-    -c "**.cgi" \
-    -T "utf-8"
+exec mathopd -n -f ./mathopd.conf
 
