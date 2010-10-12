@@ -1,0 +1,10 @@
+1: freeze a frame in an animated gif
+2: unzip a .docx to find dirtbags file
+3: embedded in comment in .docx
+10: pngtopbm -alpha file.png
+20: after JPEG footer
+30: dd if=whatever bs=16 skip=1 | zcat
+40: low-order bits
+100: Canon.0x0018
+200: filename of each gzip part
+

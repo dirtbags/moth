@@ -1,14 +1,3 @@
-#! /bin/sh
-
-key='Molotov Cocktails'
-img=http://mfrost.typepad.com/cute_overload/images/2008/02/11/bunny.jpg
-
-
-wget -O src.jpg $img
-cat src.jpg - <<EOF >img.jpg
-Molotov Cocktails
-=================
-
 There are many variations of the molotov cocktail. The classic is a
 glass bottle filled with gasoline. An oily soaked rag is placed in the
 neck of the bottle. The rag is lit on fire and the bottle is thrown at
@@ -44,6 +33,4 @@ and light the sucker. This method should be made with a plastic bottle
 so that it will not break on impact. When you light it, the bottle will
 quickly explode so be quick. Using a fuse is a good idea. 
 
-'$key' is the key.
-
-EOF
+"KEY" is the key.

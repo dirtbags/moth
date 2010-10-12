@@ -80,11 +80,11 @@ In order to do this, the 8-bit *byte* stream must be converted into a
 *bit* stream.  This bit stream must then be converted into a stream of
 6-bit bytes, as in the following figure:
 
-    |   00    |   01    |   AF    |   F0    |   B4    |   14    |
+    |   00    |   04    |   AF    |   F0    |   74    |   14    |
     |         |         |         |         |         |         |
-    |000000 00|0000 1000|10 101111|111100 00|0111 0100|00 010100|
+    |000000 00|0000 0100|10 101111|111100 00|0111 0100|00 010100|
     |                                                           |
-    |000000|00 0000|1000 10|101111|111100|00 0111|0100 00|010100|
+    |000000|00 0000|0100 10|101111|111100|00 0111|0100 00|010100|
     |      |       |       |      |      |       |       |      |
     |  00  |  00   |  12   |  2F  |  3C  |  07   |  10   |  14  |
 

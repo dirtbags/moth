@@ -103,10 +103,15 @@ successful attempt to skirt firewall rules.
 Question
 ========
 
+Sometimes as an analyst, you only get the first few dozen bytes of a
+conversation, and you may not even get an indication of whether the
+client or server spoke first.
+
 What follows is a list of the first line of text sent in various
-different connections.  The key for this page is the comma-separated (no
-spaces) list of protocols not described on this page, ordered from
-lowest (1) to highest (F).
+different connections.  The key for this page is the list of protocols
+not described on this page, ordered from lowest (1) to highest (F).  In
+other words, list everything that isn't the first line of an FTP, SMTP,
+or HTTP connection.
 
     1: GET / HTTP/1.1
     2: +OK example.com server ready

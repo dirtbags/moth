@@ -1,12 +1,4 @@
-#! /usr/bin/python
-
-import gzip
-import cStringIO as StringIO
-import md5
-
-key = 'washy-eyed jeffy'
-
-garbage = '''[Preamble] Edward by the grace of God King of England, lord of Ireland and duke of Aquitaine sends greetings to all to whom the present letters come. We have inspected the great charter of the lord Henry, late King of England, our father, concerning the liberties of England in these words:
+[Preamble] Edward by the grace of God King of England, lord of Ireland and duke of Aquitaine sends greetings to all to whom the present letters come. We have inspected the great charter of the lord Henry, late King of England, our father, concerning the liberties of England in these words:
 
 Henry by the grace of God King of England, lord of Ireland, duke of Normandy and Aquitaine and count of Anjou sends greetings to his archbishops, bishops, abbots, priors, earls, barons, sheriffs, reeves, ministers and all his bailiffs and faithful men inspecting the present charter. Know that we, at the prompting of God and for the health of our soul and the souls of our ancestors and successors, for the glory of holy Church and the improvement of our realm, freely and out of our good will have given and granted to the archbishops, bishops, abbots, priors, earls, barons and all of our realm these liberties written below to hold in our realm of England in perpetuity.
 
@@ -87,35 +79,5 @@ Henry by the grace of God King of England, lord of Ireland, duke of Normandy and
 All these aforesaid customs and liberties which we have granted to be held in our realm in so far as pertains to us are to be observed by all of our realm, both clergy and laity, in so far as pertains to them in respect to their own men. For this gift and grant of these liberties and of others contained in our charter over the liberties of the forest, the archbishops, bishops, abbots, priors, earls, barons, knights, fee holders and all of our realm have given us a fifteenth part of all their movable goods. Moreover we grant to them for us and our heirs that neither we nor our heirs will seek anything by which the liberties contained in this charter might be infringed or damaged, and should anything be obtained from anyone against this it is to count for nothing and to be held as nothing. With these witnesses: the lord S(tephen) archbishop of Canterbury, E(ustace) bishop of London, J(ocelin) bishop of Bath, P(eter) bishop of Winchester, H(ugh) bishop of Lincoln, R(ichard) bishop of Salisbury, W. bishop of Rochester, W(illiam) bishop of Worcester, J(ohn) bishop of Ely, H(ugh) bishop of Hereford, R(anulf) bishop of Chichester, W(illiam) bishop of Exeter, the abbot of (Bury) St Edmunds, the abbot of St Albans, the abbot of Battle, the abbot of St Augustine's Canterbury, the abbot of Evesham, the abbot of Westminster, the abbot of Peterborough, the abbot of Reading, the abbot of Abingdon, the abbot of Malmesbury, the abbot of Winchcombe, the abbot of Hyde (Winchester), the abbot of Chertsey, the abbot of Sherborne, the abbot of Cerne, the abbot of Abbotsbury, the abbot of Milton (Abbas), the abbot of Selby, the abbot of Cirencester, H(ubert) de Burgh the justiciar, H. earl of Chester and Lincoln, W(illiam) earl of Salisbury, W(illiam) earl Warenne, G. de Clare earl of Gloucester and Hertford, W(illiam) de Ferrers earl of Derby, W(illiam) de Mandeville earl of Essex, H(ugh) Bigod earl of Norfolk, W(illiam) earl Aumale, H(umphrey) earl of Hereford, J(ohn) constable of Chester, R(obert) de Ros, R(obert) fitz Walter, R(obert) de Vieuxpont, W(illiam) Brewer, R(ichard) de Montfiquet, P(eter) fitz Herbert, W(illiam) de Aubigne, G. Gresley, F. de Braose, J(ohn) of Monmouth, J(ohn) fitz Alan, H(ugh) de Mortemer, W(illiam) de Beauchamp, W(illiam) de St John, P(eter) de Maulay, Brian de Lisle, Th(omas) of Moulton, R(ichard) de Argentan, G(eoffrey) de Neville, W(illiam) Mauduit, J(ohn) de Baalon and others. Given at Westminster on the eleventh day of February in the ninth year of our reign.
 
 We, holding these aforesaid gifts and grants to be right and welcome, conceed and confirm them for ourselves and our heirs and by the terms of the present (letters) renew them, wishing and granting for ourselves and our heirs that the aforesaid charter is to be firmly and inviably observed in all and each of its articles in perpetuity, including any articles contained in the same charter which by chance have not to date been observed. In testimony of which we have had made these our letters patent. Witnessed by Edward our son, at Westminster on the twelfth day of October in the twenty-fifth year of our reign. (Chancery warranty by John of) Stowe.
-'''
 
-partlen = 8
-
-open('key', 'w').write('key')
-
-hexofkey = key.encode('hex')
-
-keyparts = []
-for i in range(0, len(hexofkey), partlen):
-    part = hexofkey[i:i+partlen]
-    keyparts.append(part)
-
-f = StringIO.StringIO()
-
-textpartlen = len(garbage) / len(keyparts)
-for i in range(len(keyparts)):
-    offset = i*textpartlen
-    if i == len(keyparts) - 1:
-        textpart = garbage[offset:]
-    else:
-        textpart = garbage[offset:offset+textpartlen]
-
-    fn = keyparts[i] + '.txt'
-    gf = gzip.GzipFile(filename=fn, mode='ab', fileobj=f)
-    gf.write(textpart)
-    gf.close()
-
-fn = md5.new(f.getvalue()).hexdigest()
-open(fn, 'wb').write(f.getvalue())
-
-
+The key is "KEY".

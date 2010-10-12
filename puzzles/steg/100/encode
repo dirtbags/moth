@@ -11,41 +11,25 @@ import md5
 import sys
 import zipfile
 
-key = 'wilderness fishsticks'
-
-srcdir = os.path.dirname(sys.argv[0])
-exifblah = os.path.join(srcdir, 'image.cmds')
-
 def system(cmd):
     ret = os.system(cmd)
     if ret:
         raise OSError('return value %d: %s' % (ret, cmd))
 
-# Download war posters
-if not os.path.exists('ww0207-43.jpg'):
-    system('wget -r -D digital.library.northwestern.edu -A jpg -nd -l 2 "http://digital.library.northwestern.edu/otcgi/digilib/llscgi60.exe?mode=phrase&query=conserve&REGION=&SIZE=20&db=0"')
-    os.unlink('robots.txt')
+# Read in key image
+key_png = sys.stdin.read()
 
-# Store the key
-open('key', 'w').write(key)
-
-# Make a PNG of it
-f = os.popen('pbmtext < key | pnmtopng -compression 0')
-key_png = f.read()
-
-# Duplicate two photos
-jpegs = glob.glob('*.jpg')
+# Duplicate two photos, give them a chance to bindiff
+jpegs = sys.argv[1:]
 random.shuffle(jpegs)
 for fn in jpegs[:2]:
     root, ext = os.path.splitext(fn)
-    nfn = '%s.dup%s' % (root, ext)
-    shutil.copy(fn, nfn)
-    jpegs.append(nfn)
+    jpegs.append(fn)
 random.shuffle(jpegs)
 
 bytes_per_photo = len(key_png) / len(jpegs)
 
-zipf = zipfile.ZipFile('archive.zip', 'w')
+zipf = zipfile.ZipFile(sys.stdout, 'w')
 for i in range(len(jpegs)):
     fn = jpegs[i]
 
@@ -59,8 +43,6 @@ for i in range(len(jpegs)):
     bytes_str = ' '.join(str(ord(c)) for c in bytes)
     cmd2 = 'set Exif.Canon.0x0018 "%s"' % bytes_str
 
-    # First set some defaults
-    system('exiv2 -m %s %s' % (exifblah, fn))
     # Now apply our devious stuff
     system('exiv2 -M\'%s\' -M\'%s\' %s' % (cmd1, cmd2, fn))
 
@@ -75,6 +57,3 @@ for i in range(len(jpegs)):
     zi.compress_type = zipfile.ZIP_DEFLATED
     zi.external_attr = 0644 << 16L
     zipf.writestr(zi, contents)
-
-    # We're done with this file
-    os.unlink(fn)

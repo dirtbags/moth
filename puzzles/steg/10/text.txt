@@ -1,20 +1,3 @@
-#! /bin/sh -e
-
-key='We the People'
-
-img=http://www.myconfinedspace.com/wp-content/uploads/2006/11/bill-stickers.jpg
-
-wget -O src.jpg $img
-jpegtopnm src.jpg > src.pbm
-dim=$(awk '(i++ == 1) { print; }' src.pbm)
-npixels=$(awk '(i++ == 1) { print $1 * $2; }' src.pbm)
-
-alpha=alpha.pgm
-
-echo "P5" > $alpha
-echo $dim >> $alpha
-echo "255" >> $alpha
-zip - - <<EOF > alpha.zip
 We the People of the United States, in Order to form a more perfect Union, establish Justice, insure domestic Tranquility, provide for the common defence, promote the general Welfare, and secure the Blessings of Liberty to ourselves and our Posterity, do ordain and establish this Constitution for the United States of America.
 
 Article. I.
@@ -237,16 +220,4 @@ This Constitution, and the Laws of the United States which shall be made in Purs
 
 The Senators and Representatives before mentioned, and the Members of the several State Legislatures, and all executive and judicial Officers, both of the United States and of the several States, shall be bound by Oath or Affirmation, to support this Constitution; but no religious Test shall ever be required as a Qualification to any Office or public Trust under the United States.
 
-The key is "$key".
-EOF
-cat alpha.zip >> $alpha
-zipsize=$(du -b alpha.zip | awk '{print $1;}')
-echo $npixels $zipsize
-pad=$(expr $npixels - $zipsize)
-dd if=/dev/urandom bs=1 count=$pad >> $alpha
-
-pnmtopng -alpha alpha.pgm src.pbm > file.png
-md5=$(md5sum file.png | awk '{print $1;}')
-mv file.png $md5
-
-rm src.* alpha.*
+The key is "KEY".

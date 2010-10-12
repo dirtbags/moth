@@ -67,29 +67,37 @@ for dn in $indir/[0-9]*; do
     tgt=$outdir/puzzles/$points
     mkdir -p $tgt
 
-    for fn in $dn/*; do
-        case $(basename $fn) in
-            key)
-                while read answer; do
-                    echo $points $answer
-                done < $fn >> $uanswers
-                ;;
-            index.mdwn)
-                # Handle this later
-                ;;
-            *~|"#"*)
+    if [ -f $dn/Makefile ]; then
+        # If there's a makefile, run make
+        make -C $dn DESTDIR=$(pwd)/$tgt
+        files=$(cd $tgt; echo *)
+    else
+        # Otherwise, look for special files and copy the rest
+        files=
+        for fn in $dn/*; do
+            case $(basename $fn) in
+                key|index.mdwn)
+                # Handle these later
+                    ;;
+                *~|"#"*)
                 # Don't copy temporary or backup files
-                ;;
-            ,*)
+                    ;;
+                ,*)
                 # Copy but don't list
-                cp $fn $tgt/
-                ;;
-            *)
-                cp $fn $tgt/
-                files="$files $(basename $fn)"
-                ;;
-        esac
-    done
+                    cp $fn $tgt/
+                    ;;
+                *)
+                    cp $fn $tgt/
+                    files="$files $(basename $fn)"
+                    ;;
+            esac
+        done
+    fi
+
+    # Append keys
+    while read answer; do
+        echo $points $answer
+    done < $dn/key >> $uanswers
 
     # Generate index now that we have a list of files
     if [ -f $dn/index.mdwn ]; then
