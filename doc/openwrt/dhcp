@@ -1,0 +1,2 @@
+config dnsmasq
+        option leasefile        '/tmp/dhcp.leases'

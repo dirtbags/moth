@@ -1,6 +1,5 @@
 Ideas for puzzles
 =================
-* Hide something in a .docx zip file
 * Bootable image with FreeDOS, Linux, Inferno? HURD?
   * Bury puzzles in various weird locations within each OS
   * Maybe put some in the boot loader, too
@@ -9,7 +8,17 @@ Ideas for puzzles
   * DHCP option
   * Single TCP RST with token in payload
   * Multiple TCP RST with different payloads
+  * http://10.0.0.2/token
 * PXE boot some sort of points-gathering client
   * Init asks for a team hash, and starts awarding points
   * Broken startup scripts, when fixed award more points
   * Lots of remote exploits
+* "qemu -net socket" vpn thingy and then...
+* sfxrar packed with upx.  Change an instruction so it won't actually execute.
+
+
+Capture the Packet
+------------------
+
+* Jim Meilander could teach a class about Bro
+* Use qemu -net socket,connect=10.0.0.2:5399 for capture the packet
