@@ -49,7 +49,7 @@ main(int argc, char *argv[])
     char *p;
 
     for (p = category; *p; p += 1) {
-      if (! isalnum(*p)) {
+      if ((! isalnum(*p)) && ('-' != *p)) {
         cgi_page("Invalid category", "");
       }
     }
