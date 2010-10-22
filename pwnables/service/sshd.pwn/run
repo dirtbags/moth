@@ -1,8 +1,10 @@
 #! /bin/sh
 
 exec 2>&1
+
 if [ -d /opt/mcp ]; then
   sv d .
   exit
 fi
+
 exec dropbear -r ./rsa.key -E -F

@@ -14,7 +14,8 @@ Ideas for puzzles
   * Broken startup scripts, when fixed award more points
   * Lots of remote exploits
 * "qemu -net socket" vpn thingy and then...
-* sfxrar packed with upx.  Change an instruction so it won't actually execute.
+* sfxrar packed with upx.  Change an instruction so it won't actually
+  execute.
 
 
 Capture the Packet

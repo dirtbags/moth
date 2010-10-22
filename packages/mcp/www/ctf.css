@@ -162,4 +162,6 @@ table.pollster thead {
     font-weight: bold;
 }
 
-
+table.scoreboard {
+    height: 400px;
+}
