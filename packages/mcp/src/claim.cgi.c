@@ -37,6 +37,9 @@ main(int argc, char *argv[])
   {
     char *p;
 
+    if ('\0' == token[0]) {
+      cgi_page("Invalid token", "");
+    }
     for (p = token; *p; p += 1) {
       if ((! isalnum(*p)) &&
           (*p != '-') &&

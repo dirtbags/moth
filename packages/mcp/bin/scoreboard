@@ -76,6 +76,7 @@ BEGIN {
     interval = 150
     tslen = 0
 
+    nteams = 0;
     while (1 == getline) {
         time = $1
         team = $2
@@ -92,7 +93,7 @@ BEGIN {
         }
         lasttime = time
 
-        teams[team] = team
+        teams[team] = nteams++
         points_by_cat[cat] += points
         points_by_cat_team[cat, team] += points
     }
@@ -111,7 +112,7 @@ BEGIN {
 
         cmd = sprintf("cat %s/teams/names/%s", base, team)
         cmd | getline name
-        if (! name) name = team
+        if (! name) name = "Avengers"
         names_by_team[team] = name
         close(cmd)
     }
@@ -146,7 +147,7 @@ BEGIN {
     c = 0
     for (team in teams) {
         if (maxscores_by_team[team] / maxscore < 0.01) continue
-        printf("    \"%s\": [\"#%s\",[", team, colors_by_team[team])
+        printf("    \"%s\": [\"#%s\",[", teams[team], colors_by_team[team])
         for (i = 1; i < tslen; i += 1) {
             time = timestamps[i]
             printf("[%d,%.2f],",
@@ -172,7 +173,7 @@ BEGIN {
     print "      .score { overflow: hidden; color: black; }"
     for (team in teams) {
         printf("      .t%s { background-color: #%s; }\n",
-               team, colors_by_team[team])
+               teams[team], colors_by_team[team])
     }
     print "    </style>"
 
@@ -202,7 +203,7 @@ BEGIN {
         for (team in teams) {
             if (scores[i] == scores_by_team_time[team, lasttime]) {
                 name = names_by_team[team]
-                print_bar("total", team, scores[i], ncats)
+                print_bar("total", teams[team], scores[i], ncats)
             }
         }
     }
@@ -231,7 +232,7 @@ BEGIN {
                 points = points_by_cat_team[cat, team]
                 if (l[j] == points) {
                     name = names_by_team[team]
-                    print_bar(cat, team, points, points_by_cat[cat])
+                    print_bar(cat, teams[team], points, points_by_cat[cat])
                 }
             }
         }
@@ -242,6 +243,7 @@ BEGIN {
 
     print "    </table>"
     print "    <canvas id=\"chart\" width=\"800\" height=\"400\"></canvas>"
+    print "    <p><a href=\"scoring.html\">About scoring</a></p>"
     print "  </body>"
     print "</html>"
 }

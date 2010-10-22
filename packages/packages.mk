@@ -37,4 +37,4 @@ $(foreach p, $(PACKAGES), $(eval $p-clean: $p-pkgclean))
 
 $(BIN)/%.pkg: %-install
 	@ mkdir -p $(@D)
-	mksquashfs $(BUILD)/$* $@ -all-root -noappend
+	mksquashfs $(BUILD)/$* $@ -all-root -noappend -no-progress

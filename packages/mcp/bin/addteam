@@ -18,25 +18,21 @@ www=${CTF_BASE:-/var/www}
 mkdir -p $base/teams/names
 mkdir -p $base/teams/colors
 
-# Assign a color.  I spent two days selecting this color pallette for
-# people with protanopia.  Please don't change these colors.
+# Assign a color.  I spent weeks selecting a color pallette that
+# wouldn't be hell on people with protanopia.  Please don't change these
+# colors.
 nteams=$(ls $base/teams/names/ | wc -l)
-case $(expr $nteams % 15) in
-    0) color=8c7a69 ;;
-    1) color=7f7062 ;;
-    2) color=79614b ;;
-    3) color=a59281 ;;
-    4) color=a59485 ;;
-    5) color=4a4f5e ;;
-    6) color=454955 ;;
-    7) color=343c52 ;;
-    8) color=696f82 ;;
-    9) color=6b7182 ;;
-    10) color=516b55 ;;
-    11) color=4b614f ;;
-    12) color=395d3f ;;
-    13) color=6d8c72 ;;
-    14) color=708c75 ;;
+case $(expr $nteams % 10) in
+    0) color=a6cee3;;
+    1) color=1f78b4;;
+    2) color=b2df8a;;
+    3) color=33a02c;;
+    4) color=fb9a99;;
+    5) color=e31a1c;;
+    6) color=fdbf6f;;
+    7) color=ff7f00;;
+    8) color=cab2d6;;
+    9) color=6a3d9a;; 
     *)
         echo 'ERROR ERROR' 1>&2
         echo 'DOES NOT COMPUTE' 1>&2
@@ -47,12 +43,9 @@ esac
 # Compute hash of team name; they'll use this for everything in the
 # contest instead of their team name, which makes stuff much easier on
 # me since all team hashes are in the set /[0-9a-f]{8}/.
-hash=$(echo "$1" | md5sum | cut -b 1-8)
+hash=$(echo "not a nonce:::$1" | md5sum | cut -b 1-8)
 
 echo "$1" > $base/teams/names/$hash
 echo "$color" > $base/teams/colors/$hash
 
 echo "Registered with hash: $hash"
-
-# Write teams.html if it's an actual contest
-$(dirname $0)/teams.sh > $www/teams.html.new && mv $www/teams.html.new $www/teams.html

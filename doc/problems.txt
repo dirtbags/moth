@@ -1,4 +1,3 @@
-* claim.cgi not exiting
-* someone managed to get a point in no category.  that broke the scoreboard.
+* claim.cgi not exiting (maybe fixed?)
 * get LAUR for contest
 * steg point values
