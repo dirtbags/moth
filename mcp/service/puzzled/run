@@ -2,10 +2,13 @@
 
 exec 2>&1
 
-install -o ctf -m 0644 /dev/null /var/lib/ctf/puzzles.db
-install -d /var/www
+DB=/var/lib/ctf/puzzles.db
+
+mkdir -p /var/www
+touch $DB
+chown ctf $DB
 
 # Make an initial listing
 ./puzzled
 
-exec inotifyd ./puzzled /var/lib/ctf/puzzles.db:w
+exec inotifyd ./puzzled ${DB}:w
