@@ -12,6 +12,7 @@ start () {
     iptables -P OUTPUT ACCEPT
     iptables -P FORWARD ACCEPT
 
+    iptables -A INPUT -p udp --dport 53 -j ACCEPT
     iptables -A INPUT -p udp --dport 67 -j ACCEPT
     iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
     iptables -A INPUT -s 10.0.0.0/16 -j ACCEPT

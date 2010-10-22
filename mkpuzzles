@@ -1,5 +1,7 @@
 #! /bin/sh -e
 
+set -e
+
 indir=$1; shift
 outdir=$1; shift
 
@@ -69,7 +71,7 @@ for dn in $indir/[0-9]*; do
 
     if [ -f $dn/Makefile ]; then
         # If there's a makefile, run make
-        make -C $dn DESTDIR=$(pwd)/$tgt
+        make -C $dn DESTDIR=$(pwd)/$tgt || exit 1
         files=$(cd $tgt; echo *)
     else
         # Otherwise, look for special files and copy the rest
@@ -94,7 +96,11 @@ for dn in $indir/[0-9]*; do
         done
     fi
 
-    # Append keys
+    # Append keys 
+    if ! [ -f $dn/key ]; then
+        echo "$dn/key: No such file or directory" 1>&2
+        exit 1
+    fi
     while read answer; do
         echo $points $answer
     done < $dn/key >> $uanswers
