@@ -1,14 +1,4 @@
-* "net-re" dash tripping up category validation in puzzler
-* scores not preserved in /var/lib/ctf, wtf?
-* bletchley 150 no key
 * claim.cgi not exiting
 * someone managed to get a point in no category.  that broke the scoreboard.
-* ha ha, guess what this does if points.log already exists:
-    install -o root -m 0644 /dev/null /var/lib/ctf/points.log
-* scoreboard: teams aren't properly filling columns (make td have size)
-* sequence 700 no key
-* steg 20 not m4ing key
-* no "pointscli" binary
-* steg 200 totally screwed up
 * get LAUR for contest
-
+* steg point values

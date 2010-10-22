@@ -7,7 +7,8 @@ src.jpg:
 	wget -O src.jpg $(IMG)
 
 file.jpg: src.jpg
-	cat src.jpg text.txt > $@
+	cat src.jpg > $@
+	m4 -DKEY="$(shell cat key)" text.txt > $@
 
 clean:
 	rm -f file.jpg

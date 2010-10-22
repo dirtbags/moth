@@ -70,6 +70,9 @@ read_char_stdin()
       if (inlen > POST_MAX) {
         inlen = POST_MAX;
       }
+      if (inlen < 0) {
+        inlen = 0;
+      }
     } else {
       inlen = 0;
     }

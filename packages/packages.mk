@@ -7,11 +7,13 @@ endef
 
 define STANDARD_PUZZLE
 t=$(strip $1)
-$t-install:
+$t-install: $t-stdinstall
+$t-stdinstall:
 	mkdir -p $(BUILD)/$t
 	./mkpuzzles packages/$t $(BUILD)/$t
 
-$t-clean:
+$t-clean: $t-stdclean
+$t-stdclean:
 	rm -rf $(BUILD)/$t $(BIN)/$t.pkg
 
 PACKAGES += $t

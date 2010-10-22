@@ -73,7 +73,6 @@ main(int argc, char *argv[])
     }
   }
 
-
   cgi_page("Point awarded", "<!-- success -->");
 
   return 0;
