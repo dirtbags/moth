@@ -1,0 +1,1 @@
+pngtopnm -alpha file.png

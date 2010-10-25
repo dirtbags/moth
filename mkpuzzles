@@ -54,11 +54,10 @@ EOF
 
 cat=$(basename $indir)
 uanswers=$outdir/answers.unsorted
+usummary=$outdir/summary.unsorted
 
-if [ -f $indir/summary.txt ]; then
-    cp $indir/summary.txt $outdir/
-fi
-> $uanswers
+echo -n > $uanswers
+rm -f $usummary
 
 for dn in $indir/[0-9]*; do
     [ -d $dn ] || continue
@@ -78,7 +77,7 @@ for dn in $indir/[0-9]*; do
         files=
         for fn in $dn/*; do
             case $(basename $fn) in
-                key|index.mdwn)
+                key|summary|index.mdwn)
                 # Handle these later
                     ;;
                 *~|"#"*)
@@ -102,8 +101,13 @@ for dn in $indir/[0-9]*; do
         exit 1
     fi
     while read answer; do
-        echo $points $answer
-    done < $dn/key >> $uanswers
+        echo $points $answer >> $uanswers
+    done < $dn/key
+
+    # Append summary
+    while read line; do
+        echo $points $line >> $usummary
+    done < $dn/summary
 
     # Generate index now that we have a list of files
     if [ -f $dn/index.mdwn ]; then
@@ -112,4 +116,5 @@ for dn in $indir/[0-9]*; do
 done
 
 sort -n $uanswers > $outdir/answers.txt
-rm $uanswers
+[ -f $usummary ] && sort -ns $usummary > $outdir/summary.txt
+rm -f $uanswers $usummary

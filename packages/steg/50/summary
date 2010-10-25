@@ -1,0 +1,1 @@
+dd if=file.mp3 bs=16 skip=1 | zcat

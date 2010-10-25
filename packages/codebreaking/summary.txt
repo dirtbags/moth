@@ -1,8 +1,0 @@
-1       plain text, no crypto
-2       rot-1
-3       dancing men
-4       monoalphabetic substitution cipher
-5       bionicle substitution
-6       wiccan substitution
-7       scytale laid out in grid
-8       real scytale
