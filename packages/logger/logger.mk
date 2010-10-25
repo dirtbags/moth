@@ -1,4 +1,4 @@
-LOGGER_PKGDIR = $(BUILD)/logger
+LOGGER_PKGDIR = $(TARGET)/logger
 
 logger-install: logger-build
 	mkdir -p $(LOGGER_PKGDIR)

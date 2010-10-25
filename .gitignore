@@ -4,3 +4,6 @@
 *.o
 bin/
 build/
+cache/
+target/
+

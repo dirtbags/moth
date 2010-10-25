@@ -2,6 +2,14 @@
 
 exec 2>&1
 
+DB=/var/lib/ctf/tokens.db
+
+if [ ! -f $DB ]; do
+    # Append any package-provided tokens
+    cat /opt/*/tokens >$DB 2>/dev/null
+    chown ctf $DB
+fi
+
 for fn in /var/lib/ctf/tokens.db /var/lib/ctf/claim.db; do
     touch $fn
     chown ctf $fn

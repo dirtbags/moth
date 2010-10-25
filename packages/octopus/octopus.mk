@@ -1,4 +1,4 @@
-OCTOPUS_PKGDIR = $(BUILD)/octopus
+OCTOPUS_PKGDIR = $(TARGET)/octopus
 
 octopus-install: octopus-build
 	mkdir -p $(OCTOPUS_PKGDIR)/bin/

@@ -9,12 +9,12 @@ define STANDARD_PUZZLE
 t=$(strip $1)
 $t-install: $t-stdinstall
 $t-stdinstall:
-	mkdir -p $(BUILD)/$t
-	./mkpuzzles packages/$t $(BUILD)/$t
+	mkdir -p $(TARGET)/$t
+	./mkpuzzles packages/$t $(TARGET)/$t
 
 $t-clean: $t-stdclean
 $t-stdclean:
-	rm -rf $(BUILD)/$t $(BIN)/$t.pkg
+	rm -rf $(TARGET)/$t $(BIN)/$t.pkg
 
 PACKAGES += $t
 endef
@@ -26,10 +26,10 @@ $(foreach p, $(PACKAGES), $(eval $p: $(BIN)/$p.pkg))
 
 packages: $(patsubst %, $(BIN)/%.pkg, $(PACKAGES))
 
-install: $(addsuffix -install, $(PACKAGES))
+packages-install: $(addsuffix -install, $(PACKAGES))
 
-clean: $(addsuffix -clean, $(PACKAGES))
-	rm -rf $(BUILD) $(BIN)
+packages-clean: $(addsuffix -clean, $(PACKAGES))
+	rm -rf $(TARGET) $(BIN)
 
 $(foreach p, $(PACKAGES), $(eval $p-clean: $p-pkgclean))
 %-pkgclean:
@@ -37,4 +37,4 @@ $(foreach p, $(PACKAGES), $(eval $p-clean: $p-pkgclean))
 
 $(BIN)/%.pkg: %-install
 	@ mkdir -p $(@D)
-	mksquashfs $(BUILD)/$* $@ -all-root -noappend -no-progress
+	mksquashfs $(TARGET)/$* $@ -all-root -noappend -no-progress

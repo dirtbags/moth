@@ -1,4 +1,4 @@
-TOKENS_PKGDIR = $(BUILD)/tokens
+TOKENS_PKGDIR = $(TARGET)/tokens
 
 tokens-install: tokens-build
 	mkdir -p $(TOKENS_PKGDIR)/bin/

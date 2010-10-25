@@ -7,7 +7,9 @@
 #define TEAM_MAX 40
 #define CAT_MAX 40
 #define TOKEN_MAX 80
+#define itokenlen 5
 
+#define bubblebabble_len(n) (6*(((n)/2)+1))
 
 int cgi_init(char *global_argv[]);
 size_t cgi_item(char *str, size_t maxlen);
@@ -31,5 +33,8 @@ void award_and_log_uniquely(char const *team,
                             long points,
                             char const *logfile,
                             char const *line);
+void bubblebabble(unsigned char *out,
+                  unsigned char const *in,
+                  const size_t inlen);
 
 #endif

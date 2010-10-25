@@ -13,62 +13,6 @@
 #include "common.h"
 #include "arc4.h"
 
-#define itokenlen 5
-
-char const consonants[] = "bcdfghklmnprstvz";
-char const vowels[]     = "aeiouy";
-
-#define bubblebabble_len(n) (6*(((n)/2)+1))
-
-/** Compute bubble babble for input buffer.
- *
- * The generated output will be of length 6*((inlen/2)+1), including the
- * trailing NULL.
- *
- * Test vectors:
- *     `' (empty string) `xexax'
- *     `1234567890'      `xesef-disof-gytuf-katof-movif-baxux'
- *     `Pineapple'       `xigak-nyryk-humil-bosek-sonax'
- */
-void
-bubblebabble(unsigned char *out,
-             unsigned char const *in,
-             const size_t inlen)
-{
-  size_t pos  = 0;
-  int    seed = 1;
-  size_t i    = 0;
-
-  out[pos++] = 'x';
-  while (1) {
-    unsigned char c;
-
-    if (i == inlen) {
-      out[pos++] = vowels[seed % 6];
-      out[pos++] = 'x';
-      out[pos++] = vowels[seed / 6];
-      break;
-    }
-
-    c = in[i++];
-    out[pos++] = vowels[(((c >> 6) & 3) + seed) % 6];
-    out[pos++] = consonants[(c >> 2) & 15];
-    out[pos++] = vowels[((c & 3) + (seed / 6)) % 6];
-    if (i == inlen) {
-      break;
-    }
-    seed = ((seed * 5) + (c * 7) + in[i]) % 36;
-
-    c = in[i++];
-    out[pos++] = consonants[(c >> 4) & 15];
-    out[pos++] = '-';
-    out[pos++] = consonants[c & 15];
-  }
-
-  out[pos++] = 'x';
-  out[pos] = '\0';
-}
-
 int
 main(int argc, char *argv[])
 {

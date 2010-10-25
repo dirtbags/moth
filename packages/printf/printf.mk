@@ -1,4 +1,4 @@
-PRINTF_PKGDIR = $(BUILD)/printf
+PRINTF_PKGDIR = $(TARGET)/printf
 
 printf-install: printf-build
 	mkdir -p $(PRINTF_PKGDIR)

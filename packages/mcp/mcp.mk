@@ -1,4 +1,4 @@
-MCP_PKGDIR = $(BUILD)/mcp
+MCP_PKGDIR = $(TARGET)/mcp
 
 mcp-install: mcp-build
 	mkdir -p $(MCP_PKGDIR)

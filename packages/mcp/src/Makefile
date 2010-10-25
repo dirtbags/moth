@@ -1,7 +1,7 @@
 CFLAGS = -Wall -Werror
 TARGETS = in.tokend tokencli claim.cgi
 TARGETS += puzzler.cgi puzzles.cgi
-TARGETS += pointscli 
+TARGETS += pointscli mktoken
 
 all: build
 
@@ -10,6 +10,7 @@ build: $(TARGETS)
 in.tokend: in.tokend.o arc4.o common.o
 tokencli: tokencli.o arc4.o
 pointscli: pointscli.o common.o
+mktoken: mktoken.o common.o
 
 puzzles.cgi: puzzles.cgi.o common.o
 claim.cgi: claim.cgi.o common.o

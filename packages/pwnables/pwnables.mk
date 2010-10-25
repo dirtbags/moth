@@ -1,4 +1,4 @@
-PWNABLES_PKGDIR = $(BUILD)/pwnables
+PWNABLES_PKGDIR = $(TARGET)/pwnables
 
 pwnables-install: pwnables-build
 	mkdir -p $(PWNABLES_PKGDIR)
