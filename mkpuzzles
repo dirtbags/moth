@@ -96,18 +96,21 @@ for dn in $indir/[0-9]*; do
     fi
 
     # Append keys 
-    if ! [ -f $dn/key ]; then
+    if [ -f $dn/key ]; then
+        while read answer; do
+            echo $points $answer >> $uanswers
+        done < $dn/key
+    else
         echo "$dn/key: No such file or directory" 1>&2
         exit 1
     fi
-    while read answer; do
-        echo $points $answer >> $uanswers
-    done < $dn/key
 
     # Append summary
-    while read line; do
-        echo $points $line >> $usummary
-    done < $dn/summary
+    if [ -f $dn/summary ]; then
+        while read line; do
+            echo $points $line >> $usummary
+        done < $dn/summary
+    fi
 
     # Generate index now that we have a list of files
     if [ -f $dn/index.mdwn ]; then
