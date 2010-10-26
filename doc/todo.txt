@@ -1,5 +1,5 @@
 Things That Need Fixin'
 =======================
 
-* puzzles.cgi really needs to cross out points your team has claimed.
-* Make an OpenWRT router image for a FitPC
+* Do something about all the symbolic links in the build tree
+* Make arc4 global somehow

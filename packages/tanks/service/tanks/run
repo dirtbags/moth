@@ -1,0 +1,6 @@
+#! /bin/sh
+
+mkdir -p /var/lib/ctf/tanks
+mkdir -p /var/lib/ctf/tanks/www
+mkdir -p /var/lib/ctf/tanks/players
+exec ./tanksd

@@ -44,8 +44,12 @@ main(int argc, char *argv[]) {
   if (argc != 3) {
     fprintf(stderr, "Usage: %s SERVICE SERVICEKEY 3>TOKENFILE\n", argv[0]);
     fprintf(stderr, "\n");
-    fprintf(stderr, "SERVICEKEY is a filenames.\n");
+    fprintf(stderr, "SERVICEKEY is a filename.\n");
+    fprintf(stderr, "Server chatter happens over stdin and stdout.\n");
     fprintf(stderr, "Tokens are written to file descriptor 3.\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "To run with netcat:\n");
+    fprintf(stderr, "    nc server 1 -e tokencli cat cat.key 3> tokenfile\n");
     return EX_USAGE;
   }
 
