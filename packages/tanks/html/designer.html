@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Tank Designer</title>
-    <link rel="stylesheet" href="dirtbags.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
     <style type="text/css">
       #preview {
         float: right;

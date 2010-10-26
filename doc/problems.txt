@@ -1,2 +1,2 @@
 * claim.cgi not exiting (maybe fixed?)
-* get LAUR for contest
+

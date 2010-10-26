@@ -2,9 +2,7 @@
 
 d=/var/lib/ctf/tanks
 p=$d/players
-w=$d/www
-
-mkdir -p $w $p
+w=/var/www/tanks
 
 summary () {
     cat <<EOF
@@ -12,18 +10,18 @@ summary () {
 <html>
   <head>
     <title>Tanks</title>
-    <link rel=\"stylesheet\" href=\"http://10.0.0.2/ctf.css\" type=\"text/css\">
+    <link rel="stylesheet" href="style.css" type="text/css">
   </head>
   <body>
     <h1>Tanks</h1>
-    <p>New here?  Start with the <a href=\"intro.html\">introduction</a>.</p>
+    <p>New here?  Start with the <a href="intro.html">introduction</a>.</p>
     <p>New round every minute.</p>
     <h2>Round results</h2>
     <ul>
 EOF
     printed=0
     find $w -name "round-*.html" | sort -r | while read fn; do
-        $b=$(basename $fn)
+        b=$(basename $fn)
         if [ $printed -lt 20 ]; then
             echo "<li><a href=\"$b\">$b</a></li>"
         else
@@ -34,7 +32,7 @@ EOF
     cat <<EOF
     </ul>
 EOF
-    cat /opt/tanks/www/nav.html.inc
+    cat /opt/tanks/html/nav.html.inc
     cat <<EOF
   </body>
 </html>
@@ -44,12 +42,18 @@ EOF
 while true; do
     # Make sure all teams exist
     # XXX: pull this out into another daemon
-    wget -O - http://10.0.0.2/teams.txt | \
+    wget -q -O - http://10.0.0.2/teams.txt | \
         KEY="Too much cheese." /opt/tokens/bin/arc4 | \
         while read hash; do
-        mkdir -p $p/$hash
-        chown ctf $p/$hash
+        install -o ctf -d $p/$hash
     done
+
+    # Has anyone submitted a program yet?
+    if [ $(find $p -name program | wc -l) = 0 ]; then
+        sleep 15
+        continue
+    fi
+            
 
     # Round number?
     if [ -f $d/next-round ]; then
@@ -59,7 +63,7 @@ while true; do
     fi
     expr $next + 1 > $d/next-round
 
-    fn=$(printf "%s/round-%04d.html" $d $next)
+    fn=$(printf "%s/round-%04d.html" $w $next)
     rfn=$(printf "/tmp/tanks-results-%04d.txt" $next)
     tfn=$(printf "/tmp/tanks-token-%04d.txt" $next)
 
@@ -71,13 +75,13 @@ while true; do
   <head>
     <title>Tanks Round $next</title>
     <script type="application/javascript" src="tanks.js"></script>
-    <link rel="stylesheet" href="http://10.0.0.2/ctf.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
     <script type="application/javascript">
       function go() {
         start("battlefield",
 // Start JSON data
 EOF
-    /opt/tanks/bin/forftanks $d/*/ >>$fn 3>$rfn
+    /opt/tanks/bin/forftanks $p/* >>$fn 3>$rfn
     cat <<EOF >>$fn
 // end JSON data
       );
@@ -91,7 +95,7 @@ window.onload = go;
     <p><span id="fps">0</span> fps</p>
 EOF
     /opt/tanks/bin/rank.awk $rfn >>$fn
-    cat /opt/tanks/www/nav.html.inc
+    cat /opt/tanks/html/nav.html.inc >>$fn
     cat <<EOF >>$fn
   </body>
 </html>
@@ -101,16 +105,21 @@ EOF
     nc 10.0.0.2 1 -e /opt/tokens/bin/tokencli tanks ./category.key 3> $tfn
     k=$(cat $tfn)
     /opt/tanks/bin/winners.awk $rfn | while read winner; do
-        echo "Round $next winner: $winner"
+        hash=$(basename $winner)
+        echo "Round $next winner: $hash"
 
         # Squirrel it away just in case
-        cat $tfn >> $p/$winner/tokens
+        cat $tfn >> $winner/tokens
 
         # XXX: pull this out into another daemon
         # XXX: this puts the token in /proc/self/cmdline
-        wget -O /dev/null "http://10.0.0.2/claim.cgi?t=$winner&k=$k"
+        wget -q -s "http://10.0.0.2/claim.cgi?t=$hash&k=$k"
     done
 
-    summary > $d/summary.html.$$
-    mv $d/summary.html.$$ $d/summary.html
+    summary > $w/summary.html.$$
+    mv -f $w/summary.html.$$ $w/summary.html
+
+    rm -f $tfn $rfn
+
+    sleep 60
 done
