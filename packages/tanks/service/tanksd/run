@@ -1,0 +1,10 @@
+#! /bin/sh
+
+exec 2>&1
+
+mkdir -p /var/www/tanks
+ln -s /opt/tanks/html/* /var/www/tanks/
+ln -sf summary.html /var/www/tanks/index.html
+
+install -o ctf -d /var/lib/ctf/tanks/players
+exec ./tanksd

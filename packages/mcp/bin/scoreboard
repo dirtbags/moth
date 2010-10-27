@@ -30,18 +30,18 @@ function escape(s) {
     return s
 }
 
-function print_bar(cat, team, n, d) {
+function print_bar(cat, teamid, teamname, n, d) {
     printf("<div class=\"t%s score\""               \
            "     style=\"height: %.2f%%;\""         \
            "     onmouseover=\"highlight('%s')\""   \
            "     onmouseout=\"restore('%s')\">\n"   \
            "<!-- %s --> %s: %s\n"                   \
            "</div>", 
-           team, 
+           teamid, 
            100 * n / d, 
-           team,
-           team,
-           cat, escape(names_by_team[team]), n)
+           teamid,
+           teamid,
+           cat, escape(name), n)
 }
 
 function output(    t, c) {
@@ -203,7 +203,7 @@ BEGIN {
         for (team in teams) {
             if (scores[i] == scores_by_team_time[team, lasttime]) {
                 name = names_by_team[team]
-                print_bar("total", teams[team], scores[i], ncats)
+                print_bar("total", teams[team], name, scores[i], ncats)
             }
         }
     }
@@ -232,7 +232,7 @@ BEGIN {
                 points = points_by_cat_team[cat, team]
                 if (l[j] == points) {
                     name = names_by_team[team]
-                    print_bar(cat, teams[team], points, points_by_cat[cat])
+                    print_bar(cat, teams[team], name, points, points_by_cat[cat])
                 }
             }
         }
@@ -242,7 +242,7 @@ BEGIN {
     print "      </tr>"
 
     print "    </table>"
-    print "    <canvas id=\"chart\" width=\"800\" height=\"400\"></canvas>"
+    print "    <canvas id=\"chart\" width=\"800\" height=\"300\"></canvas>"
     print "    <p><a href=\"scoring.html\">About scoring</a></p>"
     print "  </body>"
     print "</html>"
