@@ -1,0 +1,58 @@
+From: The Dirtbags <zephyr@dirtbags.net>
+To: RECIP
+Subject: WIN BIG AT CAPTURE THE FLAG!!!
+Message-ID: <cG9zdGVyczp4YW5hZC1wb2xveA==@dirtbags.net>
+MIME-Version: 1.0
+Content-type: multipart/alternative; boundary=eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA
+X-Face: '8$#2%$m/.;29z5"5"/
+
+There are 5 tokens hidden in this message.  Can you find them all?
+
+--eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA
+Content-type: text/plain; charset=UTF-8
+
+Are you ready for CTF?
+
+The teams are in and it looks like this year's CTF is going to be about
+double the size of last year.  I've posted teams at
+<http://dirtbags.net/ctf>.
+
+If you came last year, there are some changes in store for you.  I've
+done away with the weird boxes at each table, so there's no need to
+bring a monitor or keyboard.  What you really need to be a sysadmin this
+year is netcat and nmap.  We will *not* provide an Internet connection,
+so figure out now how you're going to get onto the Internet (you will
+need it).
+
+If you have any questions, or would just like to hang out and shoot the
+breeze, feel free to hop on IRC (server woozle.org, channel #ctf).
+
+I hope you all have as much fun playing this as I've had building it!
+
+zephyr
+--eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA
+Content-type: text/html; charset=UTF-8
+
+<p>Are you ready for CTF?</p>
+
+<p>The teams are in and it looks like this year's CTF is going to be
+about double the size of last year.  I've posted teams at 
+<a href="http://dirtbags.net/ctf" class="posters">http://dirtbags.net/ctf</a>.</p>
+
+<p>If you came last year, there are some changes in store for you.  I've
+done away with the weird boxes at each table, so there's no need to
+bring a monitor or keyboard.  What you really need to be a sysadmin this
+year is netcat and nmap.  We will <i class="xalep">not</i> provide an
+Internet connection, so figure out now how you're going to get onto the
+Internet (you will need it).</p>
+
+<p>If you have any questions, or would just like to hang out and shoot
+the breeze, feel free to 
+<a href="irc://woozle.org/ctf" class="mikex">hop on IRC (server woozle.org, channel #ctf)</a>.</p>
+
+<p>I hope you all have as much fun playing this as I've had building it!</p>
+
+<p>zephyr</p>
+--eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA--
+
+cbfgref:krzbp-fbpbk
