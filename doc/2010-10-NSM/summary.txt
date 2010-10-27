@@ -1,0 +1,117 @@
+Network Security Monitoring Summit
+==================================
+
+October 11-15, 2010, PNNL, Richland, WA
+
+
+After kicking the idea around at the DOE CYSEC conference in Atlanta
+earlier this year, Kevin and I were invited to run a smaller version of
+Tracer FIRE at the Fall NSM summit.  Kevin had to pull out due to lack
+of management support, but I said I could still run a full event.
+
+I was asked if I could also provide training.  I agreed to run the
+"net-re" category, but this fell through as they got enough other
+presenters.  The contest was scheduled to go on for a 4-hour slot.  I
+noted my event could be used as a buffer, since it could run for many
+hours.
+
+To prepare for this event, I added or fleshed out a few categories:
+
+* steg (steganography)
+* octopus (rapid network programming)
+* logger (logfile parsing)
+* printf (stack analysis/manipulation through printf)
+* pwnables (system administration)
+
+I rewrote the core infrastructure in C--it had been in Python--in an
+attempt to get Python out of the build.  Python does not support
+cross-compiling, and Buildroot packages Python 2.5 (several years old)
+since it is the most recent version that can be tricked into
+cross-compiling.  There is no remaining Python code in the build.
+
+I also changed the build in such a way that functionality could be put
+into packages, and packages cherry-picked for each contest.  This
+removes the requirement to constantly re-build the entire image, while
+still providing most of the benefits gained from most of the server
+being read-only.  It also allows for much larger packages than what fits
+in RAM, which was a last minute problem at TF2.  Package size is now
+bounded only by the size of a squashfs (16EiB).
+
+The contest was also redesigned to remove the "flag server" and replace
+it with "tokens", good for one point each in a category.  It was
+difficult to design puzzles around the "flag server" concept, but far
+more natural to come up with puzzles which hand out tokens.  This meant
+the demise of the well-liked "badmath" category, the ill-concieved
+"kevin" category, and the "black box" categories ("pwnables" being a
+start at replacing this functionality).
+
+After everything was created and somewhat tested, I estimated I had
+enough material for about 60 hours of contest.
+
+Due to scheduling problems and the death of one presenter (!), I was
+asked to run the event for 12 hours instead of the initial 4.
+
+Categories enabled
+------------------
+
+* steg
+* octopus
+* pwnables
+* logger
+* sequence
+* net-re
+* bletchley
+
+
+Problems
+--------
+
+Leaving for the event I was not comfortable with the sparse amount of
+testing we were able to perform.
+
+There were a few problems which required intimate knowledge of the
+system to remedy on the spot.  Several of these were serious:
+
+* the scoring system refused to recognize "net-re" as a valid category
+* some puzzles (especially in the steg category) didn't accept the
+  correct answer
+
+Point values assigned to puzzles in steg arose as a major issue, causing
+one of the more advanced contestants to give up in frustration at around
+hour 9.  He had been working hard on a 5 point puzzle when someone
+leapfrogged him with a 20 point puzzle which required much less effort.
+
+Many of the more advanced aspects to puzzles were not discovered.  For
+instance, only 1 out of 5 tokens in logger was discovered.  Only 1 out
+of 4 pwnables were attempted by any team.
+
+A UDP scan, it turns out, is very slow.  Nobody found Octopus until I
+told them where it was, and by then it was too late to expect any
+results.
+
+The wireless router slowed down TCP port scans tremendously.
+
+
+Successes
+---------
+
+Fairly good progress was made in bletchley.  This was the first contest
+in which anybody made any progress in this category.
+
+The reduced number of categories worked well.
+
+Careful team composition worked out much better than the haphazard team
+composition at TF2.
+
+The network infrastructure (a WL520-GU running OpenWRT) was once again
+fully up to the task.
+
+After talking with the contestant who gave up, and asking him to help me
+solve the problem, he was much more positive about the event.
+
+Everyone said they had a good time and learned new things.
+
+All software bugs were recoverable.  The core game infrastructure proved
+reliable.
+
+There was a lot of buzz about our CTF exercise.
