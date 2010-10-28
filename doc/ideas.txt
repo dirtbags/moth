@@ -16,7 +16,7 @@ Ideas for puzzles
 * "qemu -net socket" vpn thingy and then...
 * sfxrar packed with upx.  Change an instruction so it won't actually
   execute.
-
+* pwnables: have scp log passwords somewhere
 
 Capture the Packet
 ------------------
