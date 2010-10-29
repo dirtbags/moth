@@ -83,6 +83,9 @@ proxy, it will be a full URL.
 
 `VERSION` is the version of HTTP in use.  It always begins with `HTTP/`
 and ends with major and minor version numbers, separated by a period.
+Many protocols are "HTTP-like", and provide a version beginning with
+something other than `HTTP/'.  Although they may look like HTTP, they
+are not truly HTTP connections.
 
 `METHOD` is typically either `GET`, `HEAD`, or `POST`, but may also be
 `OPTIONS`, `PUT`, `DELETE`, `TRACE`, `CONNECT`, or any number of
@@ -107,11 +110,14 @@ Sometimes as an analyst, you only get the first few dozen bytes of a
 conversation, and you may not even get an indication of whether the
 client or server spoke first.
 
-What follows is a list of the first line of text sent in various
-different connections.  The key for this page is the list of protocols
-not described on this page, ordered from lowest (1) to highest (F).  In
-other words, list everything that isn't the first line of an FTP, SMTP,
-or HTTP connection.
+You have been given the first line sent in 16 different connections and
+asked to determine which warrant further investigation.  You need to
+rule out things that are clearly not the first line of HTTP, SMTP, or
+FTP.
+
+The answer for this page is the list of protocols *not described on this
+page*, ordered from lowest (1) to highest (F).  The answer should be of
+the form "1,2,3,7,8,A,B,C".
 
     1: GET / HTTP/1.1
     2: +OK example.com server ready

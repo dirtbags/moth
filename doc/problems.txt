@@ -1,8 +1,5 @@
 * claim.cgi not exiting (maybe fixed?)
-* mcp/index.html: provide example token
 * tanks/designer.cgi: s/token/team hash/
-* net-re/3: give example of what the answer would look like
-* eth0/run: wrong netmask, no router
-* eth0.pwn/run: wrong netmask, no router
-* tanks: player directories not getting populated
+* teams.txt: Come up with a better solution to creating this at boot
+
 
