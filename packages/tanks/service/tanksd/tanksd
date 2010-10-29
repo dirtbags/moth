@@ -42,7 +42,7 @@ EOF
 while true; do
     # Make sure all teams exist
     # XXX: pull this out into another daemon
-    wget -q -O - http://10.0.0.2/teams.txt | \
+    wget -q -O - http://10.0.0.2/teams.html | \
         KEY="Too much cheese." /opt/tokens/bin/arc4 | \
         while read hash; do
         install -o ctf -d $p/$hash

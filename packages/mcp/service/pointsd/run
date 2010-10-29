@@ -6,4 +6,8 @@ install -o ctf -m 0755 -d /var/lib/ctf/points.new
 install -o ctf -m 0755 -d /var/lib/ctf/points.tmp
 touch /var/lib/ctf/points.log
 
+# Re-populate teams list for tanks
+ls $base/teams/names | KEY="Too much cheese." /opt/mcp/bin/arc4 > $www/teams.txt.$$
+mv $www/teams.txt.$$ $www/teams.txt
+
 exec ./pointsd
