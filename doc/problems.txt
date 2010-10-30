@@ -2,4 +2,20 @@
 * tanks/designer.cgi: s/token/team hash/
 * teams.txt: Come up with a better solution to creating this at boot
 
+NMT
+---
+* Lots of files missing at startup: I really need a new-contest script
+* Tanks aren't awarding points (hadn't added tokens to packages)
+  * put tokencli in tanks package
+  * all packages ought to work standalone
+* scoreboard: 8 points (1,1,3,3) looks incorrectly proportioned, maybe
+  table height competing with cell height?
+* sequence 300; puzzler isn't taking the unicode character right
+
+
+Physical
+--------
+
+* We should buy a longer VGA cable
+* Tape!
 

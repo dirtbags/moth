@@ -7,4 +7,5 @@ fi
 
 hostname pwnables
 ifconfig eth0 10.0.0.10 netmask 255.255.0.0
+route add default gw 10.0.0.1
 exec inotifyd true $(pwd):x
