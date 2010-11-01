@@ -40,7 +40,7 @@ EOF
     fi
 
     cat <<EOF
-    <form action="/puzzler.cgi" method="post">
+    <form action="/puzzler.cgi" method="post" accept-charset="utf-8">
       <input type="hidden" name="c" value="$cat">
       <input type="hidden" name="p" value="$points">
       Team:<input name="t" size="8">
