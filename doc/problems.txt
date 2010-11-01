@@ -2,6 +2,7 @@
 * tanks/designer.cgi: s/token/team hash/
 * teams.txt: Come up with a better solution to creating this at boot
 
+
 NMT
 ---
 * Lots of files missing at startup: I really need a new-contest script
@@ -11,6 +12,12 @@ NMT
 * scoreboard: 8 points (1,1,3,3) looks incorrectly proportioned, maybe
   table height competing with cell height?
 * sequence 300; puzzler isn't taking the unicode character right
+* mcp/ngircd.conf: add "OperCanUseMode = yes" to Global section
+* scoreboard: if a team doesn't exist it's still giving them a name
+* forf manual: describe comments
+* key.png (8x12): .tnih a ton si siht
+* We need some programs so that we never have to edit .db files
+  directly.  I truncated tokens.db with > instead of >>.
 
 
 Physical
