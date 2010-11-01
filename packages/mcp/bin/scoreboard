@@ -105,14 +105,14 @@ BEGIN {
         # Busybox awk segfaults if you try to close a file that didn't
         # exist.  We work around it by calling cat.
         cmd = sprintf("cat %s/teams/colors/%s", base, team)
+        color = "444444";
         cmd | getline color
-        if (! color) color = "cccccc";
         colors_by_team[team]  = color
         close(cmd)
 
         cmd = sprintf("cat %s/teams/names/%s", base, team)
+        name = "Phantoms"
         cmd | getline name
-        if (! name) name = "Avengers"
         names_by_team[team] = name
         close(cmd)
     }
