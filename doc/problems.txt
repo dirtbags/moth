@@ -1,3 +1,6 @@
+Bugs
+====
+
 * claim.cgi not exiting (maybe fixed?)
 * tanks/designer.cgi: s/token/team hash/
 * teams.txt: Come up with a better solution to creating this at boot
@@ -14,6 +17,8 @@ NMT
 * forf manual: describe comments
 * We need some programs so that we never have to edit .db files
   directly.  I truncated tokens.db with > instead of >>.
+* Get erin to edit net-re
+* reject port 22 from outside of 10.0.0.0/16
 
 
 Physical
@@ -21,6 +26,7 @@ Physical
 
 * We should buy a longer VGA cable
 * Tape!
+
 
 
 Possibly fixed
