@@ -1,0 +1,37 @@
+How to run a CTF event
+======================
+
+When a CTF image boots, it goes through the following sequence:
+
+1. Mount a partition labelled "CTF-STATE" read-only under /var/lib/ctf,
+   if such a partition exists
+2. Mount a partition labelled "CTF" under /mnt/ctf
+3. For every file matching /mnt/ctf/${pkg}.pkg, mount it under /opt/$pkg
+4. For every directory matching /opt/*/service/${d}, copy it recursively
+   into /var/service/$d
+
+Terms Used Here
+---------------
+
+* puzzle: a static category with one web page (and optional data) and a
+  list of correct answers for each point value.  For example, sequence.
+
+* live category: a dynamic category which requires interaction to
+  solve.  For example, octopus.
+
+* puzzler: infrastructure to serve up and award points for static
+  puzzle categories (eg. sequence)
+
+* pointsd: points server.
+
+* mcp: "Master Control Program".  The main server, containing puzzler,
+  scoreboard, and tokend.
+
+
+Packages You Ought To Know About
+--------------------------------
+
+* mcp is the "Master Control Program".  A machine running this package
+  is the server, and comes up with IP 10.0.0.2.  It contains the point
+  server, token server, scoreboard, and puzzler.
+* pwnables is the "vulnerable services" package.  A machine running
