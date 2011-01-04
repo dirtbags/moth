@@ -7,8 +7,8 @@ endef
 
 define STANDARD_PUZZLE
 t=$(strip $1)
-$t-install: $t-stdinstall
-$t-stdinstall:
+$t-install: $(TARGET)/$t
+$(TARGET)/$t: packages/$t
 	mkdir -p $(TARGET)/$t
 	./mkpuzzles packages/$t $(TARGET)/$t
 
