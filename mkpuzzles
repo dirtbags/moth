@@ -43,7 +43,7 @@ EOF
     <form action="/puzzler.cgi" method="post" accept-charset="utf-8">
       <input type="hidden" name="c" value="$cat">
       <input type="hidden" name="p" value="$points">
-      Team:<input name="t" size="8">
+      Team hash:<input name="t" size="8">
       Answer:<input name="a" size="20">
       <input type="submit" value="submit">
     </form>

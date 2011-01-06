@@ -1,4 +1,4 @@
 #! /bin/sh
 
 exec 2>&1
-exec /opt/ngircd/bin/ngircd --config ./ngircd.conf --nodaemon
+exec /opt/ircd/bin/ngircd --config ./ngircd.conf --nodaemon
