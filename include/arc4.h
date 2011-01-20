@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define ARC4_HASHLEN 16
+
 struct arc4_ctx {
   uint8_t S[256];
   uint8_t i;
@@ -16,5 +18,6 @@ void arc4_crypt(struct arc4_ctx *ctx,
                 uint8_t *obuf, uint8_t const *ibuf, size_t buflen);
 void arc4_crypt_buffer(uint8_t const *key, size_t keylen,
                        uint8_t *buf, size_t buflen);
-
+void arc4_hash(uint8_t const *buf, size_t buflen,
+               uint8_t *hash);
 #endif
