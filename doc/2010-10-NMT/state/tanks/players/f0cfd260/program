@@ -1,0 +1,27 @@
+99 100 set-speed!  ( big circles ) 
+0 set-led!
+0 set-turret!
+
+2 sensor? { 100 -28 set-speed! } if (outer right)
+3 sensor? { -32 100 set-speed! } if (outer left)
+
+4 sensor? { 100 2 set-speed! } if (middle pincer)
+5 sensor? { -2 100 set-speed! } if (middle pincer)
+
+4 sensor? 2 sensor? & { 50 -48 set-speed! } if (middle right)
+5 sensor? 3 sensor? & { -52 50 set-speed! } if (middle left)
+
+1 sensor? { 100 100 set-speed!  } if              ( full speed ahead if we have a target )
+fire-ready? { 1 set-led! } { 40 random 10 + 35 random 5 + set-speed! } ifelse (trundle if we can't fire, else show danger LED) 
+
+6 sensor? { 100 -48 set-speed! } if  ( inner right ) 
+7 sensor? { -52 100 set-speed! } if  ( inner left  ) 
+
+0 sensor? { fire! } if              ( Fire if turret sensor triggered )
+
+4 sensor? fire-ready? ! & {70 100 set-speed!} if (escape if we can't fire and are close) 
+5 sensor? fire-ready? ! & {100 70 set-speed!} if (escape if we can't fire and are close) 
+
+8 sensor? 6 sensor? & { -99 -100 set-speed! } if  ( front crash avoid ) 
+8 sensor? 7 sensor? & { -100 -99 set-speed! } if  ( front crash avoid ) 
+9 sensor? { 100 100 set-speed! } if  ( rear crash avoid ) 

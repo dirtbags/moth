@@ -1,0 +1,29 @@
+#! /bin/sh
+
+if [ "$1" -ne "-f" ]; then
+    echo "Usage: $0 -f"
+    echo
+    echo "Wipes out the current contest.  This operation is not"
+    echo "reversable, which is why you have to specify -f to signify"
+    echo "that you know what you're getting into."
+    exit
+fi
+
+sv d tokend
+sv d pointsd
+sv d puzzled
+sv d tanksd
+
+rm -f /var/lib/ctf/tokens.db
+rm -f /var/lib/ctf/points.log
+rm -f /var/www/scoreboard.html
+rm -f /var/lib/ctf/puzzles.db
+rm -rf /var/lib/ctf/points.new
+rm -rf /var/lib/ctf/points.tmp
+rm -rf /var/lib/ctf/tanks
+rm -rf /var/lib/ctf/teams
+
+sv u tokend
+sv u pointsd
+sv u puzzled
+sv u tanksd

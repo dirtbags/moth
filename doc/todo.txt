@@ -3,3 +3,6 @@ Things That Need Fixin'
 
 * Do something about all the symbolic links in the build tree
 * Make arc4 global somehow
+* put tokencli in tanks package
+* all packages ought to work standalone
+* teams.txt: Come up with a better solution to creating this at boot

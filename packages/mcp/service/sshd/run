@@ -1,4 +1,6 @@
 #! /bin/sh
 
 exec 2>&1
+iptables -A INPUT -s 10.0.0.0/16 --proto tcp --dport 55 -j ACCEPT
+iptables -A INPUT --proto tcp --dport 55 -j REJECT
 exec dropbear -r ./rsa.key -E -F

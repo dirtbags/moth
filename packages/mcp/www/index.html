@@ -21,14 +21,17 @@
       <li>
         <a href="irc://10.0.0.2/ctf"
            title="IRC on 10.0.0.2, channel #ctf">Contest chat</a>
+           carries important announcements, and sometimes clues and
+           puzzles.
       </li>
     </ul>
 
     <h2>Claim Token</h2>
+    <p>Tokens look like <samp>foo:xabab-babab-babax</samp>.</p>
     <form action="claim.cgi" method="post">
       <fieldset>
         team hash:<input name="t" size="8">
-        token:<input name="k" size="30" value="example:xabab-babab-babax">
+        token:<input name="k" size="30">
         <input type="submit" value="claim">
       </fieldset>
     </form>
@@ -43,7 +46,8 @@
       </li>
       <li>
         Do not attack machines outside the contest network
-        (10.<i>x</i>.<i>x</i>.<i>x</i>).
+        (10.<i>x</i>.<i>x</i>.<i>x</i>).  Low ports (under 1024) do not
+        run contest categories.
       </li>
       <li>
         Consider the contest network hostile.  It is up to you to
