@@ -1,0 +1,130 @@
+Installing onto a thumb drive
+=============================
+
+This explains how to install Dirtbags Tiny Linux, and then a CTF
+contest, onto a thumb drive.  After you're done, you can continue to use
+the thumb drive as a FAT-formatted storage device with (probably)
+everything that could use it before.
+
+
+Step 1: Partitioning
+--------------------
+
+Using cfdisk, parted, or fdisk, create two partitions on the device.
+Partition 1 should be a bootable FAT16 (type 06), and take most of the
+space.  Partition 2 should be Linux (type 83), and take a smaller amount
+of space: I use around 20MiB.
+
+Here is what my 4G thumb drive looked like in cfdisk after partitioning:
+
+     Name       Flags     Part Type FS Type         [Label]       Size (MB)
+    -----------------------------------------------------------------------
+     sdb1       Boot       Primary  FAT16                           3979.56
+     sdb2                  Primary  Linux                             27.56
+
+
+For the rest of this document, I'll refer to the whole device as $DRIVE,
+the FAT partiton as $FATFS, and the EXT3 partition as $EXTFS.
+
+    # DRIVE=/dev/sdb
+    # FATFS=/dev/sdb1
+    # EXTFS=/dev/sdb2
+
+
+Step 2: File system creation
+----------------------------
+
+The `packages` service of dbtl looks for a filesystem labeled
+"PACKAGES", or whichever device is specified in the "packages=" kernel
+command-line option.  In the interest of simplicity, we'll just go with
+"PACKAGES".  This will get mounted under /mnt/packages.
+
+    # mkdosfs -n PACKAGES $FATFS
+
+The second partition will be used for persistent storage: things like
+scores, what puzzles have been solved, and tank history.  The packages
+service mounts the filesystem labeled "VAR", or the "var=" kernel
+option, will be mounted under `/var`.  We'll make this a journalled
+filesystem to better handle nastiness.
+
+    # mke2fs -j -L VAR $EXTFS
+
+You can use `blkid` to check that things worked properly:
+
+    # blkid
+    ...
+    /dev/sdb1: LABEL="PACKAGES" UUID="0A17-A576" TYPE="vfat" 
+    /dev/sdb2: LABEL="VAR" UUID="ae019f2b-d00a-4b19-803b-3d1c1fb47765" SEC_TYPE="ext2" TYPE="ext3" 
+
+Note: if dbtl can't mount /var, it uses a tmpfs.
+
+
+
+Step 3: Making it boot
+----------------------
+
+I use a boot loader called "syslinux" to boot the kernel.  It reads its
+configuration file, kernel image, and initrd, off of a FAT.
+
+First, you need a MBR:
+
+    # cat /usr/lib/syslinux/mbr.bin > $DRIVE
+
+Next, set up syslinux.  I like to make syslinux put all its bits in the
+`/syslinux` directory, to keep the root clean.
+
+    # mount $FATFS /mnt/b
+    # mkdir /mnt/b/syslinux
+    # umount /mnt/b
+    # syslinux -d syslinux $FATFS
+
+
+Step 4: Installing Linux
+------------------------
+
+Hopefully you have a dbtl kernel and initrd.  These need to go on the
+FAT.
+
+    # mount $FATFS /mnt/b
+    # cp dbtl.squashfs /mnt/b/syslinux/
+    # cp bzImage /mnt/b/syslinux/
+
+
+Step 5: Telling syslinux what to boot
+-------------------------------------
+
+Syslinux looks for a file called `syslinux.cfg` for its instructions.
+Feel free to make it as spiffy as you like.  For instance, I carry
+around a thumb drive with boot options for bare DBTL, DBTL with CTF, and
+a Debian installer.
+
+This is the minimum configuration needed to boot our contest.
+
+    # cat <<EOD >/mnt/b/syslinux/syslinux.cfg
+    > DEFAULT ctf
+    > LABEL ctf
+    >   KERNEL bzImage
+    >   INITRD dbtl.squashfs
+    > EOD
+
+
+Step 5: Installing packages
+---------------------------
+
+Finally, you need to tell it what packages to load.  The set of packages
+determines the "personality" of the image.  If you need help picking
+packages, talk to me.
+
+In this guide we'll just install everything.
+
+    # cp *.pkg /mnt/b
+
+
+Step 6: Clean up
+----------------
+
+Unmount the volume and you're good to go!
+
+    # umount /mnt/b
+
+   

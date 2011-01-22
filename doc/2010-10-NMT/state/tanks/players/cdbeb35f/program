@@ -1,0 +1,20 @@
+95 100 set-speed!                                          ( DEFAULT ROAM )
+1 sensor? { -100 100 set-speed! } if                       ( LEFT TARGET DETECT )
+2 sensor? { 100 -100 set-speed! } if                       ( RIGHT TARGET DETECT )
+3 sensor? { 100 100 set-speed! } if                        ( FORWARD TARGET DETECT )
+3 sensor? fire-ready? ! & { -100 -100 set-speed! } if      ( FORWARD THREAT DETECT )
+1 sensor? fire-ready? ! & { 100 -100 set-speed! } if       ( LEFT THREAT DETECT )
+2 sensor? fire-ready? ! & { -100 100 set-speed! } if       ( RIGHT THREAT DETECT )
+9 sensor? fire-ready? ! & { 100 100 set-speed! } if        ( REAR THREAT DETECT )
+0 sensor? { -100 -100 set-speed! } if                      ( FORWARD COLLISION DETECT )
+
+0 set-turret!
+5 sensor? 4 sensor? ! & { get-turret 3 - set-turret! } if                ( TARGET FINE LEFT )
+6 sensor? 4 sensor? ! & { get-turret 3 + set-turret! } if                ( TARGET FINE RIGHT )
+7 sensor? 4 sensor? ! & { get-turret 12 - set-turret! } if               ( TARGET COARSE LEFT )
+8 sensor? 4 sensor? ! & { get-turret 12 + set-turret! } if               ( TARGET COARSE RIGHT )
+4 sensor? { get-turret set-turret! } if                    ( LOCK TURRET WHEN FIRING )
+4 sensor? { fire! } if                                     ( TARGET IN RANGE )
+
+0 set-led!                                                 ( TRACKING LIGHT DEFAULT )
+1 sensor? 2 sensor? | { 1 set-led! } if                    ( TRACKING LIGHT ON )
