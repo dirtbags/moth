@@ -23,7 +23,7 @@ arc4_init(struct arc4_ctx *ctx, uint8_t const *key, size_t keylen)
 }
 
 uint8_t
-arc4_pad(struct arc4_ctx *ctx)
+arc4_out(struct arc4_ctx *ctx)
 {
   ctx->i = (ctx->i + 1) % 256;
   ctx->j = (ctx->j + ctx->S[ctx->i]) % 256;
@@ -33,17 +33,17 @@ arc4_pad(struct arc4_ctx *ctx)
 
 void
 arc4_crypt(struct arc4_ctx *ctx,
-           uint8_t *obuf, uint8_t const *ibuf, size_t buflen)
+           uint8_t *obuf, const uint8_t *ibuf, size_t buflen)
 {
   size_t k;
 
   for (k = 0; k < buflen; k += 1) {
-    obuf[k] = ibuf[k] ^ arc4_pad(ctx);
+    obuf[k] = ibuf[k] ^ arc4_out(ctx);
   }
 }
 
 void
-arc4_crypt_buffer(uint8_t const *key, size_t keylen,
+arc4_crypt_buffer(const uint8_t *key, size_t keylen,
                   uint8_t *buf, size_t buflen)
 {
   struct arc4_ctx ctx;
