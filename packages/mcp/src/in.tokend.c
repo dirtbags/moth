@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
@@ -10,8 +11,35 @@
 #include <string.h>
 #include <ctype.h>
 #include <sysexits.h>
+#include <dirent.h>
 #include "common.h"
 #include "arc4.h"
+
+void
+list_teams()
+{
+  struct dirent *ent;
+  DIR           *dir;
+
+  dir = opendir(state_path("teams/names"));
+  if (! dir) return;
+  while ((ent = readdir(dir))) {
+    struct stat buf;
+
+    if ((0 == stat(state_path("teams/names/%s", ent->d_name), &buf)) &&
+        (S_ISREG(buf.st_mode))) {
+      uint8_t hash[ARC4_HASHLEN];
+      int i;
+
+      arc4_hash((uint8_t *)ent->d_name, strlen(ent->d_name), hash);
+      for (i=0; i < ARC4_HASHLEN; i += 1) {
+        printf("%02x", hash[i]);
+      }
+      printf("\n");
+    }
+  }
+  closedir(dir);
+}
 
 int
 main(int argc, char *argv[])
@@ -29,10 +57,19 @@ main(int argc, char *argv[])
 
     len = read(0, category, sizeof(category));
     if (0 >= len) return 0;
+
+    /* Category name of "?" lists arc4 hashes of all teams */
+    if ((1 == len) && ('?' == category[0])) {
+      list_teams();
+      return 0;
+    }
+
+    /* Strip invalid characters */
     for (categorylen = 0;
          (categorylen < len) && isalnum(category[categorylen]);
          categorylen += 1);
   }
+
 
   /* Read in that category's key. */
   {

@@ -19,4 +19,4 @@ clean: packages-clean
 scrub: clean
 	rm -rf $(CACHE)
 
-include packages/packages.mk
+-include */*.mk
