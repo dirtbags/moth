@@ -1,10 +1,35 @@
-#include <sys/select.h>
+/** logger.c - generate fake log messages (part of dirtbags CTF)
+ *
+ * Author: Neale Pickett <neale@lanl.gov>
+ *
+ * This software has been authored by an employee or employees of Los
+ * Alamos National Security, LLC, operator of the Los Alamos National
+ * Laboratory (LANL) under Contract No. DE-AC52-06NA25396 with the
+ * U.S. Department of Energy.  The U.S. Government has rights to use,
+ * reproduce, and distribute this software.  The public may copy,
+ * distribute, prepare derivative works and publicly display this
+ * software without charge, provided that this Notice and any statement
+ * of authorship are reproduced on all copies.  Neither the Government
+ * nor LANS makes any warranty, express or implied, or assumes any
+ * liability or responsibility for the use of this software.  If
+ * software is modified to produce derivative works, such modified
+ * software should be clearly marked, so as not to confuse it with the
+ * version available from LANL.
+ */
+
+
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "token.h"
+
+#ifdef STANDALONE
+#  define TOKEN_MAX 50
+#else
+#  include "token.h"
+#  include "arc4.h"
+#endif
 
 #define PID_MAX 32768
 #define QSIZE 200
@@ -27,12 +52,16 @@ read_tokens()
   char    name[40];
 
   for (i = 0; i < sizeof(token)/sizeof(*token); i += 1) {
+#ifdef STANDALONE
+    strcpy(token[i], "logger:xylep-donut-nanox");
+#else
     /* This can't grow beyond 40.  Think about it. */
     sprintf(name, "logger%d", i);
 
     len = read_token(name, key, sizeof(key), token[i], sizeof(token[i]));
     if ((-1 == len) || (len >= sizeof(token[i]))) abort();
     token[i][len] = '\0';
+#endif
   }
 }
 

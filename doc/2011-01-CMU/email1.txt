@@ -1,0 +1,71 @@
+From: The Dirtbags <zephyr@dirtbags.net>
+To: RECIP
+Subject: WIN BIG AT CAPTURE THE FLAG!!!
+Message-ID: <cG9zdGVyczp4YW5hZC1wb2xveA==@dirtbags.net>
+MIME-Version: 1.0
+Content-type: multipart/alternative; boundary=eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA
+X-Face: '8$#2%$m/.;29z5"5"/
+
+There are 5 tokens hidden in this message.  Can you find them all?
+
+--eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA
+Content-type: text/plain; charset=UTF-8
+
+CTF starts TOMORROW!  Do you have sufficient stores of Mountain Dew?
+
+This is CMU's first ever CTF, so please be ready for a couple of
+hiccups.  Likewise, we expect you to be totally lost for a while, as you
+get your bearings.  While we tried to cover everything in the
+registration web page, here are some points worth repeating:
+
+Your machine really ought to have netcat and nmap, and whatever
+programming language(s) you prefer.  An Ubuntu live CD has, at past
+contests, not been sufficient.  It's also a good idea to make sure your
+computer works before you show up.  Time is precious, don't spend yours
+installing an operating system.
+
+We will have a switch at each table with gobs of ports, but you should
+bring your own network cable.  We will *not* provide an Internet
+connection, so figure out now how you're going to get onto the Internet
+(you will need it).
+
+If you have any questions, or would just like to hang out and shoot the
+breeze, feel free to hop on IRC (server woozle.org, channel #ctf).
+
+We hope you have as much fun playing this as we're going to have
+watching you work!
+
+The Dirtbags
+
+PS: are you aware of how much data can be hidden in a single email?
+--eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA
+Content-type: text/html; charset=UTF-8
+
+<p>CTF starts TOMORROW!  Do you have sufficient stores of Mountain Dew?</p>
+
+<p>This is CMU's first ever CTF, so please be ready for a couple of
+hiccups.  Likewise, we expect you to be totally lost for a while, as you
+get your bearings.  While we tried to cover everything in the
+registration web page, here are some points worth repeating:</p>
+
+<p>Your machine really ought to have netcat and nmap, and whatever
+programming language(s) you prefer.  An Ubuntu live CD has, at past
+contests, not been sufficient.  It's also a good idea to make sure your
+computer works before you show up.  Time is precious, don't spend yours
+installing an operating system.</p>
+
+<p>We will have a switch at each table with gobs of ports, but you should
+bring your own network cable.  We will *not* provide an Internet
+connection, so figure out now how you're going to get onto the Internet
+(you will need it).</p>
+
+<p>If you have any questions, or would just like to hang out and shoot the
+breeze, feel free to hop on IRC (server woozle.org, channel #ctf).</p>
+
+<p>We hope you have as much fun playing this as we're going to have
+watching you work!</p>
+
+<p><a href="http://dirtbags.net/#have_you_examined_the_email_closely?">The Dirtbags</a></p>
+--eJwryC8uSS0qtqpIzc1P1i3OT86vAABObgfA--
+
+cbfgref:krzbp-fbpbk

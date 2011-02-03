@@ -1,5 +1,9 @@
 #! /bin/sh -e
 
+# Configure IP address
+IP=$(cat ip.txt)
+ip addr add $IP dev eth0
+
 # Set up chroot environment
 # We never umount any of this since it's all just in RAM
 mkdir -p /mnt/pwnables-root

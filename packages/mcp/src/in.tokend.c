@@ -14,6 +14,7 @@
 #include <dirent.h>
 #include "common.h"
 #include "arc4.h"
+#include "md5.h"
 
 void
 list_teams()
@@ -28,14 +29,11 @@ list_teams()
 
     if ((0 == stat(state_path("teams/names/%s", ent->d_name), &buf)) &&
         (S_ISREG(buf.st_mode))) {
-      uint8_t hash[ARC4_HASHLEN];
-      int i;
+      char digest[MD5_HEXDIGEST_LEN + 1];
 
-      arc4_hash((uint8_t *)ent->d_name, strlen(ent->d_name), hash);
-      for (i=0; i < ARC4_HASHLEN; i += 1) {
-        printf("%02x", hash[i]);
-      }
-      printf("\n");
+      md5_hexdigest((uint8_t *)ent->d_name, strlen(ent->d_name), digest);
+      digest[MD5_HEXDIGEST_LEN] = '\n';
+      write(1, digest, sizeof(digest));
     }
   }
   closedir(dir);

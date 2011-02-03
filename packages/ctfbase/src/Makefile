@@ -1,6 +1,7 @@
 build: tokencli arc4
 
-arc4: arc4.o arc4-main.o
+arc4: arc4.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -DARC4_MAIN -o $@ $<
 
 tokencli: tokencli.o arc4.o
 
