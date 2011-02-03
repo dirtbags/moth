@@ -194,17 +194,17 @@ struct bound_port {
 } bound_ports[PORTS];
 
 int
-bind_port(int fd, uint16_t port) {
+bind_port(struct in_addr *addr, int fd, uint16_t port) {
   struct sockaddr_in addr;
 
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_addr.s_addr = *addr;
   return bind(fd, (struct sockaddr *)&addr, sizeof(addr));
 }
 
 int
-rebind()
+rebind(struct in_addr *addr)
 {
   static int offset = 0;
   char       token[200];
@@ -235,7 +235,7 @@ rebind()
     bound_ports[i + offset].fd = socket(PF_INET, SOCK_DGRAM, 0);
     do {
       port = (random() % 56635) + 10000;
-      ret = bind_port(bound_ports[i + offset].fd, port);
+      ret = bind_port(addr, bound_ports[i + offset].fd, port);
     } while (-1 == ret);
 
     /* Set the last guy's port number */
@@ -337,15 +337,25 @@ loop()
 int
 main(int argc, char *argv[])
 {
-  int    ret;
-  int    i;
-  time_t last = time(NULL);
+  int            ret;
+  int            i;
+  time_t         last = time(NULL);
+  struct in_addr addr;
 
   /* The random seed isn't super important here. */
-  srand(8);
+  srand(last);
+
+  if (argc > 1) {
+    if (-1 == inet_aton(argv[1], &addr)) {
+      fprintf(stderr, "invalid address: %s\n", argv[1]);
+      return EX_IOERR;
+    }
+  } else {
+    addr = INADDR_ANY;
+  }
 
   bound_ports[0].fd = socket(PF_INET, SOCK_DGRAM, 0);
-  ret = bind_port(bound_ports[0].fd, 8888);
+  ret = bind_port(&addr, bound_ports[0].fd, 8888);
   if (-1 == ret) {
     perror("bind port 8888");
     return EX_IOERR;
@@ -354,7 +364,7 @@ main(int argc, char *argv[])
   for (i = 1; i < PORTS; i += 1) {
     bound_ports[i].fd = -1;
   }
-  if (-1 == rebind()) {
+  if (-1 == rebind(&addr)) {
     perror("initial binding");
     return EX_IOERR;
   }
@@ -364,7 +374,7 @@ main(int argc, char *argv[])
 
     if (last + 4 < now) {
       last = now;
-      if (-1 == rebind()) break;
+      if (-1 == rebind(&addr)) break;
     }
   }
 
