@@ -2,7 +2,7 @@
 
 exec 2>&1
 
-ip addr add 10.0.0.2/24 dev eth0
+ip addr add 10.0.0.2/24 label eth0:mcp dev eth0
 
 DB=/var/lib/ctf/tokens.db
 

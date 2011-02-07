@@ -1,6 +1,7 @@
 #! /bin/sh
 
 while true; do
+    # Get new tokens
     for dn in /opt/*/tokens/*; do
         [ -d $dn ] || continue
         puzzle=$(basename $dn)
@@ -9,5 +10,16 @@ while true; do
             -e /opt/tokens/bin/tokencli $category $dn/category.key 3>&1 | \
             /opt/tokens/bin/arc4 $dn/enc.key > /var/lib/ctf/tokens/$puzzle
     done
+
+    # Fetch list of teams
+    wget -q -P /var/lib/ctf http://10.0.0.2/teams.txt &
+
+    # Archive state
+    state=/var/www/state.tar.gz.rc4
+    tar cf - /var/lib/ctf | \
+        gzip -c | \
+        KEY='crashmaster' arc4 > $state.tmp
+    mv $state.tmp $state
+
     sleep 60
 done
