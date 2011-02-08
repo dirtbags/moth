@@ -28,7 +28,6 @@
 #  define TOKEN_MAX 50
 #else
 #  include "token.h"
-#  include "arc4.h"
 #endif
 
 #define PID_MAX 32768

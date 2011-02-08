@@ -52,19 +52,6 @@ arc4_crypt_buffer(const uint8_t *key, size_t keylen,
   arc4_crypt(&ctx, buf, buf, buflen);
 }
 
-void
-arc4_hash(uint8_t const *buf, size_t buflen,
-          uint8_t *hash)
-{
-  struct arc4_ctx ctx;
-  int             i;
-
-  arc4_init(&ctx, buf, buflen);
-  for (i = 0; i < ARC4_HASHLEN; i += 1) {
-    hash[i] = arc4_out(&ctx);
-  }
-}
-
 
 #ifdef ARC4_MAIN
 

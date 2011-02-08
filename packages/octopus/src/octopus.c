@@ -195,12 +195,12 @@ struct bound_port {
 
 int
 bind_port(struct in_addr *addr, int fd, uint16_t port) {
-  struct sockaddr_in addr;
+  struct sockaddr_in saddr;
 
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = *addr;
-  return bind(fd, (struct sockaddr *)&addr, sizeof(addr));
+  saddr.sin_family = AF_INET;
+  saddr.sin_port = htons(port);
+  memcpy(&saddr.sin_addr.s_addr, addr, sizeof(struct in_addr));
+  return bind(fd, (struct sockaddr *)&saddr, sizeof(saddr));
 }
 
 int
@@ -351,7 +351,7 @@ main(int argc, char *argv[])
       return EX_IOERR;
     }
   } else {
-    addr = INADDR_ANY;
+    addr.s_addr = INADDR_ANY;
   }
 
   bound_ports[0].fd = socket(PF_INET, SOCK_DGRAM, 0);

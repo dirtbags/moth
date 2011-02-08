@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define ARC4_HASHLEN 16
-
 struct arc4_ctx {
   uint8_t S[256];
   uint8_t i;
