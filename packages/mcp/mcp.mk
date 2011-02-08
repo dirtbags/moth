@@ -6,9 +6,7 @@ mcp-install: mcp-build
 	$(call COPYTREE, packages/mcp/bin, $(MCP_PKGDIR)/bin)
 	cp packages/mcp/src/in.tokend $(MCP_PKGDIR)/bin/
 	cp packages/mcp/src/pointscli $(MCP_PKGDIR)/bin/
-	cp packages/mcp/src/tokencli $(MCP_PKGDIR)/bin/
 	cp packages/mcp/src/puzzles.cgi $(MCP_PKGDIR)/bin/
-	cp packages/mcp/src/arc4 $(MCP_PKGDIR)/bin/
 
 	$(call COPYTREE, packages/mcp/service, $(MCP_PKGDIR)/service)
 
