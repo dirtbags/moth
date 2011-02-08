@@ -1,0 +1,12 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+# Set up networking for all CTF ip
+ip link set eth0 up
+if ! ip route | grep -q default; then
+    ip route add default via 10.0.0.1 || exit 1
+fi
+
+install -o root -m 0755 -d /var/lib/ctf/tokens
+exec ./ctfd

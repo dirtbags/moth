@@ -1,0 +1,42 @@
+#! /bin/sh
+
+base=${CTF_BASE:-/var/lib/ctf}
+
+read -p "Team password: " -r teamhash
+
+if ! KEY='Too much cheese.' arc4 < $base/teams.txt | grep -q -F -e "$teamhash"; then
+    echo 'No such team.'
+    exit
+fi
+
+cd $base/rlyeh
+
+if [ -f $teamhash ]; then
+    now=$(date +%s)
+    ts=$(stat -c %Y $teamhash)
+    d=$(expr $now - $ts)
+    if [ $d -lt 60 ]; then
+        echo 'You are trying to connect too fast.'
+        exit
+    fi
+else
+    echo 0 > $teamhash
+fi
+read level < $teamhash
+
+(
+    if ! flock -n 8; then
+        echo 'Your team is already logged in.'
+        exit
+    fi
+
+    echo "Your team is on level $level."
+    echo
+
+    if ./rlyeh $level; then
+        echo "10 points for Gryffindor!"
+        expr $level + 1 > $teamhash
+    else
+	touch $teamhash
+    fi
+) 8<$teamhash

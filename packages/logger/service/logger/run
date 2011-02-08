@@ -1,4 +1,6 @@
-#! /bin/sh
+#! /bin/sh -e
 
 exec 2>&1
-exec tcpsvd 0 4104 /opt/logger/bin/logger
+IP=$(cat ip.txt)
+ip addr add $IP label eth0:logger dev eth0
+exec tcpsvd ${IP#/*} 1958 /opt/logger/bin/logger
