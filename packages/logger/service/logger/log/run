@@ -1,4 +1,3 @@
 #! /bin/sh
 
-# I'm sorry this is confusing.
-exec logger -t logger
+exec svlogd -tt $PWD

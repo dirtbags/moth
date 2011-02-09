@@ -1,4 +1,6 @@
-#! /bin/sh
+#! /bin/sh -e
+
+PATH=/bin:/opt/ctfbase/bin; export PATH
 
 while true; do
     # Get new tokens
@@ -7,8 +9,8 @@ while true; do
         puzzle=$(basename $dn)
         category=$(cat $dn/category)
         busybox nc 10.0.0.2 1 \
-            -e /opt/tokens/bin/tokencli $category $dn/category.key 3>&1 | \
-            /opt/tokens/bin/arc4 $dn/enc.key > /var/lib/ctf/tokens/$puzzle
+            -e tokencli $category $dn/category.key 3>&1 | \
+            arc4 $dn/enc.key > /var/lib/ctf/tokens/$puzzle
     done
 
     # Fetch list of teams
