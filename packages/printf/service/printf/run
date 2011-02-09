@@ -11,4 +11,4 @@ ip addr add $IP label eth0:printf dev eth0
 # And he says, "how about 9001, because that's bigger than 9000"
 # Okay.
 
-exec tcpsvd ${IP#/*} 9001 ./run-printf
+exec tcpsvd ${IP%/*} 9001 ./run-printf

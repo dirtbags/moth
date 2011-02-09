@@ -1,5 +1,7 @@
 #! /bin/sh -e
 
+PATH=/bin:/opt/ctfbase/bin
+
 if [ $# -ne 1 ]; then
     echo "Usage: $0 TEAM" 1>&2
     exit 64
@@ -51,5 +53,5 @@ echo "$color" > $base/teams/colors/$hash
 echo "Registered with hash: $hash"
 
 # Create encrypted listing of teams
-ls $base/teams/names | KEY="Too much cheese." /opt/mcp/bin/arc4 > $www/teams.txt.$$
+ls $base/teams/names | KEY="Too much cheese." arc4 > $www/teams.txt.$$
 mv $www/teams.txt.$$ $www/teams.txt

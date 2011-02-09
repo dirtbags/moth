@@ -39,4 +39,4 @@ for puzzle in gimmie ltraceme straceme killme; do
     ln -sf /mnt/pwnables-root/var/lib/ctf/tokens/$puzzle /var/lib/ctf/tokens/$puzzle
 done
 
-exec tcpsvd -C 5:"Let's not be greedy" 0 23 /sbin/telnetd -l ./pwnie
+exec tcpsvd -C 5:"Let's not be greedy" ${IP%/*} 23 /sbin/telnetd -l ./pwnie

@@ -2,4 +2,4 @@
 
 IP=$(cat ../octopus/ip.txt)
 sv s octopus >/dev/null || exit 1
-exec tcpsvd ${IP#/*} 8888 ./octopus-redirect
+exec tcpsvd ${IP%/*} 8888 ./octopus-redirect
