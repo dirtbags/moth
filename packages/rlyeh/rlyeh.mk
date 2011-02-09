@@ -20,6 +20,7 @@ rlyeh-install: rlyeh-build
 	cp $(RLYEH_BUILDDIR)/rlyeh/rlyeh $(RLYEH_PKGDIR)/bin
 
 	$(call COPYTREE, packages/rlyeh/service, $(RLYEH_PKGDIR)/service)
+	$(call COPYTREE, packages/rlyeh/tokens, $(RLYEH_PKGDIR)/tokens)
 
 rlyeh-clean:
 	rm -rf $(RLYEH_BUILDDIR)

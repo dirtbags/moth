@@ -8,7 +8,7 @@ DB=/var/lib/ctf/tokens.db
 
 if [ ! -f $DB ]; then
     # Append any package-provided tokens
-    cat /opt/*/tokens >$DB 2>/dev/null
+    cat /opt/*/tokens.txt >$DB 2>/dev/null
     chown ctf $DB
 fi
 
