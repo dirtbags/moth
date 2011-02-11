@@ -1,6 +1,6 @@
 #! /bin/sh
 
-if [ "$1" -ne "-f" ]; then
+if [ "$1" != "-f" ]; then
     echo "Usage: $0 -f"
     echo
     echo "Wipes out the current contest.  This operation is not"
