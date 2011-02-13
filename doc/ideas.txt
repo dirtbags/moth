@@ -23,3 +23,12 @@ Capture the Packet
 
 * Jim Meilander could teach a class about Bro
 * Use qemu -net socket,connect=10.0.0.2:5399 for capture the packet
+
+
+From Jed Crandell
+-----------------
+
+* Have password easily read, must determine username with stack
+  examination (like in printf category)
+* Use %600000u%n to write an arbitrary value to a location in
+  stack, then jump to that location somehow.

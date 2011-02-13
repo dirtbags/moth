@@ -47,7 +47,8 @@ char const octopus[] =
    );
 
 const char *friends[8] = {
-  ("Help Olive Octopus visit all 8 of her friends to receive a prize!\n"
+  ("Welcome to Olive Octopus's house!  Olive lives at 00021270.\n"
+   "Help Olive visit all 8 of her friends to receive a prize!\n"
    "Hurry though, things change quickly in the ocean!\n"
    "Next friend: %08o\n"
    "%s"
