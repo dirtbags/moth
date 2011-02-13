@@ -8,5 +8,5 @@ ln -sf summary.html /var/www/tanks/index.html
 
 install -o ctf -d /var/lib/ctf/tanks/players
 
-PATH=/bin:/opt/ctfbase/bin; export PATH
+PATH=/bin:/opt/ctfbase/bin:/opt/tanks/bin; export PATH
 exec ./tanksd

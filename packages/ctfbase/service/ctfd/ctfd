@@ -14,7 +14,10 @@ while true; do
     done
 
     # Fetch list of teams
-    wget -q -P /var/lib/ctf http://10.0.0.2/teams.txt &
+    teams=/var/lib/ctf/teams.txt
+    rm -f $teams.tmp
+    wget -q -O $teams.tmp http://10.0.0.2/teams.txt  && \
+        mv $teams.tmp $teams
 
     # Archive state
     state=/var/www/state.tar.gz.rc4
