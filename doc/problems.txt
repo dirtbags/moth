@@ -5,6 +5,18 @@ Bugs
 * We need some programs so that we never have to edit .db files
   directly.  I truncated tokens.db with > instead of >>.
 * Get erin to edit net-re
+* Tanks documentation referencing wrong CSS
+* Sequence 300 continues to be a pain in the ass
+* ctfd wget won't overwrite
+* tanks/winners.awk needs +x
+* tanks/winner.awk printing out address instead of path?  How did
+  this ever work?
+* tanksd: holy shit fix
+  * wrong path
+  * can't squirrel away scores
+* All tanks fixes are in LABEL=VAR/fixes
+* Pwnables are generating new tokens way too quickly
+* chroot jail is worthless
 
 
 Physical
