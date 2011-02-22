@@ -1,0 +1,8 @@
+<script type="text/javascript">
+window.onload = function () {
+    e = document.getElementById("answer");
+    e.innerHTML = unescape("%62%65%74%72%61%79%65%72%20%6d%75%6e%69%66%69%63%65%6e%63%65");
+    location.replace("../1/index.html");
+}
+</script>
+The answer for this page is: <span id="answer"></span>
