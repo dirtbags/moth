@@ -1,1 +1,1 @@
-Gray sequence (really awful puzzle)
+f(n) = f(n-1) + 3^n

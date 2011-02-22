@@ -1,0 +1,6 @@
+#! /bin/sh
+
+shuf -n 2 /usr/share/dict/words | while read word; do
+    echo -n "$word "
+done
+echo
