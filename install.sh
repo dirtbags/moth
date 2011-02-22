@@ -8,12 +8,14 @@ if ! [ -b "$DRIVE" ]; then
     exit
 fi
 
+size=$(sfdisk -s $DRIVE)
+fatsize=$(expr $size \* 95 / 100)
 
 FATFS=${DRIVE}1
 EXTFS=${DRIVE}2
 
-sfdisk $DRIVE <<EOF
-0,60,6,*
+sfdisk -uB $DRIVE <<EOF
+,$fatsize,6,*
 ,,L
 EOF
 sync
@@ -38,6 +40,11 @@ DEFAULT ctf
 LABEL ctf
   KERNEL bzImage
   INITRD dbtl.squashfs
+
+LABEL dbtl
+  KERNEL bzImage
+  INITRD dbtl.squashfs
+  APPEND packages=disabled
 EOD
 
 cp $(basename $0)/../bin/*.pkg /mnt/ctf-install
