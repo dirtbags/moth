@@ -1,12 +1,10 @@
+No more blanks!  From now on you must use techniques from previous
+puzzles to resequence the answer.
+
     00000000  00 5e 03 6f 72 73 00 57  04 72 6f 63 61 00 56 05  |.^.ors.W.roca.V.|
     00000010  72 65 63 69 70 00 5d 05  63 61 76 61 74 00 5b 01  |recip.].cavat.[.|
     00000020  73 00 5c 05 69 74 20 65  78 00 59 05 69 6f 6e 20  |s.\.it ex.Y.ion |
     00000030  64 00 54 02 65 64 00 5a  03 65 70 6f 00 58 01 74  |d.T.ed.Z.epo.X.t|
     00000040  00 53 05 74 6f 64 64 6c  00 55 01 20              |.S.toddl.U. |
     0000004c
-
-
-    ________________________________________
-    ^                                    ^
-    83                                   94
 

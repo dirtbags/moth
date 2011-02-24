@@ -267,7 +267,7 @@ fgrepx(char const *needle, char const *filename)
         break;
       } else if (EOF == c) {    /* End of file */
         break;
-      } else if (('\0' == p) || (*p != c)) {
+      } else if (('\0' == p) || (*p != (char)c)) {
         p = needle;
         /* Discard the rest of the line */
         do {
