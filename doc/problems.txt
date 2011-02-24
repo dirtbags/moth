@@ -1,12 +1,7 @@
 Bugs
 ====
 
-* We need some programs so that we never have to edit .db files
-  directly.  I truncated tokens.db with > instead of >>.
-* Get erin to edit net-re
 * Tanks documentation referencing wrong CSS
-* Sequence 300 continues to be a pain in the ass
-* ctfd wget won't overwrite
 * tanks/winners.awk needs +x
 * tanks/winner.awk printing out address instead of path?  How did
   this ever work?
@@ -24,11 +19,6 @@ Physical
 * We should buy a longer VGA cable
 * Tape!
 
-
-
-Possibly fixed
---------------
-* sequence 300; puzzler isn't taking the unicode character right
 
 
 Won't fix
