@@ -576,6 +576,7 @@ Bb.commands = {
 Wopr = Host:new("wopr", "WOPR%")
 Wopr.history = {
    'subsys comm',
+   'wopr:xopev-zihuk-hubyx',
    'exit',
    'subsys comm',
    'bb',
