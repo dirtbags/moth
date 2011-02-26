@@ -3,8 +3,6 @@
 START=45
 STOP=89
 
-VLANS=48
-
 start () {
     stop
 
