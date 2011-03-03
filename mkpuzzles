@@ -85,10 +85,10 @@ for dn in $indir/[0-9]*; do
                     ;;
                 ,*)
                 # Copy but don't list
-                    cp $fn $tgt/
+                    ln -f $fn $tgt/
                     ;;
                 *)
-                    cp $fn $tgt/
+                    ln -f $fn $tgt/
                     files="$files $(basename $fn)"
                     ;;
             esac

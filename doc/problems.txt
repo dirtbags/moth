@@ -1,14 +1,6 @@
 Bugs
 ====
 
-* Tanks documentation referencing wrong CSS
-* tanks/winners.awk needs +x
-* tanks/winner.awk printing out address instead of path?  How did
-  this ever work?
-* tanksd: holy shit fix
-  * wrong path
-  * can't squirrel away scores
-* All tanks fixes are in LABEL=VAR/fixes
 * Pwnables are generating new tokens way too quickly
 * chroot jail isn't secure under Linux (see man page)
 
@@ -16,9 +8,7 @@ Bugs
 Physical
 --------
 
-* We should buy a longer VGA cable
 * Tape!
-
 
 
 Won't fix
