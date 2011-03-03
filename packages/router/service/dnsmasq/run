@@ -1,0 +1,12 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+mkdir -p /var/lib/misc
+
+exec /opt/router/sbin/dnsmasq \
+    --keep-in-foreground \
+    --conf-file=dnsmasq.conf \
+    --pid-file= \
+    --log-facility=/dev/stdout
+
