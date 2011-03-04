@@ -8,5 +8,5 @@ exec /opt/router/sbin/dnsmasq \
     --keep-in-foreground \
     --conf-file=dnsmasq.conf \
     --pid-file= \
-    --log-facility=/dev/stdout
+    --log-facility=/proc/self/fd/1
 
