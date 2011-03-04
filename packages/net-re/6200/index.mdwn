@@ -1,0 +1,34 @@
+Substitution Boxes
+==================
+
+As previously mentioned, we can use operations other than XOR to 'encrypt' our data. Substitution Boxes, or S-Boxes, are used as a step in many block ciphers, including AES, Blowfish, and DES. S-Boxes are trivial to implement in both high level languages and assembly (it's just an array). 
+
+Here's an example 4 bit S-Box:
+
+        | 00 | 01 | 10 | 11
+    ------------------------
+     00 | 1  | a  | c  | 0
+    ------------------------
+     01 | b  | 3  | 2  | 7
+    ------------------------
+     10 | 5  | 6  | 4  | 9
+    ------------------------
+     11 | 8  | f  | e  | d
+
+Two input bits select the column, two input bits select the row. The resulting value is the output. To reverse the process, we must invert the S-Box such that the output values produce the input values. You would also need to know which bits of input selected the column and which selected the row.
+
+There isn't a key involved in the S-Box, other than the arrangement of values in the box. Both the input values are data to be encoded. In some algorithms, like AES, the S-Box is a constant, and the key is involved at other steps in the process. In other cases, like BlowFish, the key is used to generate the sbox itself.
+
+To unravel an S-Box, you really need to know what the values contained in it actually are. To get the values, you may have to have a malware reverse engineer poke around in the binary. S-Boxes vary in size, but are commonly 16x16, using the upper four bits in a character to index the row, and the lower 4 bits for the column. Look for a chunk of data 256 bytes long that doesn't contain any repeated values.
+
+Is it likely that you'll find this method actually being used? I hope so, since it's actually solvable. Instead you may find an Sbox associated with a commonly used crypto system such as AES, which would at least tell you the algorithm being used. That's solvable too, but you'll have to acquire the actual AES key!
+
+The problem
+===========
+
+Working with a reverse engineer, you determined that the packets in the following pcap were encrypted using an Sbox in ECB mode. You even found the arrangement of the sbox in the malware.
+
+The Key
+=======
+
+The key is the title of the book that was sent.

@@ -1,0 +1,6 @@
+More Cipher Block Chaining
+==========================
+
+Decrypt the file in the attached pcap.  This is like the prior problem, except this time you don't know the key or initialization vector (IV). The key and IV are each one byte long.
+
+If you're using Windows, [file for Windows](http://gnuwin32.sourceforge.net/packages/file.htm) might be useful.
