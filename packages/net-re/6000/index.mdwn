@@ -1,0 +1,33 @@
+Time to make things difficult
+=============================
+
+So far we've been using xor as a tool to combine a message with a key to obfuscate a message. There's another word for what we've been doing: Cryptography.
+
+The xor operation can be thought of as a trivial cryptographic cypher. It can be replaced with a wide variety of other operations, some of which we'll consider in the next few exercizes. 
+
+First though, we should consider how we've been using this cypher. In cryptography terms, we've been using it in Electronic Codebook Mode (ECB). ECB mode takes the plaintext and key as inputs to an encryption method and produces a cooresponding cyphertext. Given the same plaintext and key, the same cypher text will always result. This property has been key to figuring out many of the previous puzzles, and we're about to throw it out.
+
+![Electronic Code Book](ECB.png)
+
+Cipher Block Chaining
+=====================
+
+![Cipher Block Chaining](CBC.png)
+
+Cipher block chaining is the most commonly used mode when encrypting data with an encryption algorithm. Unlike ECB mode, the resulting cyphertext at each step is dependent upon all the cypher text values that preceeded it. In the first step there is no preceding cypher text to rely on, so instead an initialization vector is used. It forms, in essence a secondary key.
+
+![Cipher Block Chaining Decryption](CBC_decrypt.png)
+
+Other Modes
+===========
+
+There are several other modes used with crypto algorithms that we won't be covering here. The wikipedia page on block cypher modes is a good resource in this regard. 
+
+The only thing that bears mentioning in regards to the other modes is that a couple of them (Output FeedBack and Cipher Feedback) allow for encryption functions that are not reversible, as long as they are replayable. The ciphers only act as key factories for each step in the encryption process, so we only need to get them to reproduce the keys. You can essentially use any operation as the cipher in this case: addition, complicated bit logic, or even a random number generator.
+
+The problem
+===========
+
+Decrypt the following using CBC mode with 'xor' as the encryption algorithm, 0x5Ae2 as a two byte key, and 0x3a21 as an initialization vector (You'll be encrypting to bytes at a time):
+
+08 a6 3e 28 0b ea 32 7a 11 e8 3f 65 44
