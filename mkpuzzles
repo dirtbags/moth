@@ -98,7 +98,7 @@ for dn in $indir/[0-9]*; do
     # Append keys 
     if [ -f $dn/key ]; then
         while read answer; do
-            echo $points $answer >> $uanswers
+            [ -n "$answer" ] && echo $points $answer >> $uanswers
         done < $dn/key
     else
         echo "$dn/key: No such file or directory" 1>&2

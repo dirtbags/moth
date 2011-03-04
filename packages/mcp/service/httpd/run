@@ -14,5 +14,11 @@ for d in /opt/*; do
     fi
 done
 
-exec mathopd -n -f ./mathopd.conf
-
+cd /var/www
+exec thttpd -D \
+    -h 10.0.0.2 \
+    -c "**.cgi" \
+    -u ctf \
+    -l /proc/self/fd/1 \
+    -T UTF-8 \
+    -nos
