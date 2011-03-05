@@ -9,12 +9,12 @@ if ! [ -b "$DRIVE" ]; then
 fi
 
 size=$(sfdisk -s $DRIVE)
-fatsize=$(expr $size \* 95 / 100)
+fatsize=$(sfdisk -l /dev/sdb | awk '/^Disk/ {print $3 - 2;}')
 
 FATFS=${DRIVE}1
 EXTFS=${DRIVE}2
 
-sfdisk -uB $DRIVE <<EOF
+sfdisk $DRIVE <<EOF
 ,$fatsize,6,*
 ,,L
 EOF
@@ -25,9 +25,9 @@ mkdir -p /mnt/ctf-install
 mkdosfs -n PACKAGES $FATFS
 mke2fs -j -L VAR $EXTFS
 
-cat mbr.bin > $DRIVE
+cat /usr/lib/syslinux/mbr.bin > $DRIVE
 mount $FATFS /mnt/ctf-install
-mkdir /mnt/ctf-install/syslinux
+mkdir /mnt/ctf-install/syslinux /mnt/ctf-install/disabled
 umount /mnt/ctf-install
 syslinux -d syslinux $FATFS
 
@@ -47,7 +47,8 @@ LABEL dbtl
   APPEND packages=disabled
 EOD
 
-cp $(basename $0)/../bin/*.pkg /mnt/ctf-install
+cp $(dirname $0)/bin/*.pkg /mnt/ctf-install/disabled/
+mv /mnt/ctf-install/disabled/ctfbase.pkg /mnt/ctf-install/
 umount /mnt/ctf-install
 rmdir /mnt/ctf-install
 
