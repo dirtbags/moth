@@ -67,6 +67,7 @@ for dn in $indir/[0-9]*; do
 
     tgt=$outdir/puzzles/$points
     mkdir -p $tgt
+    touch $tgt/index.html
 
     if [ -f $dn/Makefile ]; then
         # If there's a makefile, run make

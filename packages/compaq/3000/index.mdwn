@@ -1,0 +1,8 @@
+You have found a virus on one of your customers computers. To answer this question,
+you will need to reverse engineer it and find out information about the sample.
+
+The MD5 for this sample is ec7be21bd697050d119c9f9df0fb6450
+
+What is the original entry point for the worm after the unpacking process?
+
+Assume a normal address layout with the program being loaded with an ImageBase of 400000.
