@@ -98,9 +98,7 @@ for dn in $indir/[0-9]*; do
 
     # Append keys 
     if [ -f $dn/key ]; then
-        while read answer; do
-            [ -n "$answer" ] && echo $points $answer >> $uanswers
-        done < $dn/key
+        awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/key >> $uanswers
     else
         echo "$dn/key: No such file or directory" 1>&2
         exit 1
@@ -108,9 +106,7 @@ for dn in $indir/[0-9]*; do
 
     # Append summary
     if [ -f $dn/summary ]; then
-        while read line; do
-            echo $points $line >> $usummary
-        done < $dn/summary
+        awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/summary >> $usummary
     fi
 
     # Generate index now that we have a list of files
