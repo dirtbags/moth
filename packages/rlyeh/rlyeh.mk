@@ -1,10 +1,14 @@
 RLYEH_PKGDIR = $(TARGET)/rlyeh
 RLYEH_BUILDDIR = $(BUILD)/rlyeh
+RLYEH_CACHE = $(CACHE)/rlyeh.git
 RLYEH_URL = "http://woozle.org/~neale/projects/rlyeh"
 
+$(RLYEH_CACHE):
+	git clone --bare $(RLYEH_URL) $@
+
 rlyeh-source: $(RLYEH_BUILDDIR)
-$(RLYEH_BUILDDIR):
-	git clone $(RLYEH_URL) $@
+$(RLYEH_BUILDDIR): $(RLYEH_CACHE)
+	git clone $< $@
 
 rlyeh-build: rlyeh-source
 	$(MAKE) -C $(RLYEH_BUILDDIR)

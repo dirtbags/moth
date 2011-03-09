@@ -8,6 +8,7 @@ wopr-install: packages/wopr/tokens.txt
 	cp packages/wopr/tokens.txt $(WOPR_PKGDIR)/
 
 	$(call COPYTREE, packages/wopr/www, $(WOPR_PKGDIR)/www)
+	$(call COPYTREE, packages/wopr/service, $(WOPR_PKGDIR)/service)
 
 wopr-clean:
 

@@ -94,7 +94,7 @@ do
    for i = 1, 4 do
       seed = seed*256 + string.byte(r:read(1))
    end
-   r:close()
+   io.close(r)
    math.randomseed(seed)
 end
 
