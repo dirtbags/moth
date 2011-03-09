@@ -1,0 +1,15 @@
+diff -Naur fnord-1.10-orig//httpd.c fnord-1.10/httpd.c
+--- fnord-1.10-orig//httpd.c	2011-03-08 22:28:18.000000000 -0700
++++ fnord-1.10/httpd.c	2011-03-08 22:31:12.000000000 -0700
+@@ -663,8 +663,9 @@
+ static char* mimetype="text/plain";
+ 
+ static struct mimeentry { const char* name, *type; } mimetab[] = {
+-  { "html",	"text/html" },
+-  { "htm",	"text/html" },
++  { "html",	"text/html; charset=utf-8" },
++  { "htm",	"text/html; charset=utf-8" },
++  { "txt",	"text/plain; charset=utf-8" },
+   { "css",	"text/css" },
+   { "dvi",	"application/x-dvi" },
+   { "ps",	"application/postscript" },

@@ -156,7 +156,7 @@ main(int argc, char *argv[])
       printf("  <dt>%s</dt>\n", cat);
       printf("  <dd>\n");
       for (i = 0; i < ncatpoints; i += 1) {
-        printf("    <a href=\"/%s/%ld\">%ld</a>\n",
+        printf("    <a href=\"/%s/%ld/\">%ld</a>\n",
                cat, catpoints[i], catpoints[i]);
         if (catpoints[i] > maxpoints) break;
       }

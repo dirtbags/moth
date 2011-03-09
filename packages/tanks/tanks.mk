@@ -1,10 +1,14 @@
 TANKS_PKGDIR = $(TARGET)/tanks
+TANKS_CACHE = $(CACHE)/tanks.git
 TANKS_BUILDDIR = $(BUILD)/tanks
 TANKS_URL = "http://woozle.org/~neale/projects/ctanks"
 
+$(TANKS_CACHE):
+	git clone --bare $(TANKS_URL) $@
+
 tanks-source: $(TANKS_BUILDDIR)
-$(TANKS_BUILDDIR):
-	git clone $(TANKS_URL) $@
+$(TANKS_BUILDDIR): $(TANKS_CACHE)
+	git clone $< $@
 
 tanks-build: tanks-source
 	$(MAKE) -C $(TANKS_BUILDDIR)
