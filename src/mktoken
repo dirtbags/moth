@@ -1,0 +1,12 @@
+#! /bin/sh
+
+case "$1" in
+    ""|"-h"|"--help")
+        echo "Usage: $0 CATEGORY [POINTS]"
+        exit
+esac
+
+bb=$(dd bs=1 count=5 if=/dev/urandom 2>/dev/null | ./bubblebabble)
+points=$2${2:+:}
+
+echo $1:$points$bb
