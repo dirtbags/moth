@@ -1,0 +1,53 @@
+Problems with Sandia
+--------------------
+
+* Tighter integration of scoreboard
+* Spell out *exactly* what they can and cannot do:
+  * No posters with offensive text
+  * No machines at tables
+  * No grabbing our network while we're using it
+  * Give them exact network configuration information (they thought I
+    said /24, we needed /16)
+* Specify where they get to project their scoreboard and what color
+  scheme it needs to be, including max luminosity
+* They need to let me know well in advance if they want any links,
+  hosted files, or anything else in our game server
+* Let Kevin know that we need everything planned out in advance and will
+  stubbornly refuse to accommodate any last-minute changes
+* We handled power and network pretty well this year, do that again
+
+
+
+Other problems
+--------------
+
+* We must have 8-foot rounds.  We got 5-foot rounds this year.  Bring
+  measuring tape and tell hotel immediately.
+* Explain tokens even more clearly to vendors
+* Have puzzles explain what format examples should be in
+* TFTP tank submission
+* Interfaces on pwnables are going down
+* Specify how vendors can participate on IRC with ads
+* Provide schedule to hotel well in advance
+* Fewer categories.  20 is too many.
+* Tanks unmatched comment
+* Auto-refreshing tanks page
+* Text announcement system in scoreboard
+* No text to speech announcements, or at least display text as it's
+  being pronounced
+* Have some 4" gaffer tape
+* Classes need to start at the same time every day, danny thinks 9-4:30
+* Go back to five days
+* Have vendors sponsor a social event
+* Pen testing class
+* ltraceme needs to die
+
+
+Bullshit
+--------
+
+* Chash wants a $800 chair
+* Open bar
+* Chash wants a Segway
+* Chash wants a trash can behind the uh the thing.  And a terlet.
+* Nerf weaponry
