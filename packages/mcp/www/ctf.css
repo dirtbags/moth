@@ -1,14 +1,36 @@
 /* green phosphor: #2a4 */
 
-/**** document ****/
-
+/**** Color Scheme ****/
 html {
-    background: #112 url(grunge.png) repeat-x;
+    background: #112 url(smoke.jpg) no-repeat;
+    background-size: contain;
 }
+
+body, h1:first-child:before {
+    color: #ddc;
+}
+
+h1, h2, h3 {
+    color: #1dd;
+}
+
+a {
+    color: #f80;
+}
+
+a:hover {
+    color: #112;
+    background-color: #f80;
+}
+
+.readme, pre {
+    background-color: #333;
+}
+
+/**** document ****/
 
 body {
     font-family: sans-serif;
-    color: #ddc;
     padding: 10px;
     max-width: 700px;
 }
@@ -23,7 +45,6 @@ h1:first-child {
 }
 
 h1:first-child:before {
-    color: #ddc;
     letter-spacing: -0.1em;
     content: "Capture The Flag: ";
 }
@@ -36,27 +57,17 @@ a img {
 
 a {
     text-decoration: underline;
-    color: #84b;
 }
-
-a:hover {
-    color: #2a4;
-    background: #333;
-}
-
 
 h1, h2, h3 {
-    color: #b71;
     letter-spacing: -0.05em;
 }
 
 .readme {
-    background-color: #333;
     margin: 1em;
 }
 
 pre {
-    background-color: #333;
     border: solid #ddc 2px;
     padding: 0.25em;
 }
@@ -121,10 +132,6 @@ nav li + li:before {
     float: right;
     font-size: small;
     text-align: center;
-}
-
-#scoreboard {
-    background: #112;
 }
 
 #scoreboard td {
