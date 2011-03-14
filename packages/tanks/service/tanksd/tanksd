@@ -111,6 +111,8 @@ EOF
         wget -q -s "http://10.0.0.2/claim.cgi?t=$hash&k=$k"
     done
 
+    ln -sf $fn $w/current.html
+
     summary > $w/summary.html.$$
     mv -f $w/summary.html.$$ $w/summary.html
 
