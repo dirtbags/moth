@@ -1,7 +1,7 @@
 #! /bin/sh
 
 port=8888
-host=10.0.0.8
+host=${1:-10.0.0.8}
 
 blooper=$(tempfile)
 trap "rm $blooper" 0

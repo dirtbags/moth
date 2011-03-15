@@ -11,7 +11,6 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include "token.h"
 
 #define OUTPUT_MAX 1024
 #define INPUT_MAX 1024
@@ -19,6 +18,9 @@
 #ifndef max
 #define max(a,b) (((a)>(b))?(a):(b))
 #endif
+
+char token[80];
+size_t tokenlen;
 
 uint8_t const key[] = {0x99, 0x5f, 0xcb, 0xde,
                        0xf9, 0x6d, 0x02, 0xf3,
@@ -47,7 +49,7 @@ char const octopus[] =
    );
 
 const char *friends[8] = {
-  ("Welcome to Olive Octopus's house!  Olive lives at 00021270.\n"
+  ("Welcome to Olive Octopus's house!\n"
    "Help Olive visit all 8 of her friends to receive a prize!\n"
    "Hurry though, things change quickly in the ocean!\n"
    "Next friend: %08o\n"
@@ -208,16 +210,7 @@ int
 rebind(struct in_addr *addr)
 {
   static int offset = 0;
-  char       token[200];
-  size_t     tokenlen;
   int        i;
-
-  tokenlen = read_token("octopus",
-                        key, sizeof(key),
-                        token, sizeof(token));
-  if (-1 == tokenlen) {
-    return -1;
-  }
 
   for (i = 1; i < 8; i += 1) {
     int       ret;
@@ -317,8 +310,6 @@ loop()
     FD_SET(bound_ports[i].fd, &rfds);
   }
 
-  /* Wait forever.  There's no need to switch ports if nobody's doing
-     anything. */
   while (-1 == select(nfds+1, &rfds, NULL, NULL, &timeout)) {
     if (EINTR == errno) {
       continue;
@@ -340,11 +331,12 @@ main(int argc, char *argv[])
 {
   int            ret;
   int            i;
-  time_t         last = time(NULL);
+  time_t         last_bind  = 0;
+  time_t         last_token = 0;
   struct in_addr addr;
 
   /* The random seed isn't super important here. */
-  srand(last);
+  srand(time(NULL));
 
   if (argc > 1) {
     if (-1 == inet_aton(argv[1], &addr)) {
@@ -365,20 +357,26 @@ main(int argc, char *argv[])
   for (i = 1; i < PORTS; i += 1) {
     bound_ports[i].fd = -1;
   }
-  if (-1 == rebind(&addr)) {
-    perror("initial binding");
-    return EX_IOERR;
-  }
 
-  while (loop()) {
+  do {
     time_t now = time(NULL);
 
-    if (last + 4 < now) {
-      last = now;
+    if (last_token + 60 < now) {
+      last_token = now;
+      while (NULL == fgets(token, sizeof(token), stdin)) {
+        if (-1 == fseek(stdin, 0, SEEK_SET)) {
+          /* Non-seekable stdin: we're done. */
+          return 0;
+        }
+      }
+      for (tokenlen = 0; token[tokenlen] && (token[tokenlen] != '\n'); tokenlen += 1);
+    }
+
+    if (last_bind + 4 < now) {
+      last_bind = now;
       if (-1 == rebind(&addr)) break;
     }
-  }
+  } while (loop());
 
-  perror("main loop");
-  return EX_IOERR;
+  return 0;
 }

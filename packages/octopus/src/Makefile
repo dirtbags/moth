@@ -3,7 +3,7 @@
 
 build: octopus
 
-octopus: octopus.o token.o
+octopus: octopus.o
 
 clean:
 	rm -f octopus *.o
