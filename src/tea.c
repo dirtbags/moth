@@ -17,26 +17,39 @@
 #define min(a,b) (((a)<(b))?(a):(b))
 
 int
-usage(const char *prog)
-{
-  fprintf(stderr, "Usage: %s [-e] <PLAINTEXT\n", prog);
-  fprintf(stderr, "\n");
-  fprintf(stderr, "You must pass in a key on fd 3 or in the environment variable KEY.\n");
-  return EX_USAGE;
-}
-
-int
 main(int argc, char *argv[])
 {
-  uint8_t *buf     = NULL;
-  size_t   len     = 0;
+  uint8_t *buf    = NULL;
+  size_t   len    = 0;
   uint32_t key[4] = {0};
+  int      encode = 0;
 
+  /* Parse args */
+  {
+    int opt;
+
+    while ((opt = getopt(argc, argv, "e")) != -1) {
+      switch (opt) {
+        case 'e':
+          encode = 1;
+          break;
+        default:
+          fprintf(stderr, "Usage: %s [-e] <PLAINTEXT\n", argv[0]);
+          fprintf(stderr, "\n");
+          fprintf(stderr, "You must pass in a key on fd 3 or in the environment variable KEY.\n");
+          return EX_USAGE;
+      }
+    }
+  }
+
+  /* Read key */
   {
     char *ekey = getenv("KEY");
 
     if (ekey) {
-      memcpy(key, ekey, min(strlen(ekey), sizeof(key)));
+      size_t l = strlen(ekey);
+
+      memcpy(key, ekey, min(l, sizeof(key)));
     } else {
       read(3, key, sizeof(key));
     }

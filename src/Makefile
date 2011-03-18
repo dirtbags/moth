@@ -1,4 +1,4 @@
-TARGETS = bubblebabble arc4
+TARGETS = bubblebabble arc4 tea
 
 all: $(TARGETS)
 
