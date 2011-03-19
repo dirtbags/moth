@@ -1,14 +1,8 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "arc4.h"
-
-#define DUMPf(fmt, args...) fprintf(stderr, "%s:%s:%d " fmt "\n", __FILE__, __FUNCTION__, __LINE__, ##args)
-#define DUMP() DUMPf("")
-#define DUMP_d(v) DUMPf("%s = %d", #v, v)
-#define DUMP_x(v) DUMPf("%s = 0x%x", #v, v)
-#define DUMP_s(v) DUMPf("%s = %s", #v, v)
-#define DUMP_c(v) DUMPf("%s = '%c' (0x%02x)", #v, v, v)
-#define DUMP_p(v) DUMPf("%s = %p", #v, v)
 
 #define swap(a, b) do {uint8_t _swap=a; a=b, b=_swap;} while (0)
 
@@ -50,16 +44,6 @@ arc4_crypt(struct arc4_ctx *ctx,
   }
 }
 
-void
-arc4_crypt_buffer(const uint8_t *key, size_t keylen,
-                  uint8_t *buf, size_t buflen)
-{
-  struct arc4_ctx ctx;
-
-  arc4_init(&ctx, key, keylen);
-  arc4_crypt(&ctx, buf, buf, buflen);
-}
-
 /* Create a nonce as an arc4 stream with key=seed */
 void
 arc4_nonce(uint8_t *nonce, size_t noncelen,
@@ -75,23 +59,134 @@ arc4_nonce(uint8_t *nonce, size_t noncelen,
 }
 
 
-#ifdef ARC4_MAIN
+/***************************************************
+ *
+ * Psuedo Random Number Generation
+ *
+ */
+static struct arc4_ctx prng_ctx;
+static int             prng_initialized = 0;
 
-#include <stdio.h>
-#include <sysexits.h>
-#include <time.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
+void
+arc4_rand_seed(const uint8_t *seed, size_t seedlen)
+{
+  arc4_init(&prng_ctx, seed, seedlen);
+  prng_initialized = 1;
+}
+
+static void
+arc4_rand_autoseed()
+{
+  if (! prng_initialized) {
+    uint8_t  key[ARC4_KEYLEN];
+    FILE    *urandom;
+
+    /* Open /dev/urandom or die trying */
+    urandom = fopen("/dev/urandom", "r");
+    if (! urandom) {
+      perror("Opening /dev/urandom");
+      abort();
+    }
+    setbuf(urandom, NULL);
+    fread(&key, sizeof(key), 1, urandom);
+    fclose(urandom);
+
+    arc4_rand_seed(key, sizeof(key));
+  }
+}
+
+uint8_t
+arc4_rand8()
+{
+  arc4_rand_autoseed();
+  return arc4_out(&prng_ctx);
+}
+
+uint32_t
+arc4_rand32()
+{
+  arc4_rand_autoseed();
+  return ((arc4_out(&prng_ctx) << 0) |
+          (arc4_out(&prng_ctx) << 8) |
+          (arc4_out(&prng_ctx) << 16) |
+          (arc4_out(&prng_ctx) << 24));
+}
+
+/*****************************************
+ *
+ * Stream operations
+ *
+ */
+
+ssize_t
+arc4_encrypt_stream(FILE *out, FILE *in,
+                    const uint8_t *key, size_t keylen)
+{
+  struct arc4_ctx ctx;
+  uint32_t        seed    = arc4_rand32();
+  uint8_t         nonce[ARC4_KEYLEN];
+  ssize_t         written = 0;
+  int             i;
+
+  fwrite("arc4", 4, 1, out);
+  fwrite(&seed, sizeof(seed), 1, out);
+
+  arc4_nonce(nonce, sizeof(nonce), &seed, sizeof(seed));
+  for (i = 0; i < keylen; i += 1) {
+    nonce[i] ^= key[i];
+  }
+  arc4_init(&ctx, nonce, sizeof(nonce));
+
+  while (1) {
+    int c = fgetc(in);
+
+    if (EOF == c) break;
+    fputc((uint8_t)c ^ arc4_out(&ctx), out);
+    written += 1;
+  }
+
+  return written;
+}
 
 int
-usage(const char *prog)
+arc4_decrypt_stream(FILE *out, FILE *in,
+                    const uint8_t *key, size_t keylen)
 {
-  fprintf(stderr, "Usage: %s [-e] <PLAINTEXT\n", prog);
-  fprintf(stderr, "\n");
-  fprintf(stderr, "You must pass in a key on fd 3 or in the environment variable KEY.\n");
-  return EX_USAGE;
+  struct arc4_ctx ctx;
+  uint32_t        seed;
+  uint8_t         nonce[ARC4_KEYLEN];
+  ssize_t         written = 0;
+  char            sig[4];
+  int             i;
+
+  fread(&sig, sizeof(sig), 1, stdin);
+  if (memcmp(sig, "arc4", 4)) {
+    return -1;
+  }
+  fread(&seed, sizeof(seed), 1, stdin);
+
+  arc4_nonce(nonce, sizeof(nonce), &seed, sizeof(seed));
+  for (i = 0; i < keylen; i += 1) {
+    nonce[i] ^= key[i];
+  }
+  arc4_init(&ctx, nonce, sizeof(nonce));
+
+  while (1) {
+    int c = fgetc(in);
+
+    if (EOF == c) break;
+    fputc((uint8_t)c ^ arc4_out(&ctx), out);
+    written += 1;
+  }
+
+  return written;
 }
+
+
+#ifdef ARC4_MAIN
+
+#include <sysexits.h>
+#include <unistd.h>
 
 int
 main(int argc, char *argv[])
@@ -100,7 +195,6 @@ main(int argc, char *argv[])
   uint8_t         key[ARC4_KEYLEN] = {0};
   size_t          keylen;
   uint8_t         nonce[ARC4_KEYLEN];
-  time_t          seed;
   int             i;
 
   /* Read key and initialize context */
@@ -111,48 +205,25 @@ main(int argc, char *argv[])
       keylen = strlen(ekey);
       memcpy(key, ekey, keylen);
     } else {
-      FILE *f = fdopen(3, "r");
-
-      if (NULL == f) {
-        return usage(argv[0]);
-      }
-
-      keylen = fread(key, 1, ARC4_KEYLEN, f);
-      fclose(f);
+      keylen = read(3, key, sizeof(key));
     }
   }
 
-  if (argv[1] && (0 == strcmp(argv[1], "-e"))) {
-    seed = time(NULL) * getpid();
-    fwrite("arc4", 1, 4, stdout);
-    fwrite(&seed, sizeof(seed), 1, stdout);
-  } else if (argv[1]) {
-    return usage(argv[0]);
-  } else {
-    char   sig[4];
-
-    fread(&sig, sizeof(sig), 1, stdin);
-    if (memcmp(sig, "arc4", 4)) {
-      fprintf(stderr, "%s: error: Input is not arc4-encrypted.", argv[0]);
+  if (! argv[1]) {
+    if (-1 == arc4_decrypt_stream(stdout, stdin, key, keylen)) {
+      perror("decrypting");
       return 1;
     }
-    fread(&seed, sizeof(seed), 1, stdin);
-  }
-
-  arc4_nonce(nonce, sizeof(nonce), &seed, sizeof(seed));
-
-  /* Xor key with nonce */
-  for (i = 0; i < sizeof(key); i += 1) {
-    key[i] ^= nonce[i];
-  }
-
-  arc4_init(&ctx, key, sizeof(key));
-
-  while (1) {
-    int c = getchar();
-
-    if (EOF == c) break;
-    putchar(c ^ arc4_out(&ctx));
+  } else if (0 == strcmp(argv[1], "-e")) {
+    if (-1 == arc4_encrypt_stream(stdout, stdin, key, keylen)) {
+      perror("encrypting");
+      return 1;
+    }
+  } else {
+    fprintf(stderr, "Usage: %s [-e] <PLAINTEXT\n", argv[0]);
+    fprintf(stderr, "\n");
+    fprintf(stderr, "You must pass in a key on fd 3 or in the environment variable KEY.\n");
+    return EX_USAGE;
   }
 
   return 0;
