@@ -1,4 +1,7 @@
+#include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <sysexits.h>
 #include "token.h"
 
 uint8_t const key[] = {0x5f, 0x64, 0x13, 0x29,
@@ -9,19 +12,10 @@ uint8_t const key[] = {0x5f, 0x64, 0x13, 0x29,
 int
 main(int argc, char *argv[])
 {
-  char    token[200];
-  ssize_t tokenlen;
-
-  tokenlen = read_token("gimmie",
-                        key, sizeof(key),
-                        token, sizeof(token) - 1);
-  if (-1 == tokenlen) {
-    write(1, "Something is broken\nI can't read my token.\n", 43);
-    return 69;
+  if (-1 == print_token("gimmie", key, sizeof(key))) {
+    fprintf(stderr, "Something is broken; I can't read my token.\n");
+    return EX_UNAVAILABLE;
   }
-
-  token[tokenlen++] = '\n';
-  write(1, token, tokenlen);
 
   return 0;
 }

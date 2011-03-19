@@ -5,7 +5,6 @@ ctfbase-install: ctfbase-build
 
 	$(call COPYTREE, packages/ctfbase/service, $(CTFBASE_PKGDIR)/service)
 
-	cp packages/ctfbase/src/tokencli $(CTFBASE_PKGDIR)/bin/
 	cp packages/ctfbase/src/arc4 $(CTFBASE_PKGDIR)/bin/
 
 ctfbase-clean:
