@@ -1,9 +1,7 @@
-build: tokencli arc4
+build: arc4
 
 arc4: arc4.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -DARC4_MAIN -o $@ $<
-
-tokencli: tokencli.o arc4.o
+arc4: CFLAGS += -DARC4_MAIN
 
 clean:
-	rm -f *.o tokencli arc4
+	rm -f *.o arc4

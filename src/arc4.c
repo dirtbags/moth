@@ -159,11 +159,11 @@ arc4_decrypt_stream(FILE *out, FILE *in,
   char            sig[4];
   int             i;
 
-  fread(&sig, sizeof(sig), 1, stdin);
+  fread(&sig, sizeof(sig), 1, in);
   if (memcmp(sig, "arc4", 4)) {
     return -1;
   }
-  fread(&seed, sizeof(seed), 1, stdin);
+  fread(&seed, sizeof(seed), 1, in);
 
   arc4_nonce(nonce, sizeof(nonce), &seed, sizeof(seed));
   for (i = 0; i < keylen; i += 1) {
@@ -191,11 +191,8 @@ arc4_decrypt_stream(FILE *out, FILE *in,
 int
 main(int argc, char *argv[])
 {
-  struct arc4_ctx ctx;
-  uint8_t         key[ARC4_KEYLEN] = {0};
-  size_t          keylen;
-  uint8_t         nonce[ARC4_KEYLEN];
-  int             i;
+  uint8_t key[ARC4_KEYLEN] = {0};
+  size_t  keylen;
 
   /* Read key and initialize context */
   {
@@ -206,19 +203,20 @@ main(int argc, char *argv[])
       memcpy(key, ekey, keylen);
     } else {
       keylen = read(3, key, sizeof(key));
+      if (-1 == keylen) {
+        fprintf(stderr, "error: must specify key.\n");
+        return 1;
+      }
     }
   }
 
   if (! argv[1]) {
     if (-1 == arc4_decrypt_stream(stdout, stdin, key, keylen)) {
-      perror("decrypting");
+      fprintf(stderr, "error: not an arc4 stream.\n");
       return 1;
     }
   } else if (0 == strcmp(argv[1], "-e")) {
-    if (-1 == arc4_encrypt_stream(stdout, stdin, key, keylen)) {
-      perror("encrypting");
-      return 1;
-    }
+    arc4_encrypt_stream(stdout, stdin, key, keylen);
   } else {
     fprintf(stderr, "Usage: %s [-e] <PLAINTEXT\n", argv[0]);
     fprintf(stderr, "\n");
