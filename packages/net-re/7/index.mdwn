@@ -90,7 +90,7 @@ exactly 4 bits.  Similarly, one octet is 8 bits, and two hex digits.
 Two octets is 16 bits, and four hex digits.
 
     Version: 0x4
-    IHL:     0x4
+    IHL:     0x5
     TOS:     0x00
     Length:  0x003c
     ID:      0x13b3
