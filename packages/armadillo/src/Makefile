@@ -1,12 +1,11 @@
 CFLAGS = -Wall -Werror
-TARGETS = gimmie straceme killme
+TARGETS = gimmie straceme killme dillo
 
 all: build
 
 build: $(TARGETS)
 
 gimmie: gimmie.o token.o arc4.o
-octopus: octopus.o token.o arc4.o
 straceme: straceme.o token.o arc4.o
 killme: killme.o token.o arc4.o
 dillo: dillo.o token.o arc4.o
