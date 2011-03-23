@@ -60,10 +60,10 @@ main(int argc, char *argv[])
     close(fd);
   }
 
-  /* Read in category name from fd 2 (stderr!)
+  /* Read in category name from fd 5
    *
    * echo -n straceme > foo.txt
-   * ./straceme $$ 2< foo.txt
+   * ./straceme $$ 5< foo.txt
    */
   {
     char   cat[50];
@@ -72,22 +72,16 @@ main(int argc, char *argv[])
     size_t tokenlen;
     int    i;
 
-    catlen = read(2, cat, sizeof(cat) - 1);
+    catlen = read(5, cat, sizeof(cat) - 1);
     for (i = 0; i < catlen; i += 1) {
       if (! isalnum(cat[i])) break;
     }
     cat[i] = '\0';
 
-    tokenlen = read_token(cat,
-                          key, sizeof(key),
-                          token, sizeof(token) - 1);
-    if (-1 == tokenlen) {
-      write(1, "Something is broken\nI can't read my token.\n", 43);
+    if (-1 == print_token(cat, key, sizeof(key))) {
+      write(2, "Something is broken; I can't read my token.\n", 44);
       return 69;
     }
-    token[tokenlen++] = '\n';
-
-    write(1, token, tokenlen);
   }
   return 0;
 }
