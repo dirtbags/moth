@@ -30,7 +30,7 @@ main(int argc, char *argv[])
 
   /* Print the dillo */
   for (i = 0; dillo[i]; i += 1) {
-    struct timespec req = {0, 33000000};
+    struct timespec req = {0, 33333333};
     uint8_t         c   = dillo[i];
 
     if ('\n' != c) {
