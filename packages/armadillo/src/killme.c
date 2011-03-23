@@ -1,11 +1,11 @@
 #include <signal.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <time.h>
+#include <stdio.h>
+#include <sysexits.h>
+#include "arc4.h"
 #include "token.h"
 
-#define SIGS 20
+#define ROUNDS 20
 
 uint8_t const key[] = {0x51, 0x91, 0x6d, 0x81,
                        0x14, 0x21, 0xf8, 0x95,
@@ -25,26 +25,12 @@ main(int argc, char *argv[])
 {
   int i;
 
-  {
-    /* Seed random number generator */
-    FILE *f;
-    int seed;
-
-    f = fopen("/dev/urandom", "r");
-    if (f) {
-      fread(&seed, sizeof(seed), 1, f);
-      srandom(seed);
-    } else {
-      srandom(getpid() * time(NULL));
-    }
-  }
-
   for (i = 1; i < 8; i += 1) {
     signal(i, handler);
   }
 
-  for (i = 0; i < SIGS; i += 1) {
-    int desired = (random() % 7) + 1;
+  for (i = 0; i < ROUNDS; i += 1) {
+    int desired = (arc4_rand8() % 7) + 1;
 
     lastsig = 0;
     printf("%d\n", desired);
@@ -64,20 +50,9 @@ main(int argc, char *argv[])
     }
   }
 
-  {
-    char   token[200];
-    size_t tokenlen;
-
-    tokenlen = read_token("killme",
-                          key, sizeof(key),
-                          token, sizeof(token) - 1);
-    if (-1 == tokenlen) {
-      write(1, "Something is broken\nI can't read my token.\n", 43);
-      return 69;
-    }
-    token[tokenlen++] = '\n';
-
-    write(1, token, tokenlen);
+  if (-1 == print_token("killme", key, sizeof(key))) {
+    fprintf(stderr, "Something is broken; I can't read my token.\n");
+    return EX_UNAVAILABLE;
   }
 
   return 0;
