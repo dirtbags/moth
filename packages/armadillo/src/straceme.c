@@ -68,8 +68,6 @@ main(int argc, char *argv[])
   {
     char   cat[50];
     int    catlen;
-    char   token[200];
-    size_t tokenlen;
     int    i;
 
     catlen = read(5, cat, sizeof(cat) - 1);
