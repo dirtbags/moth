@@ -1,8 +1,0 @@
-You have found a virus on one of your customers computers. To answer this question,
-you will need to reverse engineer it and find out information about the sample.
-
-The MD5 for this sample is ec7be21bd697050d119c9f9df0fb6450
-
-Which API is called at address 4014A2?
-
-Assume a normal address layout with the program being loaded with an ImageBase of 400000.
