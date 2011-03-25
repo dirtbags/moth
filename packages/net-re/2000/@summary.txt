@@ -1,1 +1,0 @@
-Paul's covert channel thingy

@@ -1,1 +1,0 @@
-This time, you can run the `hd` program on your own.

@@ -1,8 +1,0 @@
-You have found a virus on one of your customers computers. To answer this question,
-you will need to reverse engineer it and find out information about the sample.
-
-The MD5 for this sample is ec7be21bd697050d119c9f9df0fb6450
-
-What is the first API called after the original entry point? Include it with the parameter(s)
-
-For example, if the API was the string "zomg" being passed to printf the answer would be: printf("zomg")
