@@ -77,22 +77,27 @@ for dn in $indir/[0-9]*; do
     touch $tgt/index.html
 
     if [ -f $dn/Makefile ]; then
-        # If there's a makefile, run make
-        make -C $dn DESTDIR=$(pwd)/$tgt || exit 1
+        # If there's a Makefile, run make
+        make -C $dn || exit 1
         files=$(cd $tgt; echo *)
+    fi
+
+    if [ -f $dn/@manifest.txt ]; then
+        # If there's a manifest, use that
+        files=$(cat $dn/@manifest.txt)
     else
         # Otherwise, look for special files and copy the rest
         files=
         for fn in $dn/*; do
             case $(basename $fn) in
                 @*)
-                # Handle meta-information later
+                    # Handle meta-information later
                     ;;
                 *~|"#"*)
-                # Don't copy temporary or backup files
+                    # Don't copy temporary or backup files
                     ;;
                 ,*)
-                # Copy but don't list
+                    # Copy but don't list
                     ln -f $fn $tgt/
                     ;;
                 *)
