@@ -10,10 +10,10 @@ zasięgu 250 m) z racji zakończenia wojny nie opuścił desek
 kreślarskich nigdy nie wchodząc nawet w fazę prototypową.
 
     (61, 4)
-    (47, 8)
+    (47, 7)
     (19, 4)
     (37, 1)
-    (51, 3)
+    (51, 2)
     (67, 5)
     (9, 2)
     (26, 1)
