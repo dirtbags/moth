@@ -1,11 +1,12 @@
-#! /bin/sh
+#! /bin/sh -e
 
 exec 2>&1
 
 mkdir -p /mnt/inferno
-mount -o ro LABEL=inferno /mnt/inferno
-ln -s /mnt/inferno /var/www
+fgrep -q /mnt/inferno /proc/mounts || mount -o ro LABEL=inferno /mnt/inferno
+test -e /var/www || ln -s /mnt/inferno /var/www
 
-ip addr add eth0 10.0.0.2/24
+ip addr add 10.0.0.2/24 dev eth0
+ip link set dev eth0 up
 
 exec inotifyd true $PWD
