@@ -24,6 +24,5 @@ inferno-install: $(INFERNO_BUILDDIR)/build
 
 inferno-clean:
 	rm -rf $(INFERNO_PKGDIR) $(INFERNO_BUILDDIR) 
-	$(MAKE) -C packages/inferno/src clean
 
 PACKAGES += inferno
