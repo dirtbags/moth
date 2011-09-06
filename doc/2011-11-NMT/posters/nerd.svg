@@ -218,7 +218,7 @@
      inkscape:cx="372.04724"
      inkscape:cy="526.18109"
      inkscape:document-units="px"
-     inkscape:current-layer="g4943"
+     inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1003"
      inkscape:window-height="900"
@@ -233,7 +233,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -255,7 +255,7 @@
          style="fill:#80e5ff;fill-opacity:1;stroke:none" />
       <path
          transform="matrix(0.7128664,0,0,0.7128664,16.06225,376.29807)"
-         d="m 255,417.86218 a 15.5,15.5 0 1 1 -31,0 15.5,15.5 0 1 1 31,0 z"
+         d="m 255,417.86218 c 0,8.56042 -6.93959,15.5 -15.5,15.5 -8.56041,0 -15.5,-6.93958 -15.5,-15.5 0,-8.56041 6.93959,-15.5 15.5,-15.5 8.56041,0 15.5,6.93959 15.5,15.5 z"
          sodipodi:ry="15.5"
          sodipodi:rx="15.5"
          sodipodi:cy="417.86218"
@@ -265,7 +265,7 @@
          sodipodi:type="arc" />
       <path
          transform="matrix(0.4369181,0,0,0.4369181,85.71619,492.31929)"
-         d="m 255,417.86218 a 15.5,15.5 0 1 1 -31,0 15.5,15.5 0 1 1 31,0 z"
+         d="m 255,417.86218 c 0,8.56042 -6.93959,15.5 -15.5,15.5 -8.56041,0 -15.5,-6.93958 -15.5,-15.5 0,-8.56041 6.93959,-15.5 15.5,-15.5 8.56041,0 15.5,6.93959 15.5,15.5 z"
          sodipodi:ry="15.5"
          sodipodi:rx="15.5"
          sodipodi:cy="417.86218"
@@ -275,7 +275,7 @@
          sodipodi:type="arc" />
       <path
          transform="matrix(0.7128664,0,0,0.7128664,-19.767848,372.85798)"
-         d="m 255,417.86218 a 15.5,15.5 0 1 1 -31,0 15.5,15.5 0 1 1 31,0 z"
+         d="m 255,417.86218 c 0,8.56042 -6.93959,15.5 -15.5,15.5 -8.56041,0 -15.5,-6.93958 -15.5,-15.5 0,-8.56041 6.93959,-15.5 15.5,-15.5 8.56041,0 15.5,6.93959 15.5,15.5 z"
          sodipodi:ry="15.5"
          sodipodi:rx="15.5"
          sodipodi:cy="417.86218"
@@ -285,7 +285,7 @@
          sodipodi:type="arc" />
       <path
          transform="matrix(0.4369181,0,0,0.43691811,49.886087,488.87921)"
-         d="m 255,417.86218 a 15.5,15.5 0 1 1 -31,0 15.5,15.5 0 1 1 31,0 z"
+         d="m 255,417.86218 c 0,8.56042 -6.93959,15.5 -15.5,15.5 -8.56041,0 -15.5,-6.93958 -15.5,-15.5 0,-8.56041 6.93959,-15.5 15.5,-15.5 8.56041,0 15.5,6.93959 15.5,15.5 z"
          sodipodi:ry="15.5"
          sodipodi:rx="15.5"
          sodipodi:cy="417.86218"
@@ -457,7 +457,7 @@
          sodipodi:role="line"
          id="tspan3171"
          x="385.03497"
-         y="906.1994">Register by November 15</tspan><tspan
+         y="906.1994">Register by October 26, 2011</tspan><tspan
          sodipodi:role="line"
          id="tspan3173"
          x="385.03497"
