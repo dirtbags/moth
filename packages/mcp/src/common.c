@@ -213,6 +213,22 @@ cgi_foot()
 }
 
 void
+cgi_result(int code, char *desc, char *fmt, ...)
+{
+  va_list ap;
+
+  if (is_cgi) {
+    printf("%d %s\r\n", code, desc);
+  }
+  cgi_head(desc);
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
+  va_end(ap);
+  cgi_foot();
+  exit(0);
+}
+
+void
 cgi_page(char *title, char *fmt, ...)
 {
   va_list  ap;
@@ -226,18 +242,9 @@ cgi_page(char *title, char *fmt, ...)
 }
 
 void
-cgi_error(char *fmt, ...)
+cgi_error(char *text)
 {
-  va_list ap;
-
-  printf("500 Internal Error\r\n"
-         "Content-type: text/plain\r\n"
-         "\r\n");
-  va_start(ap, fmt);
-  vprintf(fmt, ap);
-  va_end(ap);
-  printf("\n");
-  exit(0);
+  cgi_result(500, "Internal error", "<p>%s</p>", text);
 }
 
 
@@ -267,7 +274,7 @@ fgrepx(char const *needle, char const *filename)
         break;
       } else if (EOF == c) {    /* End of file */
         break;
-      } else if (('\0' == p) || (*p != c)) {
+      } else if (('\0' == p) || (*p != (char)c)) {
         p = needle;
         /* Discard the rest of the line */
         do {
@@ -492,11 +499,11 @@ award_and_log_uniquely(char const *team,
                        char const *dbpath,
                        char const *line)
 {
-  int   fd;
+  int fd;
 
   /* Make sure they haven't already claimed these points */
   if (fgrepx(line, dbpath)) {
-    cgi_page("Already claimed",
+    cgi_result(409, "Already claimed",
              "<p>Your team has already claimed these points.</p>");
   }
 
@@ -526,54 +533,3 @@ award_and_log_uniquely(char const *team,
 }
 
 
-/** Compute bubble babble for input buffer.
- *
- * The generated output will be of length 6*((inlen/2)+1), including the
- * trailing NULL.
- *
- * Test vectors:
- *     `' (empty string) `xexax'
- *     `1234567890'      `xesef-disof-gytuf-katof-movif-baxux'
- *     `Pineapple'       `xigak-nyryk-humil-bosek-sonax'
- */
-static char const consonants[] = "bcdfghklmnprstvz";
-static char const vowels[]     = "aeiouy";
-
-void
-bubblebabble(unsigned char *out,
-             unsigned char const *in,
-             const size_t inlen)
-{
-  size_t pos  = 0;
-  int    seed = 1;
-  size_t i    = 0;
-
-  out[pos++] = 'x';
-  while (1) {
-    unsigned char c;
-
-    if (i == inlen) {
-      out[pos++] = vowels[seed % 6];
-      out[pos++] = 'x';
-      out[pos++] = vowels[seed / 6];
-      break;
-    }
-
-    c = in[i++];
-    out[pos++] = vowels[(((c >> 6) & 3) + seed) % 6];
-    out[pos++] = consonants[(c >> 2) & 15];
-    out[pos++] = vowels[((c & 3) + (seed / 6)) % 6];
-    if (i == inlen) {
-      break;
-    }
-    seed = ((seed * 5) + (c * 7) + in[i]) % 36;
-
-    c = in[i++];
-    out[pos++] = consonants[(c >> 4) & 15];
-    out[pos++] = '-';
-    out[pos++] = consonants[c & 15];
-  }
-
-  out[pos++] = 'x';
-  out[pos] = '\0';
-}

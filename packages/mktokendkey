@@ -1,19 +1,4 @@
 #! /bin/sh
 
-if [ $# -lt 1 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: $0 CATEGORY"
-    echo
-    echo "Creates tokend key for CATEGORY."
-    exit 1
-fi
+dd bs=1 count=16 if=/dev/urandom | hd
 
-puz=$1; shift
-cat=${1:-$puz}
-
-d=$(dirname $0)
-
-td=$d/mcp/tokend.keys/$cat
-echo "Writing new server key to $td"
-dd bs=1 count=16 if=/dev/urandom of=$td
-
-hd $td

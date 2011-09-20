@@ -1,1 +1,0 @@
-pngtopnm -alpha file.png | dd bs=1 skip=15 | zcat

@@ -3,25 +3,11 @@
 PATH=/bin:/opt/ctfbase/bin; export PATH
 
 while true; do
-    # Get new tokens
-    for dn in /opt/*/tokens/*; do
-        [ -d $dn ] || continue
-        puzzle=$(basename $dn)
-        category=$(cat $dn/category)
-        busybox nc 10.0.0.2 1 \
-            -e tokencli $category $dn/category.key 3>&1 | \
-            arc4 $dn/enc.key > /var/lib/ctf/tokens/$puzzle
-    done
-
     # Fetch list of teams
-    wget -q -P /var/lib/ctf http://10.0.0.2/teams.txt &
-
-    # Archive state
-    state=/var/www/state.tar.gz.rc4
-    tar cf - /var/lib/ctf | \
-        gzip -c | \
-        KEY='crashmaster' arc4 > $state.tmp
-    mv $state.tmp $state
+    teams=/var/lib/ctf/teams.txt
+    rm -f $teams.tmp
+    wget -q -O $teams.tmp http://10.0.0.2/teams.txt  && \
+        mv $teams.tmp $teams
 
     sleep 60
 done
