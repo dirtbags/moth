@@ -1,0 +1,9 @@
+#! /bin/sh
+
+# Work around busybox bug
+chmod a+r /dev/urandom
+
+mkdir -p /var/tmp/wopr
+chown ctf /var/tmp/wopr
+
+exec inotifyd /bin/true $PWD

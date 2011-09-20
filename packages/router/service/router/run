@@ -1,0 +1,41 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+hostname router
+
+# McPhall suggested all these.  I don't know what most of them do.
+# But I do know that McPhall is a smart guy.
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv6/conf/default/forwarding
+echo 0 > /proc/sys/kernel/randomize_va_space
+echo 0 > /proc/sys/net/ipv4/conf/all/arp_accept
+echo 1 > /proc/sys/net/ipv4/conf/all/arp_filter
+echo 1 > /proc/sys/net/ipv4/conf/all/arp_announce
+echo 2 > /proc/sys/net/ipv4/conf/all/arp_ignore
+echo 0 > /proc/sys/net/ipv4/conf/all/shared_media
+echo 0 > /proc/sys/net/ipv4/tcp_timestamps
+echo 1 > /proc/sys/net/ipv4/icmp_errors_use_inbound_ifaddr
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+# No label: dnsmasq can't cope
+ip addr add 10.0.0.1/16 dev eth0
+ip link set eth0 up
+
+for i in $(seq 48); do
+  ip link add link eth0 name eth0.$i type vlan id $i
+  ip addr add 10.$i.0.1/16 dev eth0.$i
+  ip link set eth0.$i up
+done
+
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+
+iptables -A INPUT -p udp --dport 53 -j ACCEPT
+iptables -A INPUT -p udp --dport 67:68 -j ACCEPT
+iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -s 10.0.0.0/16 -j ACCEPT
+iptables -A INPUT -j REJECT
+
+sleep 8100d

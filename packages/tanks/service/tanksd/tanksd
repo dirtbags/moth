@@ -41,9 +41,7 @@ EOF
 
 while true; do
     # Make sure all teams exist
-    # XXX: pull this out into another daemon
-    wget -q -O - http://10.0.0.2/teams.txt | \
-        KEY="Too much cheese." /opt/tokens/bin/arc4 | \
+    KEY='Too much cheese.' arc4 < /var/lib/ctf/teams.txt | \
         while read hash; do
         install -o ctf -d $p/$hash
     done
@@ -102,19 +100,18 @@ EOF
 EOF
     
     # Get a token and add it to the redemption log
-    nc 10.0.0.2 1 -e /opt/tokens/bin/tokencli tanks ./category.key 3> $tfn
+    nc 10.0.0.2 1 -e /opt/ctfbase/bin/tokencli tanks ./category.key 3> $tfn
     k=$(cat $tfn)
-    /opt/tanks/bin/winners.awk $rfn | while read winner; do
+    winner.awk $rfn | while read winner; do
         hash=$(basename $winner)
         echo "Round $next winner: $hash"
-
-        # Squirrel it away just in case
-        cat $tfn >> $winner/tokens
-
+        
         # XXX: pull this out into another daemon
         # XXX: this puts the token in /proc/self/cmdline
         wget -q -s "http://10.0.0.2/claim.cgi?t=$hash&k=$k"
     done
+
+    ln -sf $fn $w/current.html
 
     summary > $w/summary.html.$$
     mv -f $w/summary.html.$$ $w/summary.html
