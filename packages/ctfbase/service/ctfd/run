@@ -2,6 +2,11 @@
 
 exec 2>&1
 
+# Make user accounts
+if ! [ -r /etc/passwd ]; then
+    cat passwd >/etc/passwd
+fi
+
 # Set up networking for all CTF ip
 ip link set eth0 up
 if ! ip route | grep -q default; then
