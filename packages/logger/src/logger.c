@@ -57,7 +57,7 @@ read_tokens()
     /* This can't grow beyond 40.  Think about it. */
     sprintf(name, "logger%d", i);
 
-    len = read_token(name, key, sizeof(key), token[i], sizeof(token[i]));
+    len = get_token(token[i], sizeof(token[i]), name, key, sizeof(key));
     if ((-1 == len) || (len >= sizeof(token[i]))) abort();
     token[i][len] = '\0';
 #endif
@@ -641,7 +641,11 @@ main(int argc, char *argv[])
       }
     }
 
-    sleep(1);
+    {
+      struct timespec t = { 1, 0 };
+
+      nanosleep(&t, NULL);
+    }
   }
 
   return 0;

@@ -1,23 +1,14 @@
 Bugs
 ====
 
-* claim.cgi not exiting (maybe fixed?)
-* We need some programs so that we never have to edit .db files
-  directly.  I truncated tokens.db with > instead of >>.
-* Get erin to edit net-re
+* Pwnables are generating new tokens way too quickly
+* chroot jail isn't secure under Linux (see man page)
 
 
 Physical
 --------
 
-* We should buy a longer VGA cable
 * Tape!
-
-
-
-Possibly fixed
---------------
-* sequence 300; puzzler isn't taking the unicode character right
 
 
 Won't fix

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "common.h"
@@ -60,6 +61,12 @@ main(int argc, char *argv[])
     char needle[400];
 
     my_snprintf(needle, sizeof(needle), "%ld %s", points, answer);
+  {
+    FILE *f = fopen("/tmp/form", "w");
+    fprintf(f, "%s\n%s\n", answer, needle);
+    fclose(f);
+  }
+
     if (! fgrepx(needle,
                  package_path("%s/answers.txt", category))) {
       cgi_page("Wrong answer", "");

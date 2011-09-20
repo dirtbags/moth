@@ -1,2 +1,0 @@
-strings *pcap | grep alice
-or use wireshark and pore through TCP

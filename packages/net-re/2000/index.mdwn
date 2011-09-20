@@ -1,2 +1,0 @@
-A Covert Channel
-================

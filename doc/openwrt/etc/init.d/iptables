@@ -1,0 +1,26 @@
+#! /bin/sh /etc/rc.common
+
+START=45
+STOP=89
+
+start () {
+    stop
+
+    iptables -P INPUT ACCEPT
+    iptables -P OUTPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+
+    iptables -A INPUT -p udp --dport 53 -j ACCEPT
+    iptables -A INPUT -p udp --dport 67 -j ACCEPT
+    iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+    iptables -A INPUT -s 10.0.0.0/16 -j ACCEPT
+    iptables -A INPUT -j REJECT
+}
+
+stop () {
+    iptables -F INPUT
+    iptables -F OUTPUT
+    iptables -F FORWARD
+}
+
+
