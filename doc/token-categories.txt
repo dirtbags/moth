@@ -6,7 +6,11 @@ LANL's CTF contest allows for easy addition of new modules which can use
 A point may only be claimed once per team, but multiple teams can claim
 the same token and each will get a point.  Tokens look like this:
 
-    example:xylep-donut-nanox
+    example:xenon-donut-helix
+
+where "example" is the category name, and "xenon-donut-helix" is a
+bubblebabble hash of a 32-bit random number.  The entire string must be
+submitted as the token.
 
 Tokens are issued by the token server using the tokencli program at the
 end of this document.  They can also be issued before the beginning of a

@@ -7,4 +7,5 @@ ip addr add $IP label eth0:rlyeh dev eth0
 dir=/var/lib/ctf/rlyeh
 install -o nobody -d $dir
 
-exec setuidgid nobody tcpsvd ${IP%/*} 1928 ./rlyeh-ctf
+PATH=/opt/ctfbase/bin:/opt/rlyeh/bin:/bin:/sbin; export PATH
+exec tcpsvd ${IP%/*} 1928 ./rlyeh-ctf

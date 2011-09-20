@@ -1,42 +1,40 @@
 TANKS_PKGDIR = $(TARGET)/tanks
+TANKS_CACHE = $(CACHE)/tanks.git
 TANKS_BUILDDIR = $(BUILD)/tanks
-TANKS_TAR = $(CACHE)/tanks.tar.gz
-TANKS_URL = "http://woozle.org/~neale/gitweb.cgi?p=ctanks;a=snapshot;h=master;sf=tgz"
+TANKS_URL = "http://woozle.org/~neale/projects/ctanks"
 
-$(TANKS_TAR):
-	@ mkdir -p $(@D)
-	wget -O $@ $(TANKS_URL)
+$(TANKS_CACHE):
+	git clone --bare $(TANKS_URL) $@
 
-tanks-source: $(TANKS_BUILDDIR)/ctanks
-$(TANKS_BUILDDIR)/ctanks: $(TANKS_TAR)
-	mkdir -p $(TANKS_BUILDDIR)
-	zcat $(TANKS_TAR) | (cd $(TANKS_BUILDDIR) && tar xf -)
+tanks-source: $(TANKS_BUILDDIR)
+$(TANKS_BUILDDIR): $(TANKS_CACHE)
+	git clone $< $@
 
 tanks-build: tanks-source
-	$(MAKE) -C $(TANKS_BUILDDIR)/ctanks
+	$(MAKE) -C $(TANKS_BUILDDIR)
 
 # "html" instead of "www" to prevent automatic links
 tanks-install: tanks-build
 	mkdir -p $(TANKS_PKGDIR)/bin
-	cp $(TANKS_BUILDDIR)/ctanks/forftanks $(TANKS_PKGDIR)/bin
-	cp $(TANKS_BUILDDIR)/ctanks/designer.cgi $(TANKS_PKGDIR)/bin
-	cp $(TANKS_BUILDDIR)/ctanks/rank.awk $(TANKS_PKGDIR)/bin
-	cp $(TANKS_BUILDDIR)/ctanks/winners.awk $(TANKS_PKGDIR)/bin
+	cp $(TANKS_BUILDDIR)/forftanks $(TANKS_PKGDIR)/bin
+	cp $(TANKS_BUILDDIR)/designer.cgi $(TANKS_PKGDIR)/bin
+	cp $(TANKS_BUILDDIR)/rank.awk $(TANKS_PKGDIR)/bin
+	cp $(TANKS_BUILDDIR)/winner.awk $(TANKS_PKGDIR)/bin
 
 	$(call COPYTREE, packages/tanks/html, $(TANKS_PKGDIR)/html)
 	cp packages/mcp/www/ctf.css $(TANKS_PKGDIR)/html/style.css
 	cp packages/mcp/www/grunge.png $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/nav.html.inc $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/tanks.js $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/forf.html $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/intro.html $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/figures.js $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/procs.html $(TANKS_PKGDIR)/html
-	cp $(TANKS_BUILDDIR)/ctanks/designer.js $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/nav.html.inc $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/tanks.js $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/forf.html $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/intro.html $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/figures.js $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/procs.html $(TANKS_PKGDIR)/html
+	cp $(TANKS_BUILDDIR)/designer.js $(TANKS_PKGDIR)/html
 
 	$(call COPYTREE, packages/tanks/service, $(TANKS_PKGDIR)/service)
 
-	$(call COPYTREE, $(TANKS_BUILDDIR)/ctanks/examples, $(TANKS_PKGDIR)/examples)
+	$(call COPYTREE, $(TANKS_BUILDDIR)/examples, $(TANKS_PKGDIR)/examples)
 
 tanks-clean:
 	rm -rf $(TANKS_BUILDDIR)

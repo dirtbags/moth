@@ -2,7 +2,8 @@
 
 base=${CTF_BASE:-/var/lib/ctf}
 
-read -p "Team password: " -r teamhash
+echo -n "Team password: "
+read -r teamhash
 
 if ! KEY='Too much cheese.' arc4 < $base/teams.txt | grep -q -F -e "$teamhash"; then
     echo 'No such team.'
@@ -20,7 +21,7 @@ if [ -f $teamhash ]; then
         exit
     fi
 else
-    echo 0 > $teamhash
+    echo 1 > $teamhash
 fi
 read level < $teamhash
 
@@ -33,8 +34,9 @@ read level < $teamhash
     echo "Your team is on level $level."
     echo
 
-    if ./rlyeh $level; then
-        echo "10 points for Gryffindor!"
+    if setuidgid nobody rlyeh $level; then
+        arc4 /opt/rlyeh/tokens/rlyeh/enc.key < $base/tokens/rlyeh
+        echo
         expr $level + 1 > $teamhash
     else
 	touch $teamhash

@@ -13,6 +13,13 @@ BIN = bin
 
 all: packages
 
+dist: ctf-install.zip
+ctf-install.zip: packages.zip bzImage rootfs.squashfs /usr/lib/syslinux/mbr.bin
+	zip --junk-paths $@ packages.zip bzImage rootfs.squashfs /usr/lib/syslinux/mbr.bin install.sh
+
+packages.zip: packages
+	zip --junk-paths $@ bin/*.pkg
+
 clean: packages-clean
 	rm -rf $(BUILD) $(TARGET) $(BIN)
 
