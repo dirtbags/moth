@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
@@ -59,5 +60,5 @@ get_token(char *buf, size_t buflen,
   while ('\n' == buf[l-1]) l -= 1;
   buf[l-1] = '\0';
 
-  return l;    
+  return l;
 }
