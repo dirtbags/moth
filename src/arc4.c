@@ -148,7 +148,7 @@ arc4_encrypt_stream(FILE *out, FILE *in,
   return written;
 }
 
-int
+ssize_t
 arc4_decrypt_stream(FILE *out, FILE *in,
                     const uint8_t *key, size_t keylen)
 {
