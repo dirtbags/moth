@@ -35,8 +35,6 @@ mcp-install: $(MCP_BUILDDIR)/build
 
 	$(call COPYTREE, packages/mcp/service, $(MCP_PKGDIR)/service)
 
-	$(call COPYTREE, packages/mcp/tokend.keys, $(MCP_PKGDIR)/tokend.keys)
-
 	$(call COPYTREE, packages/mcp/www, $(MCP_PKGDIR)/www)
 	cp packages/mcp/src/puzzler.cgi $(MCP_PKGDIR)/www/
 	cp packages/mcp/src/claim.cgi $(MCP_PKGDIR)/www/
