@@ -1,4 +1,7 @@
 #! /bin/sh
 
 exec 2>&1
+
+cat passwd > /etc/passwd
+
 exec dropbear -r ./rsa.key -E -F
