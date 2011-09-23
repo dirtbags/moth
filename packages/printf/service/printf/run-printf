@@ -1,8 +1,3 @@
 #! /bin/sh
 
-chpst -u 9001 -/ /opt/printf/bin ./printf \
-    3< /var/lib/ctf/tokens/printf0 \
-    4< /var/lib/ctf/tokens/printf1 \
-    5< /var/lib/ctf/tokens/printf2 \
-    6< /var/lib/ctf/tokens/printf3 \
-    7< /var/lib/ctf/tokens/printf4
+exec chpst -u 9001 -/ /opt/printf/bin ./printf
