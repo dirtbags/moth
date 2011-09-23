@@ -2,12 +2,12 @@
 
 exec 2>&1
 
-hostname router
-
 PFX=fd84:b410:3441
 
+hostname router
+
 # We're a router
-echo 1 > /proc/sys/net/ipv6/conf/default/forwarding
+echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 
 # Bring up main ethernet interface
 ip addr add $PFX:0::1/64 dev eth0

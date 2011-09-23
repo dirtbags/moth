@@ -1,4 +1,7 @@
 #! /bin/sh
 
 exec 2>&1
+
+ip addr add fd84:b410:3441::6 label eth0:ircd dev eth0
+
 exec /opt/ircd/bin/ngircd --config ./ngircd.conf --nodaemon
