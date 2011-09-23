@@ -1,0 +1,15 @@
+IPv6 in Dirtbags CTF
+====================
+
+The contest network uses IPs in the unique local address space
+fd82:b410:3441::/48.  Each team gets a /64 internal subnet, with
+their team number (generally the same as the switch port).
+
+Each subnet's gateway is ::1.
+
+Team 5, in switch port 5, on VLAN 5, gets fd82:b410:3441:5::/64.
+
+Server network is fd84:b410:3441::/64 (AKA fd84:b410:3441:0::/64).  To
+make things easier to type, use hosts in the /112.  The MCP server lives
+at fd84:b410:3441::2.
+
