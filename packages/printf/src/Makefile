@@ -5,7 +5,7 @@ TARGETS = printf
 all: build
 build: $(TARGETS)
 
-printf: printf.o token.o
+printf: printf.o
 
 install: $(TARGETS)
 	install -m 0755 $(TARGETS) $(DESTDIR)/bin
