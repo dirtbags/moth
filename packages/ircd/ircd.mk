@@ -22,7 +22,7 @@ $(IRCD_BUILDDIR)/source: $(IRCD_TAR)
 
 ircd-build: $(IRCD_BUILDDIR)/built
 $(IRCD_BUILDDIR)/built: $(IRCD_BUILDDIR)/source
-	cd $(IRCD_SRCDIR) && ./configure $(CONFIG_XCOMPILE_FLAGS)
+	cd $(IRCD_SRCDIR) && ./configure $(CONFIG_XCOMPILE_FLAGS) --enable-ipv6
 	$(MAKE) -C $(IRCD_SRCDIR)
 	touch $@
 

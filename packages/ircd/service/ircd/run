@@ -2,6 +2,11 @@
 
 exec 2>&1
 
-ip addr add fd84:b410:3441::6 label eth0:ircd dev eth0
+IP=$(cat ip.txt)
+ip addr add $IP label eth0:ircd dev eth0
+ip monitor | grep -q $IP
 
-exec /opt/ircd/bin/ngircd --config ./ngircd.conf --nodaemon
+adduser -S -H -u 65534 nobody
+adduser -S -H irc
+
+exec setuidgid irc /opt/ircd/bin/ngircd --config ./ngircd.conf --nodaemon

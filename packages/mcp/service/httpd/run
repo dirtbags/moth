@@ -22,4 +22,4 @@ done
 mkdir -p sites
 cd sites
 ln -sf /var/www default
-exec tcpsvd -u ctf $IP 80 /opt/mcp/bin/fnord-cgi
+exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/fnord-cgi

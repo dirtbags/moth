@@ -3,7 +3,8 @@
 exec 2>&1
 
 IP=$(cat ip.txt)
-ip addr add $IP label eth0:printf dev eth0
+ip addr add $IP dev eth0
+ip monitor | grep -q $IP
 
 # So I say to him, "Alex, what's a good high port number for a CTF category?"
 # And he says, "6"
