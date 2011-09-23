@@ -4,7 +4,9 @@ exec 2>&1
 
 DB=/var/lib/ctf/puzzles.db
 
-mkdir -p /var/www
+adduser -D -S -h /var/lib/ctf -H ctf || true
+
+mkdir -p /var/lib/ctf /var/www
 touch $DB
 chown ctf $DB
 

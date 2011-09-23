@@ -1,13 +1,12 @@
 IRCD_PKGDIR = $(TARGET)/ircd
 IRCD_BUILDDIR = $(BUILD)/ircd
-IRCD_VERSION = 17.1
+IRCD_VERSION = 18
 IRCD_TAR = $(CACHE)/ngircd-$(IRCD_VERSION).tar.gz
 IRCD_URL = ftp://ftp.berlios.de/pub/ngircd/ngircd-$(IRCD_VERSION).tar.gz
 IRCD_SRCDIR = $(IRCD_BUILDDIR)/ngircd-$(IRCD_VERSION)
 
 # Prevents automake from mangling cross-compiled binary names
 IRCD_CC_HOST := $(shell $(CC) -v 2>&1 | awk '/Target:/{print $$2}')
-IRCD_CONF_OPT := --host=i686-unknown-linux-uclibc --program-transform-name=
 
 ircd-install: ircd-build
 
@@ -23,7 +22,7 @@ $(IRCD_BUILDDIR)/source: $(IRCD_TAR)
 
 ircd-build: $(IRCD_BUILDDIR)/built
 $(IRCD_BUILDDIR)/built: $(IRCD_BUILDDIR)/source
-	cd $(IRCD_SRCDIR) && ./configure $(IRCD_CONF_OPT)
+	cd $(IRCD_SRCDIR) && ./configure $(CONFIG_XCOMPILE_FLAGS)
 	$(MAKE) -C $(IRCD_SRCDIR)
 	touch $@
 
