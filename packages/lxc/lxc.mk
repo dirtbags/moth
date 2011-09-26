@@ -26,12 +26,13 @@ lxc-source: $(LXC_BUILDDIR)/source
 $(LXC_BUILDDIR)/source: $(LXC_TAR)
 	mkdir -p $(LXC_BUILDDIR)
 	zcat $(LXC_TAR) | (cd $(LXC_BUILDDIR) && tar xf -)
+	cp packages/lxc/utmp.c $(LXC_SRCDIR)/src/lxc/
 	touch $@
 
 lxc-build: $(LXC_BUILDDIR)/built
 $(LXC_BUILDDIR)/built: $(LXC_BUILDDIR)/source libcap-build
 	cd $(LXC_SRCDIR) && CFLAGS="$(LIBCAP_CFLAGS)" LDFLAGS="$(LIBCAP_LDFLAGS)" ./configure $(CONFIG_XCOMPILE_FLAGS)
-	$(MAKE) -C $(LXC_SRCDIR) LDFLAGS="-R /opt/lxc/lib"
+	LD_RUN_PATH=/opt/lxc/lib $(MAKE) -C $(LXC_SRCDIR)
 	touch $@
 
 lxc-install: lxc-build
