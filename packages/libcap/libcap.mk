@@ -6,7 +6,7 @@ LIBCAP_TAR = $(CACHE)/libcap-$(LIBCAP_VERSION).tar.gz
 LIBCAP_URL = http://ftp.debian.org/debian/pool/main/libc/libcap2/libcap2_$(LIBCAP_VERSION).orig.tar.gz
 LIBCAP_SRCDIR = $(LIBCAP_BUILDDIR)/libcap-$(LIBCAP_VERSION)
 
-LIBCAP_LDOPTS = -L$(CURDIR)/$(LIBCAP_SRCDIR)/libcap
+LIBCAP_LDFLAGS = -L$(CURDIR)/$(LIBCAP_SRCDIR)/libcap
 LIBCAP_CFLAGS = -I$(CURDIR)/$(LIBCAP_SRCDIR)/libcap/include
 
 $(LIBCAP_TAR):
