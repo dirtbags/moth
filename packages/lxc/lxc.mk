@@ -31,13 +31,14 @@ $(LXC_BUILDDIR)/source: $(LXC_TAR)
 
 lxc-build: $(LXC_BUILDDIR)/built
 $(LXC_BUILDDIR)/built: $(LXC_BUILDDIR)/source libcap-build
-	cd $(LXC_SRCDIR) && CFLAGS="$(LIBCAP_CFLAGS)" LDFLAGS="$(LIBCAP_LDFLAGS)" ./configure $(CONFIG_XCOMPILE_FLAGS)
-	LD_RUN_PATH=/opt/lxc/lib $(MAKE) -C $(LXC_SRCDIR)
+	cd $(LXC_SRCDIR) && CFLAGS="$(LIBCAP_CFLAGS)" LDFLAGS="$(LIBCAP_LDFLAGS) -Xlinker -rpath -Xlinker /opt/lxc/lib" ./configure $(CONFIG_XCOMPILE_FLAGS)
+	$(MAKE) -C $(LXC_SRCDIR)
 	touch $@
 
 lxc-install: lxc-build
 	mkdir -p $(LXC_PKGDIR)/lib
-	cp $(LXC_SRCDIR)/src/lxc/liblxc.so $(LXC_PKGDIR)/lib
+	cp $(LXC_SRCDIR)/src/lxc/liblxc.so $(LXC_PKGDIR)/lib/liblxc.so.0
+	cp $(LIBCAP_SRCDIR)/libcap/libcap.so.* $(LXC_PKGDIR)/lib
 
 	mkdir -p $(LXC_PKGDIR)/bin
 	cp $(LXC_PROGRAMS) $(LXC_PKGDIR)/bin
