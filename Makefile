@@ -10,9 +10,6 @@ CACHE = cache
 # The end result
 BIN = bin
 
-# Things configure likes to see
-CONFIG_XCOMPILE_FLAGS = --host=i386-linux --program-transform-name=
-
 all: packages
 
 dist: ctf-install.zip
