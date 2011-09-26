@@ -29,9 +29,9 @@ $(LXC_BUILDDIR)/source: $(LXC_TAR)
 	touch $@
 
 lxc-build: $(LXC_BUILDDIR)/built
-$(LXC_BUILDDIR)/built: $(LXC_BUILDDIR)/source
-	cd $(LXC_SRCDIR) && ./configure $(LXC_CONF_OPT)
-	$(MAKE) -C $(LXC_SRCDIR)
+$(LXC_BUILDDIR)/built: $(LXC_BUILDDIR)/source libcap-build
+	cd $(LXC_SRCDIR) && CFLAGS="$(LIBCAP_CFLAGS)" LDFLAGS="$(LIBCAP_LDFLAGS)" ./configure $(CONFIG_XCOMPILE_FLAGS)
+	$(MAKE) -C $(LXC_SRCDIR) LDFLAGS="-R /opt/lxc/lib"
 	touch $@
 
 lxc-install: lxc-build
@@ -45,5 +45,9 @@ lxc-install: lxc-build
 
 lxc-clean:
 	rm -rf $(LXC_BUILDDIR)
+
+
+LIBCAP_PKGDIR = $(TARGET)/libcap
+
 
 PACKAGES += lxc
