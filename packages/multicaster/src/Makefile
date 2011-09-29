@@ -1,5 +1,4 @@
 CFLAGS = -Wall -Werror
-LDFLAGS = -static
 TARGETS = multicaster-server multicaster-client
 
 all: build
