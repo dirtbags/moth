@@ -47,8 +47,8 @@ int main(int argc, char *argv[])
     /* Create socket for sending multicast datagrams */
     if ((sock = socket(multicastAddr->ai_family, multicastAddr->ai_socktype, 0)) == -1) DieWithError("socket() failed");
 
-    //int scope_id = if_nametoindex("eth0");
-    //if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, (const char *) &scope_id, sizeof(scope_id)) != 0) DieWithError("setsockopt(MULTICAST_IF) failed");
+    int hops = 5;
+    if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops, sizeof(hops)) != 0) DieWithError("setsockopt(MULTICAST_HOPS) failed");
 
     for (;;) /* Run forever */
     {
