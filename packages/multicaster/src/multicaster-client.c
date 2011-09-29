@@ -92,12 +92,24 @@ int main(int argc, char* argv[])
 
     for (;;) /* Run forever */
     {
-        char   recvString[500];      /* Buffer for received string */
-        int    recvStringLen;        /* Length of received string */
+        char      recvString[500];      /* Buffer for received string */
+        int       recvStringLen;        /* Length of received string */
+	struct    sockaddr_in6  from;
+	socklen_t fromlen = sizeof(from);
+	char	  sendString[] = "Token: banana\n";
+	char	  errorString[] = "That is not correct! Try again!\n";
 
         /* Receive a single datagram from the server */
-        if ((recvStringLen = recvfrom(sock, recvString, sizeof(recvString) - 1, 0, NULL, 0)) < 0) DieWithError("recvfrom() failed");
+        if ((recvStringLen = recvfrom(sock, recvString, sizeof(recvString) - 1, 0, (struct sockaddr *)&from, &fromlen)) < 0) DieWithError("recvfrom() failed");
         recvString[recvStringLen] = '\0';
+	if(strcmp(recvString, "hello")==0) {
+		printf("Correct!!\n");
+	//	printf("Token: banana\n");
+		sendto(sock, sendString, sizeof(sendString) - 1, 0, (struct sockaddr *)&from, fromlen);
+	} else {
+	//	printf("That isn't correct! Try again!\n");
+		sendto(sock, errorString, sizeof(errorString) - 1, 0, (struct sockaddr *)&from, fromlen);
+	}
 
         /* Print the received string */
         printf("Received string [%s]\n", recvString);
