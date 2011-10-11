@@ -1,0 +1,17 @@
+#! /bin/sh -e
+
+if ! [ -d "$1" ]; then
+    echo "usage: $0 DIRECTORY"
+    echo
+    echo "Makes DIRECTORY a read/write tmpfs mount with the same"
+    echo "contents."
+    exit 1
+fi
+
+fsname=$(basename $1)
+mkdir /tmp/$fsname
+mount -t tmpfs $fsname /tmp/$fsname
+(cd $1 && tar cf - .) | (cd /tmp/$fsname && tar xf -)
+mount -o move /tmp/$fsname $1
+rmdir /tmp/$fsname
+
