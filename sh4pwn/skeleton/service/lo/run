@@ -1,0 +1,7 @@
+#! /bin/sh -e
+
+ip link set dev lo up
+ip addr add 127.0.0.1/8 dev lo
+
+exec inotifyd true $(pwd)
+
