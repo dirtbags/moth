@@ -16,7 +16,7 @@
 static void DieWithError(const char* errorMessage)
 {
 	fprintf(stderr, "%s\n", errorMessage);
-	exit(10);
+	exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	if (argc != 4)
 	{
 		fprintf(stderr, "Usage:  %s <Multicast Address> <Port> <Send String>\n", argv[0]);
-		exit(10);
+		exit(1);
 	}
 
 	multicastIP   = argv[1];             /* First arg:   multicast IP address */
