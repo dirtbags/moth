@@ -1,0 +1,6 @@
+#! /bin/sh -e
+
+ip link set dev eth0 up
+
+exec inotifyd true $(pwd)
+
