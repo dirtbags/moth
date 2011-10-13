@@ -2,14 +2,10 @@
 
 exec 2>&1
 
+install -d /var/www
+
+# Install truncates files
 DB=/var/lib/ctf/puzzles.db
-
-# Create CTF user
-touch /etc/group /etc/passwd
-addgroup -g 56634 nogroup || true
-adduser -D -S -h /var/lib/ctf -H ctf || true
-
-mkdir -p /var/lib/ctf /var/www
 touch $DB
 chown ctf $DB
 
