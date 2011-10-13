@@ -1,28 +1,14 @@
 #! /bin/sh
 
-# First argument is seconds between running everything
-period=${1:-60}
-
-NEWPOINTS=/var/lib/ctf/points.new
+fn=$2/$3
 POINTS=/var/lib/ctf/points.log
 SCOREBOARD=/var/www/scoreboard.html
 
-if ! [ -f $SCOREBOARD ]; then
-    /opt/mcp/bin/scoreboard < $POINTS > $SCOREBOARD
+cat $fn >> $POINTS || break
+rm $fn
+
+# Render scoreboard
+if [ $POINTS -nt $SCOREBOARD ]; then
+    /opt/mcp/bin/scoreboard < $POINTS > $SCOREBOARD.new && mv $SCOREBOARD.new $SCOREBOARD
 fi
 
-while true; do
-    # Collect any new points
-    for fn in $NEWPOINTS/*; do
-        [ -f $fn ] || continue
-        cat $fn >> $POINTS || break
-        rm $fn
-    done
-
-    # Render scoreboard
-    if [ $POINTS -nt $SCOREBOARD ]; then
-        /opt/mcp/bin/scoreboard < $POINTS > $SCOREBOARD.new && mv $SCOREBOARD.new $SCOREBOARD
-    fi
-
-    sleep $period
-done
