@@ -1,13 +1,37 @@
-#! /bin/sh
+#! /bin/sh -e
 
 exec 2>&1
 
-install -o ctf -m 0755 -d /var/lib/ctf/points.new
+install -d /var/lib/ctf
+
+# Create CTF user
+touch /etc/group /etc/passwd
+addgroup -g 56634 nogroup || true
+adduser -D -S -h /var/lib/ctf -H ctf || true
+
+NEWDIR=/var/lib/ctf/points.new
+
+install -d /var/www
+install -o ctf -m 0755 -d $NEWDIR
 install -o ctf -m 0755 -d /var/lib/ctf/points.tmp
 touch /var/lib/ctf/points.log
 
-# Re-populate teams list for tanks
-ls $base/teams/names | KEY="Too much cheese." /opt/mcp/bin/arc4 > $www/teams.txt.$$
-mv $www/teams.txt.$$ $www/teams.txt
+# Generate preliminary scoreboard
+if ! [ -f /var/www/scoreboard.html ]; then
+    /opt/mcp/bin/scoreboard < /dev/null > /var/www/scoreboard.html
+fi
 
-exec ./pointsd
+
+if [ -x /sbin/inotifyd ]; then
+    exec /sbin/inotifyd ./pointsd $NEWDIR:y
+fi
+
+# Simulate inotifyd
+cd $NEWDIR
+while true; do
+    for fn in *; do
+        [ -f "$fn" ] || continue
+        ./pointsd m $NEWDIR $fn
+    done
+    sleep 7
+done
