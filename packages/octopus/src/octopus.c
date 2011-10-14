@@ -19,8 +19,8 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #endif
 
-const char token[] = "octopus:xylep-radar-nanox";
-const size_t tokenlen = sizeof(token) - 1;
+const char token[100];
+size_t tokenlen;
 
 char const octopus[] =
   ("                        ___\n"
@@ -337,6 +337,12 @@ main(int argc, char *argv[])
   } else {
     memcpy(&addr, &in6addr_any, sizeof addr);
   }
+
+  if (NULL == fgets(token, sizeof(token), stdin)) {
+    perror("Unable to read token");
+    return EX_IOERR;
+  }
+  tokenlen = strlen(token);
 
   bound_ports[0].fd = socket(AF_INET6, SOCK_DGRAM, 0);
   ret = bind_port(&addr, bound_ports[0].fd, 8888);
