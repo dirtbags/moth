@@ -5,6 +5,7 @@ octopus-install: octopus-build
 
 	$(call COPYTREE, packages/octopus/service, $(OCTOPUS_PKGDIR)/service)
 
+	cp packages/octopus/tokens.txt $(OCTOPUS_PKGDIR)/
 	cp packages/octopus/src/octopus $(OCTOPUS_PKGDIR)/bin/
 
 octopus-clean:
