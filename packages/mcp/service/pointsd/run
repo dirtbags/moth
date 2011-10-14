@@ -4,10 +4,11 @@ exec 2>&1
 
 install -d /var/lib/ctf
 
-# Create CTF user
+# Create CTF and nobody users
 touch /etc/group /etc/passwd
-addgroup -g 56634 nogroup || true
+addgroup -g 65534 nogroup || true
 adduser -D -S -h /var/lib/ctf -H ctf || true
+adduser -D -g nogroup -u 65534 -h /tmp -H nobody || true
 
 # Set up base directories
 NEWDIR=/var/lib/ctf/points.new
