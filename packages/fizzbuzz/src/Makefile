@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Werror
-TARGETS = multicaster
+TARGETS = fizzbuzz
 
 all: build
 build: $(TARGETS)
