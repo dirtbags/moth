@@ -3,6 +3,6 @@
 exec 2>&1
 
 IP=$(cat ip.txt)
-ip addr add $IP dev eth0
-ip monitor | grep -q $IP
-exec /opt/octopus/bin/octopus ${IP%/*}
+ip addr add $IP dev eth0 || true
+
+exec /opt/octopus/bin/octopus ${IP%/*} < /opt/octopus/tokens.txt
