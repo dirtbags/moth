@@ -2,9 +2,10 @@
 
 exec 2>&1
 
-DB=/var/lib/ctf/puzzles.db
+install -d /var/www
 
-mkdir -p /var/www
+# Install truncates files
+DB=/var/lib/ctf/puzzles.db
 touch $DB
 chown ctf $DB
 
