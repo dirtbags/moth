@@ -19,8 +19,8 @@
         <a href="scoring.html">About scoring</a>
       </li>
       <li>
-        <a href="irc://10.0.0.2/ctf"
-           title="IRC on 10.0.0.2, channel #ctf">Contest chat</a>
+        <a href="irc://[fd84:b410:3441::6]/ctf"
+           title="IRC on fd84:b410:3441::6, channel #ctf">Contest chat</a>
            carries important announcements, and sometimes clues and
            puzzles.
       </li>
@@ -43,15 +43,13 @@
     <h2>Rules</h2>
     <ul>
       <li>
-        No ARP-level attacks: this includes IP spoofing.
-      </li>
-      <li>
         No DoS attacks.
       </li>
       <li>
-        Do not attack machines outside the contest network
-        (10.<i>x</i>.<i>x</i>.<i>x</i>).  Low ports (under 1024) do not
-        run contest categories.
+        Contest servers lie within <samp>fd84:b410:3441::/112</samp>.
+        Do not attack machines outside <samp>fd84:b410:3441::/48</samp>.
+        Low ports (under 1024) do not run contest categories, don't
+        waste your time.
       </li>
       <li>
         Consider the contest network hostile.  It is up to you to

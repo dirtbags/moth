@@ -10,7 +10,6 @@ CACHE = cache
 # The end result
 BIN = bin
 
-
 all: packages
 
 dist: ctf-install.zip

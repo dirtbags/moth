@@ -19,13 +19,8 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #endif
 
-char token[80];
+const char token[100];
 size_t tokenlen;
-
-uint8_t const key[] = {0x99, 0x5f, 0xcb, 0xde,
-                       0xf9, 0x6d, 0x02, 0xf3,
-                       0x47, 0x60, 0x0a, 0xe0,
-                       0x0a, 0x25, 0x4d, 0x16};
 
 char const octopus[] =
   ("                        ___\n"
@@ -197,17 +192,17 @@ struct bound_port {
 } bound_ports[PORTS];
 
 int
-bind_port(struct in_addr *addr, int fd, uint16_t port) {
-  struct sockaddr_in saddr;
+bind_port(struct in6_addr *addr, int fd, uint16_t port) {
+  struct sockaddr_in6 saddr = {0};
 
-  saddr.sin_family = AF_INET;
-  saddr.sin_port = htons(port);
-  memcpy(&saddr.sin_addr.s_addr, addr, sizeof(struct in_addr));
-  return bind(fd, (struct sockaddr *)&saddr, sizeof(saddr));
+  saddr.sin6_family = AF_INET6;
+  saddr.sin6_port = htons(port);
+  memcpy(&saddr.sin6_addr, addr, sizeof *addr);
+  return bind(fd, (struct sockaddr *)&saddr, sizeof saddr);
 }
 
 int
-rebind(struct in_addr *addr)
+rebind(struct in6_addr *addr)
 {
   static int offset = 0;
   int        i;
@@ -226,7 +221,7 @@ rebind(struct in_addr *addr)
     }
 
     /* Bind to a port */
-    bound_ports[i + offset].fd = socket(PF_INET, SOCK_DGRAM, 0);
+    bound_ports[i + offset].fd = socket(AF_INET6, SOCK_DGRAM, 0);
     do {
       port = (random() % 56635) + 10000;
       ret = bind_port(addr, bound_ports[i + offset].fd, port);
@@ -266,14 +261,14 @@ rebind(struct in_addr *addr)
 void
 do_io(int which)
 {
-  struct bound_port *bp      = &bound_ports[which];
-  char               input[INPUT_MAX];
-  ssize_t            inlen;
-  struct sockaddr    from;
-  socklen_t          fromlen = sizeof(from);
+  struct bound_port   *bp      = &bound_ports[which];
+  char                 input[INPUT_MAX];
+  ssize_t              inlen;
+  struct sockaddr_in6  from;
+  socklen_t            fromlen = sizeof(from);
 
   inlen = recvfrom(bp->fd, input, INPUT_MAX, 0,
-                   &from, &fromlen);
+                   (struct sockaddr *)&from, &fromlen);
   if (-1 == inlen) {
     /* Well don't that just beat all. */
     return;
@@ -299,10 +294,6 @@ loop()
   int            i;
   int            nfds = 0;
   fd_set         rfds;
-  struct timeval timeout;
-
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
 
   FD_ZERO(&rfds);
   for (i = 0; i < PORTS; i += 1) {
@@ -310,7 +301,7 @@ loop()
     FD_SET(bound_ports[i].fd, &rfds);
   }
 
-  while (-1 == select(nfds+1, &rfds, NULL, NULL, &timeout)) {
+  while (-1 == select(nfds+1, &rfds, NULL, NULL, NULL)) {
     if (EINTR == errno) {
       continue;
     }
@@ -329,25 +320,31 @@ loop()
 int
 main(int argc, char *argv[])
 {
-  int            ret;
-  int            i;
-  time_t         last_bind  = 0;
-  time_t         last_token = 0;
-  struct in_addr addr;
+  int             ret;
+  int             i;
+  time_t          last_bind  = 0;
+  time_t          last_token = 0;
+  struct in6_addr addr;
 
   /* The random seed isn't super important here. */
   srand(time(NULL));
 
   if (argc > 1) {
-    if (-1 == inet_aton(argv[1], &addr)) {
+    if (0 >= inet_pton(AF_INET6, argv[1], &addr)) {
       fprintf(stderr, "invalid address: %s\n", argv[1]);
       return EX_IOERR;
     }
   } else {
-    addr.s_addr = INADDR_ANY;
+    memcpy(&addr, &in6addr_any, sizeof addr);
   }
 
-  bound_ports[0].fd = socket(PF_INET, SOCK_DGRAM, 0);
+  if (NULL == fgets(token, sizeof(token), stdin)) {
+    perror("Unable to read token");
+    return EX_IOERR;
+  }
+  tokenlen = strlen(token);
+
+  bound_ports[0].fd = socket(AF_INET6, SOCK_DGRAM, 0);
   ret = bind_port(&addr, bound_ports[0].fd, 8888);
   if (-1 == ret) {
     perror("bind port 8888");
@@ -360,17 +357,6 @@ main(int argc, char *argv[])
 
   do {
     time_t now = time(NULL);
-
-    if (last_token + 60 < now) {
-      last_token = now;
-      while (NULL == fgets(token, sizeof(token), stdin)) {
-        if (-1 == fseek(stdin, 0, SEEK_SET)) {
-          /* Non-seekable stdin: we're done. */
-          return 0;
-        }
-      }
-      for (tokenlen = 0; token[tokenlen] && (token[tokenlen] != '\n'); tokenlen += 1);
-    }
 
     if (last_bind + 4 < now) {
       last_bind = now;
