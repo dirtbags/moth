@@ -1,4 +1,7 @@
 #! /bin/sh
 
 exec 2>&1
+
+[ -r /etc/passwd ] || echo 'root:$1$xAJ7KwiU$BeKJjYGs9r/hY9Ag4qv4I1:0:0:root:/tmp:/bin/sh' > /etc/passwd
+
 exec dropbear -r ./rsa.key -E -F

@@ -1,0 +1,3 @@
+#! /bin/sh
+
+exec tcpsvd :: 23 telnetd -f issue -l /bin/sh

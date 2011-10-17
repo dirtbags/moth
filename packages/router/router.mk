@@ -1,33 +1,72 @@
 ROUTER_PKGDIR = $(TARGET)/router
 ROUTER_BUILDDIR = $(BUILD)/router
 
-DNSMASQ_VERSION = 2.57
-DNSMASQ_SRCDIR = $(ROUTER_BUILDDIR)/dnsmasq-$(DNSMASQ_VERSION)
-DNSMASQ_TARBALL = $(CACHE)/dnsmasq-$(DNSMASQ_VERSION).tar.gz
-DNSMASQ_URL = http://www.thekelleys.org.uk/dnsmasq/dnsmasq-$(DNSMASQ_VERSION).tar.gz
+router-source:
 
-$(DNSMASQ_TARBALL):
-	@ mkdir -p $(@D)
-	wget -O $@ $(DNSMASQ_URL)
-
-router-source: $(ROUTER_BUILDDIR)/source
-$(ROUTER_BUILDDIR)/source: $(DNSMASQ_TARBALL)
-	mkdir -p $(ROUTER_BUILDDIR)
-	zcat $(DNSMASQ_TARBALL) | (cd $(ROUTER_BUILDDIR) && tar xf -)
-	touch $@
-
-router-build: $(ROUTER_BUILDDIR)/built
-$(ROUTER_BUILDDIR)/built: $(ROUTER_BUILDDIR)/source
-	$(MAKE) -C $(DNSMASQ_SRCDIR)
-	touch $@
+router-build:
 
 router-install: router-build
-	mkdir -p $(ROUTER_PKGDIR)/sbin
-	cp $(DNSMASQ_SRCDIR)/src/dnsmasq $(ROUTER_PKGDIR)/sbin/
-
 	$(call COPYTREE, packages/router/service, $(ROUTER_PKGDIR)/service)
 
 router-clean:
-	rm -rf $(ROUTER_PKGDIR)
+	rm -rf $(ROUTER_PKGDIR) $(ROUTER_BUILDDIR)
+
+
+##
+## radvd
+##
+RADVD_VERSION = 1.8.1
+RADVD_TARBALL = $(CACHE)/radvd-$(RADVD_VERSION).tar.gz
+RADVD_URL = http://www.litech.org/radvd/dist/radvd-$(RADVD_VERSION).tar.gz
+RADVD_SRCDIR = $(ROUTER_BUILDDIR)/radvd-$(RADVD_VERSION)
+
+$(RADVD_TARBALL):
+	@ mkdir -p $(@D)
+	wget -O $@ $(RADVD_URL)
+
+router-source: $(ROUTER_BUILDDIR)/radvd-source
+$(ROUTER_BUILDDIR)/radvd-source: $(RADVD_TARBALL)
+	mkdir -p $(ROUTER_BUILDDIR)
+	zcat $(RADVD_TARBALL) | (cd $(ROUTER_BUILDDIR) && tar xf -)
+	touch $@
+
+router-build: $(ROUTER_BUILDDIR)/radvd-build
+$(ROUTER_BUILDDIR)/radvd-build: $(ROUTER_BUILDDIR)/radvd-source
+	cd $(RADVD_SRCDIR) && ./configure $(CONFIG_XCOMPILE_FLAGS)
+	$(MAKE) -C $(RADVD_SRCDIR)
+	touch $@
+
+router-install: radvd-install
+radvd-install:
+	mkdir -p $(ROUTER_PKGDIR)/bin
+	cp $(RADVD_SRCDIR)/radvd $(ROUTER_PKGDIR)/bin/
+	cp $(RADVD_SRCDIR)/radvdump $(ROUTER_PKGDIR)/bin/
+
+
+##
+## ecmh
+##
+ECMH_CACHE = $(CACHE)/ecmh.git
+ECMH_BUILDDIR = $(ROUTER_BUILDDIR)/ecmh
+ECMH_URL = http://woozle.org/~neale/projects/ecmh
+
+$(ECMH_CACHE):
+	git clone --bare $(ECMH_URL) $@
+
+router-source: $(ECMH_BUILDDIR)
+$(ECMH_BUILDDIR): $(ECMH_CACHE)
+	git clone $< $@
+
+router-build: $(ROUTER_BUILDDIR)/ecmh-build
+$(ROUTER_BUILDDIR)/ecmh-build: $(ECMH_BUILDDIR)
+	$(MAKE) -C $(ECMH_BUILDDIR)/src ECMH_VERSION=dbtl-git
+	$(MAKE) -C $(ECMH_BUILDDIR)/tools/mtrace6
+	touch $@
+
+router-install: ecmh-install
+ecmh-install:
+	mkdir -p $(ROUTER_PKGDIR)/bin
+	cp $(ECMH_BUILDDIR)/src/ecmh $(ROUTER_PKGDIR)/bin
+	cp $(ECMH_BUILDDIR)/tools/mtrace6/mtrace6 $(ROUTER_PKGDIR)/bin
 
 PACKAGES += router
