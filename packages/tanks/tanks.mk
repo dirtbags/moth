@@ -1,7 +1,7 @@
 TANKS_PKGDIR = $(TARGET)/tanks
 TANKS_CACHE = $(CACHE)/tanks.git
 TANKS_BUILDDIR = $(BUILD)/tanks
-TANKS_URL = "http://woozle.org/~neale/projects/ctanks"
+TANKS_URL = "http://dirtbags.net/projects/tanks"
 
 $(TANKS_CACHE):
 	git clone --bare $(TANKS_URL) $@
@@ -23,7 +23,6 @@ tanks-install: tanks-build
 
 	$(call COPYTREE, packages/tanks/html, $(TANKS_PKGDIR)/html)
 	cp packages/mcp/www/ctf.css $(TANKS_PKGDIR)/html/style.css
-	cp packages/mcp/www/grunge.png $(TANKS_PKGDIR)/html
 	cp $(TANKS_BUILDDIR)/nav.html.inc $(TANKS_PKGDIR)/html
 	cp $(TANKS_BUILDDIR)/tanks.js $(TANKS_PKGDIR)/html
 	cp $(TANKS_BUILDDIR)/forf.html $(TANKS_PKGDIR)/html

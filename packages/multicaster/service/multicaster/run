@@ -1,0 +1,8 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+IP=$(cat ip.txt)
+ip addr add $IP dev eth0 || true
+
+exec setuidgid ctf /opt/multicaster/bin/multicaster ff15::62c 1580 </opt/multicaster/tokens.txt

@@ -1,0 +1,14 @@
+#! /bin/sh
+
+exec 2>&1
+
+[ -r /etc/passwd ] || echo 'root:x:0:0:root:/tmp:/bin/sh' > /etc/passwd
+
+# Always do this, in case something else set a root password
+echo 'root:$1$bEGCYemG$pAo9KXWQKgQNijRGKSb7e1' | chpasswd --encrypted
+
+# Bring up the NIC; this will get us at least a link-local address, and
+# hopefully a global address with stateless autoconfiguration.
+ip link set eth0 up
+
+exec dropbear -r ./rsa.key -E -F

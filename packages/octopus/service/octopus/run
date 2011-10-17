@@ -1,6 +1,8 @@
 #! /bin/sh -e
 
 exec 2>&1
+
 IP=$(cat ip.txt)
-ip addr add $IP label eth0:octopus dev eth0
-exec /opt/octopus/bin/octopus ${IP%/*}
+ip addr add $IP dev eth0 || true
+
+exec /opt/octopus/bin/octopus ${IP%/*} < /opt/octopus/tokens.txt

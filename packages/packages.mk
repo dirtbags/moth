@@ -21,6 +21,9 @@ endef
 
 include packages/*/*.mk
 
+# Things configure likes to see
+CONFIG_XCOMPILE_FLAGS = --host=i386-linux --program-transform-name=
+
 # Make foo depend on foo.pkg
 $(foreach p, $(PACKAGES), $(eval $p: $(BIN)/$p.pkg))
 
