@@ -4,9 +4,19 @@ exec 2>&1
 
 PFX=fd84:b410:3441
 
-hostname router
+log () {
+    echo "router: $@"
+    echo "router: $@" > /dev/console
+}
 
-# We're a router
+if [ $(mount | grep -c /opt/) -gt 1 ]; then
+    log "cannot run alongside other packages" > /dev/console
+    exit 1
+fi
+
+
+# I'm a router
+hostname router
 echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 
 # Bring up main ethernet interface

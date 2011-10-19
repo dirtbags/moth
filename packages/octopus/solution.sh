@@ -1,9 +1,9 @@
 #! /bin/sh
 
 port=8888
-host=${1:-[::1]}
+host=[${1:-::1}]
 
-blooper=$(tempfile)
+blooper=/tmp/bloop.$$
 trap "rm $blooper" 0
 
 echo foo | socat -t 0.01 STDIO UDP6:$host:$port | tail -n +5 > $blooper
