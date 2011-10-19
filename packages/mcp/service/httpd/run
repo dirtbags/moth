@@ -1,17 +1,19 @@
-#! /bin/sh
+#! /bin/sh -e
 
 exec 2>&1
 
+hostname mcp
+
 # Bring up address
 IP=$(cat ip.txt)
-ip addr add $IP dev eth0
-ip monitor | grep -q $IP
+ip addr add $IP dev eth0 || true
 
 # Link in puzzles and web pages
 install -d /var/www
 for d in /opt/*; do
-    if [ -d $d/puzzles ]; then
-        ln -sf $d/puzzles /var/www/$(basename $d)
+    w=/var/www/$(basename $d)
+    if [ -d $d/puzzles ] && ! [ -d $w ]; then
+        ln -sf $d/puzzles $w
     fi
     if [ -d $d/www ]; then
         ln -sf $d/www/* /var/www/
