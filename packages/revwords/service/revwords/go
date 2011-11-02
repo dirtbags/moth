@@ -1,0 +1,3 @@
+#! /bin/sh
+
+exec /opt/revwords/bin/revwords 3</opt/revwords/tokens.txt
