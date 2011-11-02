@@ -6,3 +6,4 @@ IP=$(cat ip.txt)
 ip addr add $IP dev eth0 || true
 
 exec tcpsvd -u nobody ${IP%/*} 1013 ./go
+
