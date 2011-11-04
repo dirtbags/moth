@@ -155,6 +155,9 @@ run(char* key) {
         printf("\n");
         fflush(stdout);
         existing = FALSE;
+      } else {
+        printf("\n");
+        fflush(stdout);
       }
     } else if (91 <= tmp && tmp <= 122) {
       if (existing) {
