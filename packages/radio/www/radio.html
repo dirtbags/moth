@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>101.1 MHz</title>
+    <link rel="stylesheet" href="ctf.css" type="text/css">
+    <script type="text/javascript">
+/* RC4 symmetric cipher encryption/decryption
+ * Copyright (c) 2006 by Ali Farhadi.
+ * released under the terms of the Gnu Public License.
+ * see the GPL for details.
+ *
+ * Email: ali[at]farhadi[dot]ir
+ * Website: http://farhadi.ir/
+ */
+function rc4Encrypt(key, pt) {
+    s = new Array();
+    for (var i=0; i<256; i++) {
+	s[i] = i;
+    }
+    var j = 0;
+    var x;
+    for (i=0; i<256; i++) {
+	j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
+	x = s[i];
+	s[i] = s[j];
+	s[j] = x;
+    }
+    i = 0;
+    j = 0;
+    var ct = '';
+    for (var y=0; y<pt.length; y++) {
+	i = (i + 1) % 256;
+	j = (j + s[i]) % 256;
+	x = s[i];
+	s[i] = s[j];
+	s[j] = x;
+	ct += String.fromCharCode(pt.charCodeAt(y) ^ s[(s[i] + s[j]) % 256]);
+    }
+    return ct;
+}
+
+tokens = [
+"Vo%92%00%DE%ED%1F%BC%B9%A1%865%D6%CD%AD%EA%E7TY%CD%9F%14%F5",
+"Vo%92%00%DE%ED%1F%BC%BD%AF%995%D6%D1%A3%E0%F8TI%C1%99%10%F5",
+"Vo%92%00%DE%ED%1F%BC%A7%A9%9A5%D5%D9%A2%EA%ECTX%CB%81%1C%F5",
+"Vo%92%00%DE%ED%1F%BC%A4%A5%9F5%DE%C1%AD%EE%FDTI%C5%91%14%F5",
+"Vo%92%00%DE%ED%1F%AC%BD%AF%9F5%C4%D1%A2%FA%F9T%5B%CD%81%14%F5",
+"Vo%92%00%DE%ED%1F%B6%BB%A9%955%C8%C1%B1%EA%EFTM%CB%87%00%F5",
+"Vo%92%00%DE%ED%1F%BC%AD%AF%805%C1%CD%A9%EA%E0TX%C5%9F%10%F5",
+"Vo%92%00%DE%ED%1F%B0%BC%A9%905%DE%D1%B3%F6%E6TX%CD%9B%1C%F5",
+"Vo%92%00%DE%ED%1F%B0%A7%AF%905%DA%DD%BB%E6%E8TW%CB%99%0C%F5",
+"Vo%92%00%DE%ED%1F%AC%AD%A9%915%C1%DD%A9%FA%E9TW%DD%8D%10%F5",
+"%D0%C39fH%00q%AE%D2oMw%F7%0A%1C%B9%AFNOR1a%CD",
+"%D0%C39fH%00q%AE%D8eZw%E5%04%0E%BF%B8N%5E%5C%29%7B%CD",
+"%D0%C39fH%00q%A4%D8oGw%EE%0E%02%B3%B4NND5%7D%CD",
+"%D0%C39fH%00q%BE%D9aHw%EE%02%08%AF%AENZD3a%CD",
+"%D0%C39fH%00q%A4%D1iPw%EF%04%02%B9%AFNJD%29q%CD",
+"%D0%C39fH%00q%A2%D1oXw%E0%0E%0A%A3%BFNTD1%7D%CD",
+"%D0%C39fH%00q%BE%CCaYw%F7%02%18%B9%B0NQR6a%CD",
+"%D0%C39fH%00q%AE%DDaNw%EF%0E%02%BF%AENLX5u%CD",
+"%E6%A9%B8%09%A6%F2e%EC%E85%18%EE%8Ax_%182%BA%3A%9F%E2%0A%7B",
+"%DE%02%A7%3A%CD%90%B6%D8r%D0%7B%8C%C4%1B%C7-C%1F%14%8B7%88@",
+"Y%F8%0C%CD%ED%25%7C%E0HT%CA%AD%C5%FD%28k5%1C%7E%BE%20%16V",
+"Y%F8%0C%CD%ED%25%7C%EAFT%CF%AD%D0%F10a5%1C%7E%B0%3E%0CV",
+"Y%F8%0C%CD%ED%25%7C%ECH%5C%CF%AD%DB%FD5k7%1Cv%A6%3B%1AV",
+"Y%F8%0C%CD%ED%25%7C%F0H%5C%D9%AD%DA%FD6m%28%1Cb%B0+%02V",
+"Y%F8%0C%CD%ED%25%7C%E0NT%D7%AD%D3%E14k%28%1C%7F%AA.%0AV",
+"Y%F8%0C%CD%ED%25%7C%F0FZ%D7%AD%C7%E1%28a/%1Cp%AA%25%0AV",
+"Y%F8%0C%CD%ED%25%7C%E0MT%C3%AD%D4%FD%24e%3C%1Ck%AA+%02V",
+"Y%F8%0C%CD%ED%25%7C%ECU%5C%DF%AD%D0%E5%3Ea+%1Ck%AA%29%1AV",
+"Y%F8%0C%CD%ED%25%7C%E0BZ%CB%AD%D5%EB5a+%1Cv%A6%21%0AV",
+"Y%F8%0C%CD%ED%25%7C%F0SP%D9%AD%D4%EB%22k8%1C%7C%BE*%0AV",
+"%3F%84G%10%A5%5D.3%1F%10%F7%EC%D6%A38V%F9%96%05%19%D03%AC",
+"%3F%84G%10%A5%5D.3%15%14%FC%EC%C0%AF1V%FC%96%03%03%CA%23%AC",
+"Z%AE%16i%8F%1AK%DC%05%BE%7Ee_%0A%D2%A3%801%29%D3%13%13%E5",
+"Z%AE%16i%8F%1AK%DC%0E%B8%60eC%1A%D4%BF%8A1%2C%C5%1C%13%E5",
+"%18%F5%06d%C0%FCbli%C2%1AR25%AB%E0UD%BF@%81%15%E5",
+"%18%F5%06d%C0%FCbvc%C6%06R%3D-%B9%EE%5CD%A8@%90%01%E5",
+"%18%F5%06d%C0%FCb%7Cd%C2%1AR%3D-%A1%FAND%ABL%90%15%E5",
+"%18%F5%06d%C0%FCblc%C6%1CR7%23%A4%E6JD%BE@%98%01%E5",
+"%18%F5%06d%C0%FCbpd%C6%0ER%20%25%B3%EELD%AAL%93%09%E5",
+"%18%F5%06d%C0%FCbvq%C8%19R%3B%29%AE%E0%5BD%AC%5C%88%19%E5",
+"%18%F5%06d%C0%FCb%7Cl%C8%1ER%24%25%A4%EEUD%B4X%9F%15%E5",
+"%18%F5%06d%C0%FCbv%7D%C6%09R%229%BB%E0VD%BAP%9F%05%E5",
+"%18%F5%06d%C0%FCblq%C8%01R%3C5%BA%F6ND%BEL%81%05%E5",
+"%18%F5%06d%C0%FCb%7Cq%C8%0ER%24%25%AD%E6%5BD%B5V%98%01%E5",
+"%F2%F2%D0%DB%F7Uq%ED%E2%0C%C0%25L%7B%B9%F2I%013%C5%BA%1Fd",
+"%F2%F2%D0%DB%F7Uq%EB%FC%08%C0%25Wq%A2%E2%5B%013%CF%AB%13d",
+"%B1.2%D4ZV5%92%21%16%BB%EB%01%0D%5C%8F%D9%02%8F%0E6%A5%CB",
+"%B1.2%D4ZV5%9E9%1E%BB%EB%1A%03%5C%9F%C6%02%85%12%24%A1%CB",
+"%B1.2%D4ZV5%98%3A%16%AF%EB%1E%07K%8F%C2%02%91%02%27%B1%CB",
+"%B1.2%D4ZV5%924%18%BD%EB%08%0DD%9F%D4%02%86%0E2%BD%CB",
+"%B1.2%D4ZV5%92-%12%BE%EB%10%0BR%9F%C2%02%99%0A9%AD%CB",
+"%B1.2%D4ZV5%823%18%B5%EB%18%0DK%8B%C1%02%9B%12%22%AB%CB",
+"%B1.2%D4ZV5%9E%27%12%AA%EB%0D%03X%85%C0%02%91%043%B1%CB",
+"%B1.2%D4ZV5%92%3C%1E%B5%EB%1C%0DC%93%C6%02%9B%1E%3A%AB%CB",
+"%B1.2%D4ZV5%829%12%B7%EB%1E%0DJ%85%D9%02%9B%028%B1%CB",
+"%B1.2%D4ZV5%981%1E%B5%EB%19%17C%8F%C2%02%9D%029%A5%CB",
+"%B1.2%D4ZV5%983%18%B7%EB%06%17K%83%C8%02%98%126%AD%CB",
+"%B1.2%D4ZV5%92%3B%12%B7%EB%0E%0B%5E%93%D0%02%9F%0A%26%AD%CB",
+];
+
+
+function quote(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function check() {
+    var a = document.getElementById("a").value;
+    var o = document.getElementById("o");
+    var n = 0;
+
+    o.innerHTML = "";
+
+    for (var i in tokens) {
+        //o.innerHTML += "\"" + escape(rc4Encrypt(tokens[i][1], tokens[i][0])) + "\",\n";
+        var t = unescape(tokens[i]);
+        var d = rc4Encrypt(a, t);
+
+        if (d.substr(0, 5) == "radio") {
+            o.innerHTML += unescape(d) + "\n";
+            n += 1;
+        }
+    }
+
+    if (n) {
+        o.innerHTML += "---\n" + n + " tokens decoded\n";
+    } else {
+        o.innerHTML = "Try again.";
+    }
+
+}
+    </script>
+  </head>
+  <body>
+    <h1>101.1 MHz</h1>
+
+    <p>
+      Tune to 101.1 MHz.
+    </p>
+
+    <form action="#" onsubmit="check();">
+      If you think you've figured something out, enter it here:
+      <input id="a">
+      <input type="submit" value="check answer">
+    </form>
+
+    <pre id="o"></pre>
+  </body>
+</html>
