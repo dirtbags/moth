@@ -158,7 +158,7 @@ run(char* key) {
       }
     } else if (91 <= tmp && tmp <= 122) {
       if (existing) {
-        if (tmp == buf[0]) {
+        if (tmp == buf[0] && tmp != 'x') {
           buf[1] = 'x';
           swapchar(key, buf);
           printcrap(buf);
