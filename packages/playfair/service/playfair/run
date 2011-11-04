@@ -1,0 +1,9 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+IP=$(cat ip.txt)
+ip addr add $IP dev eth0 || true
+
+exec tcpsvd -u nobody ${IP%/*} 1013 /opt/playfair/bin/playfair
+
