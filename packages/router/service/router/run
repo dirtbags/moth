@@ -2,6 +2,9 @@
 
 exec 2>&1
 
+echo 8192 > /proc/sys/net/ipv6/neigh/default/gc_thresh3
+echo 4096 > /proc/sys/net/ipv6/neigh/default/gc_thresh2
+
 PFX=fd84:b410:3441
 
 log () {
