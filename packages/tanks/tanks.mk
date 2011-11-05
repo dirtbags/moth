@@ -21,6 +21,8 @@ tanks-install: tanks-build
 	cp $(TANKS_BUILDDIR)/rank.awk $(TANKS_PKGDIR)/bin
 	cp $(TANKS_BUILDDIR)/winner.awk $(TANKS_PKGDIR)/bin
 
+	cp packages/tanks/tokens.txt $(TANKS_PKGDIR)/
+
 	$(call COPYTREE, packages/tanks/html, $(TANKS_PKGDIR)/html)
 	cp packages/mcp/www/ctf.css $(TANKS_PKGDIR)/html/style.css
 	cp $(TANKS_BUILDDIR)/nav.html.inc $(TANKS_PKGDIR)/html
