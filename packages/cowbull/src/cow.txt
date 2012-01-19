@@ -1,0 +1,58 @@
+The Cow Game
+============
+
+You are trying to guess a 4-nybble sequence.  Each nybble will have
+either 1 or 2 bits set, and the highest bit will never be set.  The
+game server will tell you how many nybbles in each guess were correct,
+and how many had one correct bit.  It does not tell you which
+positions
+
+
+
+The Cow Client
+==============
+
+The client connects to the Cow server running on the IPv6 address
+provided in argument 1.  If argument 2 is present, the client will
+try to run it, providing stdin and stdout as in interactive mode.
+
+In interactive mode (no argument 2), the client reads a guess in the
+form of 4 ASCII numerals, and prints the number of correct nybbles
+followed by the number of nybbles with one correct bit.
+
+Here is an example of a session:
+
+    1111
+    12
+    2222
+    10
+    4444
+    02
+    4244
+    12
+    1244
+    22
+    1255
+    cow:xylep-radar-nanox
+
+
+
+The Cow Protocol
+================
+
+cowd runs on port 3782.
+
+The client always sends 6 octets.  To request a new session, it sends
+all zeroes.  Otherwise it sends the 4-octet game identifier provided
+by the server, concatenated with a 2-octet guess.
+
+The server will respond with a new game identifier (4 octets) to a new
+game request or if the game requested is too old.  If a guess is
+incorrect, the server will respond with either a 1-octet score in
+which the high nybble is the number of correct nybbles in the guess,
+and the low nybble is the number of nybbles in the guess with one
+correct bit.  If a guess is correct, the server will respond with a
+token of length 5 octets or more.
+
+There are multiple tokens, one per number of guesses used, up to
+some maximum number of guesses defined per server instance.
