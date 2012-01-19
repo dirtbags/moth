@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * How this works:
@@ -25,7 +26,7 @@
  *          echo $i
  *      fi
  *  done
- * 
+ *
  */
 
 char craptable[] = {
@@ -50,11 +51,11 @@ main(int argc, char *argv[])
       printf("Somebody didn't read the instructions.\n");
       return 1;
     }
-    
+
     tokenlen = fread(token, 1, sizeof(token), tokenin);
     fclose(tokenin);
   }
-  
+
 
   for (i=1; i <= 100; i += 1) {
     char l[100];

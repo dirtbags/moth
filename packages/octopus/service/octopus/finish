@@ -1,4 +1,0 @@
-#! /bin/sh
-
-IP=$(cat ip.txt)
-ip addr del $IP dev eth0

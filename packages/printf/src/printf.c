@@ -19,13 +19,7 @@ record(char *buf) {
 }
 
 /* Storage space for tokens */
-char *token[5] = {
-  "printf:xylep-radar-nanox",
-  "printf:xylep-radar-nanox",
-  "printf:xylep-radar-nanox",
-  "printf:xylep-radar-nanox",
-  "printf:xylep-radar-nanox"
-};
+char token[5][100];
 
 /* Make this global so the stack isn't gigantic */
 char global_fmt[8000] = {0};
@@ -40,6 +34,29 @@ main(int argc, char *argv[], char *env[])
   char *datacomp    = "welcome datacomp";
   int   token4_flag = 0;
   int   i;
+
+  /* Read in tokens */
+  {
+    FILE *tf = fdopen(3, "r");
+
+    if (! tf) {
+      fprintf(stderr, "No tokens on fd3\n");
+      return 1;
+    }
+
+    for (i = 0; i < 5; i += 1) {
+      char *p = fgets(token[i], sizeof(token[i]), tf);
+
+      if (! p) {
+        fprintf(stderr, "Cannot read token %d\n", i);
+        return 1;
+      }
+
+      /* Replace newline with null */
+      for (; *p && (*p != '\n'); p += 1);
+      *p = 0;
+    }
+  }
 
   /* Make stderr buffer until lines */
   setlinebuf(stderr);
