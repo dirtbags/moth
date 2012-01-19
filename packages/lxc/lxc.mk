@@ -50,6 +50,3 @@ lxc-clean:
 
 
 LIBCAP_PKGDIR = $(TARGET)/libcap
-
-
-PACKAGES += lxc

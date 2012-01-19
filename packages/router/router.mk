@@ -44,28 +44,29 @@ radvd-install:
 
 
 ##
-## mrd6
+## ecmh
 ##
-MRD6_CACHE = $(CACHE)/mrd6.git
-MRD6_BUILDDIR = $(ROUTER_BUILDDIR)/mrd6
-MRD6_URL = https://github.com/hugosantos/mrd6.git
+ECMH_CACHE = $(CACHE)/ecmh.git
+ECMH_BUILDDIR = $(ROUTER_BUILDDIR)/ecmh
+ECMH_URL = http://woozle.org/~neale/projects/ecmh
 
-$(MRD6_CACHE):
-	git clone --bare $(MRD6_URL) $@
+$(ECMH_CACHE):
+	git clone --bare $(ECMH_URL) $@
 
-router-source: $(MRD6_BUILDDIR)
-$(MRD6_BUILDDIR): $(MRD6_CACHE)
+router-source: $(ECMH_BUILDDIR)
+$(ECMH_BUILDDIR): $(ECMH_CACHE)
 	git clone $< $@
 
-router-build: $(ROUTER_BUILDDIR)/mrd6-build
-$(ROUTER_BUILDDIR)/mrd6-build: $(MRD6_BUILDDIR)
-	$(MAKE) -C $(MRD6_BUILDDIR)
+router-build: $(ROUTER_BUILDDIR)/ecmh-build
+$(ROUTER_BUILDDIR)/ecmh-build: $(ECMH_BUILDDIR)
+	$(MAKE) -C $(ECMH_BUILDDIR)/src ECMH_VERSION=dbtl-git
+	$(MAKE) -C $(ECMH_BUILDDIR)/tools/mtrace6
 	touch $@
 
-router-install: mrd6-install
-mrd6-install:
+router-install: ecmh-install
+ecmh-install:
 	mkdir -p $(ROUTER_PKGDIR)/bin
-	cp $(MRD6_BUILDDIR)/src/mrd $(ROUTER_PKGDIR)/bin
-
+	cp $(ECMH_BUILDDIR)/src/ecmh $(ROUTER_PKGDIR)/bin
+	cp $(ECMH_BUILDDIR)/tools/mtrace6/mtrace6 $(ROUTER_PKGDIR)/bin
 
 PACKAGES += router

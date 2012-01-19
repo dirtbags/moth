@@ -1,5 +1,5 @@
 CFLAGS = -Wall -Werror
-TARGETS = multicaster-server multicaster-client
+TARGETS = multicaster
 
 all: build
 build: $(TARGETS)

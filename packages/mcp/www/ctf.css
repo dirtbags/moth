@@ -46,7 +46,7 @@ h1:first-child {
 
 h1:first-child:before {
     letter-spacing: -0.1em;
-    content: "Capture The Flag: ";
+    content: "NSM FIRE: ";
 }
 
 /**** body ****/
