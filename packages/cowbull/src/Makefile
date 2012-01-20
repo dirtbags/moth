@@ -1,1 +1,1 @@
-cowd:
+all: cowd cowcli
