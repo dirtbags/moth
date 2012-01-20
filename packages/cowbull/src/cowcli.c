@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+#define DEBUG
+
 int
 bind_port(int fd, const struct in6_addr *addr, uint16_t port)
 {
@@ -107,6 +109,12 @@ main(int argc, char *argv[])
      * Set up socket 
      */
     sock = socket(AF_INET6, SOCK_DGRAM, 0);
+    if (-1 == bind_port(sock, &in6addr_any, 44)) {
+        perror("Binding UDP port 44");
+#ifndef DEBUG
+        return EX_IOERR;
+#endif
+    }
 
     while (1) {
         char line[20];
