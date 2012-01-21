@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+
 #define DEBUG
 
 int
@@ -86,24 +87,17 @@ main(int argc, char *argv[])
     int             sock;
     int             i;
     struct in6_addr addr;
-    FILE *in;
-    FILE *out;
+    uint32_t        token = 0;
+    FILE            *in, *out;
 
     srand(time(NULL));
+
+    signal(SIGCHLD, sigchld);
 
     if (0 >= inet_pton(AF_INET6, argv[1], &addr)) {
         fprintf(stderr, "invalid address: %s\n", argv[1]);
         return EX_IOERR;
     }
-    if (argv[2]) {
-        /* fork and exec */
-    } else {
-        in = stdin;
-        out = stdout;
-    }
-
-    signal(SIGCHLD, sigchld);
-    evil(argv);
 
     /*
      * Set up socket 
@@ -116,18 +110,59 @@ main(int argc, char *argv[])
 #endif
     }
 
-    while (1) {
-        char line[20];
-        long guess;
+    if (argv[2]) {
+        /* fork and exec */
+    } else {
+        in = stdin;
+        out = stdout;
+    }
 
-        /* XXX: only do this if we have a game ID */
-        if (NULL == fgets(line, sizeof line, in)) {
-            break;
+    //evil(argv);
+
+    while (1) {
+        long guess;
+        struct {
+            uint32_t        token;
+            uint16_t        guess;
+        } g;
+
+        g.token = token;
+        if (token) {
+            char line[20];
+
+            if (NULL == fgets(line, sizeof line, in)) {
+                break;
+            }
+            g.guess = strtol(line, NULL, 16);
+        } else {
+            g.guess = 0;
         }
 
-        guess = strtol(line, NULL, 16);
-        /* send the guess */
+        /* Send the guess */
+        if (-1 == sendto(sock, &g, sizeof g, 0, &addr, sizeof addr)) {
+            perror("Sending packet");
+            return EX_IOERR;
+        }
+
         /* read the result */
+        {
+            char buf[80];
+            ssize_t len;
+
+            len = recvfrom(sock, buf, sizeof buf, 0, NULL, NULL);
+            switch (len) {
+                case -1:
+                    perror("Reading packet");
+                    return EX_IOERR;
+                case 1:
+                    /* It's a score */
+                case 4:
+                    /* New game token */
+                default:
+                    /* You win: this is your CTF token */
+            }
+        }
+
         /* parse result */
         /* display result */
     }
