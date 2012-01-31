@@ -9,10 +9,17 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
+#include <netdb.h>
 #include <fcntl.h>
 
 
-#define DEBUG
+#define NODEBUG
+
+#ifdef DEBUG
+#   define PORT 4444
+#else
+#   define PORT 44
+#endif
 
 int
 bind_port(int fd, const struct in6_addr *addr, uint16_t port)
@@ -86,7 +93,7 @@ main(int argc, char *argv[])
     long            answer = 0;
     int             sock;
     int             i;
-    struct in6_addr addr;
+    struct addrinfo *addr;
     uint32_t        token = 0;
     FILE            *in, *out;
 
@@ -94,20 +101,31 @@ main(int argc, char *argv[])
 
     signal(SIGCHLD, sigchld);
 
-    if (0 >= inet_pton(AF_INET6, argv[1], &addr)) {
-        fprintf(stderr, "invalid address: %s\n", argv[1]);
-        return EX_IOERR;
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s SERVER\n", argv[0]);
+        return EX_USAGE;
+    }
+
+    {
+        struct addrinfo hints = { 0 };
+
+        hints.ai_family = PF_INET6;
+        hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_flags = AI_NUMERICHOST;
+
+        if (0 != getaddrinfo(argv[1], "3782", &hints, &addr)) {
+            perror("Resolving address");
+            return EX_IOERR;
+        }
     }
 
     /*
      * Set up socket 
      */
     sock = socket(AF_INET6, SOCK_DGRAM, 0);
-    if (-1 == bind_port(sock, &in6addr_any, 44)) {
+    if (-1 == bind_port(sock, &in6addr_any, PORT)) {
         perror("Binding UDP port 44");
-#ifndef DEBUG
         return EX_IOERR;
-#endif
     }
 
     if (argv[2]) {
@@ -139,7 +157,7 @@ main(int argc, char *argv[])
         }
 
         /* Send the guess */
-        if (-1 == sendto(sock, &g, sizeof g, 0, &addr, sizeof addr)) {
+        if (-1 == sendto(sock, &g, sizeof g, 0, addr->ai_addr, addr->ai_addrlen)) {
             perror("Sending packet");
             return EX_IOERR;
         }
@@ -156,15 +174,20 @@ main(int argc, char *argv[])
                     return EX_IOERR;
                 case 1:
                     /* It's a score */
+                    printf("%02x\n", buf[0]);
+                    break;
                 case 4:
                     /* New game token */
+                    printf("NEW GAME\n");
+                    token = *((uint32_t *) buf);
+                    break;
                 default:
                     /* You win: this is your CTF token */
+                    buf[len] = 0;
+                    printf("A WINNER IS YOU: %s\n", buf);
+                    break;
             }
         }
-
-        /* parse result */
-        /* display result */
     }
 
     return 0;
