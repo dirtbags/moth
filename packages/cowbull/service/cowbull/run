@@ -1,0 +1,7 @@
+#! /bin/sh -e
+
+exec 2>&1
+read IP < ip.txt
+ip addr add $IP dev eth0 || true
+
+exec setuidgid nobody /opt/cowbull/bin/cowd < /opt/cowbull/tokens.txt
