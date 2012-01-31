@@ -15,7 +15,7 @@ router-clean:
 ##
 ## radvd
 ##
-RADVD_VERSION = 1.8.1
+RADVD_VERSION = 1.8.4
 RADVD_TARBALL = $(CACHE)/radvd-$(RADVD_VERSION).tar.gz
 RADVD_URL = http://www.litech.org/radvd/dist/radvd-$(RADVD_VERSION).tar.gz
 RADVD_SRCDIR = $(ROUTER_BUILDDIR)/radvd-$(RADVD_VERSION)
