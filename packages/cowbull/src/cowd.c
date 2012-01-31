@@ -14,6 +14,8 @@
 char            tokens[NTOKENS][TOKENLEN];
 int             ntokens;
 
+char *admonishment = "Try for fewer guesses next time!\n";
+
 struct state {
     time_t          death;
     uint16_t        answer;
@@ -58,9 +60,13 @@ new_game(int sock, time_t now, struct sockaddr_in6 *from,
             for (i = 0; i < 4; i += 1) {
                 s->answer = (s->answer << 4) | ((random() % 6) + 1);
             }
+
+            g.token = s->answer;
             break;
         }
     }
+
+    printf("=%02x\n", g.token);
 
     if (g.offset < NSTATES) {
         sendto(sock, &g, sizeof(g), 0, (struct sockaddr *) from, fromlen);
@@ -103,7 +109,7 @@ loop(int sock)
     }
     cur = &states[g.offset];
 
-    if ((g.token != cur->answer) || /* Wrong token? */
+    if ((g.token != cur->answer) ||     /* Wrong token? */
         (cur->death < now) ||   /* Old game? */
         (cur->guesses++ > 100)) {       /* Too dumb? */
         /*
@@ -112,8 +118,8 @@ loop(int sock)
         new_game(sock, now, &from, fromlen);
         return;
     } else {
-        uint8_t         reply;
-        int i;
+        uint8_t         reply = 0;
+        int             i;
 
         for (i = 0; i < 4; i += 1) {
             int             s = (g.guess >> (i * 4)) & 0xf;
@@ -127,16 +133,22 @@ loop(int sock)
                 reply += 0x01;
             }
         }
+        printf("%02x ? %02x\n", g.guess, reply);
 
         if (reply == 0x40) {
-            if (cur->guesses > ntokens) {
-                sendto(sock, tokens[cur->guesses],
-                       strlen(tokens[cur->guesses]), 0,
-                       (struct sockaddr *) &from, fromlen);
+            char *r;
+            
+            if (cur->guesses <= ntokens) {
+                r = tokens[cur->guesses - 1];
+            } else {
+                r = admonishment;
             }
+            sendto(sock, r, strlen(r) - 1, 0,
+                   (struct sockaddr *) &from, fromlen);
+            cur->death = 0;
         } else {
-            sendto(sock, &reply, sizeof reply, 0, (struct sockaddr *) &from,
-                   fromlen);
+            sendto(sock, &reply, sizeof reply, 0,
+                   (struct sockaddr *) &from, fromlen);
         }
     }
 }
@@ -144,7 +156,6 @@ loop(int sock)
 int
 main(int argc, char *argv[])
 {
-    long            answer = 0;
     int             sock;
     int             i;
     struct in6_addr addr;
@@ -178,10 +189,6 @@ main(int argc, char *argv[])
     if (-1 == i) {
         perror("Bind port 3782");
         return EX_IOERR;
-    }
-
-    for (i = 0; i < 4; i += 1) {
-        answer = (answer << 4) | ((random() % 6) + 1);
     }
 
     while (1) {
