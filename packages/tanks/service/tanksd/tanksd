@@ -3,6 +3,7 @@
 d=/var/lib/ctf/tanks
 p=$d/players
 w=/var/www/tanks
+log=$d/winners.log
 
 summary () {
     cat <<EOF
@@ -40,9 +41,8 @@ EOF
 }
 
 while true; do
-    # Make sure all teams exist
-    KEY='Too much cheese.' arc4 < /var/lib/ctf/teams.txt | \
-        while read hash; do
+    for dn in /var/lib/ctf/teams/names/*; do
+        hash=${dn##*/}
         install -o ctf -d $p/$hash
     done
 
@@ -99,12 +99,13 @@ EOF
 </html>
 EOF
     
-    # Get a token and add it to the redemption log
-    nc 10.0.0.2 1 -e /opt/ctfbase/bin/tokencli tanks ./category.key 3> $tfn
-    k=$(cat $tfn)
     winner.awk $rfn | while read winner; do
         hash=$(basename $winner)
-        echo "Round $next winner: $hash"
+        echo "Round $next winner: $hash" >> $log
+        nwinners=$(wc -l $log)
+        
+        # Read a token
+        k=$(sed -n ${nwinners}p /opt/tanks/tokens.txt)
         
         # XXX: pull this out into another daemon
         # XXX: this puts the token in /proc/self/cmdline
