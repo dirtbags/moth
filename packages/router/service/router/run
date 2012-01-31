@@ -30,4 +30,6 @@ for i in $(seq 24); do
   ip link set eth0.$i up
 done
 
+ip route add fd80:1::/48 via fd84:b410:3441:24::2
+
 sleep 8100d
