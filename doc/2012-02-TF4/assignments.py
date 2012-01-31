@@ -26,6 +26,10 @@ Course questions should be directed to the appropriate instructor:
 General questions about Tracer FIRE may be sent to
 Neale Pickett <neale@lanl.gov>
 
+Remember: the exercise network should be considered
+hostile!  Do not bring anything sensitive on your laptop,
+and make sure you back everything up.
+
 Looking forward to seeing you in Santa Fe next week,
 
 -- 
