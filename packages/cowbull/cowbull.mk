@@ -4,8 +4,12 @@ cowbull-install: cowbull-build
 	mkdir -p $(COWBULL_PKGDIR)
 
 	mkdir -p $(COWBULL_PKGDIR)/bin/
-	$(MAKE) -C packages/cowbull/src install DESTDIR=$(CURDIR)/$(COWBULL_PKGDIR)
+	cp packages/cowbull/src/cowd $(COWBULL_PKGDIR)/bin
 
+	mkdir -p $(COWBULL_PKGDIR)/www/cowbull/
+	cp packages/cowbull/www/moo.html $(COWBULL_PKGDIR)/www/cowbull/index.html
+	cp packages/cowbull/src/cowcli $(COWBULL_PKGDIR)/www/cowbull/
+	
 	$(call COPYTREE, packages/cowbull/service, $(COWBULL_PKGDIR)/service)
 	cp packages/cowbull/tokens.txt $(COWBULL_PKGDIR)/
 
