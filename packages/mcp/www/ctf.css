@@ -46,7 +46,7 @@ h1:first-child {
 
 h1:first-child:before {
     letter-spacing: -0.1em;
-    content: "NSM FIRE: ";
+    content: "Tracer FIRE: ";
 }
 
 /**** body ****/
@@ -134,9 +134,30 @@ nav li + li:before {
     text-align: center;
 }
 
-#scoreboard td {
-    height: 300px;
+/* Scoreboard stuff */
+
+.scoreboard, .scoreboard body {
+    height: 100%; 
+    margin: 0;
+    padding: 0;
+    max-width: none;
 }
+
+#scoreboard {
+    height: 60%;
+    font-size: 75%;
+}
+
+#scoreboard td {
+    height: 100%;
+}
+
+#chart {
+    height: 30%;
+    width: 100%;
+}
+
+/* Tanks stuff */
 
 #battlefield {
     border: 2px solid green;
