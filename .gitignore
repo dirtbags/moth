@@ -2,7 +2,7 @@
 *#
 *.pyc
 *.o
-bin/
+./bin/
 build/
 cache/
 target/
