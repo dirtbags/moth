@@ -32,8 +32,6 @@ umount /mnt/ctf-install
 syslinux -d syslinux $FATFS
 
 mount $FATFS /mnt/ctf-install
-cp rootfs.squashfs /mnt/ctf-install/syslinux/dbtl.squashfs
-cp bzImage /mnt/ctf-install/syslinux/
 
 cat <<EOD >/mnt/ctf-install/syslinux/syslinux.cfg
 DEFAULT ctf
@@ -47,8 +45,10 @@ LABEL dbtl
   APPEND packages=disabled
 EOD
 
+cp rootfs.squashfs /mnt/ctf-install/syslinux/dbtl.squashfs
+cp bzImage /mnt/ctf-install/syslinux/
 cp $(dirname $0)/bin/*.pkg /mnt/ctf-install/disabled/
-mv /mnt/ctf-install/disabled/ctfbase.pkg /mnt/ctf-install/
+mv /mnt/ctf-install/disabled/00admin.pkg /mnt/ctf-install/
 umount /mnt/ctf-install
 rmdir /mnt/ctf-install
 
