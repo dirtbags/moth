@@ -29,7 +29,7 @@
     <p>
       Many of the categories are in the form of
       multiple <em>puzzles</em>: for each puzzle presented, a
-      case-sensitive answer must be found to recieve the amount of
+      case-sensitive answer must be found to receive the amount of
       points that puzzle is worth.  Any team may answer any puzzle
       question at any time.  A new puzzle is revealed when a team
       correctly answers the highest-valued puzzle in that category.
@@ -38,11 +38,19 @@
 
     <h2 id="tokens">Tokens</h2>
     <p>
-      Tokens are strings redeemable once for a single point each.  A
+      Tokens are strings redeemable once for points. They take on
+      two forms: a single or multipoint token. A single point
       token for the "example" category might look like this:
     </p>
 
     <pre>example:xylep-radar-nanox</pre>
+
+    <p>
+      A 42 point
+      token for the "example" category might look like this:
+    </p>
+
+    <pre>example:42:xihyp-ropar-nanix</pre>
 
     <p>
       Tokens are typically associated with "live" categories, such as a
