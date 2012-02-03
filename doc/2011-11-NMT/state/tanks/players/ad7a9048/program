@@ -1,0 +1,16 @@
+0 sensor? { fire! } if				(fire when triggered)
+0 0 mset							(recenter)
+1 sensor? { get-turret 8 + 0 mset } if	(aim +)
+2 sensor? { get-turret 8 - 0 mset } if	(aim -)
+7 sensor? { get-turret 3 + 0 mset } if	(precise aim +)
+8 sensor? { get-turret 3 - 0 mset } if	(precise aim -)
+9 sensor? { get-turret 0 mset } if		(lock if targeted)
+5 sensor? { 20 0 mget + 0 mset } if		(move turret + if backing up)
+0 mget set-turret!
+
+100 100 set-speed!				(search in circles)
+3 sensor? { 100 50 set-speed! } if		(swerve right if target)
+6 sensor? { 100 100 set-speed! } if		(run if threat behind)
+4 sensor? { 50 100 set-speed! } if		(swerve left if target)
+5 sensor? { -20 -50 set-speed! } if		(swerve backwards if collision)
+3 sensor? 4 sensor? & fire-ready? ! & { -100 -100 set-speed! } if(run away!)
