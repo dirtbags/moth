@@ -36,4 +36,9 @@ done
 # Subnet route for SNL at TF4
 ip route add fd80:1::/48 via fd84:b410:3441:24::2
 
+# Drop SSH from non-management VLANs
+ip6tables -A INPUT -s fd84:b410:3441:0::/64 -m tcp -p tcp --dport 22 -j ACCEPT
+ip6tables -A INPUT -m tcp -p tcp --dport 22 -j DROP
+ip6tables -A FORWARD -d fd84:b410:3441:0::/64 -m tcp -p tcp --dport 22 -j DROP
+
 sleep 8100d

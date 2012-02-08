@@ -2,7 +2,9 @@ DESTDIR ?= /tmp
 
 build: cowd cowcli
 
-cowcli: CC=cc
+cowcli: cowcli.c
+	$(CC) -o $@ -static $<
+	strip $@
 
 install: build
 	cp cowd cowcli $(DESTDIR)/bin/
