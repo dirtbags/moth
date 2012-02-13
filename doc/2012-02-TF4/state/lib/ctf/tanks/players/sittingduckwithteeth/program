@@ -1,0 +1,3 @@
+0 sensor? { fire! } if
+1 sensor? { get-turret 40 + set-turret! } if
+2 sensor? { get-turret 40 - set-turret! } if
