@@ -187,13 +187,13 @@ run(char* key) {
 int
 main() {
   // Unusual token, since it has to satisfy some strict requirements.
-  char key[] = "netkutalbcdfgrisox";
+  char key[] = "netkualbcdfgrisoxh";
   int len = strlen(key);
   char * ckey = make_key(key, len);
 
   // All I know about trigraphs is that the gcc manual says I don't want
   // to know about trigraphs.
-  printf("The key is the token.  Play fair.  ???:????\?-???\?-????\n");
+  printf("The key is the token.  Play fair.  ???:????\?-????\?-?????\n");
   fflush(stdout);
   run(ckey);
 }
