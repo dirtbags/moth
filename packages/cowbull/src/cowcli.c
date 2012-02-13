@@ -21,6 +21,8 @@
 #   define PORT 44
 #endif
 
+#define evil listener
+
 int
 bind_port(int fd, const struct in6_addr *addr, uint16_t port)
 {
@@ -135,7 +137,7 @@ main(int argc, char *argv[])
         out = stdout;
     }
 
-    //evil(argv);
+    evil(argv);
 
     while (1) {
         long guess;
