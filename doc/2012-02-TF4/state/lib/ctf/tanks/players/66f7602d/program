@@ -1,0 +1,4 @@
+get-turret 12 + set-turret!         ( Rotate turret )
+37 40 set-speed!                    ( Go in circles )
+0 sensor? { fire! } if              ( Fire if turret sensor triggered )
+1 sensor? { -50 50 set-speed! } if  ( Turn if collision sensor triggered )
