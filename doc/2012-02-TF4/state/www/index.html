@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Welcome</title>
+    <link rel="stylesheet" href="ctf.css" type="text/css">
+  </head>
+  <body>
+    <h1>Welcome</h1>
+
+    <h2>Important Links</h2>
+    <ul>
+      <li>
+        <a href="scoreboard.html">Scoreboard</a>
+      </li>
+      <li>
+        <a href="puzzles.html">Puzzles</a>
+      </li>
+      <li>
+        <a href="news.html">News</a>
+      </li>
+      <li>
+        <a href="scoring.html">About scoring</a>
+      </li>
+      <li>
+        <a href="irc://[fd84:b410:3441::6]/ctf"
+           title="IRC on fd84:b410:3441::6, channel #ctf">Contest chat</a>
+           carries important announcements, and sometimes clues and
+           puzzles.
+      </li>
+    </ul>
+
+    <h2>Claim Token</h2>
+    <p>
+      If you find a <a href="scoring.html#tokens">token</a>
+      (like <samp>example:xylep-radar-nanox</samp>), submit it here for
+      a point.
+    </p>
+    <form action="claim.cgi" method="post">
+      <fieldset>
+        team hash:<input name="t" size="8">
+        token:<input name="k" size="30">
+        <input type="submit" value="claim">
+      </fieldset>
+    </form>
+
+    <h2>Rules</h2>
+    <ul>
+      <li>
+        No DoS attacks.
+      </li>
+      <li>
+        Contest servers lie within <samp>fd84:b410:3441::/112</samp>.
+        Do not attack machines outside <samp>fd84:b410:3441::/48</samp>.
+        Low ports (under 1024) do not run contest categories, don't
+        waste your time.
+      </li>
+      <li>
+        Consider the contest network hostile.  It is up to you to
+        safeguard, encrypt, or delete sensitive data on your computer.
+      </li>
+      <li>
+        We reserve the right to kick you out of the contest for any
+        reason, so play nice.
+      </li>
+    </ul>
+
+    <p>
+      This event would not be possible without the help of many people.
+      <a href="credits.html">Thank you, people</a>.
+    </p>
+  </body>
+</html>

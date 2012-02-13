@@ -1,0 +1,10 @@
+3 random
+dup 0 = { 70 70 set-speed! } if
+dup 1 = { 40 70 set-speed! } if
+    2 = { 70 40 set-speed! } if 
+get-turret 20 - set-turret!
+
+3 sensor? { 0 0 set-speed! } if
+1 sensor? { get-turret 60 + set-turret! } if
+2 sensor? { get-turret 60 - set-turret! } if
+0 sensor? { fire! } if
