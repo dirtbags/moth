@@ -1,0 +1,12 @@
+100 80 set-speed!
+get-turret 18 + set-turret!         ( Rotate turret )
+
+1 sensor? { 80 -80 set-speed! } if  ( Turn if collision sensor triggered )
+2 sensor? { -80 80 set-speed! } if  ( Turn if collision sensor triggered )
+
+3 sensor? { 50 -50 set-speed! } if
+4 sensor? { -50 50 set-speed! } if
+
+5 sensor? { 100 100 set-speed! } if
+6 sensor? { 0 0 set-speed! } if
+0 sensor? { fire! } if              ( Fire if turret sensor triggered )

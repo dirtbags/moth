@@ -1,0 +1,16 @@
+3 5 random
+dup 0 = { 90 90 set-speed! } if
+dup 1 = { 60 90 set-speed! } if
+    2 = { 90 60 set-speed! } if 
+0 set-turret!
+
+9 sensor? { 70 20 set-speed! } if
+8 sensor? { 80 10 set-speed! } if
+7 sensor? { 20 70 set-speed! } if
+6 sensor? { 10 80 set-speed! } if
+5 sensor? { fire-ready? { 100 100 set-speed! } { -60 -60 set-speed! } ifelse } if
+4 sensor? { 100 100 set-speed! } if
+3 sensor? { 70 20 set-speed! } if
+2 sensor? { 20 70 set-speed! } if
+1 sensor? { -100 -100 set-speed! } if
+0 sensor? { fire! } if
