@@ -1,0 +1,1 @@
+/opt/mcp/www/state.cgi
