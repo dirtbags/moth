@@ -10,8 +10,8 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="744.09448819"
-   height="1052.3622047"
+   width="765"
+   height="990"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.1 r9760"
@@ -117,7 +117,8 @@
          style="fill:#000000;fill-opacity:0.39130435;stroke:#000000;stroke-width:4.488029px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          d="m 231.70059,447.5205 346.64658,1.97238 -243.09634,277.12 -105.52258,2.46548 1.97234,-281.55786 z"
          id="path4440"
-         sodipodi:nodetypes="ccccc" />
+         sodipodi:nodetypes="ccccc"
+         inkscape:connector-curvature="0" />
     </clipPath>
     <inkscape:perspective
        sodipodi:type="inkscape:persp3d"
@@ -318,58 +319,59 @@
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(0,-62.362183)">
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Perfect DOS VGA 437;-inkscape-font-specification:'Perfect DOS VGA 437,'"
-       x="373.17224"
+       x="402.24164"
        y="427.80289"
        id="text3850"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
-         x="373.17224"
+         x="402.24164"
          y="427.80289"
          id="tspan3854" /><tspan
          sodipodi:role="line"
-         x="373.17224"
+         x="402.24164"
          y="463.80289"
          id="tspan4189">February 4-8</tspan><tspan
          sodipodi:role="line"
-         x="373.17224"
+         x="402.24164"
          y="499.80289"
          id="tspan3856">La Fonda Hotel</tspan><tspan
          sodipodi:role="line"
-         x="373.17224"
-         y="535.80292"
+         x="402.24164"
+         y="535.80286"
          id="tspan4187">Santa Fe, NM</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Perfect DOS VGA 437;-inkscape-font-specification:Perfect DOS VGA 437"
-       x="227.58296"
+       x="256.6524"
        y="596.8891"
        id="text3858"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3860"
-         x="227.58296"
+         x="256.6524"
          y="596.8891">Save The Date</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:20px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Perfect DOS VGA 437;-inkscape-font-specification:Perfect DOS VGA 437"
-       x="373.29724"
+       x="402.36664"
        y="668.82324"
        id="text3864"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3866"
-         x="373.29724"
+         x="402.36664"
          y="668.82324">For updates, visit</tspan><tspan
          sodipodi:role="line"
-         x="373.29724"
+         x="402.36664"
          y="693.82324"
          id="tspan3868">http://csr.lanl.gov/tf/</tspan><tspan
          sodipodi:role="line"
-         x="373.29724"
+         x="402.36664"
          y="718.82324"
          id="tspan4237">and subscribe to the email list</tspan></text>
     <text
@@ -387,7 +389,7 @@
     <g
        id="layer1-2"
        style="display:inline"
-       transform="matrix(17.473214,0,0,17.473214,76.857149,18.43361)">
+       transform="matrix(13.544643,0,0,13.544643,168.78371,97.005039)">
       <g
          transform="translate(4,-1032.3622)"
          id="g3832">
@@ -555,7 +557,7 @@
       </g>
     </g>
     <g
-       transform="matrix(0.71434786,0,0,0.71434786,-58.75236,271.63809)"
+       transform="matrix(0.71434786,0,0,0.71434786,-29.682933,271.63809)"
        id="g9370">
       <g
          id="g4836-6"
@@ -926,7 +928,7 @@
     </g>
     <g
        id="g5574"
-       transform="matrix(1.8772307,0,0,1.8772307,378.38276,723.21884)">
+       transform="matrix(1.8772307,0,0,1.8772307,407.45218,723.21884)">
       <text
          transform="scale(0.83441383,1.1984461)"
          sodipodi:linespacing="125%"
@@ -1107,7 +1109,7 @@
     </g>
     <g
        id="g4580"
-       transform="matrix(1.0169091,0,0,1.0169091,-196.38188,24.630197)">
+       transform="matrix(1.0169091,0,0,1.0169091,-167.31246,24.630197)">
       <path
          inkscape:connector-curvature="0"
          style="fill:#989898;fill-opacity:0.62318839;stroke:none;filter:url(#filter4101)"
@@ -1197,7 +1199,7 @@
       </g>
     </g>
     <g
-       transform="translate(146.00956,166.32224)"
+       transform="translate(175.07898,166.32224)"
        id="g4841">
       <g
          id="text7363-0"
@@ -1353,24 +1355,24 @@
     <text
        xml:space="preserve"
        style="font-size:28px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#808080;fill-opacity:1;stroke:none;font-family:Perfect DOS VGA 437;-inkscape-font-specification:Perfect DOS VGA 437"
-       x="161.72581"
+       x="190.79526"
        y="622.36212"
        id="text4191"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan4193"
-         x="161.72581"
+         x="190.79526"
          y="622.36212">(better save your MBR, too)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:56px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Perfect DOS VGA 437;-inkscape-font-specification:Perfect DOS VGA 437"
-       x="114.28571"
+       x="143.35515"
        y="422.36218"
        id="text4214"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan4216"
-         x="114.28571"
+         x="143.35515"
          y="422.36218">Tracer Fire 2013</tspan></text>
   </g>
 </svg>
