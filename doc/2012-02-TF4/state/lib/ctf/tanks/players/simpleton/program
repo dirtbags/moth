@@ -1,0 +1,5 @@
+90 100 set-speed!
+0 set-turret!
+
+0 sensor? { fire! } if
+1 sensor? { -100 100 set-speed! } if
