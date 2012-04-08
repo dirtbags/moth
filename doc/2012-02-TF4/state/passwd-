@@ -1,0 +1,4 @@
+root:$1$i/EeZyl6$5C6Z8s0ftEdTKFLUli1wP1:0:0:root:/tmp:/bin/sh
+ctf:x:100:65534:Linux User,,,:/var/lib/ctf:/bin/false
+nobody:x:65534:65534:Linux User,,,:/home/nobody:/bin/false
+irc:x:101:65534:Linux User,,,:/home/irc:/bin/false
