@@ -134,7 +134,7 @@ BEGIN {
 
     # Now we can start writing the document
     print "<!DOCTYPE html>"
-    print "<html>"
+    print "<html class=\"scoreboard\">"
     print "  <head>"
     print "    <title>Scoreboard</title>"
     print "    <link rel=\"stylesheet\" href=\"ctf.css\" type=\"text/css\">"
@@ -242,8 +242,7 @@ BEGIN {
     print "      </tr>"
 
     print "    </table>"
-    print "    <canvas id=\"chart\" width=\"800\" height=\"300\"></canvas>"
-    print "    <p><a href=\"scoring.html\">About scoring</a></p>"
+    print "    <canvas id=\"chart\" width=\"1024\" height=\"240\"></canvas>"
     print "  </body>"
     print "</html>"
 }
