@@ -1,0 +1,4 @@
+nogroup:x:65534:
+ctf:x:1000:
+nobody:x:1001:
+irc:x:1002:
