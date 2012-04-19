@@ -1,12 +1,14 @@
-#! /bin/sh
+#! /bin/sh -e
 
 exec 2>&1
 
 mkdir -p /var/www/tanks
-ln -s /opt/tanks/html/* /var/www/tanks/
-ln -sf summary.html /var/www/tanks/index.html
+ln -s /opt/tanks/html/* /var/www/tanks/ || true
+ln -s summary.html /var/www/tanks/index.html || true
 
-install -o ctf -d /var/lib/ctf/tanks/players
+mkdir -p /var/lib/ctf/tanks/players
+chown ctf /var/lib/ctf/tanks
+chown ctf /var/lib/ctf/tanks/players
 
 PATH=/bin:/opt/ctfbase/bin:/opt/tanks/bin; export PATH
 exec ./tanksd
