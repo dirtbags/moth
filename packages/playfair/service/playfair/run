@@ -2,7 +2,7 @@
 
 exec 2>&1
 
-IP=$(cat ip.txt)
+IP=$(/opt/00admin/sbin/fire-ip add)
 ip addr add $IP dev eth0 || true
 
 exec tcpsvd -u nobody ${IP%/*} 1013 /opt/playfair/bin/playfair
