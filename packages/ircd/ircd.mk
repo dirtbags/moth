@@ -1,6 +1,6 @@
 IRCD_PKGDIR = $(TARGET)/ircd
 IRCD_BUILDDIR = $(BUILD)/ircd
-IRCD_VERSION = 18
+IRCD_VERSION = 19.1
 IRCD_TAR = $(CACHE)/ngircd-$(IRCD_VERSION).tar.gz
 IRCD_URL = ftp://ftp.berlios.de/pub/ngircd/ngircd-$(IRCD_VERSION).tar.gz
 IRCD_SRCDIR = $(IRCD_BUILDDIR)/ngircd-$(IRCD_VERSION)

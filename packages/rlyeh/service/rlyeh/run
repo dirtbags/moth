@@ -1,8 +1,8 @@
 #! /bin/sh -e
 
 exec 2>&1
-read IP < ip.txt
-ip addr add $IP label eth0:rlyeh dev eth0 || true
+
+IP=$(/opt/00admin/sbin/fire-ip add)
 
 dir=/var/lib/ctf/rlyeh
 install -o nobody -d $dir

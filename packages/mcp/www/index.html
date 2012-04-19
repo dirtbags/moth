@@ -16,11 +16,15 @@
         <a href="puzzles.html">Puzzles</a>
       </li>
       <li>
+        <a href="news.html">News</a>
+      </li>
+      <li>
         <a href="scoring.html">About scoring</a>
       </li>
       <li>
         <a href="irc://[fd84:b410:3441::6]/ctf"
            title="IRC on fd84:b410:3441::6, channel #ctf">Contest chat</a>
+        (<a href"irc://10.0.0.6/ctf" title="IRC on 10.0.0.6, channel #ctf">IPv4</a>)
            carries important announcements, and sometimes clues and
            puzzles.
       </li>
@@ -46,8 +50,10 @@
         No DoS attacks.
       </li>
       <li>
-        Contest servers lie within <samp>fd84:b410:3441::/112</samp>.
-        Do not attack machines outside <samp>fd84:b410:3441::/48</samp>.
+        Contest servers lie within <samp>fd84:b410:3441::/112</samp>
+        (or <samp>10.0.0.0/24</samp> for IPv4 contests).
+        Do not attack machines outside <samp>fd84:b410:3441::/48</samp>
+        (<samp>10.0.0.0/16</samp>).
         Low ports (under 1024) do not run contest categories, don't
         waste your time.
       </li>
