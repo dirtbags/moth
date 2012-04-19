@@ -2,11 +2,9 @@
 
 exec 2>&1
 
-hostname mcp
+IP=$(/opt/00admin/sbin/fire-ip add)
 
-# Bring up address
-IP=$(cat ip.txt)
-ip addr add $IP dev eth0 || true
+hostname mcp
 
 # Link in puzzles and web pages
 install -d /var/www
