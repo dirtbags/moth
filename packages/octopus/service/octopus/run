@@ -2,7 +2,8 @@
 
 exec 2>&1
 
-IP=$(cat ip.txt)
-ip addr add $IP dev eth0 || true
+IP=$(/opt/00admin/sbin/fire-ip add)
+
+grep -q ipv4 /proc/cmdline && IP=::ffff:$IP
 
 exec /opt/octopus/bin/octopus ${IP%/*} < /opt/octopus/tokens.txt
