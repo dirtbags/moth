@@ -1,0 +1,64 @@
+#! /bin/sh
+
+BASE=/tmp/p2
+
+mkdir -p $BASE
+
+if ! [ -f $BASE/nonce ]; then
+    dd if=/dev/urandom count=1 | md5sum - > $BASE/nonce
+fi
+clear
+read nonce < $BASE/nonce
+
+newteam () {
+    echo '== Team Creation =='
+    echo
+    echo -n 'What would you like your team to be called (3-12 chars)? '
+    read -r name
+    echo
+    namelen=$(printf "%s" "$name" | wc -c)
+    if [ $namelen -lt 3 ] || [ $namelen -gt 12 ]; then
+        echo 'Invalid name length'
+        return
+    fi
+    hash=$(printf '%s %s' "$nonce" "$name" | md5sum | cut -b 1-8)
+
+    if [ -d $BASE/$hash ]; then
+        echo "That name is already in use.  Try another one."
+        return
+    fi
+
+    mkdir $BASE/$hash
+
+    printf '%s' "$name" > $BASE/$hash/.name
+
+    echo "Your team hash is $hash.  Write that down somewhere and don't lose it."
+    echo "If you forget your hash, you'll have to start over from the beginning"
+    echo "with a new team and everybody will laugh at you."
+}
+
+echo -n 'Team hash ("new" to create a new team): '
+read -r hash
+echo
+if [ -z "$hash" ]; then
+    exit 0
+elif [ "$hash" = "new" ]; then
+    newteam
+elif ! [ -d $BASE/$hash ]; then
+    echo "No such team, fool."
+    echo "Is this when everybody laughs at you for forgetting your hash?"
+else
+    read -r name < $BASE/$hash/.name
+    echo "Welcome $name"
+    echo
+    echo "Enter answer and I'll tell you if it's right or if you're a dummy."
+    echo -n '> '
+    read -r answer
+    ahash=$(printf '%s' "$answer" | md5sum | cut -d' ' -f1)
+fi
+
+echo
+echo "Press [Enter] to clear the screen."
+read
+exit 0
+
