@@ -59,7 +59,7 @@ $(ECMH_BUILDDIR): $(ECMH_CACHE)
 
 router-build: $(ROUTER_BUILDDIR)/ecmh-build
 $(ROUTER_BUILDDIR)/ecmh-build: $(ECMH_BUILDDIR)
-	$(MAKE) -C $(ECMH_BUILDDIR)/src ECMH_VERSION=dbtl-git
+	$(MAKE) -C $(ECMH_BUILDDIR)/src ECMH_VERSION=dbtl-git STRIP=$(STRIP)
 	$(MAKE) -C $(ECMH_BUILDDIR)/tools/mtrace6
 	touch $@
 

@@ -4,5 +4,5 @@ exec 2>&1
 
 cd /var/www
 
-exec tcpsvd -l localhost 0 80 /opt/inferno/bin/fnord-idx . .
+exec tcpsvd -l localhost 0 80 /opt/inferno/bin/eris -d
 
