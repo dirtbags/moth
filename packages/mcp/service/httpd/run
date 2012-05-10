@@ -18,4 +18,5 @@ for d in /opt/*; do
     fi
 done
 
-exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/fnord-cgi /var/www
+cd /var/www
+exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/eris -c
