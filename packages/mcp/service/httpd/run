@@ -18,5 +18,5 @@ for d in /opt/*; do
     fi
 done
 
-cd /var/www
+ln -sf /var/www default
 exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/eris -c

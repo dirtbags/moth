@@ -2,7 +2,6 @@
 
 exec 2>&1
 
-cd /var/www
-
+ln -sf /var/www default
 exec tcpsvd -l localhost 0 80 /opt/inferno/bin/eris -d
 
