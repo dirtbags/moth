@@ -1,57 +1,37 @@
-This directory contains the files used to set up an OpenWRT router.
+Using an OpenWRT router
+=======================
 
+You can use an off-the-shelf, OpenWRT capable wireless router,
+configuring only through the web interface.  The OpenWRT setup is
+intended for smaller contests, wired or non-wired, in which
+participants can be counted on not to launch link level attacks (ARP
+or NDP).  Bear in mind that the cheap consumer routers have relatively
+slow CPUs and won't stand up to high volume.
 
-Bear in mind that the cheap consumer routers have relatively slow CPUs
-and won't stand up to high volume.  This same configuration applies to
-OpenWRT running on an x86 PC, or any other target of OpenWRT.  For
-larger contests, it would be a good idea to use a faster machine for the
-router.  I don't have any specific recommendations at this time (Oct
-2010).
+The CTF repository includes a "router" package, which will boot a DBTL
+device as a IPv6 router complete with multicast forwarding and up to
+24 tagged VLANs (by using a managed switch).  This is a better option
+for larger contests, and can better handle high-speed (Gigabit)
+traffic.
 
-The router comes up as 10.0.0.1/16 on eth0.
+Instructions for setting up OpenWRT
+-----------------------------------
 
-If the router has a built-in switch, it is brought up without VLAN
-support, since these switches typically only support 16 VLANs, and do
-not support QinQ (double VLAN tags).  All 5 ports work like an unmanaged
-switch, which ends up being handy for the contest table.
+After installing OpenWRT:
 
-Plugging a managed switch into the router enables access to 48 VLANs,
-each configured to a /16 network.  The router on VLAN number v comes up
-as 10.v.0.1/16.
+* Change the root password
+* Install the kmod-ipv6, radvd, and luci-app-radvd packages
+* Configure the LAN interface as 10.0.0.1/16 and
+  fd84:b410:3441::1/64
+* Tell DHCP to begin at 257 after the base IP: this will assure
+  all DHCP addresses are after 10.0.1.0
+* Disable router solicitations on LAN
+* Enable WPA2, with the password "correct horse battery staple"
+* Turn on router advertisements (under radvd) on LAN
+* Enable prefix fd84:b410:3441::1/54 under radvd
 
-If the router has the ability to come up as a wireless access point, it
-will do so with SSID "CTF" and IP 10.254.0.1/16.
-
-All subnets can route to all other subnets, through the router.
-10.0.0.1/16 and 10.254.0.1/16 may have a higher TTL when routed to a
-VLAN (I haven't checked).  Keep in mind that anything connected directly
-to the router (ie. not through the managed switch) can do its own VLAN
-tagging.  This would be the way to hop on another team's subnet to do
-something like check service availability in such a way as to prevent
-teams from firewalling each other out.
-
-
-                                    SSID "CTF"
-                                  10.254.0.1/16
-                                    ((Y))
-                                      |
-                                      -------------
-                                     |   OpenWRT   |
-                                      -0-1-2-3-4---
-                                      /| | | | |
-                                     / | | | | |
-                                    /  | | | | |
-                                   /  10.0.0.1/16
-                                  /
-              -------------------t---
-             |   Managed Switch      |
-              -1-2-3-4-5-...-47-48---
-              /    |         |   \
-             /     |         |    \
-            /      |         |     \
-           /       |         |      \
-    10.1.0.1/16    |         |   10.48.0.1/16
-                   |         |
-              10.3.0.1/16    |
-                             |
-                        10.47.0.1/16
+This should be sufficient to bring up the router for running the
+contest.  If you want to get fancy, you can scp the files in
+www in this directory, into /www on the router.  This will give
+users some guidance if they accidentally browse to the router IP,
+and also disables the default redirection to luci.
