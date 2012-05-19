@@ -20,7 +20,13 @@ Instructions for setting up OpenWRT
 After installing OpenWRT:
 
 * Change the root password
-* Install the kmod-ipv6, radvd, and luci-app-radvd packages
+* Install the following packages:
+    ip6tables
+    kmod-ip6tables
+    kmod-ipv6
+    libip6tc
+    luci-app-radvd
+    radvd
 * Configure the LAN interface as 10.0.0.1/16 and
   fd84:b410:3441::1/64
 * Tell DHCP to begin at 257 after the base IP: this will assure
@@ -28,7 +34,7 @@ After installing OpenWRT:
 * Disable router solicitations on LAN
 * Enable WPA2, with the password "correct horse battery staple"
 * Turn on router advertisements (under radvd) on LAN
-* Enable prefix fd84:b410:3441::1/54 under radvd
+* Enable prefix fd84:b410:3441::1/64 under radvd
 
 This should be sufficient to bring up the router for running the
 contest.  If you want to get fancy, you can scp the files in
