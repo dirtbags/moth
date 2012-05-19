@@ -20,6 +20,9 @@ www=${CTF_BASE:-/var/www}
 mkdir -p $base/teams/names
 mkdir -p $base/teams/colors
 
+[ -f $base/teams/nonce ] || dd if=/dev/urandom count=1 | md5sum | cut -b 1-8 > $base/teams/nonce
+nonce=$(cat $base/teams/nonce)
+
 # Assign a color.  I spent weeks selecting a color pallette that
 # wouldn't be hell on people with protanopia.  Please don't change these
 # colors.
@@ -45,7 +48,7 @@ esac
 # Compute hash of team name; they'll use this for everything in the
 # contest instead of their team name, which makes stuff much easier on
 # me since all team hashes are in the set /[0-9a-f]{8}/.
-hash=$(dd if=/dev/urandom count=1 2>/dev/null | md5sum | cut -b 1-8)
+hash=$(printf "%s:%s" $nonce "$1" | md5sum | cut -b 1-8)
 
 echo "$1" > $base/teams/names/$hash
 echo "$color" > $base/teams/colors/$hash
