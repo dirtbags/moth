@@ -1,6 +1,4 @@
-#! /usr/bin/lua
-
-require("lfs")
+#! /bin/env lua
 
 BASEDIR = "/var/tmp/wopr"
 POST_MAX = 512
@@ -128,7 +126,7 @@ end
 --
 
 function get(key, ...)
-   local fn = string.format("%s/%s", dirname, key)
+   local fn = string.format("%s.%s", dirname, key)
    local f = io.open(fn)
    if (not f) then
       return arg[1]
@@ -140,11 +138,8 @@ function get(key, ...)
 end
 
 function set(key, ...)
-   local fn = string.format("%s/%s", dirname, key)
+   local fn = string.format("%s.%s", dirname, key)
    local f
-
-   -- Lazy mkdir to save a few inodes
-   lfs.mkdir(dirname)
 
    f = io.open(fn, "w")
    if not f then
@@ -155,7 +150,7 @@ function set(key, ...)
 end
 
 function del(key)
-   local fn = string.format("%s/%s", dirname, key)
+   local fn = string.format("%s.%s", dirname, key)
    os.remove(fn)
 end
 
