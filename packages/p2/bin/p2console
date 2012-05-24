@@ -10,6 +10,10 @@ fi
 clear
 read nonce < $BASE/nonce
 
+esc () {
+    printf '%s' "$*" | sed 's/[^-0-9A-Za-z ]/_/g; s/ /+/g'
+}
+
 newteam () {
     echo '== Team Creation =='
     echo
@@ -32,9 +36,18 @@ newteam () {
 
     printf '%s' "$name" > $BASE/$hash/.name
 
-    echo "Your team hash is $hash.  Write that down somewhere and don't lose it."
-    echo "If you forget your hash, you'll have to start over from the beginning"
-    echo "with a new team and everybody will laugh at you."
+    cat <<EOD
+Your team hash is $hash.  Write that down somewhere and don't lose it.
+If you forget your hash, you'll have to start over from the beginning
+with a new team and everybody will laugh at you.
+EOD
+}
+
+done () {
+    echo
+    echo "Press [Enter] to clear the screen."
+    read
+    exit 0
 }
 
 echo -n 'Team hash ("new" to create a new team): '
@@ -44,21 +57,32 @@ if [ -z "$hash" ]; then
     exit 0
 elif [ "$hash" = "new" ]; then
     newteam
+    done
 elif ! [ -d $BASE/$hash ]; then
     echo "No such team, fool."
     echo "Is this when everybody laughs at you for forgetting your hash?"
-else
-    read -r name < $BASE/$hash/.name
-    echo "Welcome $name"
-    echo
-    echo "Enter answer and I'll tell you if it's right or if you're a dummy."
-    echo -n '> '
-    read -r answer
-    ahash=$(printf '%s' "$answer" | md5sum | cut -d' ' -f1)
+    done
 fi
 
+read -r name < $BASE/$hash/.name
+echo "Welcome $name"
 echo
-echo "Press [Enter] to clear the screen."
-read
-exit 0
+echo "Enter answer and I'll tell you if it's right or if you're a dummy."
+echo -n '> '
+read -r answer
+match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
+cat=${match% *}
+points=${match#* }
+fn=$BASE/$hash/$cat.$points
+if [ -f $fn ]; then
+    echo "You've already received points for this answer."
+else
+    printf "%s %s\n" $cat $points > $fn
+    echo "You get $points more points in the $cat category."
+    # run puzzles.cgi
+    # update scoreboard
+    echo "Check the puzzles overview for newly-unlocked content!"
+fi
+
+done
 
