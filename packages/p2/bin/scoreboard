@@ -1,0 +1,84 @@
+#! /bin/sh
+
+# Calculate total points awarded so far
+total=0
+for i in ${1:-answers}/*; do
+    pts=$(awk '{print $2; exit;}' $i)
+    total=$(expr $total + $pts)
+done
+
+render () {
+    name=$1
+    cat=$2
+    score=$3
+    width=$(awk "BEGIN{print 100 * $score / $total;}")
+    printf '<span class="%s" style="width: %0.2f%%" title="%s:%s:%d"><!--\n:%s %s %d\n-->%d</span>' \
+        $cat $width   $name $cat $score   $name $cat $score   $score
+}
+
+scores () {
+    cat=
+    score=0
+    while read c p; do
+        if [ "$cat" != "$c" ] && [ $score -gt 0 ]; then
+            render $1 $cat $score
+            score=0
+        fi
+        cat=$c
+        score=$(expr $score + $p)
+    done
+    if [ $score -gt 0 ]; then
+        render $1 $cat $score
+    fi
+}
+
+
+cat <<EOF
+<!DOCTYPE html>
+<html><head><title>Project 2 Scoreboard</title>
+<meta http-equiv="refresh" content="60">
+<style>
+html {background: black url("p2inv.png") no-repeat top center; background-size: contain; min-height: 100%; color: white;}
+body {background: black; opacity: 0.8; margin: 0;}
+p {margin: 0;}
+span {display: inline-block; margin: 0; border: 0;}
+.c0 {background-color: #842;}
+.c1 {background-color: #028;}
+.c2 {background-color: #802;}
+.c3 {background-color: #640;}
+.c4 {background-color: #486;}
+.c5 {background-color: #682;}
+.c6 {background-color: #408;}
+.c7 {background-color: #624;}
+.name {position: absolute; right: 10px;}
+#scores p {margin: 0; padding: 0; border: none; border-top: thin solid #222; clear: both;}
+#scores p:hover {background-color: #222;}
+</style>
+</head><body>
+<p>
+EOF
+
+for dn in /opt/*/answers.txt; do
+    c=$(echo $dn | cut -d/ -f2)
+    printf '<span class="%s">%s</span>\n' $c $c
+done
+
+cat <<EOF
+</p>
+<div id="scores">
+EOF
+
+for d in users/*; do
+    awk -v d=$d '{s+=$2;} END{print s " " d;}' $d/* 2>/dev/null
+done | sort -nr | while read s d; do
+    user=${d##*/}
+    echo '<p>'
+    printf '<span class="name">%s</span>\n' $user
+    sort $d/* 2>/dev/null | scores $user
+    echo
+    echo '</p>'
+done
+
+cat <<EOF
+</div></body></html>
+EOF
