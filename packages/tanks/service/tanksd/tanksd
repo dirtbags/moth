@@ -41,7 +41,7 @@ EOF
 }
 
 while true; do
-    for dn in /var/lib/ctf/teams/names/*; do
+    find /var/lib/ctf/teams/names -type f | while read dn; do
         hash=${dn##*/}
         install -o ctf -d $p/$hash
     done
@@ -92,24 +92,19 @@ window.onload = go;
     <div id="game_box"><canvas id="battlefield"></canvas></div>
     <p><span id="fps">0</span> fps</p>
 EOF
-    /opt/tanks/bin/rank.awk $rfn >>$fn
+    awk -f /opt/tanks/bin/rank.awk $rfn >>$fn
     cat /opt/tanks/html/nav.html.inc >>$fn
     cat <<EOF >>$fn
   </body>
 </html>
 EOF
     
-    winner.awk $rfn | while read winner; do
+    awk -f /opt/tanks/bin/winner.awk $rfn | while read winner; do
         hash=$(basename $winner)
         echo "Round $next winner: $hash" >> $log
         nwinners=$(wc -l $log)
         
-        # Read a token
-        k=$(sed -n ${nwinners}p /opt/tanks/tokens.txt)
-        
-        # XXX: pull this out into another daemon
-        # XXX: this puts the token in /proc/self/cmdline
-        wget -q -s "http://10.0.0.2/claim.cgi?t=$hash&k=$k"
+        /opt/mcp/bin/pointscli $hash tanks 1
     done
 
     ln -sf $fn $w/current.html
