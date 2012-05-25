@@ -14,7 +14,7 @@ fatsize=$(sfdisk -l /dev/sdb | awk '/^Disk/ {print $3 - 2;}')
 FATFS=${DRIVE}1
 EXTFS=${DRIVE}2
 
-sfdisk $DRIVE <<EOF
+sfdisk $DRIVE <<EOF || true
 ,$fatsize,6,*
 ,,L
 EOF

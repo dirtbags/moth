@@ -2,11 +2,9 @@
 
 exec 2>&1
 
-hostname mcp
+IP=$(/opt/00admin/sbin/fire-ip add)
 
-# Bring up address
-IP=$(cat ip.txt)
-ip addr add $IP dev eth0 || true
+hostname mcp
 
 # Link in puzzles and web pages
 install -d /var/www
@@ -20,4 +18,5 @@ for d in /opt/*; do
     fi
 done
 
-exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/fnord-cgi /var/www
+ln -sf /var/www default
+exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/eris -c
