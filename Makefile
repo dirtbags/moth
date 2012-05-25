@@ -10,6 +10,11 @@ CACHE = cache
 # The end result
 BIN = bin
 
+ifdef ARCH
+export CC = ${ARCH}-cc
+export STRIP = ${ARCH}-strip
+endif
+
 all: packages
 
 dist: ctf-install.zip
