@@ -2,11 +2,33 @@
 
 exec 2>&1
 
-IP=$(cat ip.txt)
-ip addr add $IP label eth0:ircd dev eth0
-ip monitor | grep -q $IP
+IP=$(/opt/00admin/sbin/fire-ip add)
 
 adduser -S -H -u 65534 nobody
 adduser -S -H irc
+
+operpass=$(dd if=/dev/urandom count=1 | md5sum | cut -d' ' -f1)
+
+cat <<EOD >ngircd.conf
+[Global]
+        Name = irc.ctf
+        Info = CTF IRC
+        AdminInfo1 = CTF IRC Server
+        AdminInfo2 = The table at the front of the room
+        AdminEmail = zephyr@dirtbags.net
+        MotdPhrase = "welcome datacomp"
+        Listen = ${IP%/*}
+        ServerUID = 101
+        ServerGID = 65534
+
+[Options]
+        OperCanUseMode = yes
+        DNS = no
+        Ident = no
+
+[Operator]
+        Name = oper
+        Password = $operpass
+EOD
 
 exec setuidgid irc /opt/ircd/bin/ngircd --config ./ngircd.conf --nodaemon

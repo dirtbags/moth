@@ -1,4 +1,3 @@
 #! /bin/sh
 
-IP=$(cat ip.txt)
-ip addr del $IP dev eth0
+/opt/00admin/sbin/fire-ip del

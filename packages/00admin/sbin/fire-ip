@@ -1,0 +1,32 @@
+#! /bin/sh -e
+
+action=$1; shift
+
+read n < ip.txt
+
+if grep -q ipv4 /proc/cmdline; then
+    # IPv4
+    IP="10.0.0.$n/16"
+else
+    # IPv6
+    l=$(busybox dc 16 o $n p)
+    IP="fd84:b410:3441::$l/64"
+fi
+
+
+
+[ "$action" ] && ip addr $action $IP dev eth0
+
+if [ "$action" = "add" ]; then
+    fail=fail
+    for i in $(seq 5); do
+        if ip addr | grep -v tentative | grep -Fq $IP; then
+            fail=
+            break
+        fi
+        sleep 1
+    done
+    [ "$fail" ] && return 1
+fi
+
+[ "$action" = del ] || echo $IP
