@@ -3,7 +3,7 @@ DESTDIR ?= /tmp
 build: cowd cowcli
 
 cowcli: cowcli.c
-	$(CC) -o $@ -static $<
+	cc -o $@ -static $<
 	strip $@
 	upx $@
 
