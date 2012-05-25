@@ -1,9 +1,0 @@
-config wifi-device wl0
-	option type	broadcom
-	option channel	1
-
-config wifi-iface
-	option device	wl0
-	option network	wifi
-	option mode	ap
-	option ssid	CTF
