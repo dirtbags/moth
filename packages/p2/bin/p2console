@@ -1,14 +1,14 @@
 #! /bin/sh
 
-BASE=/tmp/p2
+: ${BASE:=/var/lib/ctf/p2}
 
 mkdir -p $BASE
 
-if ! [ -f $BASE/nonce ]; then
-    dd if=/dev/urandom count=1 | md5sum - > $BASE/nonce
+if ! [ -f $BASE/salt ]; then
+    dd if=/dev/urandom count=1 | md5sum - > $BASE/salt
 fi
 clear
-read nonce < $BASE/nonce
+read salt < $BASE/salt
 
 esc () {
     printf '%s' "$*" | sed 's/[^-0-9A-Za-z ]/_/g; s/ /+/g'
@@ -25,7 +25,7 @@ newteam () {
         echo 'Invalid name length'
         return
     fi
-    hash=$(printf '%s %s' "$nonce" "$name" | md5sum | cut -b 1-8)
+    hash=$(printf '%s %s' "$salt" "$name" | md5sum | cut -b 1-8)
 
     if [ -d $BASE/$hash ]; then
         echo "That name is already in use.  Try another one."
@@ -43,7 +43,7 @@ with a new team and everybody will laugh at you.
 EOD
 }
 
-done () {
+fini () {
     echo
     echo "Press [Enter] to clear the screen."
     read
@@ -57,32 +57,35 @@ if [ -z "$hash" ]; then
     exit 0
 elif [ "$hash" = "new" ]; then
     newteam
-    done
+    fini
 elif ! [ -d $BASE/$hash ]; then
     echo "No such team, fool."
     echo "Is this when everybody laughs at you for forgetting your hash?"
-    done
+    fini
 fi
 
 read -r name < $BASE/$hash/.name
-echo "Welcome $name"
-echo
-echo "Enter answer and I'll tell you if it's right or if you're a dummy."
-echo -n '> '
+printf "%s answer: " "$name"
 read -r answer
+echo
+
 match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
+if [ -z "$match" ]; then
+    echo "That is not a correct answer."
+    fini
+fi
+    
 cat=${match% *}
 points=${match#* }
 fn=$BASE/$hash/$cat.$points
 if [ -f $fn ]; then
     echo "You've already received points for this answer."
 else
-    printf "%s %s\n" $cat $points > $fn
+    > $fn
     echo "You get $points more points in the $cat category."
     # run puzzles.cgi
     # update scoreboard
-    echo "Check the puzzles overview for newly-unlocked content!"
 fi
 
-done
+fini
 
