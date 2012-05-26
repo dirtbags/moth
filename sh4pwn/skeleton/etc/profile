@@ -1,6 +1,0 @@
-PATH=/bin
-[ $USER = root ] && PATH=/sbin:/bin
-for i in /opt/*/bin; do
-    [ -d $i ] && PATH=$i:$PATH
-done
-export PATH
