@@ -1,6 +1,0 @@
-#! /bin/sh
-
-dev=/dev/$(basename $(pwd))
-test -c $dev || exit
-
-exec getty 38400 $dev
