@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define NOISE_PROB 300
+#define NOISE_PROB 2000
 #define NOISE_BITS 16
 
 int badbits = 0;
