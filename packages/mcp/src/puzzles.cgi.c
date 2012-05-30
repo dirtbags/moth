@@ -67,8 +67,10 @@ main(int argc, char *argv[])
 
     while (f && (! feof(f))) {
       read_until_char(f, NULL, 0, ' ');
+      read_until_char(f, NULL, 0, ' ');
       read_until_char(f, cat, sizeof(cat), ' ');
-      read_until_char(f, points_str, sizeof(points_str), '\n');
+      read_until_char(f, points_str, sizeof(points_str), ' ');
+      read_until_char(f, NULL, 0, '\n');
       points = atol(points_str);
 
       for (i = 0; i < ncats; i += 1) {
@@ -133,8 +135,8 @@ main(int argc, char *argv[])
       char points_str[20];
       long points;
 
-      read_until_char(map, cat, sizeof(cat), ' ');
-      read_until_char(map, points_str, sizeof(points_str), '\n');
+      read_until_char(map, points_str, sizeof(points_str), ' ');
+      read_until_char(map, cat, sizeof(cat), '\n');
       points = atol(hash);
 
       printf("    <a href=\"/%s/%ld/\">%ld</a>\n", cat, points, points);
