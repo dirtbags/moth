@@ -8,6 +8,7 @@ if ! [ -f $BASE/salt ]; then
     dd if=/dev/urandom count=1 | md5sum - > $BASE/salt
 fi
 clear
+printf '\017'
 read salt < $BASE/salt
 
 esc () {
@@ -64,28 +65,52 @@ elif ! [ -d $BASE/$hash ]; then
     fini
 fi
 
+clear
+
 read -r name < $BASE/$hash/.name
-printf "%s answer: " "$name"
-read -r answer
-echo
 
-match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
-if [ -z "$match" ]; then
-    echo "That is not a correct answer."
-    fini
-fi
+printf 'Welcome back, [34m%s[0m.\n' "$name"
+
+while true; do
+    printf "[32mp2>[0m "
+    read -r answer
+
+    case "$answer" in
+        \?|help)
+            cat <<EOD
+[32m                         Help
+----------------------------------------------------------[0m
+
+Type "[34mquit[0m" to leave the p2 shell.
+
+Any other string is checked as an answer.  If the answer
+is correct, you are awarded points and the scoreboard will
+update within 10 seconds.  Check the puzzles overview to
+see if your answer unlocked a new puzzle.
+EOD
+            continue
+            ;;
+        quit)
+            break
+            ;;
+    esac
+
+    match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
+    if [ -z "$match" ]; then
+        echo 'That is not a correct answer.  Type "[34mhelp[0m" for help.'
+        continue
+    fi
     
-cat=${match% *}
-points=${match#* }
-fn=$BASE/$hash/$cat.$points
-if [ -f $fn ]; then
-    echo "You've already received points for this answer."
-else
-    > $fn
-    echo "You get $points more points in the $cat category."
-    # run puzzles.cgi
-    # update scoreboard
-fi
-
-fini
+    cat=${match% *}
+    points=${match#* }
+    fn=$BASE/$hash/$cat.$points
+    if [ -f $fn ]; then
+        echo "You've already received points for this answer."
+    else
+        > $fn
+        echo "You get $points more points in the $cat category."
+        # run puzzles.cgi
+        # update scoreboard
+    fi
+done
 
