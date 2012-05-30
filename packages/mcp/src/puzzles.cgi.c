@@ -52,7 +52,7 @@ int
 main(int argc, char *argv[])
 {
   int i;
-  DIR *srv;
+  DIR *opt;
 
   if (-1 == cgi_init(argv)) {
     return 0;
@@ -60,10 +60,10 @@ main(int argc, char *argv[])
 
   {
     FILE *f = fopen(state_path("puzzles.db"), "r");
-    char  cat[CAT_MAX];
-    char  points_str[11];
-    long  points;
-    int   i;
+    char cat[CAT_MAX];
+    char points_str[11];
+    long points;
+    int  i;
 
     while (f && (! feof(f))) {
       read_until_char(f, NULL, 0, ' ');
@@ -90,81 +90,63 @@ main(int argc, char *argv[])
     if (f) fclose(f);
   }
 
-  srv = opendir(package_path(""));
-  if (NULL == srv) {
-    cgi_error("Cannot opendir(\"/srv\")");
+  opt = opendir(package_path(""));
+  if (NULL == opt) {
+    cgi_error("Cannot opendir(\"/opt\")");
   }
 
   cgi_head("Open puzzles");
   printf("<dl>\n");
 
-  /* For each file in /srv/ ... */
+  /* For each file in /opt/ ... */
   while (1) {
-    struct dirent *e          = readdir(srv);
+    struct dirent *e          = readdir(opt);
     char          *cat;
     DIR           *puzzles;
     long           catpoints[PUZZLES_MAX];
+    long           maxpoints = 0;
     size_t         ncatpoints = 0;
+    
 
     if (! e) break;
 
     cat = e->d_name;
     if ('.' == cat[0]) continue;
-    /* We have to lstat anyway to see if it's a directory; may as
-       well just barge ahead and watch for errors. */
-
-    /* Open /srv/ctf/$cat/puzzles/ */
-    puzzles = opendir(package_path("%s/puzzles", cat));
-    if (NULL == puzzles) {
-      continue;
-    }
-
-    while (ncatpoints < PUZZLES_MAX) {
-      struct dirent *pe = readdir(puzzles);
-      long           points;
-      char          *p;
-
-      if (! pe) break;
-
-      /* Only do this if it's an int */
-      points = strtol(pe->d_name, &p, 10);
-      if (*p) continue;
-
-      catpoints[ncatpoints++] = points;
-    }
-
-    closedir(puzzles);
-
-    /* Sort points */
-    qsort(catpoints, ncatpoints, sizeof(*catpoints),
-          (int (*)(const void *, const void *))longcmp);
-
-
-    /* Print out point values up to one past the last solved puzzle in
-       this category */
-    {
-      long maxpoints = 0;
-
-      /* Find the most points scored in this category */
-      for (i = 0; i < ncats; i += 1) {
-        if (0 == strcmp(cat, points_by_cat[i].cat)) {
-          maxpoints = points_by_cat[i].points;
-          break;
-        }
+       
+    /* Find the most points scored in this category */
+    for (i = 0; i < ncats; i += 1) {
+      if (0 == strcmp(cat, points_by_cat[i].cat)) {
+        maxpoints = points_by_cat[i].points;
+        break;
       }
-
-      printf("  <dt>%s</dt>\n", cat);
-      printf("  <dd>\n");
-      for (i = 0; i < ncatpoints; i += 1) {
-        printf("    <a href=\"/%s/%ld/\">%ld</a>\n",
-               cat, catpoints[i], catpoints[i]);
-        if (catpoints[i] > maxpoints) break;
-      }
-      printf("  </dd>\n");
     }
+
+    /* Read in category's map file, print html until point limit reached */
+    FILE *map = fopen(package_path("%s/map.txt", cat), "r");
+    if (map == NULL) continue;
+
+    printf("  <dt>%s</dt>\n", cat);
+    printf("  <dd>\n");
+
+    while (i < PUZZLES_MAX && (!feof(map))) {
+      char hash[20];
+      char points_str[20];
+      long points;
+
+      read_until_char(map, cat, sizeof(cat), ' ');
+      read_until_char(map, points_str, sizeof(points_str), '\n');
+      points = atol(hash);
+
+      printf("    <a href=\"/%s/%ld/\">%ld</a>\n", cat, points, points);
+
+      if (points > maxpoints) break;
+    }
+
+    printf("  </dd>\n");
+    fclose(map);
   }
 
-  closedir(srv);
+  closedir(opt);
 
   printf("</dl>\n");
   cgi_foot();
