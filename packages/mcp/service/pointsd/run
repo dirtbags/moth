@@ -17,14 +17,6 @@ install -d /var/lib/ctf
 install -o ctf -m 0755 -d $NEWDIR
 install -o ctf -m 0755 -d /var/lib/ctf/points.tmp
 
-# Make tokens database now, this is as good a time as any
-TOKENS=/var/lib/ctf/tokens.db
-for fn in $TOKENS /opt/*/tokens.txt; do
-    [ -f "$fn" ] || continue
-    cat $fn
-done | sort | uniq > $TOKENS.new
-mv $TOKENS.new $TOKENS
-
 # Create some files
 CLAIM=/var/lib/ctf/claim.db
 touch $CLAIM

@@ -29,9 +29,6 @@ main(int argc, char *argv[])
     }
   }
 
-  if (! team_exists(team)) {
-    cgi_result(409, "No such team", "<p>There is no team with that hash.</p>");
-  }
 
   /* Any weird characters in token name? */
   {
@@ -49,12 +46,6 @@ main(int argc, char *argv[])
     }
   }
 
-
-  /* Does the token exist? */
-  if (! fgrepx(token, state_path("tokens.db"))) {
-    cgi_result(409, "No such token", "<p>This token has not been issued.</p>");
-  }
-
   /* Award points */
   {
     char *p = token;
@@ -62,6 +53,7 @@ main(int argc, char *argv[])
     char  category[40];
     char  points_s[40];
     int   points;
+    int   ret;
 
     /* Pull category name out of the token */
     for (q = category; *p && (*p != ':'); p += 1) {
@@ -69,6 +61,11 @@ main(int argc, char *argv[])
     }
     *q = '\0';
     if (p) p += 1;
+
+    /* Now we can check to see if it's valid */
+    if (! anchored_search(package_path("%s/tokens.txt", category), token, 0)) {
+        cgi_result(409, "No such token", "<p>This token has not been issued.</p>");
+    }
 
     /* Pull point value out of the token (if it has one) */
     for (q = points_s; *p && (*p != ':'); p += 1) {
@@ -78,11 +75,9 @@ main(int argc, char *argv[])
     points = atoi(points_s);
     if (0 == points) points = 1;
 
-    {
-      char line[200];
-
-      my_snprintf(line, sizeof(line), "%s %s", team, token);
-      award_and_log_uniquely(team, category, points, state_path("claim.db"), line);
+    ret = award_points(team, category, points, token);
+    if (ret < 0) {
+        cgi_fail(ret);
     }
   }
 
