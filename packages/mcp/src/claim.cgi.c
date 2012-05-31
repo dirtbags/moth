@@ -63,7 +63,8 @@ main(int argc, char *argv[])
     if (p) p += 1;
 
     /* Now we can check to see if it's valid */
-    if (! anchored_search(package_path("%s/tokens.txt", category), token, 0)) {
+    if ((! anchored_search(package_path("%s/tokens.txt", category), token, 0)) &&
+        (! anchored_search(state_path("tokens.db"), token, 0))) {
         cgi_result(409, "No such token", "<p>This token has not been issued.</p>");
     }
 
