@@ -104,11 +104,7 @@ main(int argc, char *argv[])
   while (1) {
     struct dirent *e          = readdir(opt);
     char          *cat;
-    DIR           *puzzles;
-    long           catpoints[PUZZLES_MAX];
     long           maxpoints = 0;
-    size_t         ncatpoints = 0;
-    
 
     if (! e) break;
 
