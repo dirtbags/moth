@@ -40,11 +40,6 @@ main(int argc, char *argv[])
     }
   }
 
-  /* Check to see if team exists */
-  if (! team_exists(team)) {
-    cgi_page("No such team", "");
-  }
-
   /* Validate category name (prevent directory traversal) */
   {
     char *p;
@@ -62,19 +57,16 @@ main(int argc, char *argv[])
 
     my_snprintf(needle, sizeof(needle), "%ld %s", points, answer);
 
-    if (! fgrepx(needle,
-                 package_path("%s/answers.txt", category))) {
+    if (! anchored_search(package_path("%s/answers.txt", category), needle, 0)) {
       cgi_page("Wrong answer", "");
     }
   }
 
   {
-    char line[200];
-
-    my_snprintf(line, sizeof(line),
-               "%s %s %ld", team, category, points);
-    award_and_log_uniquely(team, category, points,
-                           state_path("puzzles.db"), line);
+    int ret = award_points(team, category, points, "P");
+    if (ret < 0) {
+        cgi_fail(ret);
+    }
   }
 
   cgi_page("Points awarded",

@@ -229,6 +229,21 @@ cgi_result(int code, char *desc, char *fmt, ...)
 }
 
 void
+cgi_fail(int err)
+{
+    switch (err) {
+        case ERR_GENERAL:
+            cgi_result(500, "Points not awarded", "<p>The server is unable to award your points at this time.</p>");
+        case ERR_NOTEAM:
+            cgi_result(409, "No such team", "<p>There is no team with that hash.</p>");
+        case ERR_CLAIMED:
+            cgi_result(409, "Already claimed", "<p>Your team has already claimed these points.</p>");
+        default:
+            cgi_result(409, "Failure", "<p>Failure code: %d</p>", err);
+    }
+}
+
+void
 cgi_page(char *title, char *fmt, ...)
 {
   va_list  ap;
@@ -252,44 +267,55 @@ cgi_error(char *text)
  * Common routines
  */
 
-
-#define EOL(c) ((EOF == (c)) || ('\n' == (c)))
-
+/* cut -d$ANCHOR -f2- | grep -Fx "$NEEDLE" */
 int
-fgrepx(char const *needle, char const *filename)
+anchored_search(char const *filename, char const *needle, char const anchor)
 {
-  FILE       *f;
-  int         found = 0;
-  char const *p     = needle;
+    FILE *f = fopen(filename, "r");
+    size_t nlen = strlen(needle);
+    char line[1024];
+    int ret = 0;
 
-  f = fopen(filename, "r");
-  if (f) {
-    while (1) {
-      int c = fgetc(f);
+    while (f) {
+        char *p;
 
-      /* This list of cases would have looked so much nicer in OCaml.  I
-         apologize. */
-      if (EOL(c) && ('\0' == *p)) {
-        found = 1;
-        break;
-      } else if (EOF == c) {    /* End of file */
-        break;
-      } else if (('\0' == p) || (*p != (char)c)) {
-        p = needle;
-        /* Discard the rest of the line */
-        do {
-          c = fgetc(f);
-        } while (! EOL(c));
-      } else if (EOL(c)) {
-        p = needle;
-      } else {                  /* It matched */
-        p += 1;
-      }
+        if (NULL == fgets(line, sizeof line, f)) {
+            break;
+        }
+
+        /* Find anchor */
+        if (anchor) {
+            p = strchr(line, anchor);
+            if (! p) {
+                continue;
+            }
+            p += 1;
+        } else {
+            p = line;
+        }
+
+        /* Don't bother with strcmp if string lengths differ.
+           If this string is shorter than the previous, it's okay.  This is
+           just a performance hack.
+         */
+        if ((p[nlen] != '\n') &&
+            (p[nlen] != '\0')) {
+            continue;
+        }
+        p[nlen] = 0;
+
+        /* Okay, now we can compare! */
+        if (0 == strcmp(p, needle)) {
+            ret = 1;
+            break;
+        }
     }
-    fclose(f);
-  }
 
-  return found;
+    if (f) {
+        fclose(f);
+    }
+
+    return ret;
 }
 
 void
@@ -343,9 +369,8 @@ mkpath(char const *base, char const *fmt, va_list ap)
   char         relpath[PATH_MAX];
   static char  path[PATH_MAX];
   char const  *var;
-  int          len;
 
-  len = vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
+  vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
   relpath[sizeof(relpath) - 1] = '\0';
 
   var = getenv("CTF_BASE");
@@ -409,26 +434,36 @@ team_exists(char const *teamhash)
   return 1;
 }
 
+/* Return values:
+    -1: general error
+    -2: no such team
+    -3: points already awarded
+ */
 int
 award_points(char const *teamhash,
              char const *category,
-             long points)
+             const long points,
+             char const *uid)
 {
   char   line[100];
   int    linelen;
   char   *filename;
-  int    fd;
+  FILE   *f;
   time_t now = time(NULL);
 
   if (! team_exists(teamhash)) {
-    return -2;
+    return ERR_NOTEAM;
   }
 
   linelen = snprintf(line, sizeof(line),
-                     "%lu %s %s %ld\n",
-                     (unsigned long)now, teamhash, category, points);
+                     "%s %s %ld %s",
+                     teamhash, category, points, uid);
   if (sizeof(line) <= linelen) {
-    return -1;
+    return ERR_GENERAL;
+  }
+
+  if (anchored_search(state_path("points.log"), line, ' ')) {
+    return ERR_CLAIMED;
   }
 
   /* At one time I had this writing to a single log file, using lockf.
@@ -443,93 +478,34 @@ award_points(char const *teamhash,
      those files to the main log file, it is possible to stop the thing
      that appends, edit the file at leisure, and then start the appender
      back up, all without affecting things trying to score: they're
-     still able to record their score and move on.  You don't even
-     really need an appender, but it does make things look a little
-     nicer on the fs.
-
-     The fact that this makes the code simpler is just gravy.
-
-     Note that doing this means there's a little time between when a
-     score's written and when the scoreboard (which only reads the log
-     file) picks it up.  It's not a big deal for the points log, but
-     this situation makes this technique unsuitable for writing log
-     files that prevent people from double-scoring, like the puzzler or
-     token log.
+     still able to record their score and move on.
   */
 
-  filename = state_path("points.tmp/%d.%d.%s.%s.%ld",
-                        now, getpid(),
+  filename = state_path("points.tmp/%lu.%d.%s.%s.%ld",
+                        (unsigned long)now, getpid(),
                         teamhash, category, points);
-
-  fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
-  if (-1 == fd) {
-    return -1;
+  f = fopen(filename, "w");
+  if (! f) {
+    return ERR_GENERAL;
   }
 
-  if (-1 == write(fd, line, linelen)) {
-    close(fd);
-    return -1;
+  if (EOF == fprintf(f, "%lu %s\n", (unsigned long)now, line)) {
+    return ERR_GENERAL;
   }
 
-  close(fd);
+  fclose(f);
 
   /* Rename into points.new */
   {
     char ofn[PATH_MAX];
 
     strncpy(ofn, filename, sizeof(ofn));
-    filename = state_path("points.new/%d.%d.%s.%s.%ld",
-                          now, getpid(),
+    filename = state_path("points.new/%lu.%d.%s.%s.%ld",
+                          (unsigned long)now, getpid(),
                           teamhash, category, points);
     rename(ofn, filename);
   }
 
   return 0;
 }
-
-/** Award points iff they haven't been logged.
-
-    If [line] is not in [dbfile], append it and give [points] to [team]
-    in [category].
-*/
-void
-award_and_log_uniquely(char const *team,
-                       char const *category,
-                       long points,
-                       char const *dbpath,
-                       char const *line)
-{
-  int fd;
-
-  /* Make sure they haven't already claimed these points */
-  if (fgrepx(line, dbpath)) {
-    cgi_result(409, "Already claimed",
-             "<p>Your team has already claimed these points.</p>");
-  }
-
-  /* Open and lock logfile */
-  fd = open(dbpath, O_WRONLY | O_CREAT, 0666);
-  if (-1 == fd) {
-    cgi_error("Unable to open log");
-  }
-  if (-1 == lockf(fd, F_LOCK, 0)) {
-    cgi_error("Unable to lock log");
-  }
-
-  /* Award points */
-  if (0 != award_points(team, category, points)) {
-    cgi_error("Unable to award points");
-  }
-
-  /* Log that we did so */
-  lseek(fd, 0, SEEK_END);
-  if (-1 == write(fd, line, strlen(line))) {
-    cgi_error("Unable to append log");
-  }
-  if (-1 == write(fd, "\n", 1)) {
-    cgi_error("Unable to append log");
-  }
-  close(fd);
-}
-
 

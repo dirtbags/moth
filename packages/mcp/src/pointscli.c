@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sysexits.h>
+#include <time.h>
 #include "common.h"
 
 int
@@ -8,9 +9,10 @@ main(int argc, char *argv[])
 {
   int points;
   int ret;
+  char comment[512];
 
-  if (argc != 4) {
-    fprintf(stderr, "Usage: pointscli TEAM CATEGORY POINTS\n");
+  if (argc != 5) {
+    fprintf(stderr, "Usage: pointscli TEAM CATEGORY POINTS 'COMMENT'\n");
     return EX_USAGE;
   }
 
@@ -20,17 +22,22 @@ main(int argc, char *argv[])
     return EX_USAGE;
   }
 
-  ret = award_points(argv[1], argv[2], points);
+  snprintf(comment, sizeof comment, "--%s", argv[4]);
+
+  ret = award_points(argv[1], argv[2], points, comment);
   switch (ret) {
-    case -3:
-      fprintf(stderr, "Runtime error\n");
-      return EX_SOFTWARE;
-    case -2:
+    case ERR_GENERAL:
+      perror("General error");
+      return EX_UNAVAILABLE;
+    case ERR_NOTEAM:
       fprintf(stderr, "No such team\n");
       return EX_NOUSER;
-    case -1:
-      perror("Couldn't award points");
-      return EX_UNAVAILABLE;
+    case ERR_CLAIMED:
+      fprintf(stderr, "Duplicate entry\n");
+      return EX_DATAERR;
+    default:
+      fprintf(stderr, "Error %d\n", ret);
+      return EX_SOFTWARE;
   }
 
   return 0;
