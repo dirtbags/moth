@@ -5,6 +5,8 @@ if [ $# -ne 1 ]; then
     exit 64
 fi
 
+
+
 escape () {
     sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 }
@@ -14,6 +16,13 @@ set -C
 
 base=${CTF_BASE:-/var/lib/ctf}
 www=${CTF_BASE:-/var/www}
+
+if which backup-team >/dev/null 2>&1 ; then
+    if [ ! -e $base/pass ]; then
+        echo "\nYou should consider running backup-pass or new-contest."
+        echo "DBTL Altocumulus™ backup system will not work without it.\n"
+    fi
+fi
 
 mkdir -p $base/teams/names
 mkdir -p $base/teams/colors
