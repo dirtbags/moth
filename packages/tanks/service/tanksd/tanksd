@@ -104,7 +104,7 @@ EOF
         echo "Round $next winner: $hash" >> $log
         nwinners=$(wc -l $log)
         
-        /opt/mcp/bin/pointscli $hash tanks 1
+        /opt/mcp/bin/pointscli $hash tanks 1 "tanks round $next"
     done
 
     ln -sf $fn $w/current.html
