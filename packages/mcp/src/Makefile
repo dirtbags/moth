@@ -1,10 +1,13 @@
 CFLAGS = -Wall -Werror
 TARGETS = claim.cgi puzzler.cgi puzzles.cgi
-TARGETS += pointscli
+TARGETS += pointscli arc4
 
 all: build
 
 build: $(TARGETS)
+
+arc4: CFLAGS += -DARC4_MAIN
+arc4: arc4.o
 
 pointscli: pointscli.o common.o
 
