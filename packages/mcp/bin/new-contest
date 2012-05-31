@@ -23,6 +23,8 @@ rm -rf /var/lib/ctf/points.tmp
 rm -rf /var/lib/ctf/tanks
 rm -rf /var/lib/ctf/teams
 
+backup-pass
+
 sv u tokend
 sv u pointsd
 sv u puzzled
