@@ -1,0 +1,38 @@
+#! /bin/sh -e
+
+trap "stty echo; echo ''; echo 'Passfile not written'; exit 42" 1 2 3 15
+
+askpass () {
+    echo "Password:  "
+    stty -echo
+    read pass1
+    echo "Retype password:  "
+    read pass2
+    stty echo
+    if [ "${pass1}" = "${pass2}" ]; then
+        echo "Got it.\n"
+        return 0
+    else
+        echo "Authentication token manipulation error.\n"
+        return 1
+    fi 
+}
+
+base=${CTF_BASE:-/var/lib/ctf}
+passfile=$base/pass
+
+if [ -e $passfile ]; then
+    echo "\nDanger! Danger!\n"
+    echo "Wipes out current passfile. It's ok as long as note the current"
+    echo "timestamp ($(date +%s)) and the new pass will be applied on the"
+    echo "next scoreboard update.\n"
+fi
+
+echo "Enter passphrase for backups"
+echo "To exit, press ctrl+c"
+until askpass; do true; done
+
+echo -e "${pass1}" > $passfile
+echo "Passfile written"
+stty echo
+
