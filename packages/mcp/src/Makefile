@@ -1,6 +1,6 @@
 CFLAGS = -Wall -Werror
 TARGETS = claim.cgi puzzler.cgi puzzles.cgi
-TARGETS += pointscli arc4
+TARGETS += pointscli arc4 tea
 
 all: build
 
