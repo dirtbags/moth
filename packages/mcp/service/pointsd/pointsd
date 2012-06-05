@@ -4,8 +4,10 @@ fn=$2/$3
 POINTS=/var/lib/ctf/points.log
 SCOREBOARD=/var/www/scoreboard.html
 
-cat $fn >> $POINTS || break
-rm $fn
+# Only do this if this score hasn't yet been recorded
+if ! cut -d' ' -f2- $POINTS | grep -Fqx "$(cut -d' ' -f2- $fn)"; then
+    cat $fn >> $POINTS && rm $fn
+fi
 
 # Render scoreboard
 if [ $POINTS -nt $SCOREBOARD ]; then
