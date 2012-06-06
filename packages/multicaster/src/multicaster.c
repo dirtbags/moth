@@ -27,7 +27,6 @@ main(int argc, char *argv[])
   char*     multicastIP;                  /* Arg: IP Multicast address */
   char*     multicastPort;                /* Arg: Server port */
   char      token[100];
-  size_t    tokenlen;
   struct    addrinfo *  multicastAddr;     /* Multicast address */
   struct    addrinfo    hints = { 0 };	/* Hints for name lookup */
   struct    timeval timeout = { 0 };
@@ -44,7 +43,6 @@ main(int argc, char *argv[])
   if (NULL == fgets(token, sizeof(token), stdin)) {
     DieWithError("Unable to read token");
   }
-  tokenlen = strlen(token);
 
   /* Resolve destination address for multicast datagrams */
   hints.ai_family   = PF_INET6;
