@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Werror
+CFLAGS = -Wall
 LDFLAGS = -static
 TARGETS = printf
 
