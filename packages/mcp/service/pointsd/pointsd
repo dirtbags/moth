@@ -1,16 +1,31 @@
-#! /bin/sh
+#! /bin/sh -e
 
 fn=$2/$3
-POINTS=/var/lib/ctf/points.log
-SCOREBOARD=/var/www/scoreboard.html
+
+WWW=${CTF_BASE:-/var/www}
+BASE=${CTF_BASE:-/var/lib/ctf}
+OPT=${CTF_BASE:-/opt}
+
+POINTS=$BASE/points.log
+BACKUP=$WWW/backup.png
+SCOREBOARD=$WWW/scoreboard.html
 
 # Only do this if this score hasn't yet been recorded
 if ! cut -d' ' -f2- $POINTS | grep -Fqx "$(cut -d' ' -f2- $fn)"; then
-    cat $fn >> $POINTS && rm $fn
+    cat $fn >> $POINTS
+    rm $fn
 fi
 
-# Render scoreboard
 if [ $POINTS -nt $SCOREBOARD ]; then
-    /opt/mcp/bin/scoreboard < $POINTS > $SCOREBOARD.new && mv $SCOREBOARD.new $SCOREBOARD
+    # Generate new backup
+    (
+        cat bkup.png; 
+        tar cvf - $BASE | gzip -c | $OPT/00admin/bin/tea 3< $OPT/00admin/password
+    ) > $BACKUP.new
+    mv $BACKUP.new $BACKUP
+
+    # Render scoreboard
+    /opt/mcp/bin/scoreboard < $POINTS > $SCOREBOARD.new
+    mv $SCOREBOARD.new $SCOREBOARD
 fi
 
