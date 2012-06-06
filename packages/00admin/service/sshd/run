@@ -2,7 +2,9 @@
 
 exec 2>&1
 
-echo 'root:$1$i/EeZyl6$5C6Z8s0ftEdTKFLUli1wP1' | chpasswd --encrypted
+read password < /opt/00admin/password
+
+printf 'root:%s' "$password" | chpasswd --md5
 
 # Bring up the NIC; this will get us at least a link-local address, and
 # hopefully a global address with stateless autoconfiguration.
