@@ -77,27 +77,31 @@ BEGIN {
     tslen = 0
 
     nteams = 0;
-    while (1 == getline) {
-        time = $1
-        team = $2
-        cat = $3
-        points = int($4)
+}
 
-        if (! start) {
-            start = time
-        }
+# MAINLOOP
+{
+    time = $1
+    team = $2
+    cat = $3
+    points = int($4)
 
-        if (time > (outtime + interval)) {
-            outtime = time
-            output()
-        }
-        lasttime = time
-
-        teams[team] = nteams++
-        points_by_cat[cat] += points
-        points_by_cat_team[cat, team] += points
+    if (! start) {
+        start = time
     }
 
+    if (time > (outtime + interval)) {
+        outtime = time
+        output()
+    }
+    lasttime = time
+
+    teams[team] = nteams++
+    points_by_cat[cat] += points
+    points_by_cat_team[cat, team] += points
+}
+
+END {
     output()
 
     # Get team colors and names
@@ -180,7 +184,8 @@ BEGIN {
     print "  </head>"
     print "  <body>"
     print "    <h1>Scoreboard</h1>"
-    print "<p id=\"debug\"></p>"
+    print "    <p id=\"debug\"></p>"
+    print "    <img src=\"backup.png?" NR "\" alt=\"\" style=\"display: none;\" height=\"1\" width=\"1\">"
     print "    <table id=\"scoreboard\">"
     print "      <tr>"
     print "        <th>Overall</th>"
