@@ -31,6 +31,7 @@ mcp-install: $(MCP_BUILDDIR)/build
 	$(call COPYTREE, packages/mcp/bin, $(MCP_PKGDIR)/bin)
 	cp packages/mcp/src/pointscli $(MCP_PKGDIR)/bin/
 	cp packages/mcp/src/puzzles.cgi $(MCP_PKGDIR)/bin/
+	cp packages/mcp/src/tea $(MCP_PKGDIR)/bin/
 
 	cp $(MCP_BUILDDIR)/eris/eris $(MCP_PKGDIR)/bin/
 
