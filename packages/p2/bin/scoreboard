@@ -30,20 +30,42 @@ function escape(s) {
     return s
 }
 
+function head() {
+    print "<!DOCTYPE html>"
+    print "<html><head><title>Project 2 Scoreboard</title>"
+    print "<meta http-equiv=\"refresh\" content=\"60\">"
+    print "<style>"
+    print "html {background: black url(\"p2inv.png\") no-repeat top center; background-size: contain; min-height: 100%; color: white;}"
+    print "body {background: black; opacity: 0.8; margin: 0;}"
+    print "p {margin: 0;}"
+    print "span {display: inline-block; margin: 0; border: 0;}"
+    print ".cat0 {background-color: #842;}"
+    print ".cat1 {background-color: #028;}"
+    print ".cat2 {background-color: #802;}"
+    print ".cat3 {background-color: #640;}"
+    print ".cat4 {background-color: #486;}"
+    print ".cat5 {background-color: #682;}"
+    print ".cat6 {background-color: #408;}"
+    print ".cat7 {background-color: #624;}"
+    print ".name {position: absolute; right: 10px;}"
+    print "#scores p {margin: 0; padding: 0; border: none; border-top: thin solid #222; clear: both;}"
+    print "#scores p:hover {background-color: #222;}"
+    print "</style>"
+    print "</head><body>"
+    print "<div id=\"scores\">"
+}
+
+function foot() {
+    print "</div></body></html>"
+}
+
 BEGIN {
     base = ENVIRON["CTF_BASE"]
     if (! base) {
         base = "/var/lib/ctf"
     }
 
-    # Only display two decimal places
-    CONVFMT = "%.2f"
-    
-    # New point at least every 2.5 minutes
-    interval = 150
-    tslen = 0
-
-    nteams = 0;
+    head()
 }
 
 # MAINLOOP
@@ -57,7 +79,6 @@ BEGIN {
     if (! (hash in team_names)) {
         fn = sprintf("%s/teams/names/%s", base, hash)
         getline team_names[hash] < fn
-        print (hash, team_names[hash])
         close(fn)
     }
 
@@ -85,6 +106,9 @@ END {
             total_score[hash] += cat_score[hash, cat]
         }
         scores[nteams++] = total_score[hash]
+        if (total_score[hash] > max_score) {
+            max_score = total_score[hash]
+        }
     }
 
     # Sort scores
@@ -99,7 +123,7 @@ END {
                 continue;
             }
 
-            name = team_names[hash]
+            name = escape(team_names[hash])
             printf("<span class=\"name\">%s</span>\n", name)
 
             for (ncat = 0; ncat < ncats; ncat += 1) {
@@ -107,11 +131,15 @@ END {
                 points = cat_points[hash, cat];
 
                 if (cat_points[hash, cat] > 0) {
-                    printf("<!-- %s %s %s -->", cat, points, escape(name))
+                    width = cat_score[hash, cat] / max_score * 80 
+                    printf("<!-- %s %s %s -->", cat, points, name)
                     printf("  <span class=\"cat%d\" style=\"width: %.2f%%;\">%d</span>\n", 
-                            ncat, cat_score[hash, cat] * 100, cat_points[hash, cat])
+                            ncat, width, cat_points[hash, cat])
                 }
             }
         }
     }
+
+    foot()
 }
+
