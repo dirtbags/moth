@@ -11,7 +11,7 @@ BACKUP=$WWW/backup.png
 SCOREBOARD=$WWW/scoreboard.html
 
 # Only do this if this score hasn't yet been recorded
-if ! cut -d' ' -f2- $POINTS | grep -Fqx "$(cut -d' ' -f2- $fn)"; then
+if [ -z "$(sort -k2 $POINTS $fn | uniq -f1 -d)" ]; then
     cat $fn >> $POINTS
     rm $fn
 fi
