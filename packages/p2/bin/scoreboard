@@ -36,20 +36,22 @@ function head() {
     print "<meta http-equiv=\"refresh\" content=\"60\">"
     print "<style>"
     print "html {background: black url(\"p2inv.png\") no-repeat top center; background-size: contain; min-height: 100%; color: white;}"
-    print "body {background: black; opacity: 0.8; margin: 0;}"
+    print "body {background: black; opacity: 0.92; margin: 0;}"
     print "p {margin: 0;}"
     print "span {display: inline-block; margin: 0; border: 0;}"
-    print ".cat0 {background-color: #842;}"
-    print ".cat1 {background-color: #028;}"
-    print ".cat2 {background-color: #802;}"
-    print ".cat3 {background-color: #640;}"
-    print ".cat4 {background-color: #486;}"
-    print ".cat5 {background-color: #682;}"
-    print ".cat6 {background-color: #408;}"
-    print ".cat7 {background-color: #624;}"
+    print ".cat0 {background-color: #a6cee3; color: black;}"
+    print ".cat1 {background-color: #1f78b4;}"
+    print ".cat2 {background-color: #b2df8a; color: black;}"
+    print ".cat3 {background-color: #33a02c;}"
+    print ".cat4 {background-color: #fb9a99;}"
+    print ".cat5 {background-color: #e31a1c;}"
+    print ".cat6 {background-color: #fdbf6f;}"
+    print ".cat7 {background-color: #ff7f00;}"
+    print ".cat8 {background-color: #cab2d6;}"
+
     print ".name {position: absolute; right: 10px;}"
-    print "#scores p {margin: 0; padding: 0; border: none; border-top: thin solid #222; clear: both;}"
-    print "#scores p:hover {background-color: #222;}"
+    print "#scores p {margin: 0; padding: 0; border: thin solid #222; opacity: 0.92;}"
+    print "#scores p:hover {border: thin solid yellow;}"
     print "</style>"
     print "</head><body>"
     print "<div id=\"scores\">"
@@ -114,6 +116,12 @@ END {
     # Sort scores
     qsort(scores, 0, nteams-1)
 
+    print "<p>"
+    for (ncat = 0; ncat < ncats; ncat += 1) {
+        printf("<span class=\"cat%d\">%s</span>\n", ncat, categories[ncat]);
+    }
+    print "</p>"
+
     for (i = nteams-1; i >= 0; i -= 1) {
         score = scores[i];
         if (score == scores[i-1]) continue;         # Skip duplicates
@@ -124,6 +132,7 @@ END {
             }
 
             name = escape(team_names[hash])
+            print "<p>"
             printf("<span class=\"name\">%s</span>\n", name)
 
             for (ncat = 0; ncat < ncats; ncat += 1) {
@@ -131,12 +140,13 @@ END {
                 points = cat_points[hash, cat];
 
                 if (cat_points[hash, cat] > 0) {
-                    width = cat_score[hash, cat] / max_score * 80 
+                    width = cat_score[hash, cat] / max_score * 90 
                     printf("<!-- %s %s %s -->", cat, points, name)
-                    printf("  <span class=\"cat%d\" style=\"width: %.2f%%;\">%d</span>\n", 
+                    printf("<span class=\"cat%d\" style=\"width: %.2f%%;\">%d</span>", 
                             ncat, width, cat_points[hash, cat])
                 }
             }
+            print "</p>"
         }
     }
 
