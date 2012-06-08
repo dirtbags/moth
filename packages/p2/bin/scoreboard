@@ -58,7 +58,34 @@ function head() {
 }
 
 function foot() {
-    print "</div></body></html>"
+
+
+    print "    </div>"
+    print "    <pre style=\"position: fixed; bottom: 0; right: 20em; "
+    print "    opacity: 0.8;\">"
+    print "    What is it?"
+    print "      It is a hacker/forensic/puzzle game... are you up for a challenge"
+    print ""      
+    print "    How do I play?"
+    print "      Sit at the terminal and make yourself a team."
+    print "      Follow instructions from there (involves visiting a website)"
+    print ""
+    print "    FAQ:"
+    print "    Q - What is the picture being projected?"
+    print "    A - It is the scoreboard and the image is for you to figure out"
+    print "    "
+    print "    Q - Are there any hints?"
+    print "    A - NO"
+    print "    "
+    print "    Q - Can I connect remotely and play?"
+    print "    A - Sure, connect to our Access Point \"Verizon MiFi A6AD Secure\""
+    print "    "
+    print "    Q - How do I track my points?"
+    print "    A - See first FAQ.  The points are based off of how many"
+    print "        puzzles you've solved in each category"
+    print "    </pre>"
+    print "  </body>"
+    print "</body></html>"
 }
 
 BEGIN {
