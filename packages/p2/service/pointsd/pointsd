@@ -1,0 +1,31 @@
+#! /bin/sh -e
+
+fn=$2/$3
+
+WWW=${CTF_BASE:-/var/www}
+BASE=${CTF_BASE:-/var/lib/ctf}
+OPT=${CTF_BASE:-/opt}
+
+POINTS=$BASE/points.log
+BACKUP=$WWW/backup.png
+SCOREBOARD=$WWW/scoreboard.html
+
+# Only do this if this score hasn't yet been recorded
+if [ -z "$(sort -k2 $POINTS $fn | uniq -f1 -d)" ]; then
+    cat $fn >> $POINTS
+    rm $fn
+fi
+
+if [ $POINTS -nt $SCOREBOARD ]; then
+    # Generate new backup
+    (
+        cat bkup.png; 
+        tar cvf - $BASE | gzip -c | $OPT/00admin/bin/tea 3< $OPT/00admin/password
+    ) > $BACKUP.new
+    mv $BACKUP.new $BACKUP
+
+    # Render scoreboard
+    /opt/p2/bin/scoreboard < $POINTS > $SCOREBOARD.new
+    mv $SCOREBOARD.new $SCOREBOARD
+fi
+
