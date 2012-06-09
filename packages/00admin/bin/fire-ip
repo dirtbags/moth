@@ -4,7 +4,9 @@ action=$1; shift
 
 read n < ip.txt
 
-if grep -q ipv4 /proc/cmdline; then
+if grep -q '/' ip.txt; then
+    IP=$n
+elif grep -q ipv4 /proc/cmdline; then
     # IPv4
     IP="10.0.0.$n/16"
 else
