@@ -1,0 +1,22 @@
+#! /bin/sh
+
+exec 2>&1
+
+# Turn off default gettys
+sv d tty1 tty2 tty3 tty4
+if ! sv s tty1 | grep down; then
+    exit
+fi
+
+# Disable magic sysrq key
+echo 0 > /proc/sys/kernel/sysrq
+
+# Make this like a VT52; including disabling ctrl-alt-del
+loadkmap /opt/p2client/dumbterm.kmap
+
+# Simulate a green-phosphor CRT
+printf '\033]P0111122\033]P788ff00\033]Pfff8800'
+
+# Run the console!
+exec getty -n -l ./p2connect 38400 tty1
+
