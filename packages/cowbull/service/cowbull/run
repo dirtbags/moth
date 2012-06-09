@@ -2,6 +2,6 @@
 
 exec 2>&1
 
-IP=$(/opt/00admin/sbin/fire-ip add)
+IP=$(/opt/00admin/bin/fire-ip add)
 
 exec setuidgid nobody /opt/cowbull/bin/cowd < /opt/cowbull/tokens.txt
