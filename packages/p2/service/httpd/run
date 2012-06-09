@@ -1,0 +1,25 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+IP=$(/opt/00admin/bin/fire-ip add)
+
+addgroup -g 65534 nogroup || true
+adduser -D -g nogroup -u 65534 -h /tmp -H nobody || true
+
+hostname p2
+
+# Link in puzzles and web pages
+install -d /var/www
+for d in /opt/*; do
+    w=/var/www/$(basename $d)
+    if [ -d $d/puzzles ] && ! [ -d $w ]; then
+        ln -sf $d/puzzles $w
+    fi
+    if [ -d $d/www ]; then
+        ln -sf $d/www/* /var/www/
+    fi
+done
+
+ln -sf /var/www default
+exec tcpsvd -u nobody ${IP%/*} 80 /opt/p2/bin/eris -c
