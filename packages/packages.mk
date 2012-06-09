@@ -5,20 +5,6 @@ define COPYTREE
 	(cd $(1) && find . -not -name "*~" | cpio -o) | (cd $(2) && cpio -i)
 endef
 
-define STANDARD_PUZZLE
-t=$(strip $1)
-$t-install: $(TARGET)/$t
-$(TARGET)/$t: packages/$t
-	mkdir -p $(TARGET)/$t
-	./mkpuzzles packages/$t $(TARGET)/$t
-
-$t-clean: $t-stdclean
-$t-stdclean:
-	rm -rf $(TARGET)/$t $(BIN)/$t.pkg
-
-PACKAGES += $t
-endef
-
 include packages/*/*.mk
 
 # Things configure likes to see
