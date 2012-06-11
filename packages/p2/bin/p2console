@@ -38,7 +38,7 @@ newteam () {
     printf '%s' "$name" > $BASE/$hash/.name
 
     cat <<EOD
-Your team hash is $hash.  Write that down somewhere and don't lose it.
+Your team hash is [1m$hash[0m.  Write that down somewhere and don't lose it.
 If you forget your hash, you'll have to start over from the beginning
 with a new team and everybody will laugh at you.
 EOD
@@ -69,19 +69,19 @@ clear
 
 read -r name < $BASE/$hash/.name
 
-printf 'Welcome back, [34m%s[0m.\n' "$name"
+printf 'Welcome back, [1m%s[0m.\n' "$name"
 
 while true; do
-    printf "[32mp2>[0m "
+    printf "[7mp2>[0m "
     read -r answer
 
     case "$answer" in
         \?|help)
             cat <<EOD
-[32m                         Help
+[1m                         Help
 ----------------------------------------------------------[0m
 
-Type "[34mquit[0m" to leave the p2 shell.
+Type "[1mquit[0m" to leave the p2 shell.
 
 Any other string is checked as an answer.  If the answer
 is correct, you are awarded points and the scoreboard will
@@ -97,7 +97,7 @@ EOD
 
     match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
     if [ -z "$match" ]; then
-        echo 'That is not a correct answer.  Type "[34mhelp[0m" for help.'
+        echo 'That is not a correct answer.  Type "[1mhelp[0m" for help.'
         continue
     fi
     
@@ -108,7 +108,7 @@ EOD
         echo "You've already received points for this answer."
     else
         > $fn
-        echo "You get $points more points in the $cat category."
+        echo "You get [1m$points[0m more points in the [1m$cat[0m category."
         # run puzzles.cgi
         # update scoreboard
     fi
