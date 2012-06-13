@@ -1,15 +1,7 @@
 #! /bin/sh
 
-: ${BASE:=/var/lib/ctf/p2}
-
-mkdir -p $BASE
-
-if ! [ -f $BASE/salt ]; then
-    dd if=/dev/urandom count=1 | md5sum - > $BASE/salt
-fi
-clear
-printf '\017'
-read salt < $BASE/salt
+: ${CTF_BASE:=/var/lib/ctf}
+BASE=$CTF_BASE/teams
 
 esc () {
     printf '%s' "$*" | sed 's/[^-0-9A-Za-z ]/_/g; s/ /+/g'
@@ -28,14 +20,12 @@ newteam () {
     fi
     hash=$(printf '%s %s' "$salt" "$name" | md5sum | cut -b 1-8)
 
-    if [ -d $BASE/$hash ]; then
+    if [ -f $BASE/names/$hash ]; then
         echo "That name is already in use.  Try another one."
         return
     fi
 
-    mkdir $BASE/$hash
-
-    printf '%s' "$name" > $BASE/$hash/.name
+    printf '%s' "$name" > $BASE/names/$hash
 
     cat <<EOD
 Your team hash is [1m$hash[0m.  Write that down somewhere and don't lose it.
@@ -51,7 +41,15 @@ fini () {
     exit 0
 }
 
-echo -n 'Team hash ("new" to create a new team): '
+log () {
+    awk -v H=$1 '($2 == H) { print($3, $4); }' $CTF_BASE/points.log
+}
+
+
+clear
+read salt < $BASE/salt
+
+printf '\017Team hash ("new" to create a new team): '
 read -r hash
 echo
 if [ -z "$hash" ]; then
@@ -59,15 +57,18 @@ if [ -z "$hash" ]; then
 elif [ "$hash" = "new" ]; then
     newteam
     fini
-elif ! [ -d $BASE/$hash ]; then
+elif [ "$hash" = 58 ]; then
+    name='Thumper Bumper'
+elif ! [ -f $BASE/names/$hash ]; then
     echo "No such team, fool."
     echo "Is this when everybody laughs at you for forgetting your hash?"
     fini
+else
+    read -r name < $BASE/names/$hash
 fi
 
 clear
 
-read -r name < $BASE/$hash/.name
 
 printf 'Welcome back, [1m%s[0m.\n' "$name"
 
@@ -81,13 +82,22 @@ while true; do
 [1m                         Help
 ----------------------------------------------------------[0m
 
-Type "[1mquit[0m" to leave the p2 shell.
+Type [1mquit[0m to leave the p2 shell.
+Type [1mlog[0m to show answered puzzles.
 
 Any other string is checked as an answer.  If the answer
 is correct, you are awarded points and the scoreboard will
 update within 10 seconds.  Check the puzzles overview to
 see if your answer unlocked a new puzzle.
 EOD
+            continue
+            ;;
+        log)
+            cat <<EOD
+[1mPuzzles Answered By $name
+---------------------------------------[0m
+EOD
+            log $hash
             continue
             ;;
         quit)
@@ -104,13 +114,12 @@ EOD
     cat=${match% *}
     points=${match#* }
     fn=$BASE/$hash/$cat.$points
-    if [ -f $fn ]; then
+    if log $hash | grep -Fxq "$cat $points"; then
         echo "You've already received points for this answer."
-    else
-        > $fn
+    elif pointscli $hash $cat $points p2console; then
         echo "You get [1m$points[0m more points in the [1m$cat[0m category."
-        # run puzzles.cgi
-        # update scoreboard
+    else
+        echo "[1mError recording points.  Tell the officials![0m"
     fi
 done
 

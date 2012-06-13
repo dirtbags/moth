@@ -1,0 +1,15 @@
+#! /bin/sh -e
+ 
+exec 2>&1
+
+hostname p2
+
+IP=$(dbip -a)
+install -d /var/lib/ctf/teams
+install -o ctf -m 0755 -d /var/lib/ctf/teams/names
+
+if ! [ -f /var/lib/ctf/teams/salt ]; then
+    dd if=/dev/urandom count=1 | md5sum - > /var/lib/ctf/teams/salt
+fi
+
+exec setuidgid ctf tcpsvd 0 5555 ./p2console
