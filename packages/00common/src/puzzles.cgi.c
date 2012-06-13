@@ -133,10 +133,10 @@ main(int argc, char *argv[])
       long points;
 
       read_until_char(map, points_str, sizeof(points_str), ' ');
-      read_until_char(map, cat, sizeof(cat), '\n');
-      points = atol(hash);
+      read_until_char(map, hash, sizeof(hash), '\n');
+      points = atol(points_str);
 
-      printf("    <a href=\"/%s/%ld/\">%ld</a>\n", cat, points, points);
+      printf("    <a href=\"/%s/\">%ld</a>\n", hash, points);
 
       if (points > maxpoints) break;
     }
