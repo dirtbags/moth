@@ -116,7 +116,7 @@ EOD
     fn=$BASE/$hash/$cat.$points
     if log $hash | grep -Fxq "$cat $points"; then
         echo "You've already received points for this answer."
-    elif pointscli $hash $cat $points p2console; then
+    elif /opt/p2/bin/pointscli $hash $cat $points p2console; then
         echo "You get [1m$points[0m more points in the [1m$cat[0m category."
     else
         echo "[1mError recording points.  Tell the officials![0m"
