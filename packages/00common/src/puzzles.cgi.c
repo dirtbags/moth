@@ -105,6 +105,7 @@ main(int argc, char *argv[])
     struct dirent *e          = readdir(opt);
     char          *cat;
     long           maxpoints = 0;
+    FILE          *map;
 
     if (! e) break;
 
@@ -120,7 +121,7 @@ main(int argc, char *argv[])
     }
 
     /* Read in category's map file, print html until point limit reached */
-    FILE *map = fopen(package_path("%s/map.txt", cat), "r");
+    map = fopen(package_path("%s/map.txt", cat), "r");
     if (map == NULL) continue;
 
     printf("  <dt>%s</dt>\n", cat);
