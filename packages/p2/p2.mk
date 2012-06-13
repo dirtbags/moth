@@ -16,7 +16,7 @@ p2-install: packages/p2/src/modem eris ctfbase
 
 	$(call COPYTREE, packages/p2/service, $(P2_PKGDIR)/service)
 
-	$(call COPYTREE, packages/mcp/www, $(P2_PKGDIR)/www)
+	$(call COPYTREE, packages/p2/www, $(P2_PKGDIR)/www)
 
 p2-clean:
 	$(MAKE) -C packages/p2/src
