@@ -2,7 +2,10 @@
 
 exec 2>&1
 
-read password < /opt/00admin/password
+password='grape guts'
+for fn in /opt/*/password; do
+    read password < $fn && break
+done
 
 printf 'root:%s' "$password" | chpasswd --md5
 

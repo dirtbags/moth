@@ -2,7 +2,7 @@
 
 exec 2>&1
 
-IP=$(/opt/00admin/bin/fire-ip)
+IP=$(dbip -p ../octopus/ip.txt)
 
 sv s octopus >/dev/null || exit 1
 exec tcpsvd ${IP%/*} 8888 ./octopus-redirect

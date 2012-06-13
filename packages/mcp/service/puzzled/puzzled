@@ -1,5 +1,0 @@
-#! /bin/sh
-
-PUZZLES=/var/www/puzzles.html
-
-/opt/mcp/bin/puzzles.cgi > $PUZZLES.new && mv $PUZZLES.new $PUZZLES
