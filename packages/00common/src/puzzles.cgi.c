@@ -136,7 +136,7 @@ main(int argc, char *argv[])
       read_until_char(map, hash, sizeof(hash), '\n');
       points = atol(points_str);
 
-      printf("    <a href=\"/%s/\">%ld</a>\n", hash, points);
+      printf("    <a href=\"/%s/%s/\">%ld</a>\n", cat, hash, points);
 
       if (points > maxpoints) break;
     }
