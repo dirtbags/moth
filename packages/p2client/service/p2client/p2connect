@@ -1,11 +1,13 @@
 #! /bin/sh
 
-# Try hard to look like a serial connection
-
+# Try hard to look like a serial terminal
 reset
 
+# Maybe this is some startup code
+sleep 0.4
+
 # Print some bullshit to confuse people
-printf 'RS232/0:1200-N81 '
+printf 'S0:1200N81 '
 
 # Simulate a green-phosphor CRT
 printf '\033]P0111122\033]P788ff00\033]Pfff8800'

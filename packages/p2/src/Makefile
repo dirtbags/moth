@@ -1,4 +1,4 @@
-all: modem tea
+all: modem
 
 clean:
-	rm -f modem tea
+	rm -f modem
