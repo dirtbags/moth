@@ -2,7 +2,7 @@
 
 exec 2>&1
 
-IP=$(/opt/00admin/bin/fire-ip add)
+IP=$(dbip -a)
 
 # So I say to him, "Alex, what's a good high port number for a CTF category?"
 # And he says, "6"

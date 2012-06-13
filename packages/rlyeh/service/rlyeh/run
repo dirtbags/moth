@@ -2,7 +2,7 @@
 
 exec 2>&1
 
-IP=$(/opt/00admin/bin/fire-ip add)
+IP=$(dbip -a)
 
 dir=/var/lib/ctf/rlyeh
 install -o nobody -d $dir
