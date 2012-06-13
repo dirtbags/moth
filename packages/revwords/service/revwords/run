@@ -2,7 +2,7 @@
 
 exec 2>&1
 
-IP=$(/opt/00admin/bin/fire-ip add)
+IP=$(dbip -a)
 
 exec tcpsvd -u nobody ${IP%/*} 1013 ./go
 
