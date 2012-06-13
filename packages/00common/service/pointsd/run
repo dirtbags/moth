@@ -1,0 +1,49 @@
+#! /bin/sh -e
+
+exec 2>&1
+
+: ${CTF_BASE:=/var/lib/ctf}
+
+install -d $CTF_BASE
+
+# Create CTF and nobody users
+touch /etc/group /etc/passwd
+addgroup -g 65534 nogroup || true
+adduser -DH -G nogroup -u 65534 nobody || true
+adduser -DHS ctf || true
+
+# Set up base directories
+NEWDIR=$CTF_BASE/points.new
+TMPDIR=$CTF_BASE/points.tmp
+
+install -d /var/www
+install -d /var/lib/ctf
+install -o ctf -m 0755 -d $NEWDIR
+install -o ctf -m 0755 -d $TMPDIR
+
+# Create some files
+touch /var/lib/ctf/points.log
+
+# Generate preliminary scoreboard
+if [ ! -f /var/www/scoreboard.html ]; then
+    ./mkpage scoreboard < /dev/null > /var/www/scoreboard.html
+fi
+
+# Generate preliminary puzzles list
+if [ ! -f /var/www/puzzles.html ]; then
+    ./mkpage puzzles.cgi > /var/www/puzzles.html
+fi
+
+# Run pointsd every time a new points file is dropped
+if [ -x /sbin/inotifyd ]; then
+    exec /sbin/inotifyd ./pointsd $NEWDIR:y
+fi
+
+# Simulate inotifyd by polling
+cd $NEWDIR
+while true; do
+    find . -type f | while read fn; do
+        ./pointsd m $NEWDIR ${fn#./}
+    done
+    sleep 7
+done

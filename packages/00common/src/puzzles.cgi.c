@@ -59,7 +59,7 @@ main(int argc, char *argv[])
   }
 
   {
-    FILE *f = fopen(state_path("puzzles.db"), "r");
+    FILE *f = fopen(state_path("points.log"), "r");
     char cat[CAT_MAX];
     char points_str[11];
     long points;

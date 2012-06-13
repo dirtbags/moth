@@ -1,0 +1,5 @@
+This directory is for things that multiple packages need.
+For example, eris httpd is used by mcp, p2, and inferno.
+
+
+This directory does not create its own package, though.
