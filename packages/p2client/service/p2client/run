@@ -14,6 +14,9 @@ deallocvt
 # Disable magic sysrq key
 echo 0 > /proc/sys/kernel/sysrq
 
+# Turn off screen blanking
+setterm -blank 0 -powersave off -powerdown 0
+
 # Make this like a VT52; including disabling ctrl-alt-del
 loadkmap < /opt/p2client/dumbterm.kmap
 
