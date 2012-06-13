@@ -166,3 +166,34 @@ nav li + li:before {
 .solved {
     text-decoration: line-through;
 }
+
+
+/* Names */
+span[data-handle]:after {
+    content: ")";
+}
+
+span[data-handle="zephyr"]:before {
+    content: "Neale Pickett (";
+}
+
+span[data-handle="pflarr"]:before {
+    content: "Paul Ferrell (";
+}
+
+span[data-handle="chamuco"]:before {
+    content: "Danny Quist (";
+}
+
+span[data-handle="cashmoney"]:before {
+    content: "Jeremy Scott (";
+}
+
+span[data-handle="phorkus"]:before {
+    content: "Mark Carey (";
+}
+
+span[data-handle="cherish"]:before {
+    content: "Cherish Franco (";
+}
+
