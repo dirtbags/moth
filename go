@@ -10,7 +10,7 @@ case ${1:-$TYPE} in
         packages='router'
         ;;
     p2)
-        packages='p2 sequence'
+        packages='p2 gs p2steg archaeology '
         ;;
     p2cli)
         packages='p2client'
@@ -45,8 +45,8 @@ echo $ARCH
 
 if [ $ARCH = i386-linux ]; then
     lsmod | grep -q kvm-intel || sudo modprobe kvm-intel
-    sudo kvm \
-        -serial stdio \
+    sudo qemu-system-i386 \
+        -nographic \
         -kernel $HOME/src/buildroot/output/images/bzImage \
         -initrd $HOME/src/buildroot/output/images/rootfs.squashfs \
         -append "console=ttyS0 packages=/dev/sda ipv6 debug" \
