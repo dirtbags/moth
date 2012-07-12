@@ -148,6 +148,8 @@ main(int argc, char *argv[])
   closedir(opt);
 
   printf("</dl>\n");
+
+  printf("<p>New puzzles are unlocked when any team answers the highest-scoring puzzle in a category.</p>");
   cgi_foot();
 
   return 0;

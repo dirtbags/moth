@@ -10,7 +10,7 @@ case ${1:-$TYPE} in
         packages='router'
         ;;
     p2)
-        packages='p2 gs p2steg archaeology '
+        packages='p2 gs archaeology nocode steg js proto'
         ;;
     p2cli)
         packages='p2client'
