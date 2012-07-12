@@ -2,23 +2,34 @@
 
 exec 2>&1
 
-# Turn off default gettys
-sv d tty1 tty2 tty3 tty4
+# Turn off conflicting getty
+sv d tty1
+
 if ! sv s tty1 | grep down; then
     exit
 fi
 
-# Don't let C-A-F2 switch away
-deallocvt
+# Cool font
+setfont -C /dev/tty1 /opt/p2client/lite-16.fnt
 
-# Disable magic sysrq key
-echo 0 > /proc/sys/kernel/sysrq
 
-# Turn off screen blanking
-setterm -blank 0 -powersave off -powerdown 0
+if ! grep -q debug /proc/cmdline; then
+    # Don't let C-A-F2 switch away
+    sv d tty2 tty3 tty4
+    deallocvt
 
-# Make this like a VT52; including disabling ctrl-alt-del
-loadkmap < /opt/p2client/dumbterm.kmap
+    # Disable magic sysrq key
+    echo 0 > /proc/sys/kernel/sysrq
+
+    # Turn off screen blanking
+    setterm -blank 0 -powersave off -powerdown 0
+
+    # Make this like a VT52; including disabling ctrl-alt-del
+    loadkmap < /opt/p2client/dumbterm.kmap
+
+    # Disable console logging
+    echo 1 4 1 4 > /proc/sys/kernel/printk
+fi
 
 # Run the console!
 exec getty -n -l ./p2connect 38400 tty1
