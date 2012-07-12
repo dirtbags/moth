@@ -4,6 +4,8 @@ exec 2>&1
 
 IP=$(dbip -p ../p2console/ip.txt)
 
+ip route add default via 10.0.0.1
+
 # Link in puzzles and web pages
 install -d /var/www
 for d in /opt/*; do
