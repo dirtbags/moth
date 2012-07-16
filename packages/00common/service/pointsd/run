@@ -40,10 +40,9 @@ if [ -x /sbin/inotifyd ]; then
 fi
 
 # Simulate inotifyd by polling
-cd $NEWDIR
 while true; do
-    find . -type f | while read fn; do
-        ./pointsd m $NEWDIR ${fn#./}
+    find $NEWDIR -type f | while read fn; do
+        ./pointsd m $NEWDIR ${fn##*/}
     done
     sleep 7
 done
