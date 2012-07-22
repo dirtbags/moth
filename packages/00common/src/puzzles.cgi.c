@@ -94,13 +94,13 @@ main(int argc, char *argv[])
 
   opt = opendir(package_path(""));
   if (NULL == opt) {
-    cgi_error("Cannot opendir(\"/opt\")");
+    cgi_error("Cannot open packages directory");
   }
 
   cgi_head("Open puzzles");
   printf("<dl>\n");
 
-  /* For each file in /opt/ ... */
+  /* For each file in /packages/ ... */
   while (1) {
     struct dirent *e          = readdir(opt);
     char          *cat;

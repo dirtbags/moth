@@ -1,9 +1,7 @@
 #! /bin/sh
 
-OPT=${CTF_BASE:-/opt}
-
 # Use first installed binary
-for bin in $OPT/*/bin/$1; do
+for bin in $CTF_BASE/packages/*/bin/$1; do
     if [ -x $bin ]; then
         exec $bin
     fi

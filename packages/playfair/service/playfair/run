@@ -5,5 +5,5 @@ exec 2>&1
 IP=$(dbip -a)
 ip addr add $IP dev eth0 || true
 
-exec tcpsvd -u nobody ${IP%/*} 1013 /opt/playfair/bin/playfair
+exec tcpsvd -u nobody ${IP%/*} 1013 $CTF_BASE/packages/playfair/bin/playfair
 
