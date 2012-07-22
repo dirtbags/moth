@@ -4,4 +4,4 @@ exec 2>&1
 
 IP=$(dbip -a)
 
-exec setuidgid nobody /opt/cowbull/bin/cowd < /opt/cowbull/tokens.txt
+exec setuidgid nobody $CTF_BASE/packages/cowbull/bin/cowd < $CTF_BASE/packages/cowbull/tokens.txt

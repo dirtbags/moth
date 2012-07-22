@@ -14,16 +14,14 @@ sv d pointsd
 sv d puzzled
 sv d tanksd
 
-rm -f /var/lib/ctf/tokens.db
-rm -f /var/lib/ctf/points.log
-rm -f /var/www/scoreboard.html
-rm -f /var/lib/ctf/puzzles.db
-rm -rf /var/lib/ctf/points.new
-rm -rf /var/lib/ctf/points.tmp
-rm -rf /var/lib/ctf/tanks
-rm -rf /var/lib/ctf/teams
-
-backup-pass
+rm -f $CTF_BASE/state/tokens.db
+rm -f $CTF_BASE/state/points.log
+rm -f $CTF_BASE/www/scoreboard.html
+rm -f $CTF_BASE/state/puzzles.db
+rm -rf $CTF_BASE/state/points.new
+rm -rf $CTF_BASE/state/points.tmp
+rm -rf $CTF_BASE/state/tanks
+rm -rf $CTF_BASE/state/teams
 
 sv u tokend
 sv u pointsd
