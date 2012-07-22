@@ -364,21 +364,21 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
 }
 
 static char *
-mkpath(char const *base, char const *fmt, va_list ap)
+mkpath(char const *type, char const *fmt, va_list ap)
 {
   char         relpath[PATH_MAX];
   static char  path[PATH_MAX];
-  char const  *var;
+  char const  *var = getenv("CTF_BASE");
 
   vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
   relpath[sizeof(relpath) - 1] = '\0';
 
-  var = getenv("CTF_BASE");
   if (! var) {
-    var = base;
+    var = "";
   }
 
-  my_snprintf(path, sizeof(path), "%s/%s", var, relpath);
+  /* $CTF_BASE/type/relpath */
+  my_snprintf(path, sizeof(path), "%s/%s/%s", var, type, relpath);
   return path;
 }
 
@@ -389,7 +389,7 @@ state_path(char const *fmt, ...)
   char    *ret;
 
   va_start(ap, fmt);
-  ret = mkpath("/var/lib/ctf", fmt, ap);
+  ret = mkpath("state", fmt, ap);
   va_end(ap);
   return ret;
 }
@@ -401,7 +401,7 @@ package_path(char const *fmt, ...)
   char    *ret;
 
   va_start(ap, fmt);
-  ret = mkpath("/opt", fmt, ap);
+  ret = mkpath("packages", fmt, ap);
   va_end(ap);
   return ret;
 }
