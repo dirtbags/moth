@@ -31,4 +31,4 @@ cat <<EOD >ngircd.conf
         Password = $operpass
 EOD
 
-exec setuidgid irc /opt/ircd/bin/ngircd --config ./ngircd.conf --nodaemon
+exec setuidgid irc $CTF_BASE/packages/ircd/bin/ngircd --config ./ngircd.conf --nodaemon

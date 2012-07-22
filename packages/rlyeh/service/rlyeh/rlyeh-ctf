@@ -1,16 +1,16 @@
 #! /bin/sh
 
-base=${CTF_BASE:-/var/lib/ctf}
+STATE=$CTF_BASE/state
 
-echo -n "Team password: "
+echo -n "Team hash: "
 read -r teamhash
 
-if ! KEY='Too much cheese.' arc4 < $base/teams.txt | grep -q -F -e "$teamhash"; then
+if ! [ -f $STATE/teams/names/"$teamhash" ]; then
     echo 'No such team.'
     exit
 fi
 
-cd $base/rlyeh
+cd $STATE/rlyeh
 
 if [ -f $teamhash ]; then
     now=$(date +%s)
@@ -35,7 +35,7 @@ read level < $teamhash
     echo
 
     if setuidgid nobody rlyeh $level; then
-        arc4 /opt/rlyeh/tokens/rlyeh/enc.key < $base/tokens/rlyeh
+        arc4 $CTF_BASE/packages/rlyeh/tokens/rlyeh/enc.key < $$CTF_BASE/state/rlyeh/tokens.txt
         echo
         expr $level + 1 > $teamhash
     else

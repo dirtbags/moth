@@ -2,13 +2,14 @@
 
 exec 2>&1
 
-mkdir -p /var/www/tanks
-ln -s /opt/tanks/html/* /var/www/tanks/ || true
-ln -s summary.html /var/www/tanks/index.html || true
+mkdir -p $CTF_BASE/state/tanks/players
+mkdir -p $CTF_BASE/state/tanks/www
+chown ctf $CTF_BASE/state/tanks
+chown ctf $CTF_BASE/state/tanks/players
 
-mkdir -p /var/lib/ctf/tanks/players
-chown ctf /var/lib/ctf/tanks
-chown ctf /var/lib/ctf/tanks/players
+ln -s $CTF_BASE/state/tanks/www $CTF_BASE/www/tanks
+ln -s $CTF_BASE/packages/tanks/html/* $CTF_BASE/state/tanks/www/ || true
+ln -s summary.html $CTF_BASE/tanks/www/index.html || true
 
-PATH=/bin:/opt/ctfbase/bin:/opt/tanks/bin; export PATH
+PATH=/bin:$CTF_BASE/packages/tanks/bin; export PATH
 exec ./tanksd

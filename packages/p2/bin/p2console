@@ -1,7 +1,6 @@
 #! /bin/sh
 
-: ${CTF_BASE:=/var/lib/ctf}
-BASE=$CTF_BASE/teams
+BASE=$CTF_BASE/state/teams
 
 esc () {
     printf '%s' "$*" | sed 's/[^-0-9A-Za-z ]/_/g; s/ /+/g'
@@ -105,7 +104,7 @@ EOD
             ;;
     esac
 
-    match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
+    match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' $CTF_BASE/packages/*/answers.txt)
     if [ -z "$match" ]; then
         echo 'That is not a correct answer.  Type "[1mhelp[0m" for help.'
         continue
@@ -116,7 +115,7 @@ EOD
     fn=$BASE/$hash/$cat.$points
     if log $hash | grep -Fxq "$cat $points"; then
         echo "You've already received points for this answer."
-    elif /opt/p2/bin/pointscli $hash $cat $points p2console; then
+    elif $CTF_BASE/packages/p2/bin/pointscli $hash $cat $points p2console; then
         echo "You get [1m$points[0m more points in the [1m$cat[0m category."
     else
         echo "[1mError recording points.  Tell the officials![0m"
