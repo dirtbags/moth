@@ -39,7 +39,7 @@ EOF
     cat <<EOF
     </ul>
 EOF
-    cat $packages/tanks/html/nav.html.inc
+    cat $PACKAGES/tanks/html/nav.html.inc
     cat <<EOF
   </body>
 </html>
@@ -49,7 +49,7 @@ EOF
 while true; do
     find $STATE/teams/names -type f | while read dn; do
         hash=${dn##*/}
-        install -o ctf -d $p/$hash
+        install -o ctf -d $TPLAYERS/$hash
     done
 
     # Has anyone submitted a program yet?
@@ -85,7 +85,7 @@ while true; do
         start("battlefield",
 // Start JSON data
 EOF
-    $PACKAGES/tanks/bin/forftanks $p/* >>$fn 3>$rfn
+    $PACKAGES/tanks/bin/forftanks $TPLAYERS/* >>$fn 3>$rfn
     cat <<EOF >>$fn
 // end JSON data
       );
