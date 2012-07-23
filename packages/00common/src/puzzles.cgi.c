@@ -136,6 +136,11 @@ main(int argc, char *argv[])
       read_until_char(map, hash, sizeof(hash), '\n');
       points = atol(points_str);
 
+      if (0 == points) {
+        printf("    <span title=\"Category Complete\">⁂</span>\n");
+        break;
+      }
+
       printf("    <a href=\"/%s/%s/\">%ld</a>\n", cat, hash, points);
 
       if (points > maxpoints) break;
