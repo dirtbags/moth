@@ -1,0 +1,78 @@
+0 sensor?{ fire! 0 0 mset } if
+1 2 mset
+1 sensor?{
+6 sensor?{
+	fire-ready?{
+		100 100 set-speed!
+	}{
+		-100 -100 set-speed!
+	} ifelse (fire)
+	}{
+		get-turret 30 > {
+		 get-turret 180 < {
+		  50 -50 set-speed! get-turret 20 - set-turret!
+		 }{
+		  -50 50 set-speed! get-turret 20 + set-turret!
+		 } ifelse (180)
+		}{
+		 get-turret -30 < {
+		  get-turret -180 > {
+			-50 50 set-speed! get-turret 20 + set-turret!
+		  }{
+			50 -50 set-speed! get-turret 20 - set-turret!
+		  } ifelse (-180)
+		 }{
+			fire-ready?{
+		  		100 100 set-speed!
+			}{
+				-100 -100 set-speed!
+			} ifelse (fire)
+		 } ifelse (-30)
+		} ifelse (30)
+	} ifelse (6)
+} if (1)
+
+2 sensor?{ get-turret 30 + set-turret! }{
+3 sensor?{ get-turret 30 - set-turret! }{
+4 sensor?{ 50 -50 set-speed! }{
+5 sensor?{ -50 50 set-speed! }{
+
+
+1 mget 20 > {
+100 100 set-speed!
+0 set-turret!
+0 1 mset
+
+}{
+
+1 mget 1 + 1 mset
+} ifelse
+
+0 2 mset
+
+} ifelse (5)
+} ifelse (4)
+
+} ifelse (3)
+} ifelse (2)
+
+9 mget 55 = {}{ 55 9 mset 0 0 mset 0 1 mset 60 3 mset 10 4 mset 50 55 set-speed! 0 set-turret! }ifelse (initialisation routine - only executed once)
+
+2 mget 0 = {
+ 7 sensor?{
+  100 100 set-speed!
+ }{
+  8 sensor?{
+   100 -100 set-speed!
+  }{
+   9 sensor?{
+    -100 100 set-speed!
+   }{
+	3 mget 0 = { 4 mget 0 = { 10 4 mset 60 3 mset 100 100 set-speed! }{ 4 mget 10 = { 50 50 random set-speed! } if 4 mget 1 - 4 mset  } ifelse (4m) }{ 3 mget 1 - 3 mset } ifelse (3m)
+	} ifelse
+	
+  } ifelse
+ } ifelse
+} if (mget)
+
+fire-ready?{}{ 6 sensor? { -100 -100 set-speed! } if } ifelse
