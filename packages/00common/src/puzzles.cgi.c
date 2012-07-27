@@ -94,13 +94,13 @@ main(int argc, char *argv[])
 
   opt = opendir(package_path(""));
   if (NULL == opt) {
-    cgi_error("Cannot opendir(\"/opt\")");
+    cgi_error("Cannot open packages directory");
   }
 
   cgi_head("Open puzzles");
   printf("<dl>\n");
 
-  /* For each file in /opt/ ... */
+  /* For each file in /packages/ ... */
   while (1) {
     struct dirent *e          = readdir(opt);
     char          *cat;
@@ -135,6 +135,11 @@ main(int argc, char *argv[])
       read_until_char(map, points_str, sizeof(points_str), ' ');
       read_until_char(map, hash, sizeof(hash), '\n');
       points = atol(points_str);
+
+      if (0 == points) {
+        printf("    <span title=\"Category Complete\">⁂</span>\n");
+        break;
+      }
 
       printf("    <a href=\"/%s/%s/\">%ld</a>\n", cat, hash, points);
 
