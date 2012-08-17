@@ -1,0 +1,41 @@
+( move back and forth )
+0 set-turret!
+6 random 2 < { 95 75 set-speed! } { 90 90 set-speed! } ifelse
+
+( rear sensor )
+4 sensor? { 90 90 set-speed! } if
+
+( far right front sensor )
+5 sensor? { 100 -100 set-speed! } if
+
+( far left front sensor )
+6 sensor? { -100 100 set-speed! } if
+
+( right front sensor )
+2 sensor? { 80 -80 set-speed! } if
+
+( left front sensor )
+3 sensor? { -80 80 set-speed! } if
+
+( immediate front sensor in firing range )
+0 sensor?
+{
+  fire-ready?
+  { fire! }
+  { -50 -50 set-speed! }
+  ifelse
+}
+if
+
+( near far right front sensor )
+8 sensor? { 60 -60 set-speed! } if
+9 sensor? { -60 60 set-speed! } if
+
+fire-ready? set-led!
+
+( front far sensor )
+7 sensor? fire-ready? & { 100 100 set-speed! } if
+
+( collison sensor )
+1 sensor? { -100 -100 set-speed!  0 set-turret! } if
+

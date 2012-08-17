@@ -3,13 +3,15 @@
 # First argument is seconds between running everything
 period=${1:-60}
 
-BIN=${CTF_BASE:-/opt/mcp}/bin
-WWW=${CTF_BASE:-/var}/www
-STATE=${CTF_BASE:-/var/lib/ctf}
+packages=$CTF_BASE/packages
+state=$CTF_BASE/state
+www=$CTF_BASE/www
 
-NEWPOINTS=$STATE/points.new
-POINTS=$STATE/points.log
-SCOREBOARD=$WWW/scoreboard.html
+BIN=$packages/mcp/bin
+
+NEWPOINTS=$state/points.new
+POINTS=$state/points.log
+SCOREBOARD=$www/scoreboard.html
 
 if ! [ -f $SCOREBOARD ]; then
     $BIN/scoreboard < $POINTS > $SCOREBOARD
