@@ -3,7 +3,7 @@
 exec 2>&1
 
 password='grape guts'
-for fn in /opt/*/password; do
+for fn in $CTF_BASE/packages/*/password; do
     read password < $fn && break
 done
 

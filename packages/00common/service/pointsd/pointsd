@@ -2,11 +2,11 @@
 
 fn=$2/$3
 
-WWW=${CTF_BASE:-/var/www}
-BASE=${CTF_BASE:-/var/lib/ctf}
-OPT=${CTF_BASE:-/opt}
+PACKAGES=$CTF_BASE/packages
+STATE=$CTF_BASE/state
+WWW=$CTF_BASE/www
 
-POINTS=$BASE/points.log
+POINTS=$STATE/points.log
 BACKUP=$WWW/backup.png
 SCOREBOARD=$WWW/scoreboard.html
 PUZZLES=$WWW/puzzles.html
@@ -22,11 +22,11 @@ cat $fn >> $POINTS
 rm $fn
 
 # Generate new backup if we can find a password file
-for pwfile in $OPT/*/password; do
+for pwfile in $PACKAGES/*/password; do
     if [ -f $pwfile ]; then
         (
             cat bkup.png
-            tar cf - $BASE | gzip -c | $OPT/*/bin/tea 3< $pwfile
+            tar cf - $STATE | gzip -c | $PACKAGES/*/bin/tea 3< $pwfile
         ) > $BACKUP.new
         mv $BACKUP.new $BACKUP
         break

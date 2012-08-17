@@ -1,9 +1,15 @@
 #! /bin/sh
 
-d=/var/lib/ctf/tanks
-p=$d/players
-w=/var/www/tanks
-log=$d/winners.log
+PACKAGES=$CTF_BASE/packages
+STATE=$CTF_BASE/state
+WWW=$CTF_BASE/www
+
+TSTATE=$STATE/tanks
+TPLAYERS=$TSTATE/players
+TLOG=$TSTATE/winners.log
+TWWW=$TSTATE/www
+
+[ "$1" = "--once" ] && once=1
 
 summary () {
     cat <<EOF
@@ -21,7 +27,7 @@ summary () {
     <ul>
 EOF
     printed=0
-    find $w -name "round-*.html" | sort -r | while read fn; do
+    find $TWWW -name "round-*.html" | sort -r | while read fn; do
         b=$(basename $fn)
         if [ $printed -lt 20 ]; then
             echo "<li><a href=\"$b\">$b</a></li>"
@@ -33,7 +39,7 @@ EOF
     cat <<EOF
     </ul>
 EOF
-    cat /opt/tanks/html/nav.html.inc
+    cat $PACKAGES/tanks/html/nav.html.inc
     cat <<EOF
   </body>
 </html>
@@ -41,9 +47,9 @@ EOF
 }
 
 while true; do
-    find /var/lib/ctf/teams/names -type f | while read dn; do
+    find $STATE/teams/names -type f | while read dn; do
         hash=${dn##*/}
-        install -o ctf -d $p/$hash
+        install -o ctf -d $TPLAYERS/$hash
     done
 
     # Has anyone submitted a program yet?
@@ -54,14 +60,14 @@ while true; do
             
 
     # Round number?
-    if [ -f $d/next-round ]; then
-        next=$(cat $d/next-round)
+    if [ -f $TSTATE/next-round ]; then
+        next=$(cat $TSTATE/next-round)
     else
         next=0
     fi
-    expr $next + 1 > $d/next-round
+    expr $next + 1 > $TSTATE/next-round
 
-    fn=$(printf "%s/round-%04d.html" $w $next)
+    fn=$(printf "%s/round-%04d.html" $TWWW $next)
     rfn=$(printf "/tmp/tanks-results-%04d.txt" $next)
     tfn=$(printf "/tmp/tanks-token-%04d.txt" $next)
 
@@ -79,7 +85,7 @@ while true; do
         start("battlefield",
 // Start JSON data
 EOF
-    /opt/tanks/bin/forftanks $p/* >>$fn 3>$rfn
+    $PACKAGES/tanks/bin/forftanks $TPLAYERS/* >>$fn 3>$rfn
     cat <<EOF >>$fn
 // end JSON data
       );
@@ -92,27 +98,29 @@ window.onload = go;
     <div id="game_box"><canvas id="battlefield"></canvas></div>
     <p><span id="fps">0</span> fps</p>
 EOF
-    awk -f /opt/tanks/bin/rank.awk $rfn >>$fn
-    cat /opt/tanks/html/nav.html.inc >>$fn
+    awk -f $PACKAGES/tanks/bin/rank.awk $rfn >>$fn
+    cat $PACKAGES/tanks/html/nav.html.inc >>$fn
     cat <<EOF >>$fn
   </body>
 </html>
 EOF
     
-    awk -f /opt/tanks/bin/winner.awk $rfn | while read winner; do
+    awk -f $PACKAGES/tanks/bin/winner.awk $rfn | while read winner; do
         hash=$(basename $winner)
         echo "Round $next winner: $hash" >> $log
         nwinners=$(wc -l $log)
         
-        /opt/mcp/bin/pointscli $hash tanks 1 "tanks round $next"
+        $PACKAGES/mcp/bin/pointscli $hash tanks 1 "tanks round $next"
     done
 
-    ln -sf $fn $w/current.html
+    ln -sf $fn $TWWW/current.html
 
-    summary > $w/summary.html.$$
-    mv -f $w/summary.html.$$ $w/summary.html
+    summary > $TWWW/summary.html.$$
+    mv -f $TWWW/summary.html.$$ $TWWW/summary.html
 
     rm -f $tfn $rfn
+
+    [ -n "$once" ] && break
 
     sleep 60
 done
