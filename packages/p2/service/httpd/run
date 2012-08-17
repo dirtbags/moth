@@ -6,17 +6,26 @@ IP=$(dbip -p ../p2console/ip.txt)
 
 ip route add default via 10.0.0.1
 
+if [ -z "$CTF_BASE" ] && ! grep -q " /www " /proc/mounts; then
+    mount -t tmpfs www /www
+fi
+
 # Link in puzzles and web pages
-install -d /var/www
-for d in /opt/*; do
-    w=/var/www/$(basename $d)
+for d in $CTF_BASE/packages/*; do
+    w=$CTF_BASE/www/$(basename $d)
     if [ -d $d/puzzles ] && ! [ -d $w ]; then
         ln -sf $d/puzzles $w
     fi
     if [ -d $d/www ]; then
-        ln -sf $d/www/* /var/www/
+        ln -sf $d/www/* $CTF_BASE/www/
     fi
 done
 
-cd /var/www
-exec tcpsvd -u nobody ${IP%/*} 80 /opt/p2/bin/eris -c.
+# news.html is persistent
+if ! [ -f $CTF_BASE/state/news.html ]; then
+    cat $CTF_BASE/packages/p2/www/news.html > $CTF_BASE/state/news.html
+fi
+ln -sf $CTF_BASE/state/news.html $CTF_BASE/www
+
+cd $CTF_BASE/www
+exec tcpsvd -u nobody ${IP%/*} 80 $CTF_BASE/packages/p2/bin/eris -c.

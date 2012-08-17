@@ -7,16 +7,15 @@ IP=$(dbip -a)
 hostname mcp
 
 # Link in puzzles and web pages
-install -d /var/www
-for d in /opt/*; do
-    w=/var/www/$(basename $d)
+for d in /packages/*; do
+    w=$CTF_BASE/www/$(basename $d)
     if [ -d $d/puzzles ] && ! [ -d $w ]; then
         ln -sf $d/puzzles $w
     fi
     if [ -d $d/www ]; then
-        ln -sf $d/www/* /var/www/
+        ln -sf $d/www/* $CTF_BASE/www/
     fi
 done
 
-cd /var/www
-exec tcpsvd -u ctf ${IP%/*} 80 /opt/mcp/bin/eris -c.
+cd $CTF_BASE/www
+exec tcpsvd -u ctf ${IP%/*} 80 $CTF_BASE/packages/mcp/bin/eris -c.
