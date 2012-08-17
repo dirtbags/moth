@@ -19,3 +19,4 @@ cat <<EOD
   </body>
 </html>
 EOD
+exit 1
