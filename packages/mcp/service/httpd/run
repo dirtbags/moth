@@ -17,5 +17,5 @@ for d in /packages/*; do
     fi
 done
 
-cd /var/www
+cd $CTF_BASE/www
 exec tcpsvd -u ctf ${IP%/*} 80 $CTF_BASE/packages/mcp/bin/eris -c.
