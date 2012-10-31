@@ -363,6 +363,33 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
   }
 }
 
+
+void
+ctf_chdir()
+{
+    char const *ctf_base = getenv("CTF_BASE");
+    int i;
+
+    if (ctf_base) {
+        /* chdir to CTF_BASE */
+        chdir(ctf_base);
+    }
+
+    /* Keep going up one directory until there's a packages directory */
+    for (i = 0; i < 5; i += 1) {
+        struct stat st;
+
+        if ((0 == stat("packages", &st)) &&
+               S_ISDIR(st.st_mode)) {
+            return;
+        }
+        chdir("..");
+    }
+    fprintf(stderr, "Can not determine CTF_BASE directory: exiting.\n");
+    exit(66);
+}
+
+
 static char *
 mkpath(char const *type, char const *fmt, va_list ap)
 {
