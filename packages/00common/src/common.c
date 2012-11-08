@@ -363,16 +363,24 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
   }
 }
 
-
 void
 ctf_chdir()
 {
-    char const *ctf_base = getenv("CTF_BASE");
+    static int initialized = 0;
     int i;
 
-    if (ctf_base) {
-        /* chdir to CTF_BASE */
-        chdir(ctf_base);
+    if (initialized) {
+        return;
+    }
+    initialized = 1;
+
+    /* chdir to $CTF_BASE */
+    {
+        char const *ctf_base = getenv("CTF_BASE");
+
+        if (ctf_base) {
+            chdir(ctf_base);
+        }
     }
 
     /* Keep going up one directory until there's a packages directory */
@@ -395,17 +403,13 @@ mkpath(char const *type, char const *fmt, va_list ap)
 {
   char         relpath[PATH_MAX];
   static char  path[PATH_MAX];
-  char const  *var = getenv("CTF_BASE");
 
+  ctf_chdir();
   vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
   relpath[sizeof(relpath) - 1] = '\0';
 
-  if (! var) {
-    var = "";
-  }
-
   /* $CTF_BASE/type/relpath */
-  my_snprintf(path, sizeof(path), "%s/%s/%s", var, type, relpath);
+  my_snprintf(path, sizeof(path), "%s/%s", type, relpath);
   return path;
 }
 
