@@ -105,21 +105,30 @@ EOD
             ;;
     esac
 
-    match=$(awk -v ans="$answer" '(substr($0, length($1)+2) == ans) { print substr(FILENAME, 6, length(FILENAME)-17) " " $1; }' /opt/*/answers.txt)
-    if [ -z "$match" ]; then
-        echo 'That is not a correct answer.  Type "[1mhelp[0m" for help.'
-        continue
-    fi
+   
+    clear
+    matches=0
+    for fn in /opt/*/answers.txt; do
+    	cat=$(basename ${fn%/answers.txt})
+    	while read points ans; do
+    	    if [ "$ans" = "$answer" ]; then
+    	    	if log $hash | grep -wq "$cat $points"; then
+    	    		echo "You've already received points for this answer."
+    	    	elif /opt/p2/bin/pointscli $hash $cat $points p2console; then
+		        echo "You get [1m$points[0m more points in the [1m$cat[0m category."
+		        matches=$(expr $matches + 1)
+	        else
+		        echo "[1mError recording points.  Tell the officials![0m"
+		fi
+	    fi
+	done < $fn
+    done
     
-    cat=${match% *}
-    points=${match#* }
-    fn=$BASE/$hash/$cat.$points
-    if log $hash | grep -Fxq "$cat $points"; then
-        echo "You've already received points for this answer."
-    elif /opt/p2/bin/pointscli $hash $cat $points p2console; then
-        echo "You get [1m$points[0m more points in the [1m$cat[0m category."
-    else
-        echo "[1mError recording points.  Tell the officials![0m"
+    if [ "$matches" -eq 0 ]; then
+    	echo 'That is not a correct answer.  Type "help" for help.'
+    fi
+    if [ "$matches" -gt 1 ]; then
+    	echo "Holy shit!  Double word score!"
     fi
 done
 
