@@ -57,6 +57,7 @@ main(int argc, char *argv[])
   if (-1 == cgi_init(argv)) {
     return 0;
   }
+  ctf_chdir();
 
   {
     FILE *f = fopen(state_path("points.log"), "r");

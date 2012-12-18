@@ -363,22 +363,53 @@ my_snprintf(char *buf, size_t buflen, char *fmt, ...)
   }
 }
 
+void
+ctf_chdir()
+{
+    static int initialized = 0;
+    int i;
+
+    if (initialized) {
+        return;
+    }
+    initialized = 1;
+
+    /* chdir to $CTF_BASE */
+    {
+        char const *ctf_base = getenv("CTF_BASE");
+
+        if (ctf_base) {
+            chdir(ctf_base);
+        }
+    }
+
+    /* Keep going up one directory until there's a packages directory */
+    for (i = 0; i < 5; i += 1) {
+        struct stat st;
+
+        if ((0 == stat("packages", &st)) &&
+               S_ISDIR(st.st_mode)) {
+            return;
+        }
+        chdir("..");
+    }
+    fprintf(stderr, "Can not determine CTF_BASE directory: exiting.\n");
+    exit(66);
+}
+
+
 static char *
-mkpath(char const *base, char const *fmt, va_list ap)
+mkpath(char const *type, char const *fmt, va_list ap)
 {
   char         relpath[PATH_MAX];
   static char  path[PATH_MAX];
-  char const  *var;
 
+  ctf_chdir();
   vsnprintf(relpath, sizeof(relpath) - 1, fmt, ap);
   relpath[sizeof(relpath) - 1] = '\0';
 
-  var = getenv("CTF_BASE");
-  if (! var) {
-    var = base;
-  }
-
-  my_snprintf(path, sizeof(path), "%s/%s", var, relpath);
+  /* $CTF_BASE/type/relpath */
+  my_snprintf(path, sizeof(path), "%s/%s", type, relpath);
   return path;
 }
 
@@ -389,7 +420,7 @@ state_path(char const *fmt, ...)
   char    *ret;
 
   va_start(ap, fmt);
-  ret = mkpath("/var/lib/ctf", fmt, ap);
+  ret = mkpath("state", fmt, ap);
   va_end(ap);
   return ret;
 }
@@ -401,7 +432,7 @@ package_path(char const *fmt, ...)
   char    *ret;
 
   va_start(ap, fmt);
-  ret = mkpath("/opt", fmt, ap);
+  ret = mkpath("packages", fmt, ap);
   va_end(ap);
   return ret;
 }
