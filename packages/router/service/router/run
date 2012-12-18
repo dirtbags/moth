@@ -12,7 +12,7 @@ log () {
     echo "router: $@" > /dev/console
 }
 
-if [ $(mount | grep -c /opt/) -gt 1 ]; then
+if [ $(mount | grep -c /packages/) -gt 1 ]; then
     log "cannot run alongside other packages" > /dev/console
     exit 1
 fi

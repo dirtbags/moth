@@ -16,13 +16,13 @@ Content-type: text/html
     <h1>Team Registration</h1>
 EOF
 
-if [ ! -w /var/www ] || [ ! -w /var/lib/ctf/teams ]; then
+if [ ! -w $CTF_BASE/www ] || [ ! -w $CTF_BASE/state/teams ]; then
     echo "<p>It looks like the server isn't set up for self-registrations."
     echo "Go talk to someone at the head table to register your team.</p>"
 else
     echo "<p>Team name: $team</p>"
     echo -n "<pre>"
-    if /opt/mcp/bin/addteam "$team"; then
+    if $CTF_BASE/mcp/bin/addteam "$team"; then
         echo "</pre><p>Write this hash down.  You will use it to claim points.</p>"
     else
         echo "Oops, something broke.  Better call Neale.</pre>"
