@@ -1,7 +1,7 @@
 TANKS_PKGDIR = $(TARGET)/tanks
 TANKS_CACHE = $(CACHE)/tanks.git
 TANKS_BUILDDIR = $(BUILD)/tanks
-TANKS_URL = "http://dirtbags.net/projects/tanks"
+TANKS_URL = "http://woozle.org/~neale/g.cgi/tanks"
 
 $(TANKS_CACHE):
 	git clone --bare $(TANKS_URL) $@
