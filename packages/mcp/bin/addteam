@@ -14,19 +14,21 @@ escape () {
 # Don't overwrite files
 set -C
 
-base=${CTF_BASE:-/var/lib/ctf}
-www=${CTF_BASE:-/var/www}
+STATE=$CTF_BASE/state
+WWW=$CTF_BASE/www
 
-mkdir -p $base/teams/names
-mkdir -p $base/teams/colors
+mkdir -p $STATE/teams/names
+mkdir -p $STATE/teams/colors
 
-[ -f $base/teams/salt ] || dd if=/dev/urandom count=1 2>/dev/null | md5sum | cut -b 1-8 > $base/teams/salt
-salt=$(cat $base/teams/salt)
+if ! [ -f $STATE/teams/salt ]; then
+    dd if=/dev/urandom count=1 2>/dev/null | md5sum | cut -b 1-8 > $STATE/teams/salt
+fi
+salt=$(cat $STATE/teams/salt)
 
 # Assign a color.  I spent weeks selecting a color pallette that
 # wouldn't be hell on people with protanopia.  Please don't change these
 # colors.
-nteams=$(ls $base/teams/names/ | wc -l)
+nteams=$(ls $STATE/teams/names/ | wc -l)
 case $(expr $nteams % 10) in
     0) color=a6cee3;;
     1) color=1f78b4;;
@@ -50,7 +52,7 @@ esac
 # me since all team hashes are in the set /[0-9a-f]{8}/.
 hash=$(printf "%s:%s" $salt "$1" | md5sum | cut -b 1-8)
 
-echo "$1" > $base/teams/names/$hash
-echo "$color" > $base/teams/colors/$hash
+echo "$1" > $STATE/teams/names/$hash
+echo "$color" > $STATE/teams/colors/$hash
 
 echo "Registered with hash: $hash"

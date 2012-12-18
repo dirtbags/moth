@@ -2,4 +2,4 @@
 
 exec 2>&1
 
-exec /opt/router/bin/radvd -C radvd.conf -d 1 -m stderr -p radvd.pid
+exec $CTF_BASE/packages/router/bin/radvd -C radvd.conf -d 1 -m stderr -p radvd.pid

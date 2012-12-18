@@ -1,6 +1,7 @@
 #! /bin/env lua
 
-BASEDIR = "/var/tmp/wopr"
+CTF_BASE = os.getenv("CTF_BASE") or ""
+BASEDIR = CTF_BASE .. "/state/wopr"
 POST_MAX = 512
 
 method = os.getenv("REQUEST_METHOD")

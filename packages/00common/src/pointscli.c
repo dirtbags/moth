@@ -16,6 +16,7 @@ main(int argc, char *argv[])
                 "Usage: pointscli TEAM CATEGORY POINTS 'COMMENT'\n");
         return EX_USAGE;
     }
+    ctf_chdir();
 
     points = atoi(argv[3]);
     if (0 == points) {
