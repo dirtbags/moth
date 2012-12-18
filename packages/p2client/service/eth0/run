@@ -4,9 +4,5 @@ exec 2>&1
 
 ip link set dev eth0 up
 
-if grep 'debug' /proc/cmdline; then
-    ip addr add dev eth0 10.0.0.110/24
-    exec sleep 8d
-else
-    exec udhcpc -f eth0
-fi
+ip addr add dev eth0 10.0.0.110/24
+exec sleep 8d
