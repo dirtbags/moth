@@ -1,0 +1,27 @@
+70 75 set-speed!
+0 set-turret!
+
+10 random 1 > { 75 75 set-speed! } if
+
+2 sensor? {
+  85 70 set-speed!
+  0 sensor? { get-turret 15 + set-turret! }
+            { get-turret 30 + set-turret! } ifelse 
+} if
+3 sensor? { 
+  75 80 set-speed!
+  0 sensor? { get-turret 15 - set-turret! }
+            { get-turret 30 - set-turret! } ifelse 
+} if
+5 sensor? { 
+  7 sensor? { 70 30 set-speed! } if
+  8 sensor? { 30 70 set-speed! } if
+  0 sensor? { fire! } if
+  6 sensor? fire-ready? & { 100 100 set-speed! } if
+} if
+4 sensor? { 100 100 set-speed! } if
+1 sensor? { -50 25 set-speed! } if
+
+fire-ready? set-led!
+
+

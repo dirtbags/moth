@@ -1,3 +1,3 @@
 #! /bin/sh
 
-exec /opt/fizzbuzz/bin/fizzbuzz 3</opt/fizzbuzz/token.enc
+exec $CTF_BASE/packages/fizzbuzz/bin/fizzbuzz 3<$CTF_BASE/packages/fizzbuzz/token.enc

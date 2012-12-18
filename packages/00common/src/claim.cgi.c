@@ -11,6 +11,7 @@ main(int argc, char *argv[])
   if (-1 == cgi_init(argv)) {
     return 0;
   }
+  ctf_chdir();
 
   /* Read in team and token */
   while (1) {
