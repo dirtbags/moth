@@ -1,0 +1,50 @@
+0 sensor?{
+	get-turret 0 = { 1 sensor?{ fire! } if } if
+
+	get-turret 17 = { 2 sensor?{ fire! } if } if
+	get-turret 34 = { 3 sensor?{ fire! } if } if
+	get-turret 51 = { 4 sensor?{ fire! } if } if
+
+	get-turret -17 = { 5 sensor?{ fire! } if } if
+	get-turret -34 = { 6 sensor?{ fire! } if } if
+	get-turret -51 = { 7 sensor?{ fire! } if } if
+}if (0)
+fire-ready?{ 0 set-led! }{ 1 set-led! } ifelse
+
+1 sensor?{ 0 set-turret! }{
+	2 sensor?{ 17 set-turret! }{
+		3 sensor?{ 34 set-turret! }{
+			4 sensor?{ 51 set-turret! }{
+				5 sensor?{ -17 set-turret! }{
+					6 sensor?{ -34 set-turret! }{
+						7 sensor?{ -51 set-turret! }{
+							0 set-turret!
+						}ifelse
+					}ifelse
+				}ifelse
+			}ifelse
+		}ifelse
+	}ifelse
+}ifelse
+
+get-turret 0 = { 2 sensor?{ 17 set-turret! }{ 5 sensor?{ -17 set-turret! } if (5) } ifelse (2) } if (0t)
+get-turret 17 = { 1 sensor?{ 0 set-turret! }{ 3 sensor?{  34 set-turret! } if (3) } ifelse (1) } if (17t)
+get-turret 34 = { 2 sensor?{ 17 set-turret! }{ 4 sensor?{  51 set-turret! } if (4) } ifelse (2) } if (34t)
+get-turret 51 = {  34 set-turret! } if (51t)
+
+get-turret -17 = { 1 sensor?{ 0 set-turret! }{ 6 sensor?{  -34 set-turret! } if (6) } ifelse (1) } if (-17t)
+get-turret -34 = { 5 sensor?{ -17 set-turret! }{ 7 sensor?{  -51 set-turret! } if (7) } ifelse (5) } if (-34t)
+get-turret -51 = {  -34 set-turret! } if (51t)
+
+9 mget 55 = {}{ 0 set-turret! 55 9 mset} ifelse
+
+	1 sensor?{ 100 1 mset 100 2 mset }{
+		2 sensor?{ 100 1 mset -100 2 mset }{
+			5 sensor?{ -100 1 mset 100 2 mset }{
+				100 1 mset 100 2 mset
+			} ifelse (5)
+		} ifelse (2)
+	} ifelse (1)
+
+	8 sensor?{ 100 1 mset 100 2 mset } if
+1 mget 2 mget set-speed!

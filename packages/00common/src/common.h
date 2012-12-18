@@ -23,6 +23,7 @@ void cgi_page(char *title, char *fmt, ...);
 void cgi_error(char *text);
 
 
+void ctf_chdir();
 int anchored_search(char const *filename, char const *needle, const char anchor);
 void urandom(char *buf, size_t buflen);
 int my_snprintf(char *buf, size_t buflen, char *fmt, ...);

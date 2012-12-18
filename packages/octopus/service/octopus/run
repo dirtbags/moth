@@ -6,4 +6,4 @@ IP=$(dbip -a)
 
 grep -q ipv4 /proc/cmdline && IP=::ffff:$IP
 
-exec /opt/octopus/bin/octopus ${IP%/*} < /opt/octopus/tokens.txt
+exec $CTF_BASE/packages/octopus/bin/octopus ${IP%/*} < $CTF_BASE/packages/octopus/tokens.txt
