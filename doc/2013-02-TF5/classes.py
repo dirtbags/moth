@@ -1,11 +1,21 @@
 #! /usr/bin/python3
 
-import sys
+import smtplib
+
+smtpd = smtplib.SMTP("mail.lanl.gov")
+
+courses = {
+	"net": "Network Archaeology",
+	"mal": "Malware Reverse-Engineering",
+	"hst": "Host Forensics",
+	"icc": "Incident Coordination",
+	"nil": "None",
+}
 
 limits = {
-	"net": 100,
-	"mal": 60,
-	"hst": 60,
+	"net": 120,
+	"mal": 70,
+	"hst": 70,
 	"icc": 40,
 	"nil": 9000,
 	":-(": 9000,
@@ -14,7 +24,10 @@ limits = {
 # Read in allowed substring list
 allowed = []
 for line in open("approved.txt"):
-	allowed.append(line.strip())
+	line = line.strip()
+	if line:
+		allowed.append(line)
+template = open("mail.txt").read()
 
 # Read in registration data
 registrants = []
@@ -56,8 +69,11 @@ for email in registrants:
 		oldreg = None
 		
 	if oldreg != w:
-		print(w, email)
-		open(email, "w").write(w)
+		#msg = template.replace("RCPT", email).replace("COURSE", courses[w])
+		#smtpd.sendmail("neale@lanl.gov", [email], msg)
+		#open(email, "w").write(w)
 
-print("%d got 1st choice, %d got 2nd choice, %d got screwed" %
-	(counts[0], counts[1], counts[2]))
+	#print(w, email, r)
+
+
+print("%d got 1st choice, %d got 2nd choice, %d got screwed" % (counts[0], counts[1], counts[2]))
