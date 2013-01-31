@@ -1,6 +1,11 @@
 From: The Tracer FIRE Registration Fairy <neale@lanl.gov>
 To: RCPT
-Subject: Tracer FIRE: Your Course Assignment
+Subject: Tracer FIRE: Your Course Assignment (repeat email)
+
+This is a repeat email of your course assignment.  Some people didn't
+recieve their assignment on Monday.  This should not contain any new
+information if you've already seen your course assignment.
+
 
 Your course assignment is:
 
