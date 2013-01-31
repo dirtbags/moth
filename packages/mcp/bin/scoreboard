@@ -30,221 +30,138 @@ function escape(s) {
     return s
 }
 
-function print_bar(cat, teamid, teamname, n, d) {
-    printf("<div class=\"t%s score\""               \
-           "     style=\"height: %.2f%%;\""         \
-           "     onmouseover=\"highlight('%s')\""   \
-           "     onmouseout=\"restore('%s')\">\n"   \
-           "<!-- %s --> %s: %s\n"                   \
-           "</div>", 
-           teamid, 
-           100 * n / d, 
-           teamid,
-           teamid,
-           cat, escape(name), n)
+function head() {
+    print "<!DOCTYPE html>"
+    print "<html><head><title>Project 2 Scoreboard</title>"
+    print "<meta http-equiv=\"refresh\" content=\"60\">"
+    print "<style>"
+    print "html {background: black url(\"p2inv.png\") no-repeat top center; background-size: contain; min-height: 100%; color: white;}"
+    print "body {background: black; opacity: 0.92; margin: 0;}"
+    print "p {margin: 0;}"
+    print "span {display: inline-block; margin: 0; border: 0;}"
+    print ".cat0 {background-color: #a6cee3; color: black;}"
+    print ".cat1 {background-color: #1f78b4;}"
+    print ".cat2 {background-color: #b2df8a; color: black;}"
+    print ".cat3 {background-color: #33a02c;}"
+    print ".cat4 {background-color: #fb9a99;}"
+    print ".cat5 {background-color: #e31a1c;}"
+    print ".cat6 {background-color: #fdbf6f;}"
+    print ".cat7 {background-color: #ff7f00;}"
+    print ".cat8 {background-color: #cab2d6;}"
+
+    print ".name {position: absolute; right: 10px;}"
+    print "#scores p {margin: 0; padding: 0; border: thin solid #222; opacity: 0.92;}"
+    print "#scores p:hover {border: thin solid yellow;}"
+    print "</style>"
+    print "</head><body>"
+    print "<div id=\"scores\">"
 }
 
-function output(    t, c) {
-    for (t in teams) {
-        score = 0;
-        for (c in points_by_cat) {
-            if (points_by_cat[c] > 0) {
-                score += points_by_cat_team[c, t] / points_by_cat[c];
-            }
-        }
-        if (score > maxscore) {
-            maxscore = score
-        }
-        if (score > maxscores_by_team[t]) {
-            maxscores_by_team[t] = score
-        }
-        scores_by_team_time[t, lasttime] = score
-    }
-    timestamps[tslen++] = lasttime
+function foot() {
+
+
+    print "    </div>"
+    print "    <pre style=\"position: fixed; bottom: 0; left: 20%; font-size: 250%;"
+    print "    opacity: 0.8; background-color: black\">"
+    print "Project 2<br>"
+    print "<p>A CTF for people with limited time/patience/self-confidence.</p>"
+    print "<p>Plug in ethernet at this table, download puzzles, go think.</p>"
+    print "<p>http://10.0.0.2/</p>"
+    print "<p>Use the terminal to claim points when you've figured something out.</p>"
+    print "    </pre>"
+    print "  </body>"
+    print "</body></html>"
 }
 
 BEGIN {
     base = ENVIRON["CTF_BASE"]
+    if (! base) {
+        base = "/var/lib/ctf"
+    }
 
-    # Only display two decimal places
-    CONVFMT = "%.2f"
-    
-    # New point at least every 2.5 minutes
-    interval = 150
-    tslen = 0
-
-    nteams = 0;
+    head()
 }
 
 # MAINLOOP
 {
     time = $1
-    team = $2
+    hash = $2
     cat = $3
     points = int($4)
 
-    if (! start) {
-        start = time
+    # Build a list of team names
+    if (! (hash in team_names)) {
+        fn = sprintf("%s/teams/names/%s", base, hash)
+        getline team_names[hash] < fn
+        close(fn)
     }
 
-    if (time > (outtime + interval)) {
-        outtime = time
-        output()
+    # Total points possible so far in this category
+    if (! ((cat, points) in cat_pointval)) {
+        cat_total[cat] += points
+        cat_pointval[cat, points] = 1
     }
-    lasttime = time
 
-    teams[team] = nteams++
-    points_by_cat[cat] += points
-    points_by_cat_team[cat, team] += points
+    # Enumerate categories
+    if (! (cat in seen_cats)) {
+        seen_cats[cat] = 1
+        categories[ncats++] = cat
+    }
+
+    # Points this team has in this category
+    cat_points[hash, cat] += points
 }
 
 END {
-    output()
-
-    # Get team colors and names
-    for (team in teams) {
-        # Busybox awk segfaults if you try to close a file that didn't
-        # exist.  We work around it by calling cat.
-        cmd = sprintf("cat %s/state/teams/colors/%s", base, team)
-        color = "444444";
-        cmd | getline color
-        colors_by_team[team]  = color
-        close(cmd)
-
-        cmd = sprintf("cat %s/state/teams/names/%s", base, team)
-        name = "Phantoms"
-        cmd | getline name
-        names_by_team[team] = name
-        close(cmd)
+    # Adjust per-category points to a per-category percentage complete
+    for (hash in team_names) {
+        for (cat in cat_total) {
+            cat_score[hash, cat] = cat_points[hash, cat] / cat_total[cat]
+            total_score[hash] += cat_score[hash, cat]
+        }
+        scores[nteams++] = total_score[hash]
+        if (total_score[hash] > max_score) {
+            max_score = total_score[hash]
+        }
     }
 
-    # Sort categories
-    ncats = 0
-    for (cat in points_by_cat) {
-        cats[ncats++] = cat
-    }
-    qsort(cats, 0, ncats-1)
-
-    # Create a sorted list of scores
-    nteams = 0
-    for (team in teams) {
-        scores[nteams++] = scores_by_team_time[team, lasttime]
-    }
+    # Sort scores
     qsort(scores, 0, nteams-1)
 
-
-    # Now we can start writing the document
-    print "<!DOCTYPE html>"
-    print "<html class=\"scoreboard\">"
-    print "  <head>"
-    print "    <title>Scoreboard</title>"
-    print "    <link rel=\"stylesheet\" href=\"ctf.css\" type=\"text/css\">"
-    print "    <script type=\"application/javascript\" src=\"scoreboard.js\"></script>"
-
-    # Provide raw data for the chart
-    print "    <script type=\"application/javascript\">"
-    print "function init() {"
-    printf("  plot(\"chart\", %d, %.2f, {\n", tslen, maxscore)
-    c = 0
-    for (team in teams) {
-        if (maxscores_by_team[team] / maxscore < 0.01) continue
-        printf("    \"%s\": [\"#%s\",[", teams[team], colors_by_team[team])
-        for (i = 1; i < tslen; i += 1) {
-            time = timestamps[i]
-            printf("[%d,%.2f],",
-                   i, scores_by_team_time[team, time])
-        }
-        printf("]],\n");
+    print "<p>"
+    for (ncat = 0; ncat < ncats; ncat += 1) {
+        printf("<span class=\"cat%d\">%s</span>\n", ncat, categories[ncat]);
     }
-    print "  });"
-    print "  if (location.hash) {"
-    print "    cycle();"
-    print "    setInterval(cycle, 10000);"
-    print "  }"
-    print "}"
-    print "window.onload = init;"
-    print "    </script>"
+    print "</p>"
 
-    # Reload every minute
-    print "    <meta http-equiv=\"refresh\" content=\"60\">"
+    for (i = nteams-1; i >= 0; i -= 1) {
+        score = scores[i];
+        if (score == scores[i-1]) continue;         # Skip duplicates
 
-    # Set up team colors and a few page-specific styles
-    print "    <style type=\"text/css\">"
-    print "      body { width: 100%; }"
-    print "      .score { overflow: hidden; color: black; }"
-    for (team in teams) {
-        printf("      .t%s { background-color: #%s; }\n",
-               teams[team], colors_by_team[team])
-    }
-    print "    </style>"
-
-    print "  </head>"
-    print "  <body>"
-    print "    <h1>Scoreboard</h1>"
-    print "    <p id=\"debug\"></p>"
-    print "    <img src=\"backup.png?" NR "\" alt=\"\" style=\"display: none;\" height=\"1\" width=\"1\">"
-    print "    <table id=\"scoreboard\">"
-    print "      <tr>"
-    print "        <th>Overall</th>"
-
-    # Print out category names
-    for (i = 0; i < ncats; i += 1) {
-        cat = cats[i]
-        points = points_by_cat[cat]
-        if (0 == points) continue
-        printf("<th>%s (%d)</th>\n", cat, points)
-    }
-
-    print "      </tr>"
-    print "      <tr>"
-
-    # Print out teams, ranked by score
-    print "        <td>"
-    for (i = 0; i < nteams; i += 1) {
-        if (scores[i] == scores[i-1]) continue;
-        for (team in teams) {
-            if (scores[i] == scores_by_team_time[team, lasttime]) {
-                name = names_by_team[team]
-                print_bar("total", teams[team], name, scores[i], ncats)
+        for (hash in team_names) {
+            if (total_score[hash] != score) {
+                continue;
             }
-        }
-    }
-    print "        </td>"
 
-    # Print out scores within each category
-    for (i = 0; i < ncats; i += 1) {
-        cat = cats[i]
-        points = points_by_cat[cat]
-        if (0 == points) break;
+            name = escape(team_names[hash])
+            print "<p>"
+            printf("<span class=\"name\">%s</span>\n", name)
 
-        print "<td>"
-        
-        # Create sorted list of scores in this category
-        n = 0
-        for (team in teams) {
-            l[n++] = points_by_cat_team[cat, team];
-        }
-        qsort(l, 0, n-1)
+            for (ncat = 0; ncat < ncats; ncat += 1) {
+                cat = categories[ncat];
+                points = cat_points[hash, cat];
 
-        # Print out teams, ranked by points
-        for (j = 0; j < n; j += 1) {
-            if (l[j] == l[j-1]) continue;
-            if (0 == l[j]) continue;
-            for (team in teams) {
-                points = points_by_cat_team[cat, team]
-                if (l[j] == points) {
-                    name = names_by_team[team]
-                    print_bar(cat, teams[team], name, points, points_by_cat[cat])
+                if (cat_points[hash, cat] > 0) {
+                    width = cat_score[hash, cat] / max_score * 90 
+                    printf("<!-- %s %s %s -->", cat, points, name)
+                    printf("<span class=\"cat%d\" style=\"width: %.2f%%;\">%d</span>", 
+                            ncat, width, cat_points[hash, cat])
                 }
             }
+            print "</p>"
         }
-
-        print "</td>"
     }
-    print "      </tr>"
 
-    print "    </table>"
-    print "    <canvas id=\"chart\" width=\"1024\" height=\"240\"></canvas>"
-    print "  </body>"
-    print "</html>"
+    foot()
 }
+
