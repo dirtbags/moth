@@ -1,0 +1,29 @@
+You are registered for the Tracer Fire Malware Reverse Engineering c=
+lass starting February 4th at 8:00AM Mountain time.&nbsp; I will be conduct=
+ing the class through the GotoWebinar (<a href=3D"http://www.gotomeeting.co=
+m/fec/webinar">http://www.gotomeeting.com/fec/webinar</a>)
+ software. Please check requirements for this tool before you attempt to co=
+nnect on Monday morning. On Monday morning I will send out the connection d=
+etails for the conference bridge and the link for the webinar connection.
+
+Below are the requirements for participation in the class and labs:<br>
+
+Laptop running VMware Workstation at least version 9. (VMware Fusion on the=
+ Mac is fine)<br>
+
+Fully configured VMware Workstation Windows 7 virtual machine (An XP image =
+will work as well). You must have administrative privileges and be able to =
+completely disable AV or remove it on all machines.<br>
+
+If you bring a system with VirtualBox, VMware ESX Server, or anything that =
+is not VMware Workstation be aware that some (possibly all) of the labs mig=
+ht have problems.<br>
+
+You will need an irc client and the ability to connect to an IRC server on =
+the internet. Pidgin is a nice client and tends to work with proxies quite =
+well. The IRC server we will be using is irc.oftc.net.&nbsp;
+
+
+Thanks<br>
+
+Russ<br>
