@@ -1,0 +1,75 @@
+Hi all,
+
+You've been identified as registering for the Host Forensic online track of=
+ Tracer FIRE 5.  We will be conducting a one-day online class and we have s=
+plit the group of participants in two.  If you're receiving this email, you=
+ are registered for the Monday session.  Wait, you ask what shall I do on T=
+uesday?  Well, we have an opportunity for you to attend the Incident Coordi=
+nator online class.  If you are interested in the Incident Coordinator cour=
+se, you can email Ben Anderson (brander@sandia.gov<mailto:brander@sandia.go=
+v>) or either myself or Dawn Abbott (emails listed below).
+
+We've tried to keep attendees from the same site together on the same day. =
+ If that didn't occur or for some other reason,  and you really need to req=
+uest a change to attend the Tuesday online course please send an email to m=
+yself (ksnauer@sandia.gov<mailto:ksnauer@sandia.gov>) or to Dawn Abbott (dc=
+abbot@sandia.gov<mailto:dcabbot@sandia.gov>).
+
+Also, you will need to have a certain configuration for your computer that =
+you'll be using to view and participate in the online course listed below.
+
+Here are the requirements for virtual students of the Host Forensic track (=
+most software is available for free or you can use a trial version):
+
+
+1)      You will need a computer running Windows 7 (or a virtual machine ru=
+nning Windows 7) with the Lync Attendee client (http://www.microsoft.com/en=
+-us/download/details.aspx?id=3D15755).  The urls are provided below for all=
+ of the software mentioned:
+
+a.       Sleuthkit 3.x or 4.0 ( http://www.sleuthkit.org/sleuthkit/download=
+.php )
+
+b.      Volatility 2.1 ( https://www.volatilesystems.com/default/volatility=
+ )
+
+c.       Python 2.7.x ( http://www.python.org/download/releases/2.7.3/ )
+
+d.      PDF Dissector by Zynamics (optional)
+
+e.      Pdfubar ( http://code.google.com/p/pdfubar/ )
+
+f.        Jdgui ( http://java.decompiler.free.fr/ )
+
+g.       Java jvm ( http://www.java.com/en/download/index.jsp )
+
+h.      Ida Pro free version (or commercial if you already have a license) =
+http://out7.hex-rays.com/files/idafree50.exe
+
+i.         Wireshark ( http://www.wireshark.org/download.html )
+
+j.        a hex editor of your choice (example:  http://www.hexworkshop.com=
+/)
+
+k.       Vmware workstation with Windows installed (for testing malcode)
+
+
+
+2)      A set of headphones (microphone not necessary) so you can listen in=
+to your online class if you're sitting in RECOIL facility (Albuquerque hub =
+attendees).  If you are participating from the Albuquerque hub, you should =
+have received a separate email from Dawn Abbott with directions and a map o=
+f our location.
+
+The url for attending the online class will be:  https://meeting.sandia.gov=
+/ksnauer/W2NQ7RB5
+
+Please join the meeting as a guest if you are not a Sandia staff member and=
+ use the email address you registered with or  just your name and organizat=
+ion.
+
+See you on Monday.
+
+Thanks,
+Kevin Nauer
+Sandia National Labs
