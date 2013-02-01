@@ -237,7 +237,7 @@ cgi_fail(int err)
         case ERR_NOTEAM:
             cgi_result(409, "No such team", "<p>There is no team with that hash.</p>");
         case ERR_CLAIMED:
-            cgi_result(409, "Already claimed", "<p>Your team has already claimed these points.</p>");
+            cgi_result(409, "Already claimed", "<p>That is the correct answer, but your team has already claimed these points.</p>");
         default:
             cgi_result(409, "Failure", "<p>Failure code: %d</p>", err);
     }
