@@ -1,0 +1,17 @@
+#! /bin/sh
+
+# Give it your registration raw data on stdin
+# It appends any new folks to tokens.txt
+
+mktoken () {
+	dd if=/dev/urandom bs=4 count=1 2>/dev/null | hexdump | while read a b c; do
+		[ -n "$b" ] && echo $b$c
+	done
+}
+
+while IFS='	' read name email org c1 c2; do
+	if ! grep -q "$email" tokens.txt; then
+		printf "%s " "$email" >> tokens.txt
+		mktoken >> tokens.txt
+	fi
+done
