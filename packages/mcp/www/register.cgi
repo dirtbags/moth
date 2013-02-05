@@ -1,7 +1,12 @@
 #! /bin/sh -e
 
-team=$(echo "$QUERY_STRING" | sed -n s'/.*team=\([^&]*\).*/\1/p')
-team=$(busybox httpd -d "$team" || echo "$team")
+param () {
+	ret=$(echo "$QUERY_STRING" | tr '=&' ' \n' | awk -v "k=$1" '($1==k) {print $2;}')
+	ret=$(busybox httpd -d "$ret" || echo "$ret")
+}
+
+team=$(param n)
+hash=$(param h | tr -dc 0-9a-f)
 
 cat <<EOF
 Content-type: text/html
@@ -16,18 +21,15 @@ Content-type: text/html
     <h1>Team Registration</h1>
 EOF
 
-if [ ! -w $CTF_BASE/www ] || [ ! -w $CTF_BASE/state/teams ]; then
-    echo "<p>It looks like the server isn't set up for self-registrations."
-    echo "Go talk to someone at the head table to register your team.</p>"
+if ! grep -q $h $CTF_BASE/state/teams/assigned.txt; then
+	echo "<p>That token has not been assigned.</p>"
+elif [ -f $CTF_BASE/state/teams/names/$h ]; then
+	echo "<p>That token has already been named.</p>"
 else
-    echo "<p>Team name: $team</p>"
-    echo -n "<pre>"
-    if $CTF_BASE/mcp/bin/addteam "$team"; then
-        echo "</pre><p>Write this hash down.  You will use it to claim points.</p>"
-    else
-        echo "Oops, something broke.  Better call Neale.</pre>"
-    fi
+	printf "%s" "$t" > $CTF_BASE/state/teams/names/$h
+	echo "<p>Okay, your team has been named and you may begin using your token!</p>"
 fi
+
 cat <<EOF
   </body>
 </html>

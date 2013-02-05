@@ -7,14 +7,18 @@
   <body>
     <h1>Team Registration</h1>
     <p>
-      Please register a team for yourself during this training.  This
-      team is just for the training portion; it will not be the team you
-      play on during the exercise.
+      Before you can use a token, you must choose a team name.
+      You can only do this once per token,
+      so make sure it's the team name you actually want.
+      Staff are unable to make changes to team names.
     </p>
     <form method="get" action="register.cgi">
+      <label>Team Hash (Token):</label>
+      <input type="text" name="h">
+      <br>
       <label>Team Name:</label>
-      <input type="text" name="team">
-        
+      <input type="text" name="n">
+      <br>        
       <input type="submit" value="Register">
     </form>
   </body>
