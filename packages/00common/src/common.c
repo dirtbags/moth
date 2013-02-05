@@ -218,7 +218,7 @@ cgi_result(int code, char *desc, char *fmt, ...)
   va_list ap;
 
   if (is_cgi) {
-    printf("%d %s\r\n", code, desc);
+    printf("Status: %d %s\r\n", code, desc);
   }
   cgi_head(desc);
   va_start(ap, fmt);
