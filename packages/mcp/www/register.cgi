@@ -22,8 +22,8 @@ Content-type: text/html
     <h1>Team Registration</h1>
 EOF
 
-if [ -z "$hash" ]; then
-	echo "<p>Empty hash, cannot complete request</p>"
+if [ -z "$hash" ] || [ -z "$team" ]; then
+	echo "<p>Empty field, cannot complete request</p>"
 elif ! grep -q $hash $CTF_BASE/state/teams/assigned.txt; then
 	echo "<p>That hash has not been assigned.</p>"
 elif [ -f $CTF_BASE/state/teams/names/$hash ]; then
