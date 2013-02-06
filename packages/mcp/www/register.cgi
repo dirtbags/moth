@@ -3,6 +3,7 @@
 param () {
 	ret=$(echo "$QUERY_STRING" | tr '=&' ' \n' | awk -v "k=$1" '($1==k) {print $2;}')
 	ret=$(busybox httpd -d "$ret" || echo "$ret")
+	echo "$ret"
 }
 
 team=$(param n)
@@ -21,12 +22,12 @@ Content-type: text/html
     <h1>Team Registration</h1>
 EOF
 
-if ! grep -q $h $CTF_BASE/state/teams/assigned.txt; then
+if ! grep -q $hash $CTF_BASE/state/teams/assigned.txt; then
 	echo "<p>That token has not been assigned.</p>"
-elif [ -f $CTF_BASE/state/teams/names/$h ]; then
-	echo "<p>That token has already been named.</p>"
+elif [ -f $CTF_BASE/state/teams/names/$hash ]; then
+	echo "<p>That token has already been registered.</p>"
 else
-	printf "%s" "$t" > $CTF_BASE/state/teams/names/$h
+	printf "%s" "$team" > $CTF_BASE/state/teams/names/$h
 	echo "<p>Okay, your team has been named and you may begin using your token!</p>"
 fi
 
