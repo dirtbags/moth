@@ -58,7 +58,8 @@ main(int argc, char *argv[])
 
     /* Pull category name out of the token */
     for (q = category; *p && (*p != ':'); p += 1) {
-      *(q++) = tolower(*p);
+      *p = tolower(*p);
+      *(q++) = *p;
     }
     *q = '\0';
     if (p) p += 1;
