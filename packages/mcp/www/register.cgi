@@ -22,13 +22,15 @@ Content-type: text/html
     <h1>Team Registration</h1>
 EOF
 
-if ! grep -q $hash $CTF_BASE/state/teams/assigned.txt; then
-	echo "<p>That token has not been assigned.</p>"
+if [ -z "$hash" ]; then
+	echo "<p>Empty hash, cannot complete request</p>"
+elif ! grep -q $hash $CTF_BASE/state/teams/assigned.txt; then
+	echo "<p>That hash has not been assigned.</p>"
 elif [ -f $CTF_BASE/state/teams/names/$hash ]; then
-	echo "<p>That token has already been registered.</p>"
+	echo "<p>That hash has already been registered.</p>"
 else
-	printf "%s" "$team" > $CTF_BASE/state/teams/names/$h
-	echo "<p>Okay, your team has been named and you may begin using your token!</p>"
+	printf "%s" "$team" > $CTF_BASE/state/teams/names/$hash
+	echo "<p>Okay, your team has been named and you may begin using your hash!</p>"
 fi
 
 cat <<EOF
