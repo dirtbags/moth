@@ -83,7 +83,7 @@ BEGIN {
 
     # Build a list of team names
     if (! (hash in team_names)) {
-        fn = sprintf("%s/teams/names/%s", base, hash)
+        fn = sprintf("%s/state/teams/names/%s", base, hash)
         getline team_names[hash] < fn
         close(fn)
     }
