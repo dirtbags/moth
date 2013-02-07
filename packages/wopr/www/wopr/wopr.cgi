@@ -494,7 +494,7 @@ FLD-1327 extends target date for full WOPR integration until June 22,
 -- Message ID #-5: a snippet of the WOPR command program
 [-1] = "^A^@^@<8B>U<D4><E8>wopr:xetil-rokak-robyx<AD><FF><FF><FF>^O<B6>MЉËEօ<C0>uG<84>",
 [-2] = "<C3>^A<90><8D>t&^@<E9>@<FF><FF><FF><8D>v^@<83>",
-[-3] = "[^_]Ð<8D>t&^@<89>^\$<E8>Ѐ^@^@<8B>=<A4><C2>^E^H<80>;/<89>",
+[-3] = "[^_]Ð<8D>t&^@<89>^$<E8>Ѐ^@^@<8B>=<A4><C2>^E^H<80>;/<89>",
 [-4] = "<85><D2>^?׃<C4>^T1<C0>[]Ít&^@<B8>^A^@^@^@븋C^D<89>",
 [-5] = [[
 ^@^@^@^@^@^@on", n] => set attcon = n
@@ -708,7 +708,7 @@ Smoc.inventory = {
    [-3] = "<FF><FF><FF><FF>%L<C9>^D^Hhx^@^@^@",
    [-4] = "^D^H^G^P^@^@P",
    [-5] = "<EC>^P<8B>=<EC><C9>^D^H<C7>",
-   [-6] = "WVS<83><EC>\<8B>E^L<8B><8B>U^P",
+   [-6] = "WVS<83><EC>\\<8B>E^L<8B><8B>U^P",
    [-7] = "Y^@^@" .. Smoc.authcode .. "^@get_launch_trigger^@",
    [-8] = "^@",
    [-9] = "^@",
@@ -792,7 +792,7 @@ function Smoc:cmd_launch(argv)
          self:writeln("ERROR: Triggering device not installed")
       else
          self:set("nuked")
-         Wopr:login("Detonating warhead...\nwopr:xoroz-hymaz-fivex wopr:xufov-sugig-zecox wopr:xocem-dabal-fisux wopr:xufez-dofas-tyvyx\s*** CONNECTION TERMINATED")
+         Wopr:login("Detonating warhead...\nwopr:xoroz-hymaz-fivex wopr:xufov-sugig-zecox wopr:xocem-dabal-fisux wopr:xufez-dofas-tyvyx\n*** CONNECTION TERMINATED")
       end
    end
 end

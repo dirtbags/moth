@@ -47,7 +47,7 @@ function head() {
 	print ".cat5 {background-color: #e31a1c;}"
 	print ".cat6 {background-color: #fdbf6f;}"
 	print ".cat7 {background-color: #ff7f00;}"
-	print ".cat8 {background-color: #cab2d6;}"
+	print ".cat8 {background-color: #cab2d6; color: black;}"
 
 	print ".name {position: absolute; right: 10px;}"
 	print "#scores p {margin: 0; padding: 0; border: thin solid #222; opacity: 0.92;}"
