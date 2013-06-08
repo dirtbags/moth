@@ -1,5 +1,21 @@
 #! /bin/sh -e
 
+# Change to CTF_BASE
+cd ${CTF_BASE:-.}
+for i in $(seq 5); do
+	[ -d packages ] && break
+	cd ..
+done
+if ! [ -d packages ]; then
+	cat <<EOF
+Content-type: text/html
+
+Cannot find CTF_BASE
+EOF
+	exit 1
+fi
+
+# Read CGI parameters
 param () {
 	ret=$(echo "$QUERY_STRING" | tr '=&' ' \n' | awk -v "k=$1" '($1==k) {print $2;}')
 	ret=$(busybox httpd -d "$ret" || echo "$ret")
