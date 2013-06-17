@@ -26,4 +26,4 @@ $(foreach p, $(PACKAGES), $(eval $p-clean: $p-pkgclean))
 
 $(BIN)/%.pkg: %-install
 	@ mkdir -p $(@D)
-	mksquashfs $(TARGET)/$* $@ -all-root -noappend -no-progress
+	(cd $(TARGET); tar czf - $*) > $@
