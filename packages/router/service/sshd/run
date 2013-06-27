@@ -1,7 +1,0 @@
-#! /bin/sh
-
-exec 2>&1
-
-echo 'root:$1$xAJ7KwiU$BeKJjYGs9r/hY9Ag4qv4I1:0:0' | chpasswd --encrypted
-
-exec dropbear -r ./rsa.key -E -F
