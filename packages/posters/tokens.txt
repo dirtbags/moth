@@ -1,6 +1,0 @@
-posters:xylep-nanox
-posters:xanad-polox
-posters:xemoc-socox
-posters:xurat-tulox
-posters:xalep-mikex
-posters:xylen-bubux

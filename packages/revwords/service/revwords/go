@@ -1,3 +1,0 @@
-#! /bin/sh
-
-exec $CTF_BASE/packages/revwords/bin/revwords 3<$CTF_BASE/packages/revwords/tokens.txt

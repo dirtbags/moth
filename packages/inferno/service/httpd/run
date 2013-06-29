@@ -1,7 +1,0 @@
-#! /bin/sh -e
-
-exec 2>&1
-
-cd $PACKAGES/www
-exec tcpsvd -l localhost 0 80 $CTF_BASE/packages/inferno/bin/eris -d.
-

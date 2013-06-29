@@ -1,7 +1,0 @@
-#! /bin/sh -e
-
-exec 2>&1
-
-IP=$(dbip -a)
-
-exec setuidgid ctf $CTF_BASE/packages/multicaster/bin/multicaster ff15::62c 1580 <$CTF_BASE/packages/multicaster/tokens.txt

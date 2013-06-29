@@ -1,3 +1,0 @@
-#! /bin/sh
-
-exec chpst -u 9001 -/ $CTF_BASE/packages/printf/bin ./printf 3<$CTF_BASE/packages/printf/tokens.txt

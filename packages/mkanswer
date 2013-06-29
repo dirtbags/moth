@@ -1,6 +1,6 @@
 #! /bin/sh
 
-shuf -n 2 /usr/share/dict/words | while read word; do
+grep -v "'" /usr/share/dict/words | shuf -n 2 | while read word; do
     echo -n "$word "
 done
 echo
