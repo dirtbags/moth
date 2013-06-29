@@ -1,7 +1,0 @@
-#! /bin/sh -e
-
-exec 2>&1
-
-IP=$(dbip -a)
-
-exec setuidgid nobody $CTF_BASE/packages/cowbull/bin/cowd < $CTF_BASE/packages/cowbull/tokens.txt

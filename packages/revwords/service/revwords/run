@@ -1,8 +1,0 @@
-#! /bin/sh -e
-
-exec 2>&1
-
-IP=$(dbip -a)
-
-exec tcpsvd -u nobody ${IP%/*} 1013 ./go
-

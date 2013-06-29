@@ -1,7 +1,3 @@
-ifndef PASSWORD
-$(error PASSWORD not defined)
-endif
-
 TEA_BIN = packages/00common/src/tea
 POINTSCLI_BIN = packages/00common/src/pointscli
 PUZZLES_BIN = packages/00common/src/puzzles.cgi
@@ -22,6 +18,4 @@ define CTFBASE_INSTALL
 	cp $(TEA_BIN) $(1)/bin
 	cp $(POINTSCLI_BIN) $(1)/bin
 	cp $(PUZZLES_BIN) $(1)/bin
-
-	echo "$(PASSWORD)" > $(1)/password
 endef
