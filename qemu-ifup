@@ -1,5 +1,0 @@
-#! /bin/sh
-
-ip addr add fd84:b410:3441::ffff/64 dev $1
-ip addr add 10.0.1.254/24 dev $1
-
