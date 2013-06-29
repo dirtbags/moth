@@ -1,9 +1,0 @@
-#! /bin/sh -e
-
-exec 2>&1
-
-IP=$(dbip -a)
-
-grep -q ipv4 /proc/cmdline && IP=::ffff:$IP
-
-exec $CTF_BASE/packages/octopus/bin/octopus ${IP%/*} < $CTF_BASE/packages/octopus/tokens.txt
