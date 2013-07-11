@@ -40,12 +40,12 @@ EOF
 
 if [ -z "$hash" ] || [ -z "$team" ]; then
 	echo "<p>Empty field, cannot complete request</p>"
-elif ! grep -q " $hash$" $CTF_BASE/state/teams/assigned.txt; then
+elif ! grep -q "^$hash$" state/teams/assigned.txt; then
 	echo "<p>That hash has not been assigned.</p>"
-elif [ -f $CTF_BASE/state/teams/names/$hash ]; then
+elif [ -f state/teams/names/$hash ]; then
 	echo "<p>That hash has already been registered.</p>"
 else
-	printf "%s" "$team" > $CTF_BASE/state/teams/names/$hash
+	printf "%s" "$team" > state/teams/names/$hash
 	echo "<p>Okay, your team has been named and you may begin using your hash!</p>"
 fi
 
