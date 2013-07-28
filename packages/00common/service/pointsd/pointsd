@@ -26,7 +26,7 @@ for pwfile in $PACKAGES/*/password; do
     if [ -f $pwfile ]; then
         (
             cat bkup.png
-            tar cf - $STATE | gzip -c | $PACKAGES/*/bin/tea 3< $pwfile
+            tar cf - $STATE | gzip -c | $PACKAGES/*/bin/tea -e 3< $pwfile
         ) > $BACKUP.new
         mv $BACKUP.new $BACKUP
         break
