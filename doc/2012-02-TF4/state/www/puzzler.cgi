@@ -1,1 +1,0 @@
-/opt/mcp/www/puzzler.cgi
