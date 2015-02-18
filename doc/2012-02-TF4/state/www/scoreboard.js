@@ -1,1 +1,0 @@
-/opt/mcp/www/scoreboard.js
