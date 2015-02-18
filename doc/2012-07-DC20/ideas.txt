@@ -1,7 +1,0 @@
-* foam
-** beat-matching puzzle
-    You have to play an MP3 to beat-match something being broadcast over
-    FM.  When you do, the two pieces work together somehow to tell you
-    the key.
-** New recordings of Ginnie
-
