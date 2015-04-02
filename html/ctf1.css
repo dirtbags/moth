@@ -1,0 +1,207 @@
+/* Pallette:  http://paletton.com/#uid=3360u0kkWtL00++bxKws6lGT03t */
+
+/**** Color Scheme ****/
+html {
+    background: #1C1000 url(smoke.jpg) no-repeat;
+    background-size: cover;
+    min-height: 100%;
+}
+
+body, h1:first-child:before {
+    color: #FFDAA3;
+}
+
+h1, h2, h3 {
+    color: #AD6F15;
+}
+
+a {
+    color: #379F7A;
+}
+
+a:hover {
+    color: #112;
+    background-color: #D84B6E;
+}
+
+input {
+	color: #F39CB2;
+	background-color: #190006;
+    border: solid #9E1336 2px;
+    border-radius: 2px;
+}
+
+.readme, pre {
+    background-color: #333;
+}
+
+/**** document ****/
+
+body {
+    font-family: sans-serif;
+    padding: 10px;
+    max-width: 700px;
+}
+
+/**** heading ****/
+
+h1:first-child {
+    text-transform: lowercase;
+    font-size: 1.6em;
+    padding: 3px;
+    margin: 0 0 1em 70px;
+}
+
+h1:first-child:before {
+    letter-spacing: -0.1em;
+    content: "FIRE: ";
+}
+
+/**** body ****/
+
+a img {
+    border: 0px;
+}
+
+a {
+    text-decoration: underline;
+}
+
+h1, h2, h3 {
+    letter-spacing: -0.05em;
+}
+
+.readme {
+    margin: 1em;
+}
+
+pre {
+    border: solid #ddc 2px;
+    padding: 0.25em;
+}
+
+
+th {
+    vertical-align: top;
+    text-align: center;
+}
+td {
+    vertical-align: top;
+    text-align: left;
+}
+
+dt {
+    font-weight: bold;
+}
+
+p {
+    line-height: 1.4em;
+    margin-bottom: 20px;
+}
+
+hr {
+    border: 1px solid #ddc;
+}
+
+
+
+/*** navigation bar ***/
+
+nav h2 {
+    display: none;
+}
+
+nav ul {
+    list-style: none;
+    text-align: center;
+}
+
+nav li {
+    display: inline;
+}
+
+nav li a {
+  text-transform: lowercase;
+  font-size: 0.9em;
+}
+
+nav li + li:before {
+    content: " | ";
+}
+
+/**** special cases ****/
+
+.wide {
+    max-width: inherit;
+}
+
+.figure {
+    margin: 0.5em 1em;
+    float: right;
+    font-size: small;
+    text-align: center;
+}
+
+/* Scoreboard stuff */
+
+.scoreboard, .scoreboard body {
+    height: 100%; 
+    margin: 0;
+    padding: 0;
+    max-width: none;
+}
+
+#scoreboard {
+    height: 60%;
+    font-size: 75%;
+}
+
+#scoreboard td {
+    height: 100%;
+}
+
+#chart {
+    height: 30%;
+    width: 100%;
+}
+
+/* Tanks stuff */
+
+#battlefield {
+    border: 2px solid green;
+}
+
+.solved {
+    text-decoration: line-through;
+}
+
+
+/* Names */
+span[data-handle]:after {
+    content: ")";
+}
+
+span[data-handle="zephyr"]:before {
+    content: "Neale Pickett (";
+}
+
+span[data-handle="pflarr"]:before {
+    content: "Paul Ferrell (";
+}
+
+span[data-handle="chamuco"]:before {
+    content: "Danny Quist (";
+}
+
+span[data-handle="cashmoney"]:before {
+    content: "Jeremy Scott (";
+}
+
+span[data-handle="phorkus"]:before {
+    content: "Mark Carey (";
+}
+
+span[data-handle="cherish"]:before {
+    content: "Cherish Franco (";
+}
+

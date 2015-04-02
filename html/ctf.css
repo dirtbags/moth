@@ -1,0 +1,203 @@
+/* Pallette:  http://paletton.com/#uid=3360u0kkWtL00++bxKws6lGT03t */
+
+@import "fonts/maven_pro.css";
+
+html {
+	background: #1C1000 url(stripes.jpg) no-repeat left bottom;
+	background-size: cover;
+	min-height: 100%;
+	font-family: "Maven Pro", Ubuntu, sans-serif;
+}
+
+body {
+	padding: 10px;
+	max-width: 35em;
+	margin: 1em auto;
+	border-radius: 1em;
+}
+
+h1, h2, h3 {
+	color: #AD6F15;
+	font-family: "Maven Pro", Ubuntu, sans-serif;
+	font-weight: bold;
+}
+
+h1:first-child {
+	color: #9E1336;
+	background: rgba(216, 75, 110, 0.15);
+	font-size: 2em;
+	border-radius: 0.2em;
+	padding: 0 0.3em;
+	text-align: center;
+}
+
+.block{
+	background: #FFDAA3;
+	background-size: 100% 100%;
+	color: #AD6F15;
+	border-radius: 0.6em;
+	padding: 0.2em;
+}
+
+.readme, pre {
+	background-color: #FFDAA3;
+	border-radius: 2em;
+}
+
+
+
+
+
+
+input {
+	font-family: "Maven Pro", Ubuntu, sans-serif;
+}
+
+a {
+	color: #1C1000;
+	text-decoration: underline;
+}
+
+a:hover {
+	color: #9E1336;
+}
+
+a img {
+	border: 0px;
+}
+
+pre {
+	border: solid #ddc 2px;
+	padding: 0.25em;
+	font-family: "Ubuntu Mono", monospace;
+}
+
+tt, code, kbd, samp {
+	font-family: "Ubuntu Mono", monospace;
+}
+
+
+th {
+	vertical-align: top;
+	text-align: center;
+}
+td {
+	vertical-align: top;
+	text-align: left;
+}
+
+dt {
+	font-weight: bold;
+}
+
+p {
+	line-height: 1.4em;
+	margin-bottom: 20px;
+}
+
+hr {
+	border: 1px solid #ddc;
+}
+
+#prompt {
+	color: #0E7450;
+	border-radius: 0.2em;
+}
+
+#cli {
+	background: rgba(14, 116, 80, 0.2);
+	color: #00120C;
+	width: 100%;
+	border: 0px;
+	padding: 0.1em 0.1em;
+}
+
+
+/*** navigation bar ***/
+
+nav h2 {
+	display: none;
+}
+
+nav ul {
+	list-style: none;
+	text-align: center;
+}
+
+nav li {
+	display: inline;
+}
+
+nav li a {
+  text-transform: lowercase;
+  font-size: 0.9em;
+}
+
+nav li + li:before {
+	content: " | ";
+}
+
+/**** Terminal ****/
+
+#terminal {
+	background: #FFDAA3 url("trident.jpg") no-repeat center;
+	background-size: 100% 100%;
+}
+
+#terminal #output {
+	max-height: 20em;
+	overflow-y: scroll;
+}
+
+#terminal #output::-webkit-scrollbar
+{
+	width: 0.7em;
+}
+
+#terminal #output::-webkit-scrollbar-track
+{
+	border-radius: 0.7em;
+	background-color: rgba(173, 111, 21, 0.4);
+}
+
+#terminal #output::-webkit-scrollbar-thumb
+{
+	border-radius: 0.7em;
+	background-color: #FFDAA3;
+	border: solid rgba(173, 111, 21, 0.4) 1px;
+}
+
+.wide {
+	max-width: inherit;
+}
+
+.figure {
+	margin: 0.5em 1em;
+	float: right;
+	font-size: small;
+	text-align: center;
+}
+
+/* Scoreboard stuff */
+
+.scoreboard, .scoreboard body {
+	height: 100%; 
+	margin: 0;
+	padding: 0;
+	max-width: none;
+}
+
+#scoreboard {
+	height: 60%;
+	font-size: 75%;
+}
+
+#scoreboard td {
+	height: 100%;
+}
+
+#chart {
+	height: 30%;
+	width: 100%;
+}
+
