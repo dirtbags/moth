@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Scoreboard</title>
-    <link rel="stylesheet" href="ctf.css" type="text/css">
-    <script src="points.js" async></script>
-  </head>
-  <body>
-    <h1>Scoreboard</h1>
+	<head>
+		<title>Scoreboard</title>
+		<link rel="stylesheet" href="css/style.css" type="text/css">
+		<script src="js/scoreboard.js" async></script>
+		<script>
+function init() {
+	var sb = document.getElementById("scoreboard");
+	scoreboard(sb);
+}
 
-  </body>
+window.addEventListener("load", init);
+		</script>
+	</head>
+	<body>
+		<h1>Scoreboard</h1>
+		<div id="scoreboard"></div>
+	</body>
 </html>
