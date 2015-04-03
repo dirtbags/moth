@@ -1,20 +1,14 @@
 /* Pallette:  http://paletton.com/#uid=3360u0kkWtL00++bxKws6lGT03t */
 
-@import "fonts/maven_pro.css";
+@import "../fonts/maven_pro.css";
 
 html {
-	background: #1C1000 url(stripes.jpg) no-repeat left bottom;
+	background: #1C1000 url(../stripes.jpg) no-repeat left bottom;
 	background-size: cover;
 	min-height: 100%;
 	font-family: "Maven Pro", Ubuntu, sans-serif;
 }
 
-body {
-	padding: 10px;
-	max-width: 35em;
-	margin: 1em auto;
-	border-radius: 1em;
-}
 
 h1, h2, h3 {
 	color: #AD6F15;
@@ -24,19 +18,13 @@ h1, h2, h3 {
 
 h1:first-child {
 	color: #9E1336;
-	background: rgba(216, 75, 110, 0.15);
-	font-size: 2em;
+	background: rgba(28, 16, 0, 0.8);
+	font-size: 3em;
 	border-radius: 0.2em;
 	padding: 0 0.3em;
 	text-align: center;
-}
-
-.block{
-	background: #FFDAA3;
-	background-size: 100% 100%;
-	color: #AD6F15;
-	border-radius: 0.6em;
-	padding: 0.2em;
+	max-width: 6em;
+	float: left;
 }
 
 .readme, pre {
@@ -137,11 +125,22 @@ nav li + li:before {
 	content: " | ";
 }
 
+section {
+	background: #FFDAA3 url("../trident.jpg") no-repeat center;
+	background-size: 100% 100%;
+	color: #AD6F15;
+	border-radius: 0.6em;
+	padding: 0.2em;
+}
+
 /**** Terminal ****/
 
 #terminal {
-	background: #FFDAA3 url("trident.jpg") no-repeat center;
-	background-size: 100% 100%;
+	padding: 10px;
+	max-width: 35em;
+	margin: 1em auto;
+	border-radius: 1em;
+
 }
 
 #terminal #output {
@@ -167,6 +166,44 @@ nav li + li:before {
 	border: solid rgba(173, 111, 21, 0.4) 1px;
 }
 
+/**** Scoreboard ****/
+
+#scoreboard {
+	width: 100%;
+	clear: both;
+	background: rgba(25, 0, 6, 0.8);
+	border-radius: 2em;
+}
+
+#scoreboard span {
+	font-size: 75%;
+	display: inline-block;
+	margin: 0;
+	border: 0;
+	overflow: hidden;
+	height: 2.2em;
+}
+
+#scoreboard .teamname {
+	font-size: 133%;
+	color: #D84B6E;
+	opacity: 0.8;
+	position: absolute;
+	right: 1em;
+	height: 1.1em;
+}
+
+.cat0, .cat9{background-color: #a6cee3; color: black;}
+.cat1, .cat10 {background-color: #1f78b4; color: white;}
+.cat2, .cat11 {background-color: #b2df8a; color: black;}
+.cat3, .cat11 {background-color: #33a02c; color: white;}
+.cat4, .cat12 {background-color: #cab2d6; color: black;}
+.cat5, .cat13 {background-color: #e31a1c; color: white;}
+.cat6, .cat14 {background-color: #fdbf6f; color: black;}
+.cat7, .cat15 {background-color: #ff7f00; color: black;}
+.cat8, .cat16 {background-color: #fb9a99; color: black;}
+
+
 .wide {
 	max-width: inherit;
 }
@@ -177,27 +214,3 @@ nav li + li:before {
 	font-size: small;
 	text-align: center;
 }
-
-/* Scoreboard stuff */
-
-.scoreboard, .scoreboard body {
-	height: 100%; 
-	margin: 0;
-	padding: 0;
-	max-width: none;
-}
-
-#scoreboard {
-	height: 60%;
-	font-size: 75%;
-}
-
-#scoreboard td {
-	height: 100%;
-}
-
-#chart {
-	height: 30%;
-	width: 100%;
-}
-
