@@ -1,10 +1,15 @@
-/* Pallette:  http://paletton.com/#uid=3360u0kkWtL00++bxKws6lGT03t */
+/*
+Light blue: #96d1e3
+Off-white blue: #b9e0ef
+Dark brown: #35170c
+Light brown: #432115
+Tan: #e1c3b8
+*/
 
 @import "../fonts/maven_pro.css";
 
 html {
-	background: #1C1000 url(../stripes.jpg) no-repeat left bottom;
-	background-size: cover;
+	background: #35170c url(../brown-circles.jpg) repeat left bottom;
 	min-height: 100%;
 	font-family: "Maven Pro", Ubuntu, sans-serif;
 }
@@ -17,14 +22,12 @@ h1, h2, h3 {
 }
 
 h1:first-child {
-	color: #9E1336;
-	background: rgba(28, 16, 0, 0.8);
+	color: #96d1e3;
+	background: #35170c;
 	font-size: 3em;
 	border-radius: 0.2em;
 	padding: 0 0.3em;
 	text-align: center;
-	max-width: 6em;
-	float: left;
 }
 
 .readme, pre {
@@ -42,7 +45,7 @@ input {
 }
 
 a {
-	color: #1C1000;
+	color: #432115;
 	text-decoration: underline;
 }
 
@@ -126,10 +129,12 @@ nav li + li:before {
 }
 
 section {
-	background: #FFDAA3 url("../trident.jpg") no-repeat center;
+	background: #e1c3b8;
 	background-size: 100% 100%;
-	color: #AD6F15;
+	color: #35170c;
+	max-width: 35em;
 	border-radius: 0.6em;
+	margin: 1em auto;
 	padding: 0.2em;
 }
 
