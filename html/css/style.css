@@ -63,7 +63,7 @@ pre {
 	font-family: "Ubuntu Mono", monospace;
 }
 
-tt, code, kbd, samp {
+code, kbd, samp {
 	font-family: "Ubuntu Mono", monospace;
 }
 
@@ -104,7 +104,25 @@ hr {
 }
 
 
+/**** Section ****/
+
+section, nav {
+	color: #35170c;
+	max-width: 35em;
+	border-radius: 0.6em;
+	margin: 1em auto;
+	padding: 0.2em;
+}
+
+section {
+	background: #e1c3b8;
+}
+
 /*** navigation bar ***/
+
+nav {
+	background: #b9e0ef;
+}
 
 nav h2 {
 	display: none;
@@ -113,6 +131,7 @@ nav h2 {
 nav ul {
 	list-style: none;
 	text-align: center;
+	padding: 0;
 }
 
 nav li {
@@ -128,15 +147,6 @@ nav li + li:before {
 	content: " | ";
 }
 
-section {
-	background: #e1c3b8;
-	background-size: 100% 100%;
-	color: #35170c;
-	max-width: 35em;
-	border-radius: 0.6em;
-	margin: 1em auto;
-	padding: 0.2em;
-}
 
 /**** Terminal ****/
 
