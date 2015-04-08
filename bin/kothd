@@ -1,0 +1,58 @@
+#! /bin/sh
+
+echo "Figuring out web user..."
+for www in www-data http _; do
+	id $www && break
+done
+
+if [ $www = _ ]; then
+	echo "Unable to determine httpd user on this system. Dying."
+	exit 1
+fi
+
+initialize () {
+	for i in points.new points.tmp teams; do
+		mkdir -p state/$i
+		setfacl -m ${www}:rwx state/$i
+	done
+
+	>> state/points.log
+	hd < /dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > state/teams/assigned.txt
+}
+
+once () {
+	if [ -f disabled ]; then
+		return
+	fi
+
+	if ! [ -d state ]; then
+		initialize $1
+	fi
+	
+	# Collect new points
+	find state/points.new -type f | while read fn; do
+		cat $fn >> state/points.log
+		rm $fn
+	done
+	
+	# Generate new puzzles.html
+	if $KOTH_BASE/puzzles.cgi > www/puzzles.new; then
+		mv www/puzzles.new www/puzzles.html
+	fi
+
+	# Generate new points.json
+	if $KOTH_BASE/points > www/points.new; then
+		mv www/points.new www/points.json
+	fi
+}
+
+cd $(basename $0)
+KOTH_BASE=$(pwd)
+
+while true; do
+	for dn in $KOTH_BASE/*; do
+		cd $dn
+		once
+	done
+	sleep 5
+done

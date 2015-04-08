@@ -1,0 +1,45 @@
+#! /usr/bin/awk -f
+
+BEGIN {
+	nteams = 0;
+	print "{";
+	print "  \"points\": [";
+}
+
+{
+	ts = $1;
+	hash = $2;
+	cat = $3;
+	points = $4;
+	
+	teamno = teams[hash];
+	if (! teamno) {
+		teamno = ++nteams;
+		teams[hash] = teamno;
+		
+		getline teamnames[teamno] < ("state/teams/" hash)
+	}
+	
+	if (NR > 1) {
+		# JSON sucks.
+		print ",";
+	}
+	printf("[%d, \"%d\", \"%s\", %d]", ts, teamno, cat, points);
+}
+
+END {
+	print "";
+	print "  ],";
+	print "  \"teams\": {";
+
+	for (i in teamnames) {
+		if (i > 1) {
+			print ",";
+		}
+		printf("\"%d\": \"%s\"", i, teamnames[i]);
+	}
+	
+	print "";
+	print "  }";
+	print "}";
+}
