@@ -1,9 +1,0 @@
-#! /bin/sh
-
-while true; do
-    TIME=$(date +%s)
-    /opt/p2/bin/p2console
-    if [ $TIME = $(date +%s) ]; then
-        exit
-    fi
-done | /opt/p2/bin/modem
