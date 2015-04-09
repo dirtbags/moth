@@ -1,0 +1,68 @@
+#! /bin/sh
+
+DESTDIR=${1:-/opt/koth}
+
+cd $(dirname $0)
+
+older () {
+	[ -z "$1" ] && return 1
+	target=$1; shift
+	[ -f $target ] || return 0
+	for i in "$@"; do
+		[ $i -nt $target ] && return 0
+	done
+	return 1
+}
+
+html () {
+	target=$DESTDIR/${1%mdwn}html
+	if older $target $1 tmpl/*; then
+		echo "HTML $1"
+		mkdir -p $(dirname $target)
+		./tmpl/mdwntohtml < $1 > $target
+	fi
+}
+
+copy () {
+	target=$DESTDIR/$1
+	if older $target $1; then
+		echo "COPY $1"
+		mkdir -p $(dirname $target)
+		cp $1 $target
+	fi
+}
+
+cc () {
+	target=$DESTDIR/bin/$(basename $1 .c)
+	if older $target $@; then
+		src=$1; shift
+		echo "CC $src"
+		gcc -Wall -Werror -o $target $@ $src
+	fi
+}
+
+git ls-files | while read fn; do
+	case "$fn" in
+	install|.*)
+		;;
+	doc/*)
+		;;
+	html/*)
+		copy $fn
+		;;
+	bin/*)
+		copy $fn
+		;;
+	src/*.cgi.c|src/pointscli.c)
+		cc src/common.c $fn
+		;;
+	src/*.c)
+		cc $fn
+		;;
+	src/*.h)
+		;;
+	*)
+		echo "??? $fn"
+		;;
+	esac
+done
