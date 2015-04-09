@@ -1,5 +1,0 @@
-#! /bin/sh
-
-while sleep 5; do
-    echo -n . 1>&2
-done

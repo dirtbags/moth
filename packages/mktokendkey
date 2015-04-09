@@ -1,4 +1,0 @@
-#! /bin/sh
-
-dd bs=1 count=16 if=/dev/urandom | hd
-
