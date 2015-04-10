@@ -40,7 +40,7 @@ EOF
 
 if [ -z "$hash" ] || [ -z "$team" ]; then
 	echo "<p>Empty field, cannot complete request</p>"
-elif ! grep -q "^$hash$" state/teams/assigned.txt; then
+elif ! grep -q "^$hash$" assigned.txt; then
 	echo "<p>That hash has not been assigned.</p>"
 elif [ -f state/teams/names/$hash ]; then
 	echo "<p>That hash has already been registered.</p>"

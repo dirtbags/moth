@@ -1,6 +1,11 @@
 #! /bin/sh
 
-DESTDIR=${1:-/opt/koth}
+DESTDIR=$1
+
+if [ -z "$DESTDIR" ]; then
+	echo "Usage: $0 DESTDIR"
+	exit
+fi
 
 cd $(dirname $0)
 
@@ -12,15 +17,6 @@ older () {
 		[ $i -nt $target ] && return 0
 	done
 	return 1
-}
-
-html () {
-	target=$DESTDIR/${1%mdwn}html
-	if older $target $1 tmpl/*; then
-		echo "HTML $1"
-		mkdir -p $(dirname $target)
-		./tmpl/mdwntohtml < $1 > $target
-	fi
 }
 
 copy () {
@@ -41,6 +37,41 @@ cc () {
 	fi
 }
 
+cgi () {
+	target=$DESTDIR/www/$(basename $1 .c)
+	if older $target $@; then
+		mkdir -p $(dirname $target)
+		src=$1; shift
+		echo "CC $src"
+		gcc -Wall -Werror -o $target $@ src/common.c $src
+	fi
+}
+
+setup() {
+	echo "SETUP"
+	for i in points.new points.tmp teams; do
+		dir=$DESTDIR/state/$i
+		mkdir -p $dir
+		setfacl -m ${www}:rwx $dir
+	done
+	>> $DESTDIR/state/points.log
+	if ! [ -f $DESTDIR/assigned.txt ]; then
+		hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > assigned.txt
+	fi
+}
+
+
+echo "Figuring out web user..."
+for www in www-data http _; do
+	id $www && break
+done
+if [ $www = _ ]; then
+	echo "Unable to determine httpd user on this system. Dying."
+	exit 1
+fi
+
+mkdir -p $DESTDIR || exit 1
+
 git ls-files | while read fn; do
 	case "$fn" in
 	install|.*)
@@ -53,8 +84,13 @@ git ls-files | while read fn; do
 	bin/*)
 		copy $fn
 		;;
-	src/*.cgi.c|src/pointscli.c)
-		cc src/common.c $fn
+	src/common.c)
+		;;
+	src/pointscli.c)
+		cc $fn src/common.c
+		;;
+	src/*.cgi.c)
+		cgi $fn
 		;;
 	src/*.c)
 		cc $fn
