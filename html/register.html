@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Team Registration</title>
-    <link rel="stylesheet" href="ctf.css" type="text/css">
-  </head>
-  <body>
-    <h1>Team Registration</h1>
-    <p>
-      Before you can use a token, you must choose a team name.
-      You can only do this once per token,
-      so make sure it's the team name you actually want.
-      Staff are unable to make changes to team names.
-    </p>
-    <form method="get" action="register.cgi">
-      <label>Team Hash (Token):</label>
-      <input type="text" name="h">
-      <br>
-      <label>Team Name:</label>
-      <input type="text" name="n">
-      <br>        
-      <input type="submit" value="Register">
-    </form>
-  </body>
+	<head>
+		<title>Team Registration</title>
+		<link rel="stylesheet" href="css/style.css" type="text/css">
+	</head>
+	<body>
+		<h1>Team Registration</h1>
+		
+		<section>
+			<p>
+				Before you can use a token, you must choose a team name.
+				You can only do this once per token,
+				so make sure it's the team name you actually want.
+				Staff are unable to make changes to team names.
+			</p>
+			<form method="get" action="register.cgi">
+				<label>Team Hash (Token):</label>
+				<input type="text" name="h">
+				<br>
+				<label>Team Name:</label>
+				<input type="text" name="n">
+				<br>				
+				<input type="submit" value="Register">
+			</form>
+		</section>
+	</body>
 </html>
