@@ -1,0 +1,30 @@
+#! /bin/sh
+
+cd $(dirname $0)
+
+# Do nothing if `disabled` is present
+if [ -f disabled ]; then
+	exit
+fi
+
+# Reset to initial state if `reset` is present
+if [ -f reset ]; then
+	rm -f state/teams/* state/points.new/* state/points.tmp/*
+	> state/points.log
+fi
+
+# Collect new points
+find state/points.new -type f | while read fn; do
+	cat $fn >> state/points.log
+	rm $fn
+done
+
+# Generate new puzzles.html
+if $KOTH_BASE/puzzles.cgi > www/puzzles.new; then
+	mv www/puzzles.new www/puzzles.html
+fi
+
+# Generate new points.json
+if $KOTH_BASE/points > www/points.new; then
+	mv www/points.new www/points.json
+fi

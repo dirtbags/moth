@@ -1,0 +1,37 @@
+#! /bin/sh
+
+newdir=$1
+if [ -z "$newdir" ]; then
+	echo "Usage: $0 NEWDIR"
+	exit 1
+fi
+
+KOTH_BASE=$(cd $(dirname $0)/.. && pwd)
+
+echo "Figuring out web user..."
+for www in www-data http _; do
+	id $www && break
+done
+
+if [ $www = _ ]; then
+	echo "Unable to determine httpd user on this system. Dying."
+	exit 1
+fi
+
+mkdir -p $newdir
+cd $newdir
+
+for i in points.new points.tmp teams; do
+	mkdir -p state/$i
+	setfacl -m ${www}:rwx state/$i
+done
+
+>> state/points.log
+
+if ! [ -f assigned.txt ]; then
+	hd < /dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > assigned.txt
+fi
+
+mkdir -p www
+cp -r $KOTH_BASE/html/* www/
+cp $KOTH_BASE/bin/*.cgi www/
