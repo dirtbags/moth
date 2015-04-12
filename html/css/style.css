@@ -108,7 +108,7 @@ hr {
 
 /**** Section ****/
 
-section, nav {
+section, nav, address {
 	color: #35170c;
 	max-width: 35em;
 	border-radius: 0.6em;
@@ -116,7 +116,7 @@ section, nav {
 	padding: 0.5em;
 }
 
-section {
+section, address {
 	background: #e1caa5;
 }
 
