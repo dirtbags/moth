@@ -21,7 +21,7 @@ h1, h2, h3 {
 	font-weight: bold;
 }
 
-h1:first-child {
+body > h1:first-child {
 	color: #96d1e3;
 	background: #35170c;
 	font-size: 3em;
