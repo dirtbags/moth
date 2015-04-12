@@ -8,20 +8,20 @@ if ! [ -d $indir ]; then
 fi
 
 die () {
-    echo "$@" 1>&2
-    exit 1
+	echo "$@" 1>&2
+	exit 1
 }
 
 escape () {
-    sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
+	sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
 }
 
 template () {
-    cat="$1"; shift
-    points="$1"; shift
-    author=$(echo $1 | escape); shift
+	cat="$1"; shift
+	points="$1"; shift
+	author=$(echo $1 | escape); shift
 
-    cat <<EOF
+	cat <<EOF
 <!DOCTYPE html>
 <html>
 	<head>
@@ -33,24 +33,24 @@ template () {
 		<h1>$cat for $points points</h1>
 EOF
 
-    echo "<section id=\"readme\">"
-    cat
-    echo "</section>"
+	echo "<section id=\"readme\">"
+	cat
+	echo "</section>"
 
-    if [ $# -gt 0 ]; then
-		echo "<section id=\"files\">"
-        echo "<h2>Associated files:</h2>"
-        echo "<ul>"
-        while [ $# -gt 0 ]; do
-            fn="$1"; shift
-            efn="$(echo $fn | escape)"
-            echo "<li><a href=\"$fn\">$efn</a></li>"
-        done
-        echo "</ul>"
-		echo "</section>"
-    fi
+	if [ $# -gt 0 ]; then
+	echo "<section id=\"files\">"
+			echo "<h2>Associated files:</h2>"
+			echo "<ul>"
+			while [ $# -gt 0 ]; do
+					fn="$1"; shift
+					efn="$(echo $fn | escape)"
+					echo "<li><a href=\"$fn\">$efn</a></li>"
+			done
+			echo "</ul>"
+	echo "</section>"
+	fi
 
-    cat <<EOF
+	cat <<EOF
 		<section id="form">
 			<form id="puzzler" action="/puzzler.cgi" method="post" accept-charset="utf-8">
 				<input type="hidden" name="c" value="$cat">
@@ -67,13 +67,14 @@ EOF
 }
 
 cat=$(basename $indir)
-outdir=$(dirname $0)/puzzles/$cat
+outdir=$(dirname $0)/../packages/$cat
 uanswers=$outdir/answers.unsorted
 usummary=$outdir/summary.unsorted
 umap=$outdir/map.unsorted
 
+mkdir -p $outdir
 if ! [ -r $outdir/mkpuzzles.salt ]; then
-    dd if=/dev/urandom bs=1 count=16 2>/dev/null | md5sum | cut -d\  -f1 > $outdir/salt
+	dd if=/dev/urandom bs=1 count=16 2>/dev/null | md5sum | cut -c1-16 > $outdir/salt
 fi
 read salt < $outdir/salt
 
@@ -81,87 +82,97 @@ read salt < $outdir/salt
 rm -f $usummary
 
 for dn in $indir/[0-9]*; do
-    [ -d $dn ] || continue
-    points=$(basename $dn)
+	[ -d $dn ] || continue
+	points=$(basename $dn)
 
-    echo $dn
+	echo $dn
 
-    odn=$(printf "%s/%s/%s" "$salt" "$cat" "$points" | md5sum | sed 's/\(....\)/\1./g' | cut -b 1-19)
-    tgt=$outdir/puzzles/$odn
-    mkdir -p $tgt
-    #touch $tgt/index.html
+	odn=$(printf "%s/%s/%s" "$salt" "$cat" "$points" | md5sum | sed 's/\(....\)/\1./g' | cut -b 1-19)
+	tgt=$outdir/puzzles/$odn
+	mkdir -p $tgt
+	#touch $tgt/index.html
 
-    if [ -f $dn/Makefile ]; then
-        # If there's a Makefile, run make
-        make DESTDIR=$(pwd)/$tgt -C $dn || exit 1
-        files=$(ls -1 $tgt | grep -v index.html || true)
-    elif [ -f $dn/00manifest.txt ]; then
-        # If there's a manifest, use that
-        files=
-        while read fn; do
-            ln -f $dn/$fn $tgt/
-            case $fn in
-                ,*)
-                    ;;
-                *)
-                    files="$files $fn"
-                    ;;
-            esac
-        done < $dn/00manifest.txt
-    else
-        # Otherwise, look for special files and copy the rest
-        files=
-        for fn in $dn/*; do
-            case $(basename $fn) in
-                00*)
-                    # Handle meta-information later
-                    ;;
-                *~|"#"*)
-                    # Don't copy temporary or backup files
-                    ;;
-                ,*)
-                    # Copy but don't list
-                    ln -f $fn $tgt/
-                    ;;
-                *)
-                    #ext=$(echo $fn | sed -ne 's/.*\././p')
-                    cfn=$(md5sum $fn | cut -b -8)$ext
-                    ln -f $fn $tgt/$cfn
-                    files="$files $cfn"
-                    ;;
-            esac
-        done
-    fi
+	if [ -f $dn/Makefile ]; then
+		# If there's a Makefile, run make
+		make DESTDIR=$(pwd)/$tgt -C $dn || exit 1
+		files=$(ls -1 $tgt | grep -v index.html || true)
+	elif [ -f $dn/00manifest.txt ]; then
+		# If there's a manifest, use that
+		files=
+		while read fn; do
+			ln -f $dn/$fn $tgt/
+			case $fn in
+			,*)
+				;;
+			*)
+				files="$files $fn"
+				;;
+			esac
+		done < $dn/00manifest.txt
+	else
+		# Otherwise, look for special files and copy the rest
+		files=
+		for fn in $dn/*; do
+			case $(basename $fn) in
+			00*)
+				# Handle meta-information later
+				;;
+			*~|"#"*)
+				# Don't copy temporary or backup files
+				;;
+			,*)
+				# Copy but don't list
+				ln -f $fn $tgt/
+				;;
+			*)
+				#ext=$(echo $fn | sed -ne 's/.*\././p')
+				cfn=$(md5sum $fn | cut -b -8)$ext
+				ln -f $fn $tgt/$cfn
+				files="$files $cfn"
+				;;
+			esac
+		done
+	fi
 
-    # Append answers 
-    if [ -f $dn/00answer.txt ]; then
-        awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/00answer.txt >> $uanswers
-    else
-        die "$dn/00answer.txt: No such file or directory"
-    fi
+	# Append answers 
+	if [ -f $dn/00answer.txt ]; then
+		awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/00answer.txt >> $uanswers
+	else
+		die "$dn/00answer.txt: No such file or directory"
+	fi
 
-    # Append summary
-    if [ -f $dn/00summary.txt ]; then
-        awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/00summary.txt >> $usummary
-    fi
+	# Append summary
+	if [ -f $dn/00summary.txt ]; then
+		awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/00summary.txt >> $usummary
+	fi
 
-    # Read author
-    if [ -f $dn/00author.txt ]; then
-        author=$(cat $dn/00author.txt)
-    else
-        die "$dn/00author.txt does not exist."
-    fi
+	# Read author
+	if [ -f $dn/00author.txt ]; then
+		author=$(cat $dn/00author.txt)
+	else
+		die "$dn/00author.txt does not exist."
+	fi
 
-    # Generate index now that we have a list of files
-    if [ -f $dn/00index.mdwn ]; then
-        markdown --html4tags $dn/00index.mdwn
-    fi | template $cat $points "$author" $files > $tgt/index.html
+	# Generate index now that we have a list of files
+	if [ -f $dn/00index.mdwn ]; then
+		markdown --html4tags $dn/00index.mdwn
+	fi | template $cat $points "$author" $files > $tgt/index.html
 
-    # Write to map
-    printf "%d %s\n" $points $odn >> $umap
+	# Write to map
+	printf "%d %s\n" $points $odn >> $umap
 done
 
+echo "Generating URL map"
 sort -n $umap > $outdir/map.txt
+
+echo "Generating answers list"
 sort -n $uanswers > $outdir/answers.txt
+
+echo "Generating summary"
 [ -f $usummary ] && sort -ns $usummary > $outdir/summary.txt
+
+echo "Linking into web space"
+ln -s ../packages/$cat/puzzles www/$cat
+
+echo "Cleaning up"
 rm -f $uanswers $usummary $umap
