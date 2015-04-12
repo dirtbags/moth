@@ -8,14 +8,22 @@
 		<h1>Team Registration</h1>
 		
 		<section>
+			<h2>Register Your Team</h2>
+
 			<p>
 				Before you can use a token, you must choose a team name.
-				You can only do this once per token,
+				You can only do this once,
 				so make sure it's the team name you actually want.
 				Staff are unable to make changes to team names.
 			</p>
+			
+			<p>
+				If somebody on your team has already registered your hash,
+				you don't need to do it again.
+			</p>
+			
 			<form method="get" action="register.cgi">
-				<label>Team Hash (Token):</label>
+				<label>Team Hash:</label>
 				<input type="text" name="h">
 				<br>
 				<label>Team Name:</label>
@@ -24,5 +32,12 @@
 				<input type="submit" value="Register">
 			</form>
 		</section>
+		<nav>
+			<ul>
+				<li><a href="register.html">Register</a></li>
+				<li><a href="puzzles.html">Puzzles</a></li>
+				<li><a href="scoreboard.html">Scoreboard</a></li>
+			</ul>
+		</nav>
 	</body>
 </html>
