@@ -201,7 +201,14 @@ cgi_head(char *title)
 void
 cgi_foot()
 {
-	printf("\n</section></body></html>\n");
+	printf("\n</section>\n");
+	printf("<nav><ul>\n");
+	printf("<li><a href="register.html">Register</a></li>\n");
+	printf("<li><a href="puzzles.html">Puzzles</a></li>\n");
+	printf("<li><a href="scoreboard.html">Scoreboard</a></li>\n");
+	printf("</ul></nav>\n");
+	printf("</body></html>\n");
+
 }
 
 void
