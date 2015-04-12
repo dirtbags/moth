@@ -48,7 +48,7 @@ web () {
 
 cgi () {
 	target=$DESTDIR/www/$(basename $1 .c)
-	if older $target $@; then
+	if older $target src/common.c $@; then
 		mkdir -p $(dirname $target)
 		src=$1; shift
 		echo "CGI $src"
@@ -64,6 +64,7 @@ setup() {
 		mkdir -p $dir
 		setfacl -m ${www}:rwx $dir
 	done
+	mkdir -p $DESTDIR/packages
 	>> $DESTDIR/state/points.log
 	if ! [ -f $DESTDIR/assigned.txt ]; then
 		hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > $DESTDIR/assigned.txt
@@ -97,6 +98,8 @@ git ls-files | while read fn; do
 		;;
 	src/common.c)
 		;;
+	src/*.h)
+		;;
 	src/pointscli.c)
 		cc $fn src/common.c
 		;;
@@ -105,8 +108,6 @@ git ls-files | while read fn; do
 		;;
 	src/*.c)
 		cc $fn
-		;;
-	src/*.h)
 		;;
 	*)
 		echo "??? $fn"

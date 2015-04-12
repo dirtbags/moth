@@ -203,9 +203,9 @@ cgi_foot()
 {
 	printf("\n</section>\n");
 	printf("<nav><ul>\n");
-	printf("<li><a href="register.html">Register</a></li>\n");
-	printf("<li><a href="puzzles.html">Puzzles</a></li>\n");
-	printf("<li><a href="scoreboard.html">Scoreboard</a></li>\n");
+	printf("<li><a href=\"register.html\">Register</a></li>\n");
+	printf("<li><a href=\"puzzles.html\">Puzzles</a></li>\n");
+	printf("<li><a href=\"scoreboard.html\">Scoreboard</a></li>\n");
 	printf("</ul></nav>\n");
 	printf("</body></html>\n");
 
@@ -393,12 +393,12 @@ ctf_chdir()
 	}
 
 	/*
-	 * Keep going up one directory until there's a packages directory 
+	 * Keep going up one directory until there's an assigned.txt file 
 	 */
 	for (i = 0; i < 5; i += 1) {
 		struct stat     st;
 
-		if ((0 == stat("packages", &st)) && S_ISDIR(st.st_mode)) {
+		if ((0 == stat("assigned.txt", &st)) && S_ISREG(st.st_mode)) {
 			return;
 		}
 		chdir("..");
@@ -473,7 +473,7 @@ team_exists(char const *teamhash)
 	/*
 	 * stat seems to be the preferred way to check for existence. 
 	 */
-	ret = stat(state_path("teams/names/%s", teamhash), &buf);
+	ret = stat(state_path("teams/%s", teamhash), &buf);
 	if (-1 == ret) {
 		return 0;
 	}

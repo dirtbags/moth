@@ -54,6 +54,10 @@ function scoreboard(element) {
 		for (var i in teams) {
 			winners.push(teams[i]);
 		}
+		if (winners.length == 0) {
+			// No teams!
+			return;
+		}
 		winners.sort(teamCompare);
 		winners.reverse();
 		
