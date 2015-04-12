@@ -37,17 +37,27 @@ cc () {
 	fi
 }
 
+web () {
+	target=$DESTDIR/www/${1#*/}
+	if older $target $1; then
+		echo "WEB $1"
+		mkdir -p $(dirname $target)
+		cp $1 $target
+	fi
+}
+
 cgi () {
 	target=$DESTDIR/www/$(basename $1 .c)
 	if older $target $@; then
 		mkdir -p $(dirname $target)
 		src=$1; shift
-		echo "CC $src"
+		echo "CGI $src"
 		gcc -Wall -Werror -o $target $@ src/common.c $src
 	fi
 }
 
 setup() {
+	[ -d $DESTDIR/state ] && return
 	echo "SETUP"
 	for i in points.new points.tmp teams; do
 		dir=$DESTDIR/state/$i
@@ -56,7 +66,7 @@ setup() {
 	done
 	>> $DESTDIR/state/points.log
 	if ! [ -f $DESTDIR/assigned.txt ]; then
-		hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > assigned.txt
+		hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > $DESTDIR/assigned.txt
 	fi
 }
 
@@ -72,6 +82,7 @@ fi
 
 mkdir -p $DESTDIR || exit 1
 
+setup
 git ls-files | while read fn; do
 	case "$fn" in
 	install|.*)
@@ -79,7 +90,7 @@ git ls-files | while read fn; do
 	doc/*)
 		;;
 	html/*)
-		copy $fn
+		web $fn
 		;;
 	bin/*)
 		copy $fn
