@@ -1,0 +1,54 @@
+Dirtbags King Of The Hill Server
+=====================
+
+This is a set of thingies to run our KOTH-style contest.
+Contests we've run in the past have been called
+"Tracer FIRE" and "Project 2".
+
+It serves up puzzles in a manner similar to Jeopardy.
+It also track scores,
+and comes with a JavaScript-based scoreboard to display team rankings.
+
+
+How Everything Works
+----------------------------
+
+I should fill this in, but I don't feel like anybody would read it.
+Send an email to <neale@woozle.org> asking me how it works,
+and I'll write this part up and email it back to you :)
+
+
+How to set it up
+--------------------
+
+It's made to be virtualized,
+so you can run multiple contests at once if you want.
+If you were to want to run it out of `/opt/koth`,
+do the following:
+
+	$ mkdir -p /opt/hack/mycontest
+	$ ./install /opt/hack/mycontest
+	$ cp kothd /opt/hack
+	
+Yay, you've got it set up.
+
+
+Installing Puzzle Categories
+------------------------------------
+
+Puzzle categories are distributed in a different way than the server.
+If you have one,
+just run
+
+	$ /opt/koth/hack/bin/install-category /path/to/my/category
+	
+
+Running It
+-------------
+
+Get your web server to serve up files from
+`/opt/koth/hack/www`.
+
+Then run `/opt/koth/kothd`.
+
+It's up to you not to be a bonehead about permissions.

@@ -27,7 +27,7 @@ template () {
 	<head>
 		<meta charset="UTF-8">
 		<title>$cat $points</title>
-		<link rel="stylesheet" href="/css/style.css" type="text/css">
+		<link rel="stylesheet" href="/../../css/style.css" type="text/css">
 	</head>
 	<body>
 		<h1>$cat for $points points</h1>
@@ -52,7 +52,7 @@ EOF
 
 	cat <<EOF
 		<section id="form">
-			<form id="puzzler" action="/puzzler.cgi" method="post" accept-charset="utf-8">
+			<form id="puzzler" action="/puzzler.cgi" method="post" accept-charset="utf-8" autocomplete="off">
 				<input type="hidden" name="c" value="$cat">
 				<input type="hidden" name="p" value="$points">
 				Team hash:<input name="t" size="8">
@@ -73,7 +73,7 @@ usummary=$outdir/summary.unsorted
 umap=$outdir/map.unsorted
 
 mkdir -p $outdir
-if ! [ -r $outdir/mkpuzzles.salt ]; then
+if ! [ -r $outdir/salt ]; then
 	dd if=/dev/urandom bs=1 count=16 2>/dev/null | md5sum | cut -c1-16 > $outdir/salt
 fi
 read salt < $outdir/salt
@@ -100,7 +100,7 @@ for dn in $indir/[0-9]*; do
 		# If there's a manifest, use that
 		files=
 		while read fn; do
-			ln -f $dn/$fn $tgt/
+			cp $dn/$fn $tgt/
 			case $fn in
 			,*)
 				;;
@@ -122,12 +122,12 @@ for dn in $indir/[0-9]*; do
 				;;
 			,*)
 				# Copy but don't list
-				ln -f $fn $tgt/
+				cp $fn $tgt/
 				;;
 			*)
 				#ext=$(echo $fn | sed -ne 's/.*\././p')
 				cfn=$(md5sum $fn | cut -b -8)$ext
-				ln -f $fn $tgt/$cfn
+				cp $fn $tgt/$cfn
 				files="$files $cfn"
 				;;
 			esac
@@ -172,7 +172,7 @@ echo "Generating summary"
 [ -f $usummary ] && sort -ns $usummary > $outdir/summary.txt
 
 echo "Linking into web space"
-ln -s ../packages/$cat/puzzles www/$cat
+ln -sf ../packages/$cat/puzzles www/$cat
 
 echo "Cleaning up"
 rm -f $uanswers $usummary $umap
