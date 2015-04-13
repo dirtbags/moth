@@ -63,6 +63,7 @@ pre {
 	border: solid #ddc 2px;
 	padding: 0.25em;
 	font-family: "Ubuntu Mono", monospace;
+	overflow: auto;
 }
 
 code, kbd, samp {
