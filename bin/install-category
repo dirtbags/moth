@@ -172,7 +172,7 @@ echo "Generating summary"
 [ -f $usummary ] && sort -ns $usummary > $outdir/summary.txt
 
 echo "Linking into web space"
-ln -sf ../packages/$cat/puzzles www/$cat
+ln -sf ../packages/$cat/puzzles $outdir/../../www/$cat
 
 echo "Cleaning up"
 rm -f $uanswers $usummary $umap
