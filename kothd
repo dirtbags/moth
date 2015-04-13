@@ -10,4 +10,5 @@ while true; do
 		dir=${i%/*}
 		$dir/bin/once
 	done
+	sleep 5
 done
