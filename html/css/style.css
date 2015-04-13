@@ -12,6 +12,7 @@ html {
 	background: #35170c url(../images/brown-circles.jpg) repeat left bottom;
 	min-height: 100%;
 	font-family: "Maven Pro", Ubuntu, sans-serif;
+	overflow-y: scroll;
 }
 
 
@@ -106,6 +107,14 @@ hr {
 	padding: 0.1em 0.1em;
 }
 
+img {
+	max-width: 100%;
+	transition: all .2s ease;
+}
+
+img:hover {
+	transform: scale(1.5);
+}
 
 /**** Section ****/
 
