@@ -34,7 +34,7 @@ body > h1:first-child {
 
 .readme, pre {
 	background-color: #FFDAA3;
-	border-radius: 2em;
+	border-radius: 0.5em;
 }
 
 
