@@ -156,6 +156,7 @@ main(int argc, char *argv[])
   printf("</dl>\n");
 
   printf("<p>New puzzles are unlocked when any team answers the highest-scoring puzzle in a category.</p>");
+  printf("<p>Are you using Windows? You have our pity. But you might enjoy a program called <samp>wget</samp>, which will allow you to download every open puzzle with a single <samp>wget -r</samp>!</p>");
   cgi_foot();
 
   return 0;
