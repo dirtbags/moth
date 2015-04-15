@@ -207,6 +207,11 @@ cgi_foot()
 	printf("<li><a href=\"puzzles.html\">Puzzles</a></li>\n");
 	printf("<li><a href=\"scoreboard.html\">Scoreboard</a></li>\n");
 	printf("</ul></nav>\n");
+	printf("<section id=\"sponsors\">\n");
+	printf("<img src=\"images/lanl.png\" alt=\"Los Alamos National Laboratory\">\n");
+	printf("<img src=\"images/doe.png\" alt=\"US Department Of Energy\">\n");
+	printf("<img src=\"images/sandia.png\" alt=\"Sandia National Laboratories\">\n");
+	printf("</section>\n");
 	printf("</body></html>\n");
 
 }
