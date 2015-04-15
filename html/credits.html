@@ -3,6 +3,26 @@
 	<head>
 		<title>The Credits</title>
 		<link rel="stylesheet" href="css/style.css" type="text/css">
+		<script>
+function shuf (ul) {
+	var lists = document.getElementsByClassName("shuf");
+	for (var l = 0; l < lists.length; l += 1) {
+		var ul = lists[l];
+		
+		for (var i = ul.children.length; i >= 0; i--) {
+			ul.appendChild(ul.children[Math.random() * i | 0]);
+		}
+	}
+}
+
+function init() {
+	shuf();
+	setInterval(shuf, 2000);
+}
+
+window.addEventListener("load", init);
+
+		</script>
 	</head>
 	<body>
 		<h1>Credits</h1>
@@ -10,7 +30,8 @@
 		<section>
 			<h2>Created By</h2>
 	
-			<ul>
+			<ul class="shuf">
+				<!-- Added in order of date -->
 				<li>Neale Pickett</li>
 				<li>Aaron McPhall</li>
 				<li>Ken S</li>
@@ -25,13 +46,17 @@
 				<li>Curtis Hash</li>
 				<li>Erin Ochoa</li>
 				<li>William Phillips</li>
-				<li>Should your name be here?	Please remind me!</li>
+				<li>Jeremy Hefner</li>
 			</ul>
+			
+			<p>
+				Should your name be here? Please remind me!
+			</p>
 		</section>
 		
 		<section>
 			<h2>Inspiration</h2>
-			<ul>
+			<ul class="shuf">
 				<li>DC949</li>
 				<li>Tube Warriors</li>
 				<li>Sandia National Laboratories</li>
@@ -45,7 +70,7 @@
 				thousands of lines of code from free software authors around the
 				world, including:
 			</p>
-			<ul>
+			<ul class="shuf">
 				<li>Busybox</li>
 				<li>Linux</li>
 				<li>dnsmasq</li>
