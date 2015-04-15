@@ -62,9 +62,9 @@ EOF
 		</section>
 		<address>Puzzle by <span class="author" data-handle="$author">$author</span></address>
 		<section id="sponsors">
-			<img src="images/lanl.png" alt="Los Alamos National Laboratory">
-			<img src="images/doe.png" alt="US Department Of Energy">
-			<img src="images/sandia.png" alt="Sandia National Laboratories">
+			<img src="../../images/lanl.png" alt="Los Alamos National Laboratory">
+			<img src="../../images/doe.png" alt="US Department Of Energy">
+			<img src="../../images/sandia.png" alt="Sandia National Laboratories">
 		</section>
 	</body>
 </html>
