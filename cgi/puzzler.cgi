@@ -3,4 +3,9 @@
 local cgi = require "cgi"
 
 cgi.init()
-print(cgi.item())
+fields = cgi.fields()
+print("Content-type: text/html")
+print()
+print("<pre>")
+print(fields["t"])
+print("</pre>")
