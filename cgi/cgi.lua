@@ -26,17 +26,30 @@ function getc_get()
 	end
 end
 
-function cgi.http_error(code, name, info)
-	print(code .. " " .. name)
-	print("Allow: GET POST")
-	print("Content-type: text/html")
-	print()
-	print("<h1>" .. code .. " " .. name .. "</h1>")
-	print("<p>" .. info .. "</p>")
-	os.exit(0)
+function read_hex()
+	local a = getc() or 0
+	local b = getc() or 0
+
+	return string.char(tonumber(a, 16)*16 + tonumber(b, 16))
 end
 
-function cgi.init()
+function item()
+	local val = ""
+
+	while (true) do
+		local c = getc()
+		if ((c == nil) or (c == "=") or (c == "&")) then
+			return val
+		elseif (c == "%") then
+			c = read_hex()
+		elseif (c == "+") then
+			c = " "
+		end
+		val = val .. c
+	end
+end
+
+function init()
 	method = os.getenv("REQUEST_METHOD")
 	if (method == "POST") then
 		if (os.getenv("HTTP_CONTENT_TYPE") ~= "application/x-www-form-urlencoded") then
@@ -60,43 +73,28 @@ function cgi.init()
 	else
 		cgi.http_error(405, "Method not allowed", "I only do GET and POST.")
 	end
-end
-
-function cgi.read_hex()
-	local a = getc() or 0
-	local b = getc() or 0
-
-	return string.char(tonumber(a, 16)*16 + tonumber(b, 16))
-end
-
-function cgi.item()
-	local val = ""
-
-	while (true) do
-		local c = getc()
-		if ((c == nil) or (c == "=") or (c == "&")) then
-			return val
-		elseif (c == "%") then
-			c = read_hex()
-		elseif (c == "+") then
-			c = " "
-		end
-		val = val .. c
-	end
-end
-
-function cgi.fields()
-	local ret = {}
 	
+	cgi.fields = {}
 	while (true) do
-		local k = cgi.item()
-		local v = cgi.item()
+		local k = item()
+		local v = item()
 		
 		if (k == "") then
-			return ret
+			break
 		end
-		ret[k] = v
+		cgi.fields[k] = v
 	end
+end
+
+
+function cgi.http_error(code, name, info)
+	print(code .. " " .. name)
+	print("Allow: GET POST")
+	print("Content-type: text/html")
+	print()
+	print("<h1>" .. code .. " " .. name .. "</h1>")
+	print("<p>" .. info .. "</p>")
+	os.exit(0)
 end
 
 function cgi.escape(s)
@@ -105,5 +103,7 @@ function cgi.escape(s)
 	s = string.gsub(s, ">", "&gt;")
 	return s
 end
+
+init()
 
 return cgi
