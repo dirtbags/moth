@@ -41,5 +41,32 @@ function koth.page(title, body)
 	os.exit(0)
 end
 
+--
+-- We're going to rely on `bin/once` only processing files with the right number of lines.
+--
+function koth.award_points(team, category, points, comment)
+	local filename = team .. "." .. category .. "." points
+	local entry = team .. " " .. category .. " " .. points
+	
+	if (comment) then
+		entry = entry .. " " .. comment
+	end
+	
+	local ok = anchored_search("../state/points.log", entry, " ")
+	if (not ok) then
+		return false, "Points already awarded"
+	end
+	
+	local f = io.open("../state/points.new/" .. filename, "a")
+	if (not f) then
+		return false, "Unable to write to points file"
+	end
+	
+	f:write(os.time(), " ", entry, "\n")
+	f:close()
+	
+	return true
+end
+
 
 return koth

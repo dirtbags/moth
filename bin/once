@@ -15,6 +15,9 @@ fi
 
 # Collect new points
 find state/points.new -type f | while read fn; do
+	# Skip partially-written files
+	[ $(wc -l $fn) -eq 1 ] || continue
+	
 	cat $fn >> state/points.log
 	rm $fn
 done
