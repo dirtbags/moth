@@ -20,11 +20,13 @@ if (not found) then
 	koth.page("Wrong answer")
 end
 
-local ok = koth.award_points(team, category, points, "P");
+local ok, err = koth.award_points(team, category, points)
 if (not ok) then
-	koth.page("Error awarding points", "You got the right answer, but something blew up trying to give you points. Try again in a few seconds.")
+	koth.page("Error awarding points",
+	"<p>You got the right answer, but something blew up trying to give you points.</p>" ..
+	"<p>" .. err .. "</p>")
 end
 
 koth.page("Points awarded",
-	"<p>" .. points .. " points for " .. team .. ".</p>" ..
+	"<p>" .. points .. " points for " .. team .. "!</p>" ..
 	"<p><a href=\"puzzles.html\">Back to puzzles</a></p>")
