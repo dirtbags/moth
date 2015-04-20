@@ -3,8 +3,13 @@
 local koth = {}
 
 -- cut -d$ANCHOR -f2- | grep -Fx "$NEEDLE"
-function anchored_search(haystack, needle, anchor)
-	for line in io.lines(haystack) do
+function koth.anchored_search(haystack, needle, anchor)
+	local f, err = io.open(haystack)
+	if (not f) then
+		return false, err
+	end
+	
+	for line in f:lines() do
 		if (anchor) then
 			pos = line:find(anchor)
 			if (pos) then
@@ -13,17 +18,13 @@ function anchored_search(haystack, needle, anchor)
 		end
 		
 		if (line == needle) then
+			f:close()
 			return true
 		end
 	end
 	
+	f:close()
 	return false
-end
-
-function koth.anchored_search(haystack, needle, anchor)
-	local ok, ret = pcall(anchored_search, haystack, needle, anchor)
-	
-	return ok and ret
 end
 
 function koth.page(title, body)
@@ -53,6 +54,8 @@ end
 -- We're going to rely on `bin/once` only processing files with the right number of lines.
 --
 function koth.award_points(team, category, points, comment)
+	team = team:gsub("[^0-9a-f]", "-")
+	
 	local filename = team .. "." .. category .. "." .. points
 	local entry = team .. " " .. category .. " " .. points
 	
@@ -60,8 +63,15 @@ function koth.award_points(team, category, points, comment)
 		entry = entry .. " " .. comment
 	end
 	
-	local ok = anchored_search("../state/points.log", entry, " ")
-	if (not ok) then
+	local f = io.open("../state/teams/" .. team)
+	if (f) then
+		f:close()
+	else
+		return false, "No such team"
+	end
+	
+	local ok = koth.anchored_search("../state/points.log", entry, " ")
+	if (ok) then
 		return false, "Points already awarded"
 	end
 	
