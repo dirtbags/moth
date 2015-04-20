@@ -28,31 +28,12 @@ copy () {
 	fi
 }
 
-cc () {
-	target=$DESTDIR/bin/$(basename $1 .c)
-	if older $target $@; then
-		src=$1; shift
-		echo "CC $src"
-		gcc -Wall -Werror -o $target $@ $src
-	fi
-}
-
 web () {
 	target=$DESTDIR/www/${1#*/}
 	if older $target $1; then
 		echo "WEB $1"
 		mkdir -p $(dirname $target)
 		cp $1 $target
-	fi
-}
-
-cgi () {
-	target=$DESTDIR/www/$(basename $1 .c)
-	if older $target src/common.c $@; then
-		mkdir -p $(dirname $target)
-		src=$1; shift
-		echo "CGI $src"
-		gcc -Wall -Werror -o $target $@ src/common.c $src
 	fi
 }
 
@@ -96,18 +77,8 @@ git ls-files | while read fn; do
 	bin/*)
 		copy $fn
 		;;
-	src/common.c)
-		;;
-	src/*.h)
-		;;
-	src/pointscli.c)
-		cc $fn src/common.c
-		;;
-	src/*.cgi.c)
-		cgi $fn
-		;;
-	src/*.c)
-		cc $fn
+	cgi/*)
+		copy $fn
 		;;
 	*)
 		echo "??? $fn"

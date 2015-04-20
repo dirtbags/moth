@@ -45,7 +45,7 @@ end
 -- We're going to rely on `bin/once` only processing files with the right number of lines.
 --
 function koth.award_points(team, category, points, comment)
-	local filename = team .. "." .. category .. "." points
+	local filename = team .. "." .. category .. "." .. points
 	local entry = team .. " " .. category .. " " .. points
 	
 	if (comment) then

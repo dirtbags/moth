@@ -1,0 +1,16 @@
+#! /bin/sh
+
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+	echo "Usage: $0 TEAM CATEGORY POINTS [COMMENT]"
+	exit 1
+fi
+
+cd $(dirname $0)/../state
+
+if grep -q "^[0-9]* $1 $2 $3 $4" points.log; then
+	echo "Points already awarded"
+	exit 1
+fi
+
+now=$(date +%s)
+echo "$now $1 $2 $3 cli:$4" > points.new/$now.$$
