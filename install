@@ -28,15 +28,6 @@ copy () {
 	fi
 }
 
-web () {
-	target=$DESTDIR/www/${1#*/}
-	if older $target $1; then
-		echo "WEB $1"
-		mkdir -p $(dirname $target)
-		cp $1 $target
-	fi
-}
-
 setup() {
 	[ -d $DESTDIR/state ] && return
 	echo "SETUP"
@@ -71,8 +62,8 @@ git ls-files | while read fn; do
 		;;
 	doc/*)
 		;;
-	html/*)
-		web $fn
+	www/*)
+		copy $fn
 		;;
 	bin/*)
 		copy $fn
