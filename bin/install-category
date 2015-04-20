@@ -27,7 +27,7 @@ template () {
 	<head>
 		<meta charset="UTF-8">
 		<title>$cat $points</title>
-		<link rel="stylesheet" href="/../../css/style.css" type="text/css">
+		<link rel="stylesheet" href="../../style.css">
 	</head>
 	<body>
 		<h1>$cat for $points points</h1>
