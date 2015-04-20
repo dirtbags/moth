@@ -43,5 +43,6 @@ for cat, biggest in pairs(max_by_cat) do
 	body = body .. "</dd>\n"
 end
 body = body .. "</dl>\n"
+body = body .. "<p>Reloading this page periodically may yield updated puzzle lists.</p>"
 
 koth.page("Open Puzzles", body)

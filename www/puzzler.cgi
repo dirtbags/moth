@@ -13,17 +13,17 @@ category = category:gsub("[^A-Za-z0-9]", "-")
 
 -- Check answer
 local needle = points .. " " .. answer
-local haystack = "../puzzles/" .. category .. "/answers.txt"
-local found = koth.anchored_search(haystack, needle)
+local haystack = "../packages/" .. category .. "/answers.txt"
+local found, err = koth.anchored_search(haystack, needle)
 
 if (not found) then
-	koth.page("Wrong answer")
+	koth.page("Wrong answer", err)
 end
 
 local ok, err = koth.award_points(team, category, points)
 if (not ok) then
 	koth.page("Error awarding points",
-	"<p>You got the right answer, but something blew up trying to give you points.</p>" ..
+	"<p>You got the right answer, but there was a problem trying to give you points:</p>" ..
 	"<p>" .. err .. "</p>")
 end
 
