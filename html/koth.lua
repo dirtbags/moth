@@ -27,16 +27,24 @@ function koth.anchored_search(haystack, needle, anchor)
 end
 
 function koth.page(title, body)
-	print("Content-type: text/html")
-	print()
+	if (os.getenv("REQUEST_METHOD")) then
+		print("Content-type: text/html")
+		print()
+	end
 	print("<!DOCTYPE html>")
-	print("<html><head><title>" .. title .. "</title><link rel=\"stylesheet\" href=\"css/style.css\"></head>")
+	print("<html><head><title>" .. title .. "</title><link rel=\"stylesheet\" href=\"style.css\"></head>")
 	print("<body><h1>" .. title .. "</h1>")
 	if (body) then
 		print("<section>")
 		print(body)
 		print("</section>")
 	end
+	print([[<section id="sponsors">
+			<img src="images/lanl.png" alt="Los Alamos National Laboratory">
+			<img src="images/doe.png" alt="US Department Of Energy">
+			<img src="images/sandia.png" alt="Sandia National Laboratories">
+		</section>]])
+
 	print("</body></html>")
 	os.exit(0)
 end
