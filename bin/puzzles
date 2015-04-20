@@ -1,6 +1,6 @@
 #! /usr/bin/lua
 
-package.path = "cgi/?.lua"
+package.path = "www/?.lua"
 local koth = require "koth"
 
 local max_by_cat = {}

@@ -77,9 +77,6 @@ git ls-files | while read fn; do
 	bin/*)
 		copy $fn
 		;;
-	cgi/*)
-		copy $fn
-		;;
 	*)
 		echo "??? $fn"
 		;;
