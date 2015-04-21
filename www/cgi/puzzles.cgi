@@ -14,7 +14,7 @@ f:close()
 
 
 for line in io.lines(koth.path("state/points.log")) do
-	local ts, team, cat, points, comment = line:match("^(%d+) (%w+) (%w+) (%d+) ?(.*)")
+	local ts, team, cat, points, comment = line:match("^(%d+) (%w+) ([%w-]+) (%d+) ?(.*)")
 	points = tonumber(points) or 0
 	
 	-- Skip scores for removed categories
