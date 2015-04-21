@@ -53,7 +53,7 @@ EOF
 
 	cat <<EOF
 		<section id="form">
-			<form id="puzzler" action="/puzzler.cgi" method="post" accept-charset="utf-8" autocomplete="off">
+			<form id="puzzler" action="../../cgi/puzzler.cgi" method="get" accept-charset="utf-8" autocomplete="off">
 				<input type="hidden" name="c" value="$cat">
 				<input type="hidden" name="p" value="$points">
 				<div>Team hash:<input name="t" size="8"></div>
