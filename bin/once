@@ -11,6 +11,7 @@ fi
 if [ -f reset ]; then
 	rm -f state/teams/* state/points.new/* state/points.tmp/*
 	: > state/points.log
+	rm -f reset
 fi
 
 # Collect new points
