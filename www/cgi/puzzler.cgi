@@ -1,5 +1,7 @@
 #! /usr/bin/lua
 
+package.path = "?.lua;cgi/?.lua;www/cgi/?.lua"
+
 local cgi = require "cgi"
 local koth = require "koth"
 
@@ -13,7 +15,7 @@ category = category:gsub("[^A-Za-z0-9]", "-")
 
 -- Check answer
 local needle = points .. " " .. answer
-local haystack = "../packages/" .. category .. "/answers.txt"
+local haystack = koth.path("packages/" .. category .. "/answers.txt")
 local found, err = koth.anchored_search(haystack, needle)
 
 if (not found) then

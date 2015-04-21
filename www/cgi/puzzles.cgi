@@ -1,18 +1,19 @@
 #! /usr/bin/lua
 
-package.path = "www/?.lua"
+package.path = "?.lua;cgi/?.lua;www/cgi/?.lua"
+
 local koth = require "koth"
 
 local max_by_cat = {}
 
-local f = io.popen("ls packages")
+local f = io.popen("ls " .. koth.path("packages"))
 for cat in f:lines() do
 	max_by_cat[cat] = 0
 end
 f:close()
 
 
-for line in io.lines("state/points.log") do
+for line in io.lines(koth.path("state/points.log")) do
 	local ts, team, cat, points, comment = line:match("^(%d+) (%w+) (%w+) (%d+) ?(.*)")
 	points = tonumber(points) or 0
 	
@@ -28,11 +29,11 @@ for cat, biggest in pairs(max_by_cat) do
 
 	body = body .. "<dt>" .. cat .. "</dt>"
 	body = body .. "<dd>"
-	for line in io.lines("packages/" .. cat .. "/map.txt") do
+	for line in io.lines(koth.path("packages/" .. cat .. "/map.txt")) do
 		points, dirname = line:match("^(%d+) (.*)")
 		points = tonumber(points)
 		
-		body = body .. "<a href=\"" .. cat .. "/" .. dirname .. "/index.html\">" .. points .. "</a> "
+		body = body .. "<a href=\"../" .. cat .. "/" .. dirname .. "/index.html\">" .. points .. "</a> "
 		if (points > biggest) then
 			break
 		end

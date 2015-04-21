@@ -9,7 +9,7 @@ function loadJSON(url, callback) {
 	xhr.send();
 }
 
-function scoreboard(element) {
+function scoreboard(element, continuous) {
 	function update(state) {
 		var teamnames = state["teams"];
 		var pointslog = state["points"];
@@ -100,5 +100,11 @@ function scoreboard(element) {
 		}
 	}
 	
-	loadJSON("points.json", update);
+	function once() {
+		loadJSON("points.json", update);
+	}
+	if (continuous) {
+		setInterval(once, 60000);
+	}
+	once();
 }
