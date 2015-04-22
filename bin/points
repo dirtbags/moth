@@ -32,7 +32,7 @@ END {
 	print "  ],";
 	print "  \"teams\": {";
 
-	for (i in teamnames) {
+	for (i = 1; i <= nteams; i += 1) {
 		if (i > 1) {
 			print ",";
 		}
