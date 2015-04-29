@@ -31,4 +31,4 @@ end
 
 koth.page("Points awarded",
 	"<p>" .. points .. " points for " .. team .. "!</p>" ..
-	"<p><a href=\"puzzles.html\">Back to puzzles</a></p>")
+	"<p><a href=\"../puzzles.html\">Back to puzzles</a></p>")
