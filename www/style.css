@@ -9,7 +9,8 @@ Tan: #e1caa5
 @import "fonts/maven_pro.css";
 
 html {
-	background: #35170c url(images/brown-circles.jpg) repeat left bottom;
+	background: #35170c url(images/tf6bg.png) center top;
+	background-repeat: repeat-x;
 	min-height: 100%;
 	font-family: "Maven Pro", Ubuntu, sans-serif;
 	overflow-y: scroll;
@@ -24,13 +25,16 @@ h1, h2, h3 {
 
 body > h1:first-child {
 	color: #96d1e3;
-	background: #35170c;
 	font-size: 3em;
 	border-radius: 0.2em;
 	padding: 0 0.3em;
 	text-align: center;
 	max-width: 66%;
 	margin: 0.5em auto;
+}
+
+body > h1:first-child img {
+	max-width: 66%;
 }
 
 .readme, pre {
