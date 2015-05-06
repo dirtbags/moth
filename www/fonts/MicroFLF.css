@@ -1,0 +1,14 @@
+@font-face {
+    font-family: 'MicroFLF';
+    src: url('MicroFLF.ttf');
+    font-weight: 500;
+    font-style: normal;
+
+}
+
+@font-face {
+    font-family: 'MicroFLF';
+    src: url('MicroFLF-Bold.ttf');
+    font-weight: 700;
+    font-style: normal;
+}
