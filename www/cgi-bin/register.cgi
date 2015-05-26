@@ -1,4 +1,4 @@
-#! /usr/bin/lua
+#! /usr/bin/env lua
 
 package.path = "?.lua;cgi-bin/?.lua;www/cgi-bin/?.lua"
 
