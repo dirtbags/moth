@@ -45,7 +45,7 @@ setup() {
 
 
 echo "Figuring out web user..."
-for www in www-data http _; do
+for www in www-data http tc _; do
 	id $www && break
 done
 if [ $www = _ ]; then
