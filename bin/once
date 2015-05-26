@@ -24,7 +24,7 @@ find state/points.new -type f | while read fn; do
 done
 
 # Generate new puzzles.html
-if www/cgi/puzzles.cgi > www/puzzles.new; then
+if www/cgi-bin/puzzles.cgi > www/puzzles.new; then
 	mv www/puzzles.new www/puzzles.html
 fi
 
