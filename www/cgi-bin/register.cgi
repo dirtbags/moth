@@ -1,6 +1,6 @@
 #! /usr/bin/lua
 
-package.path = "?.lua;cgi/?.lua;www/cgi/?.lua"
+package.path = "?.lua;cgi-bin/?.lua;www/cgi-bin/?.lua"
 
 
 local cgi = require "cgi"
