@@ -17,14 +17,14 @@ BEGIN {
 		teamno = ++nteams;
 		teams[hash] = teamno;
 		
-		getline teamnames[teamno] < ("state/teams/" hash)
+		getline teamnames[hash] < ("state/teams/" hash)
 	}
 	
 	if (NR > 1) {
 		# JSON sucks.
 		print ",";
 	}
-	printf("[%d, \"%d\", \"%s\", %d]", ts, teamno, cat, points);
+	printf("[%d, \"%s\", \"%s\", %d]", ts, hash, cat, points);
 }
 
 END {
@@ -32,11 +32,12 @@ END {
 	print "  ],";
 	print "  \"teams\": {";
 
-	for (i = 1; i <= nteams; i += 1) {
-		if (i > 1) {
-			print ",";
-		}
-		printf("\"%d\": \"%s\"", i, teamnames[i]);
+	i = 0
+	for (hash in teamnames) {
+	    if (i++) {
+		print ",";
+	    }
+	    printf("\"%s\": \"%s\"", hash, teamnames[hash]);
 	}
 	
 	print "";
