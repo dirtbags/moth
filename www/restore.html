@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Scoreboard</title>
+		<link rel="stylesheet" href="style.css" type="text/css">
+		<script src="scoreboard.js" async></script>
+		<script>
+function init() {
+	var pointslog = JSON.parse(localStorage.getItem("points"));
+  for (point in points){
+    console.log(point);
+  }
+}
+
+window.addEventListener("load", init);
+		</script>
+	</head>
+	<body>
+		<h1>Scoreboard</h1>
+		<div id="scoreboard"></div>
+	</body>
+</html>
