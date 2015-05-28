@@ -1,22 +1,31 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Scoreboard</title>
-		<link rel="stylesheet" href="style.css" type="text/css">
-		<script src="scoreboard.js" async></script>
+		<title>Points History</title>
 		<script>
 function init() {
-	var pointslog = JSON.parse(localStorage.getItem("points"));
-  for (point in points){
-    console.log(point);
+
+  function getParameterByName(name) {
+      name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+          results = regex.exec(location.search);
+      return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
   }
+
+  var pointsDiv = document.getElementById("pointslog");
+	var pointshistory = JSON.parse(localStorage.getItem("pointshistory"));
+  // get snapshot specified by query param or else most recent snapshot
+  var i = parseInt(getParameterByName("snapshot")) || pointshistory.length-1;
+  var snapshot = pointshistory[i];
+  pointsDiv.innerHTML = snapshot.map(function(entry){
+    return entry.join(" ");
+  }).join("<br>");
 }
 
 window.addEventListener("load", init);
 		</script>
 	</head>
 	<body>
-		<h1>Scoreboard</h1>
-		<div id="scoreboard"></div>
+		<div id="pointslog"></div>
 	</body>
 </html>
