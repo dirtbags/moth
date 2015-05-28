@@ -40,12 +40,11 @@ function koth.page(title, body)
 		print(body)
 		print("</section>")
 	end
-	print([[<section id="sponsors">
-			<img src="../images/lanl.png" alt="Los Alamos National Laboratory">
-			<img src="../images/doe.png" alt="US Department Of Energy">
-			<img src="../images/sandia.png" alt="Sandia National Laboratories">
-		</section>]])
-
+	print('<section id="sponsors">')
+	print('<img src="../images/lanl.png" alt="Los Alamos National Laboratory">')
+	print('<img src="../images/doe.png" alt="US Department Of Energy">')
+	print('<img src="../images/sandia.png" alt="Sandia National Laboratories">')
+	print('</section>')
 	print("</body></html>")
 	os.exit(0)
 end
@@ -55,7 +54,10 @@ end
 --
 function koth.award_points(team, category, points, comment)
 	team = team:gsub("[^0-9a-f]", "-")
-	
+	if (team == "") then
+		team = "-"
+	end
+
 	local filename = team .. "." .. category .. "." .. points
 	local entry = team .. " " .. category .. " " .. points
 	
