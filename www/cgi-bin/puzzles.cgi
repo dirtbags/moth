@@ -44,6 +44,14 @@ for cat, biggest in pairs(max_by_cat) do
 	body = body .. "</dd>\n"
 end
 body = body .. "</dl>\n"
+body = body .. "<fieldset><legend>Sandia Token:</legend>"
+body = body .. "<p>Example: <samp>sandia:5:xylep-radar-nanox</samp></p>"
+body = body .. "<form action='cgi-bin/token.cgi'>"
+body = body .. "Team Hash: <input name='t'><br>"
+body = body .. "Token: <input name='k'>"
+body = body .. "<input type='submit'>"
+body = body .. "</form>"
+body = body .. "</fieldset>"
 body = body .. "<p>Reloading this page periodically may yield updated puzzle lists.</p>"
 
 koth.page("Open Puzzles", body)
