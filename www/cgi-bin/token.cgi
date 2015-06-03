@@ -8,9 +8,6 @@ local koth = require "koth"
 local team = cgi.fields['t'] or ""
 local token = cgi.fields['k'] or ""
 
--- Defang category name; prevent directory traversal
-category = category:gsub("[^A-Za-z0-9]", "-")
-
 -- Check answer
 local needle = token
 local haystack = koth.path("tokens.txt")
@@ -20,11 +17,14 @@ if (not found) then
 	koth.page("Unrecognized token", err)
 end
 
-local category, points = token.match("^(.*):(.*):")
-if ((category == nil) || (points == nil)) then
+local category, points = token:match("^(.*):(.*):")
+if ((category == nil) or (points == nil)) then
 	koth.page("Unrecognized token", "Something doesn't look right about that token")
 end
 points = tonumber(points)
+
+-- Defang category name; prevent directory traversal
+category = category:gsub("[^A-Za-z0-9]", "-")
 
 local ok, err = koth.award_points(team, category, points, token)
 if (not ok) then
