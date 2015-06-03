@@ -1,11 +1,11 @@
 #! /bin/sh -e
 
-indir=$1; shift
-
-if ! [ -d $indir ]; then
+indir=$1
+if ! [ -n "$indir" -a -d $indir ]; then
 	echo "Usage: $0 PUZZLEDIR"
 	exit 1
 fi
+shift
 
 die () {
 	echo "$@" 1>&2
