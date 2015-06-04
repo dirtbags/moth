@@ -20,7 +20,7 @@
       }
     </style>
 		<script>
-var SECS = 1000;
+var SECS = 1000, DELAY = 30*SECS;
 var urls = ["scoreboard.html"];
 var stack = [];
 var i = 0;
@@ -30,10 +30,13 @@ if (window.XMLHttpRequest){
 }
 xmlhttp.onreadystatechange = function(){
 	if (xmlhttp.readyState == 4 && xmlhttp.status == 200){
+		// update urls
 		urls = JSON.parse(xmlhttp.responseText);
-		//console.log("new urls:", urls);
+		console.log("new urls:", urls);
 	}
 }
+xmlhttp.open("GET", "projections.json", true);
+xmlhttp.send();
 function reload() {
   // alternate between scoreboard and other things
 	if (i%2){
@@ -51,14 +54,14 @@ function reload() {
 			}
 		}
 		url = stack.pop();
+		console.log("loading " + url + " of " + urls);
 	}
-	console.log("loading " + url + " of " + urls);
 	document.getElementById("reloader").src = url;
 	i++;
 }
 
 function init() {
-	setInterval(reload, 2*SECS);
+	setInterval(reload, DELAY);
 }
 
 window.addEventListener("load", init);
