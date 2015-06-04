@@ -20,18 +20,23 @@
       }
     </style>
 		<script>
-			var i = 0;
-      function init() {
-				setInterval(function(){
-					window.document.getElementById('reloader').src = window.document.getElementById('reloader').src;
-        },2000);
-      }
+var urls = ["scoreboard.html", "credits.html", "tanks.html"];
+var i = 0;
+function reload() {
+  // alternate between scoreboard and other things
+  var url = i%2 ? urls[0] : urls[i%urls.length];
+	document.getElementById('reloader').src = url;
+  i++;
+}
 
-      window.addEventListener("load", init);
+function init() {
+	window.timeout = setTimeout(reload, 6000);
+}
+
+window.addEventListener("load", init);
 		</script>
 	</head>
 	<body>
-    <iframe id="reloader" src="//koth/scoreboard.html">
-		<div id="scoreboard"></div>
+		<iframe id="reloader" src="scoreboard.html"></iframe>
 	</body>
 </html>
