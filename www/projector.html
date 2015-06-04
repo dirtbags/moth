@@ -22,6 +22,7 @@
 		<script>
 var urls = ["scoreboard.html", "credits.html", "tanks.html"];
 var stack = [];
+var secs = 1000;
 var i = 0;
 function reload() {
   // alternate between scoreboard and other things
@@ -34,11 +35,11 @@ function reload() {
 		}
 		url = stack.pop();
 	}
-	console.log("loading " + url);
+	document.getElementById("reloader").src = url;
 }
 
 function init() {
-	setInterval(reload, 60000);
+	setInterval(reload, 60*secs);
 }
 
 window.addEventListener("load", init);
