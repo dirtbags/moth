@@ -9,7 +9,7 @@ function shuf (ul) {
 	var lists = document.getElementsByClassName("shuf");
 	for (var l = 0; l < lists.length; l += 1) {
 		var ul = lists[l];
-		
+
 		for (var i = ul.children.length; i >= 0; i--) {
 			ul.appendChild(ul.children[Math.random() * i | 0]);
 		}
@@ -27,10 +27,10 @@ window.addEventListener("load", init);
 	</head>
 	<body>
 		<h1>Credits</h1>
-		
+
 		<section>
 			<h2>Created By</h2>
-	
+
 			<ul class="shuf">
 				<!-- Added in order of date -->
 				<li>Neale Pickett</li>
@@ -48,13 +48,14 @@ window.addEventListener("load", init);
 				<li>Erin Ochoa</li>
 				<li>William Phillips</li>
 				<li>Jeremy Hefner</li>
+				<li>James Wernicke</li>
 			</ul>
-			
+
 			<p>
 				Should your name be here? Please remind me!
 			</p>
 		</section>
-		
+
 		<section>
 			<h2>Inspiration</h2>
 			<ul class="shuf">
@@ -63,7 +64,7 @@ window.addEventListener("load", init);
 				<li>Sandia National Laboratories</li>
 			</ul>
 		</section>
-		
+
 		<section>
 			<h2>Thanks</h2>
 			<p>
