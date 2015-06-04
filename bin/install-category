@@ -73,7 +73,7 @@ EOF
 }
 
 cat=$(basename $indir)
-outdir=$(dirname $0)/../packages/$cat
+outdir=$(dirname $(dirname $0))/packages/$cat
 uanswers=$outdir/answers.unsorted
 usummary=$outdir/summary.unsorted
 umap=$outdir/map.unsorted
@@ -100,7 +100,7 @@ for dn in $indir/[0-9]*; do
 
 	if [ -f $dn/Makefile ]; then
 		# If there's a Makefile, run make
-		make DESTDIR=$(pwd)/$tgt -C $dn || exit 1
+		make DESTDIR=$tgt -C $dn || exit 1
 		files=$(ls -1 $tgt | grep -v index.html || true)
 	elif [ -f $dn/00manifest.txt ]; then
 		# If there's a manifest, use that
