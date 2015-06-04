@@ -13,7 +13,7 @@
       }
       iframe {
         width: 100%;
-        height: 100;
+        height: 100%;
         border: none;
         margin: 0;
         padding: 0;
@@ -21,16 +21,15 @@
     </style>
 		<script>
       function init() {
-        setTimeout(function(){
-          window.document.getElementById('reloader').src = window.document.getElementById('reloader').src;
-        },60000);
+				setInterval(function(){
+					window.document.getElementById('reloader').src = window.document.getElementById('reloader').src;
+        },2000);
       }
-
       window.addEventListener("load", init);
 		</script>
 	</head>
 	<body>
-    <iframe id="reloader" src="http://localhost/tf6/scoreboard.html">
+    <iframe id="reloader" src="//koth/scoreboard.html">
 		<div id="scoreboard"></div>
 	</body>
 </html>
