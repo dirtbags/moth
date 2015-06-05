@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Getopt::Std;
+use Digest::BubbleBabble qw{bubblebabble};
+
+sub readch {
+	my ($chars, $fh) = @_;
+	my $retval = '';
+	sysread $fh, $retval, $chars;
+	return $retval;
+}
+
+sub usage {
+	my ($msg) = @_;
+	print <<'EOB';
+Usage: token-hash [options] count
+    -c    category name
+    -s    size of token hash [default: 8]
+EOB
+	die "\n[x] $msg\n" if $msg;
+	exit 0;
+}
+
+my $count = 1;
+my $size  = 8;
+my $cat   = '';
+
+my %options=();
+getopts("c:s:h", \%options);
+usage("not enough arguments!") unless scalar @ARGV > 0;
+usage() if $options{h};
+
+$cat   = "$options{c}:1:" if $options{c} and $options{c} =~ m/\A ([[:alnum:]_-]+) \Z/msix;
+$size  = $options{s}      if $options{s} and $options{s} =~ m/\A (\d+)            \Z/msix;
+$count = $ARGV[0]         if $ARGV[0]    and $ARGV[0]    =~ m/\A (\d+)            \Z/msix;
+
+open my $fh, "<", "/dev/urandom";
+print "[+] Generating $count tokens [$size bytes of entropy]", $cat ? " with prefix '$cat'" : "", $/;
+print $cat, bubblebabble(Digest => readch($size, $fh)), $/ for (1 .. $count);
