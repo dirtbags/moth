@@ -16,11 +16,17 @@ fi
 
 # Collect new points
 find state/points.new -type f | while read fn; do
-	# Skip partially-written files
-	[ $(wc -l < $fn) -eq 1 ] || continue
+	# Skip files opened by another process
+	lsof $fn | grep -q $fn && continue
+
+	# Skip partially written files
+	[ $(wc -l < $fn) -gt 0 ] || continue
 	
-	cat $fn >> state/points.log
-	rm $fn
+	# filter the file for unique awards
+	sort -k 4 $fn | uniq -f 1 | sort -n >> state/points.log
+
+	# Now kill the file
+	rm -f $fn
 done
 
 # Generate new puzzles.html
