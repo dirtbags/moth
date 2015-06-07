@@ -3,7 +3,46 @@ use strict;
 use warnings;
 
 use Getopt::Std;
-use Digest::BubbleBabble qw{bubblebabble};
+use vars qw( $VERSION @VOWELS @CONSONANTS );
+
+$VERSION = '1.0';
+
+# Digest::BubbleBabble from Benjamin Trott, cpan@stupidfool.org
+@VOWELS     = split //, q{aeuioy};
+@CONSONANTS = split //, q{bcdfghklmnprstvzx};
+
+sub bubblebabble {
+    my ($input) = @_;
+	my @dgst = map { ord } split //, $input;
+    my $dlen = length $input;
+
+    my $seed = 1;
+    my $rounds = int($dlen / 2) + 1;
+    my $retval = 'x';
+    for my $i (0..$rounds-1) {
+        if ($i+1 < $rounds || $dlen % 2) {
+            my $idx0 = ((($dgst[2 * $i] >> 6) & 3) + $seed) % 6;
+            my $idx1 =   ($dgst[2 * $i] >> 2) & 15;
+            my $idx2 =  (($dgst[2 * $i] &  3) + $seed / 6) % 6;
+            $retval .= $VOWELS[$idx0] . $CONSONANTS[$idx1] . $VOWELS[$idx2];
+            if ($i+1 < $rounds) {
+                my $idx3 = ($dgst[2 * $i + 1] >> 4) & 15;
+                my $idx4 =  $dgst[2 * $i + 1] & 15;
+                $retval .= $CONSONANTS[$idx3] . q/-/ . $CONSONANTS[$idx4];
+                $seed = ($seed * 5 + $dgst[2 * $i] * 7 +
+                                     $dgst[2 * $i + 1]) % 36;
+            }
+        } else {
+            my $idx0 = $seed % 6;
+            my $idx1 = 16;
+            my $idx2 = $seed / 6;
+            $retval .= $VOWELS[$idx0] . $CONSONANTS[$idx1] . $VOWELS[$idx2];
+        }
+    }
+    $retval .= 'x';
+    return $retval;
+}
+# --- END
 
 sub readch {
 	my ($chars, $fh) = @_;
@@ -28,14 +67,15 @@ my $size  = 8;
 my $cat   = '';
 
 my %options=();
-getopts("c:s:h", \%options);
-usage("not enough arguments!") unless scalar @ARGV > 0;
+getopts('c:s:h', \%options);
+usage('not enough arguments!') unless scalar @ARGV > 0;
 usage() if $options{h};
 
 $cat   = "$options{c}:1:" if $options{c} and $options{c} =~ m/\A ([[:alnum:]_-]+) \Z/msix;
 $size  = $options{s}      if $options{s} and $options{s} =~ m/\A (\d+)            \Z/msix;
 $count = $ARGV[0]         if $ARGV[0]    and $ARGV[0]    =~ m/\A (\d+)            \Z/msix;
 
-open my $fh, "<", "/dev/urandom";
-print "[+] Generating $count tokens [$size bytes of entropy]", $cat ? " with prefix '$cat'" : "", $/;
-print $cat, bubblebabble(Digest => readch($size, $fh)), $/ for (1 .. $count);
+open my $fh, '<', '/dev/urandom';
+print {*STDERR} "[+] Generating $count token", ($count > 1 ? 's' : ''), " [$size bytes of entropy]", $cat ? " with prefix '$cat'" : '', $/;
+print $cat, bubblebabble(readch($size, $fh)), $/ for (1 .. $count);
+close $fh;
