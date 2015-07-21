@@ -9,13 +9,17 @@ Tan: #e1caa5
 @import "fonts/maven_pro.css";
 
 html {
-	background: #35170c url(images/tf6bg.png) center top;
-	background-repeat: repeat-x;
-	min-height: 100%;
+/*	background: #35170c url(images/tf6bg.png) center top;*/
+/*	background-repeat: repeat-x;*/
+  background: #35170c url(images/tf6bg.png) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+/*	min-height: 100%;*/
 	font-family: "Maven Pro", Ubuntu, sans-serif;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
-
 
 h1, h2, h3 {
 	color: #AD6F15;
@@ -236,6 +240,7 @@ nav li + li:before {
 	height: 1.1em;
 }
 
+#scoreboard div * {white-space: nowrap;}
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
 .cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
 .cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
