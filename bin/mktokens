@@ -54,7 +54,7 @@ sub readch {
 sub usage {
 	my ($msg) = @_;
 	print <<'EOB';
-Usage: token-hash [options] count
+Usage: mktokens [options] count
     -c    category name
     -s    size of token hash [default: 8]
 EOB
