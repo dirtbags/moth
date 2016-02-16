@@ -1,9 +1,9 @@
 #! /usr/bin/env lua
 
-local koth = {}
+local moth = {}
 
 -- cut -d$ANCHOR -f2- | grep -Fx "$NEEDLE"
-function koth.anchored_search(haystack, needle, anchor)
+function moth.anchored_search(haystack, needle, anchor)
 	local f, err = io.open(haystack)
 	if (not f) then
 		return false, err
@@ -27,7 +27,7 @@ function koth.anchored_search(haystack, needle, anchor)
 	return false
 end
 
-function koth.page(title, body)
+function moth.page(title, body)
 	if (os.getenv("REQUEST_METHOD")) then
 		print("Content-type: text/html")
 		print()
@@ -52,7 +52,7 @@ end
 --
 -- We're going to rely on `bin/once` only processing files with the right number of lines.
 --
-function koth.award_points(team, category, points, comment)
+function moth.award_points(team, category, points, comment)
 	team = team:gsub("[^0-9a-f]", "-")
 	if (team == "") then
 		team = "-"
@@ -65,19 +65,19 @@ function koth.award_points(team, category, points, comment)
 		entry = entry .. " " .. comment
 	end
 	
-	local f = io.open(koth.path("state/teams/" .. team))
+	local f = io.open(moth.path("state/teams/" .. team))
 	if (f) then
 		f:close()
 	else
 		return false, "No such team"
 	end
 	
-	local ok = koth.anchored_search(koth.path("state/points.log"), entry, " ")
+	local ok = moth.anchored_search(moth.path("state/points.log"), entry, " ")
 	if (ok) then
 		return false, "Points already awarded"
 	end
 	
-	local f = io.open(koth.path("state/points.new/" .. filename), "a")
+	local f = io.open(moth.path("state/points.new/" .. filename), "a")
 	if (not f) then
 		return false, "Unable to write to points file"
 	end
@@ -91,19 +91,19 @@ end
 -- Most web servers cd to the directory containing the CGI.
 -- Not uhttpd.
 
-koth.base = ""
-function koth.path(p)
-	return koth.base .. p
+moth.base = ""
+function moth.path(p)
+	return moth.base .. p
 end
 
 -- Traverse up to find assigned.txt
 for i = 0, 5 do
-	local f = io.open(koth.path("assigned.txt"))
+	local f = io.open(moth.path("assigned.txt"))
 	if (f) then
 		f:close()
 		break
 	end
-	koth.base = koth.base .. "../"
+	moth.base = moth.base .. "../"
 end
 
-return koth
+return moth

@@ -6,7 +6,7 @@ if [ -z "$newdir" ]; then
 	exit 1
 fi
 
-KOTH_BASE=$(cd $(dirname $0)/.. && pwd)
+MOTH_BASE=$(cd $(dirname $0)/.. && pwd)
 
 echo "Figuring out web user..."
 for www in www-data http _; do
@@ -33,5 +33,5 @@ if ! [ -f assigned.txt ]; then
 fi
 
 mkdir -p www
-cp -r $KOTH_BASE/html/* www/
-cp $KOTH_BASE/bin/*.cgi www/
+cp -r $MOTH_BASE/html/* www/
+cp $MOTH_BASE/bin/*.cgi www/
