@@ -33,7 +33,7 @@ function moth.page(title, body)
 		print()
 	end
 	print("<!DOCTYPE html>")
-	print("<html><head><title>" .. title .. "</title><link rel=\"stylesheet\" href=\"../style.css\"><meta name=\"viewport\" content=\"width=device-width\"></head>")
+	print("<html><head><title>" .. title .. "</title><link rel=\"stylesheet\" href=\"style.css\"><meta name=\"viewport\" content=\"width=device-width\"></head>")
 	print("<body><h1>" .. title .. "</h1>")
 	if (body) then
 		print("<section>")

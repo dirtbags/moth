@@ -33,7 +33,7 @@ for cat, biggest in pairs(max_by_cat) do
 		points, dirname = line:match("^(%d+) (.*)")
 		points = tonumber(points)
 		
-		body = body .. "<a href=\"../" .. cat .. "/" .. dirname .. "/index.html\">" .. points .. "</a> "
+		body = body .. "<a href=\"" .. cat .. "/" .. dirname .. "/index.html\">" .. points .. "</a> "
 		if (points > biggest) then
 			break
 		end
