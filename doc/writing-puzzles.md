@@ -95,10 +95,10 @@ but non-listed files you would like.
 
 Special files are:
 
-* index.mdwn: a plain text file formatted with
+* index.md: a plain text file formatted with
   [markdown](http://daringfireball.net/projects/markdown/), displayed
   before the list of normal files in the puzzle directory.
-* key: a plain text file with acceptable answers, one per line.  Answers
+* 00answers.txt: a plain text file with acceptable answers, one per line.  Answers
   are matched exactly (ie. they are case-sensitive).
 * summary: a single line explaining to contest organizers what's going
   on in this puzzle.
@@ -119,7 +119,7 @@ Let's make our 5-point sandwich question!
     > The key ingredients in a sandwich are: bread, spread, and filling.
     > When making a sandwich, you need to first put down one slice of bread,
     > then apply any spreads, and finally add filling.  Popular fillings
-    > include cheese, sprouts, and cold cuts.  When you are done, apply 
+    > include cheese, sprouts, and cold cuts.  When you are done, apply
     > another slice of bread on top, and optionally tie it together with
     > a fancy toothpick.
     >

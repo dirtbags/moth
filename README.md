@@ -32,29 +32,6 @@ If you're using Xubuntu 14.04 LTS, you should have everything you need except
 
 	$ sudo apt-get install lua5.2 -y
 
-You'll also have to figure out a way to serve up CGI. Here's one way to do it
-on Xubuntu 14.04 LTS with [lighttpd](https://lighttpd.net) where the contest is at `/opt/moth/mycontest`:
-
-First, install lighttpd and backup the configuration:
-
-	$ sudo apt-get install lighttpd -y
-	$ cp /etc/lighttpd/lighttpd.conf /etc/lighttpd/lighttpd.conf.orig
-
-Add `mod_cgi` to the `ServerModules` section, an alias, and CGI handling to `/etc/lighttpd/lighttpd.conf`:
-
-	alias.url = ("/moth" => "/opt/moth/mycontest/www")
-	$HTTP["url"] =~ "/moth/" {
-  	cgi.assign = (".cgi" => "/usr/bin/lua")
-	}
-
-Finally, restart your server:
-
-	$ sudo service lighttpd restart
-	* Stopping web server lighttpd  [ OK ]
-	* Starting web server lighttpd  [ OK ]
-
-Your server should now be serving up the contest!
-
 How to set it up
 --------------------
 
@@ -81,11 +58,31 @@ After setting up (see above), just run
 Running It
 -------------
 
-Get your web server to serve up files from
-`/opt/moth/mycontest/www`.
+Get your web server to serve up your contest. Here's one way to do it
+on Xubuntu 14.04 LTS with  [lighttpd](https://lighttpd.net) where the contest is at `/opt/moth/mycontest` and `mothd` is running as user `moth`:
 
-Then run `/opt/moth/mothd`.
+First, install lighttpd and backup the configuration:
 
+	$ sudo apt-get install lighttpd -y
+	$ cp /etc/lighttpd/lighttpd.conf /etc/lighttpd/lighttpd.conf.orig
+
+Add `mod_cgi` to the `ServerModules` section, an alias, and CGI handling to `/etc/lighttpd/lighttpd.conf`:
+
+	alias.url = ("/moth" => "/opt/moth/mycontest/www")
+	$HTTP["url"] =~ "/moth/" {
+  	cgi.assign = (".cgi" => "/usr/bin/lua")
+	}
+
+Restart your server:
+
+	$ sudo service lighttpd restart
+	* Stopping web server lighttpd  [ OK ]
+	* Starting web server lighttpd  [ OK ]
+
+Make sure user `moth` can access contest content and run the daemon.
+
+	$ sudo chown -R moth:moth /opt/moth/mycontest
+	$ sudo -u moth /opt/moth/mothd
 
 Permissions
 ----------------
