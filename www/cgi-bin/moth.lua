@@ -8,7 +8,7 @@ function moth.anchored_search(haystack, needle, anchor)
 	if (not f) then
 		return false, err
 	end
-	
+
 	for line in f:lines() do
 		if (anchor) then
 			pos = line:find(anchor)
@@ -16,13 +16,13 @@ function moth.anchored_search(haystack, needle, anchor)
 				line = line:sub(pos+1)
 			end
 		end
-		
+
 		if (line == needle) then
 			f:close()
 			return true
 		end
 	end
-	
+
 	f:close()
 	return false
 end
@@ -41,9 +41,6 @@ function moth.page(title, body)
 		print("</section>")
 	end
 	print('<section id="sponsors">')
-	print('<img src="../images/lanl.png" alt="Los Alamos National Laboratory">')
-	print('<img src="../images/doe.png" alt="US Department Of Energy">')
-	print('<img src="../images/sandia.png" alt="Sandia National Laboratories">')
 	print('</section>')
 	print("</body></html>")
 	os.exit(0)
@@ -60,31 +57,31 @@ function moth.award_points(team, category, points, comment)
 
 	local filename = team .. "." .. category .. "." .. points
 	local entry = team .. " " .. category .. " " .. points
-	
+
 	if (comment) then
 		entry = entry .. " " .. comment
 	end
-	
+
 	local f = io.open(moth.path("state/teams/" .. team))
 	if (f) then
 		f:close()
 	else
 		return false, "No such team"
 	end
-	
+
 	local ok = moth.anchored_search(moth.path("state/points.log"), entry, " ")
 	if (ok) then
 		return false, "Points already awarded"
 	end
-	
+
 	local f = io.open(moth.path("state/points.new/" .. filename), "a")
 	if (not f) then
 		return false, "Unable to write to points file"
 	end
-	
+
 	f:write(os.time(), " ", entry, "\n")
 	f:close()
-	
+
 	return true
 end
 
