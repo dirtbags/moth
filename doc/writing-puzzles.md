@@ -89,13 +89,14 @@ contains a description of the puzzle.
 Answers are matched exactly (ie. they are case-sensitive).
 * **00author.txt**: A plain text file with the puzzle author's name.
 
-You can add other files to this subdirectory, and they will show up in a list
-below the puzzle description. Sometimes you want files to be accessible, but
-not show up in the list (e.g., images in the puzzle description). In this case,
-you can create a `00manifest.txt` file and add each filename you want to be
-listed on its own line. **Filenames beginning with `00` will ignored.** Any
-file ending with `.cgi` will be run as CGI. You can search the web for [how to
-write a CGI](http://bfy.tw/4PXC). Some available languages are
+You can add other files to this subdirectory, and they will copied to the
+install location and linked to in a list below the puzzle description. If you
+want to explicitly define which files are copied, create a file 
+`00manifest.txt` and add the name of each file to included to its own line. If
+you want files to be copied, but not show up in the list (e.g., images in the
+puzzle description), prepend `,` to the name of the file. Files ending with
+`.cgi` will be run as CGI. You can search the web for
+[how to write a CGI](http://bfy.tw/4PXC). Some available languages are
 [Python](http://python.org), [LUA](http://lua.org), and
 [Bourne Shell](http://bfy.tw/4PXJ).
 
@@ -113,7 +114,7 @@ Let's make our 5-point sandwich question!
     > include cheese, sprouts, and cold cuts.  When you are done, apply
     > another slice of bread on top, and optionally tie it together with
     > a fancy toothpick.
-    > ![](sandwich.jpg)
+    > ![](,sandwich.jpg)
     > Now that you know the basics of sandwich-making, it's time for a
     > question!  How many slices of bread are in a sandwich?
     > EOD
@@ -123,6 +124,8 @@ Let's make our 5-point sandwich question!
     > two
     > EOD
     $ echo "3ch01c" > 00author.txt
+    $ cp /tmp/sandwich.jpg ,sandwich.jpg
+    $ echo ",sandwich.jpg" >> 00manifest.txt
 
 If you wanted to provide a PDF of various sandwiches, this would be the
 time to add that too:
