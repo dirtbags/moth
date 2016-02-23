@@ -9,14 +9,11 @@ Tan: #e1caa5
 @import "fonts/maven_pro.css";
 
 html {
-/*	background: #35170c url(images/tf6bg.png) center top;*/
-/*	background-repeat: repeat-x;*/
-  background: #35170c url(images/tf6bg.png) no-repeat center center fixed; 
+  background: #35170c url(images/bg.png) no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
-/*	min-height: 100%;*/
 	font-family: "Maven Pro", Ubuntu, sans-serif;
 	overflow-y: auto;
 }
@@ -45,11 +42,6 @@ body > h1:first-child img {
 	background-color: #FFDAA3;
 	border-radius: 0.5em;
 }
-
-
-
-
-
 
 input {
 	font-family: "Maven Pro", Ubuntu, sans-serif;
@@ -179,7 +171,6 @@ nav li + li:before {
 	margin: 1em;
 }
 
-
 /**** Terminal ****/
 
 #terminal {
@@ -219,7 +210,6 @@ nav li + li:before {
 	width: 100%;
 	clear: both;
 	background: rgba(25, 0, 6, 0.8);
-	border-radius: 2em;
 }
 
 #scoreboard span {
