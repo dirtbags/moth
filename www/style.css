@@ -9,14 +9,11 @@ Tan: #e1caa5
 @import "fonts/maven_pro.css";
 
 html {
-/*	background: #35170c url(images/tf6bg.png) center top;*/
-/*	background-repeat: repeat-x;*/
-  background: #35170c url(images/tf6bg.png) no-repeat center center fixed; 
+  background: #35170c url(images/bg.png) no-repeat center center fixed;
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
-/*	min-height: 100%;*/
 	font-family: "Maven Pro", Ubuntu, sans-serif;
 	overflow-y: auto;
 }
@@ -45,11 +42,6 @@ body > h1:first-child img {
 	background-color: #FFDAA3;
 	border-radius: 0.5em;
 }
-
-
-
-
-
 
 input {
 	font-family: "Maven Pro", Ubuntu, sans-serif;
@@ -179,7 +171,6 @@ nav li + li:before {
 	margin: 1em;
 }
 
-
 /**** Terminal ****/
 
 #terminal {
@@ -219,28 +210,30 @@ nav li + li:before {
 	width: 100%;
 	clear: both;
 	background: rgba(25, 0, 6, 0.8);
-	border-radius: 2em;
+  position: relative;
 }
 
-#scoreboard span {
-	font-size: 75%;
-	display: inline-block;
-	margin: 0;
-	border: 0;
-	overflow: hidden;
-	height: 2.2em;
+#scoreboard div {
+  padding: 0px;
 }
 
-#scoreboard .teamname {
-	font-size: 133%;
-	color: #D84B6E;
-	opacity: 0.8;
-	position: absolute;
-	right: 1em;
-	height: 1.1em;
+#scoreboard div span {
+  display: inline-block;
+  overflow: hidden;
+	height: 2em;
+  font-size: 1em;
+  vertical-align: middle;
 }
 
-#scoreboard div * {white-space: nowrap;}
+#scoreboard div .teamname {
+  color: white;
+  position: absolute;
+  right: 0;
+  opacity: 0.8;
+  font-size: 1.5em;
+  padding: 3px 5px 0 0;
+}
+
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
 .cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
 .cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}

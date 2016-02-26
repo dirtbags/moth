@@ -1,4 +1,4 @@
-How to create puzzle categories
+How to Create Puzzle Categories
 ===============================
 
 The contest has multiple "puzzle" categories.  Each category contains a
@@ -9,7 +9,6 @@ new category.  It's up to you to make challenging puzzles, though :)
 Since Unix commands are plain text, I'll be using the Unix commands to
 illustrate steps.  These are simple commands that should be easy to
 translate to a GUI.
-
 
 Step 1: Establish a progression
 -------------------------------
@@ -50,8 +49,6 @@ Remember to only introduce one new concept for each puzzle!
 Past a certain point, feel free to throw in the killer tricky puzzles
 you're just dying to create!
 
-
-
 Step 2: Establish point values
 ------------------------------
 
@@ -63,8 +60,6 @@ It's not terribly important that a 200-point puzzle be ten times harder
 than a 20-point puzzle, but it is crucial that a 25-point puzzle be
 roughly as difficult as a 20-point puzzle.  Poorly-weighted puzzles has
 been the main reason students lose interest.
-
-
 
 Step 3: Set up your puzzle structure
 ------------------------------------
@@ -84,60 +79,62 @@ value puzzle.  In the "sandwich" category we have only 5, 10, and
     $ mkdir 5 10 100
     $
 
-
 Step 4: Write puzzles
 ---------------------
 
-Now that your skeleton is set up, you can begin to fill it in.  In each
-point-value subdirectory, there can be three special files, and as many
-downloadable files as you like, in addition to CGI and any downloadable
-but non-listed files you would like.
+Now that your skeleton is set up, you can begin to fill it in.  In each point-
+value subdirectory, there are some required files:
 
-Special files are:
+* **00index.mdwn**: A plain text file formatted with [Markdown](http://daringfireball.net/projects/markdown/).  This file usually
+contains a description of the puzzle.
+* **00answer.txt**: A plain text file with acceptable answers, one per line.
+Answers are matched exactly (ie. they are case-sensitive).
+* **00author.txt**: A plain text file with the puzzle author's name.
 
-* index.mdwn: a plain text file formatted with
-  [markdown](http://daringfireball.net/projects/markdown/), displayed
-  before the list of normal files in the puzzle directory.
-* key: a plain text file with acceptable answers, one per line.  Answers
-  are matched exactly (ie. they are case-sensitive).
-* summary: a single line explaining to contest organizers what's going
-  on in this puzzle.
-
-All remaining files, except those with filenames beginning with a comma
-(","), are listed on the puzzle page for download.
-
-Any file ending with ".cgi" will be run as CGI.  You can search the web
-for how to write a CGI.  Available languages are Python, Lua, and Bourne
-Shell.
+You can add other files to this subdirectory, and they will copied to the
+install location and linked to in a list below the puzzle description. If you
+want to explicitly define which files are copied, create a file
+`00manifest.txt` and add the name of each file to included to its own line. If
+you want files to be copied, but not show up in the list (e.g., images in the
+puzzle description), prepend `,` to the name of the file. Files ending with
+`.cgi` will be run as CGI. You can search the web for
+[how to write a CGI](http://bfy.tw/4PXC). Some available languages are
+[Python](http://python.org), [LUA](http://lua.org), and
+[Bourne Shell](http://bfy.tw/4PXJ).
 
 Let's make our 5-point sandwich question!
 
     $ cd 5
-    $ cat <<EOD >index.mdwn
+    $ cat <<EOD >00index.mdwn
     > Welcome to the Sandwich category!
+    > ---------------------------------
+    >
     > In this category you will learn how to make a tasty sandwich.
     > The key ingredients in a sandwich are: bread, spread, and filling.
     > When making a sandwich, you need to first put down one slice of bread,
     > then apply any spreads, and finally add filling.  Popular fillings
-    > include cheese, sprouts, and cold cuts.  When you are done, apply 
+    > include cheese, sprouts, and cold cuts.  When you are done, apply
     > another slice of bread on top, and optionally tie it together with
     > a fancy toothpick.
-    >
+    > ![](,sandwich.jpg)
     > Now that you know the basics of sandwich-making, it's time for a
     > question!  How many slices of bread are in a sandwich?
     > EOD
-    $ cat <<EOD >key
+    $ cat <<EOD >00answers.txt
     > 2
     > TWO
     > two
     > EOD
-    $ echo "How many slices of bread in a sandwich" > summary
+    $ echo "3ch01c" > 00author.txt
+    $ cp /tmp/sandwich.jpg ,sandwich.jpg
+    $ echo ",sandwich.jpg" >> 00manifest.txt
     $
 
 If you wanted to provide a PDF of various sandwiches, this would be the
 time to add that too:
 
     $ cp /tmp/sandwich-types.pdf .
+    $ echo "sandwich-types.pdf" >> 00manifest.txt
     $
 
 In a real category, you might provide an executable, hard drive image,
@@ -145,8 +142,6 @@ or some other kind of blob.
 
 No additional work is needed to have `sandwich-types.pdf` show up as a
 download on the puzzle page.
-
-
 
 Step 5: Package it up
 ---------------------

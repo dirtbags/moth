@@ -25,18 +25,25 @@ Please check out [the overview](doc/overview.md)
 for details.
 
 
+Dependencies
+--------------------
+If you're using Xubuntu 14.04 LTS, you should have everything you need except
+[LUA](http://lua.org) and [Markdown](https://daringfireball.net/projects/markdown/).
+
+	$ sudo apt-get install lua5.2 markdown -y
+
 How to set it up
 --------------------
 
 It's made to be virtualized,
 so you can run multiple contests at once if you want.
-If you were to want to run it out of `/opt/koth`,
+If you want to run it out of `/opt/moth`,
 do the following:
 
-	$ mkdir -p /opt/koth/mycontest
-	$ ./install /opt/koth/mycontest
-	$ cp kothd /opt/koth
-	
+	$ mkdir -p /opt/moth/mycontest
+	$ ./install /opt/moth/mycontest
+	$ cp mothd /opt/moth
+
 Yay, you've got it set up.
 
 
@@ -46,17 +53,38 @@ Installing Puzzle Categories
 Puzzle categories are distributed in a different way than the server.
 After setting up (see above), just run
 
-	$ /opt/koth/mycontest/bin/install-category /path/to/my/category
-	
+	$ /opt/moth/mycontest/bin/install-category /path/to/my/category
+
+If you want to create puzzles, also check out [How to Create Puzzle Categories](doc/writing-puzzles.md).
 
 Running It
 -------------
 
-Get your web server to serve up files from
-`/opt/koth/mycontest/www`.
+Get your web server to serve up your contest. In addition to static files, it'll need to do CGI. Here's one way to do it
+on Xubuntu 14.04 LTS with  [lighttpd](https://lighttpd.net) where the contest is at `/opt/moth/mycontest` and `mothd` is running as user `moth`:
 
-Then run `/opt/koth/kothd`.
+First, install lighttpd and backup the configuration:
 
+	$ sudo apt-get install lighttpd -y
+	$ cp /etc/lighttpd/lighttpd.conf /etc/lighttpd/lighttpd.conf.orig
+
+Add `mod_cgi` to the `ServerModules` section, an alias to point to your contest, and CGI handling for your contest files to `/etc/lighttpd/lighttpd.conf`:
+
+	alias.url = ("/moth" => "/opt/moth/mycontest/www")
+	$HTTP["url"] =~ "/moth/" {
+  	cgi.assign = (".cgi" => "/usr/bin/lua")
+	}
+
+Restart your server:
+
+	$ sudo service lighttpd restart
+	* Stopping web server lighttpd  [ OK ]
+	* Starting web server lighttpd  [ OK ]
+
+Make sure user `moth` can access your content and run the daemon.
+
+	$ sudo chown -R moth:moth /opt/moth/mycontest
+	$ sudo -u moth /opt/moth/mothd
 
 Permissions
 ----------------
@@ -67,3 +95,7 @@ Install sets it so the web user on your system can write to the files it needs t
 but if you're using Apache,
 it plays games with user IDs when running CGI.
 You're going to have to figure out how to configure your preferred web server.
+
+Everything Else
+---------------
+If anything is missing in this documentation, create an issue/PR or email somebody.

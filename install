@@ -73,3 +73,5 @@ git ls-files | while read fn; do
 		;;
 	esac
 done
+ln -s $DESTDIR/www/images $DESTDIR/www/cgi-bin/
+ln -s $DESTDIR/www/style.css $DESTDIR/www/cgi-bin/
