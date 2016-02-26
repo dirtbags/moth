@@ -58,7 +58,7 @@ unique: you may not have two 5-point puzzles.
 Point values should roughly reflect how difficult a problem is to solve.
 It's not terribly important that a 200-point puzzle be ten times harder
 than a 20-point puzzle, but it is crucial that a 25-point puzzle be
-roughly as difficult as a 20-point puzzle.  Poorly-weighted puzzles have
+roughly as difficult as a 20-point puzzle.  Poorly-weighted puzzles has
 been the main reason students lose interest.
 
 Step 3: Set up your puzzle structure
@@ -70,12 +70,14 @@ Your first step will be to make a "sandwich" directory somewhere.
 
     $ mkdir sandwich
     $ cd sandwich
+    $
 
 Within your category directory, create subdirectories for each point
 value puzzle.  In the "sandwich" category we have only 5, 10, and
 100-point puzzles.
 
     $ mkdir 5 10 100
+    $
 
 Step 4: Write puzzles
 ---------------------
@@ -91,7 +93,7 @@ Answers are matched exactly (ie. they are case-sensitive).
 
 You can add other files to this subdirectory, and they will copied to the
 install location and linked to in a list below the puzzle description. If you
-want to explicitly define which files are copied, create a file 
+want to explicitly define which files are copied, create a file
 `00manifest.txt` and add the name of each file to included to its own line. If
 you want files to be copied, but not show up in the list (e.g., images in the
 puzzle description), prepend `,` to the name of the file. Files ending with
@@ -126,12 +128,14 @@ Let's make our 5-point sandwich question!
     $ echo "3ch01c" > 00author.txt
     $ cp /tmp/sandwich.jpg ,sandwich.jpg
     $ echo ",sandwich.jpg" >> 00manifest.txt
+    $
 
 If you wanted to provide a PDF of various sandwiches, this would be the
 time to add that too:
 
     $ cp /tmp/sandwich-types.pdf .
     $ echo "sandwich-types.pdf" >> 00manifest.txt
+    $
 
 In a real category, you might provide an executable, hard drive image,
 or some other kind of blob.
@@ -149,5 +153,6 @@ up.
 
     $ cd ../..
     $ zip -r sandwich.zip sandwich/
+    $
 
 Now mail the zip file in, and you're all done!
