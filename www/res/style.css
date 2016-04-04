@@ -1,1 +1,39 @@
+html {
+    background: rgba(61, 50, 44, 0) url(brown-lines.jpg) no-repeat center center fixed;
+    background-size: cover;
+    color: #ccb;
+    height: 100%;
+}
 
+body {
+    margin: 0;
+    height: 100%
+}
+
+.terminal {
+    background: rgba(80, 70, 60, 0.9);
+    display: inline-block;
+    margin: 1%;
+    border: solid black 0.2em;
+    border-radius: 1em 0.25em 1em 1em;
+    overflow: auto;
+}
+
+.terminal p {
+    padding: 0.25em 0.5em;
+}
+
+#overview, #messages {
+    width: 47%;
+    height: 20%;
+}
+
+#puzzles {
+    width: 24%;
+    height: 70%;
+}
+
+#main {
+    width: 70%;
+    height: 70%;
+}
