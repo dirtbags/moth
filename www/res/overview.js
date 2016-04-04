@@ -6,6 +6,7 @@ function Overview(element) {
     this.start = function() {
 	term.clear();
 	term.par("Overview terminal");
+	term.par("Here you will find something resembling a scoreboard, maybe your team name.")
     }
 }
 
