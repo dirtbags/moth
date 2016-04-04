@@ -1,21 +1,18 @@
 function tx(element, text, bps) {
     var drawTimer;
 
-    var sp = false;
+    var displayed = "";
     function draw() {
 	c = text[0];
-	if ((c == " ") || (c == "\n")) {
-	    sp = true;
-	    c = " ";
-	} else if (sp) {
-	    c = " " + c;
-	    sp = false;
-	}
-	element.textContent += c;
+	displayed += c;
+	element.textContent = displayed;
 	text = text.substr(1);
-	if (text == "") {
+	if (text.length == 0) {
 	    clearInterval(drawTimer);
 	    return;
+	}
+	if (element.parentNode.lastChild == element) {
+	    element.scrollIntoView();
 	}
     }
 
@@ -40,8 +37,15 @@ function Terminal(target, bps) {
 	target.appendChild(out);
 	tx(out, next[1], bps);
 
+	console.log(outq.length);
 	if (outq.length == 0) {
 	    clearInterval(outTimer);
+	}
+    }
+
+    this.clear = function() {
+	while (target.firstChild) {
+	    target.removeChild(target.firstChild);
 	}
     }
 
