@@ -11,7 +11,7 @@ body {
 }
 
 .terminal {
-    background: rgba(80, 70, 60, 0.9);
+    background: rgba(80, 70, 60, 0.96);
     display: inline-block;
     margin: 1%;
     border: solid black 0.2em;
@@ -36,4 +36,10 @@ body {
 #main {
     width: 70%;
     height: 70%;
+}
+
+@media (max-width: 52em) {
+    #overview, #messages, #puzzles, #main {
+	width: 96%;
+    }
 }

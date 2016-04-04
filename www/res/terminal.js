@@ -2,17 +2,18 @@ function tx(element, text, bps) {
     var drawTimer;
 
     var displayed = "";
+    var idx = 0;
     function draw() {
-	c = text[0];
-	displayed += c;
+	displayed += text[idx];
 	element.textContent = displayed;
-	text = text.substr(1);
-	if (text.length == 0) {
-	    clearInterval(drawTimer);
-	    return;
-	}
+
+	idx += 1;
 	if (element.parentNode.lastChild == element) {
 	    element.scrollIntoView();
+	}
+	if (text.length == idx) {
+	    clearInterval(drawTimer);
+	    return;
 	}
     }
 
@@ -37,7 +38,6 @@ function Terminal(target, bps) {
 	target.appendChild(out);
 	tx(out, next[1], bps);
 
-	console.log(outq.length);
 	if (outq.length == 0) {
 	    clearInterval(outTimer);
 	}
