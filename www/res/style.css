@@ -1,8 +1,13 @@
+/* @import url(https://fonts.googleapis.com/css?family=Lato:400,700,400italic); */
+/* @import "maven_pro.css"; */
+@import "lato.css";
+
 html {
     background: rgba(61, 50, 44, 0) url(brown-lines.jpg) no-repeat center center fixed;
     background-size: cover;
     color: #ccb;
     height: 100%;
+    font-family: Lato;
 }
 
 body {
@@ -15,7 +20,7 @@ body {
     display: inline-block;
     margin: 1%;
     border: solid black 0.2em;
-    border-radius: 1em 0.25em 1em 1em;
+    border-radius: 1em 1em 0.5em 1em;
     overflow: auto;
 }
 
@@ -38,8 +43,39 @@ body {
     height: 70%;
 }
 
+h1 {
+    text-align: center;
+    font-size: 120%;
+}
+
+a:link {
+    color: #13a5de;
+}
+
+#puzzles dl {
+    display: inline;
+}
+#puzzles dd {
+    margin: 0;
+    margin-left: 1em;
+}
+
 @media (max-width: 52em) {
     #overview, #messages, #puzzles, #main {
 	width: 96%;
     }
+}
+
+::-webkit-scrollbar {
+    width: 0.7em;
+}
+ 
+::-webkit-scrollbar-track {
+    /* -webkit-box-shadow: inset 0 0 0.5em rgba(200, 200, 200, 0.3); */
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); 
+    border-radius: 1em;
 }
