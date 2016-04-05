@@ -15,7 +15,7 @@ function Puzzles(element) {
 
 	term.clear();
 	term.append(h1);
-	term.append(puzzles);
+	term.appendShallow(puzzles);
     }
 
     function refresh() {
