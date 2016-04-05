@@ -1,11 +1,9 @@
-var main_proc;
+var main_terminal;
 
 function Main(element) {
-    console.log(element);
     var term = new Terminal(element);
 
     this.start = function() {
-	console.log(element);
 	term.clear();
 	term.par("Main terminal.")
 	term.par("This is the main terminal. In this terminal you will get your puzzle content and someplace to enter in possible answers. It's probably just going to pull the old URL, steal the body element, and submit it to a new Terminal method for slow-despooling of the content of text nodes.")
@@ -17,8 +15,8 @@ function Main(element) {
 
 
 function main_start() {
-    main_proc = new Main(document.getElementById("main"));
-    setTimeout(main_proc.start, 2500);
+    main_terminal = new Main(document.getElementById("main"));
+    setTimeout(main_terminal.start, 2500);
 }
 
 window.addEventListener("load", main_start);

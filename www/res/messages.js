@@ -1,4 +1,4 @@
-var messages_proc;
+var messages_terminal;
 
 function Messages(element) {
     var term = new Terminal(element);
@@ -12,8 +12,8 @@ function Messages(element) {
 
 
 function messages_start() {
-    messages_proc = new Messages(document.getElementById("messages"));
-    setTimeout(messages_proc.start, 500);
+    messages_terminal = new Messages(document.getElementById("messages"));
+    setTimeout(messages_terminal.start, 500);
 }
 
 window.addEventListener("load", messages_start);

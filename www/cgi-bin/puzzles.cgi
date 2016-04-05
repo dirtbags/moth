@@ -23,7 +23,7 @@ for line in io.lines(koth.path("state/points.log")) do
 	end
 end
 
-local body = "<dl>\n"
+local body = "<dl id=\"puzzles\">\n"
 for cat, biggest in pairs(max_by_cat) do
 	local points, dirname
 
