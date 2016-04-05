@@ -1,3 +1,7 @@
+// A class to turn an element into a cybersteampunk terminal.
+// Runs at 1200 baud by default, but unlike an actual modem,
+// will despool in parallel. This looks pretty cool.
+
 // XXX: Hack for chrome not supporting an iterator method on HTMLCollection
 HTMLCollection.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
@@ -8,27 +12,26 @@ function Terminal(target, bps) {
     var outq = [];
     var outTimer;
 
-    function tx(nodes, bps, scroll) {
+    // Heavy lifting happens here.
+    // At first I had it auto-scrolling to the bottom, like xterm (1987).
+    // But that was actually kind of annoying, since this is meant to be read.
+    // So now it leaves the scrollbar in place, and the user has to scroll.
+    // This is how the Plan 9 terminal (1991) works.
+    function tx(pairs, bps, scroll) {
 	var drawTimer;
 
-	// Looks like EMCAScript 6 has a yield statement. That'll be nice.
-	//
-	// for (var node of nodes) {
-	//   var text = "";
-	//  for (var c of node._text) {
-	//    text += c;
-	//    node.textContent = text;
-	//   }
-	// }
+	// Looks like EMCAScript 6 has a yield statement.
+	// That would make this mess a lot easier to understand.
 
-	var nodeIndex = 0;
-	var node = nodes[0];
+	var pairIndex = 0;
+	var pair = pairs[0];
 
 	var textIndex = 0;
 	var text = "";
 
 	function draw() {
-	    var src = node._text;
+	    var node = pair[0];
+	    var src = pair[1];
 	    var c = src[textIndex];
 
 	    text += c;
@@ -39,12 +42,12 @@ function Terminal(target, bps) {
 		textIndex = 0;
 		text = "";
 
-		nodeIndex += 1;
-		if (nodeIndex == nodes.length) {
+		pairIndex += 1;
+		if (pairIndex == pairs.length) {
 		    clearInterval(drawTimer);
 		    return;
 		}
-		node = nodes[nodeIndex];
+		pair = pairs[pairIndex];
 	    }
 
 	    if (scroll) {
@@ -63,7 +66,7 @@ function Terminal(target, bps) {
 
     function start() {
 	if (! outTimer) {
-	    outTimer = setInterval(drawElement, 150);
+	    outTimer = setInterval(drawElement, 75);
 	}
     }
 
@@ -77,20 +80,19 @@ function Terminal(target, bps) {
 
     
     function drawElement() {
-	var element = outq.shift();
+	var pairs = outq.shift();
 
-	console.log(element);
-	if (! element) {
+	if (! pairs) {
 	    stop();
 	    return;
 	}
 
-	tx(element._terminalNodes, bps);
+	tx(pairs, bps);
     }
 
 
     function prepare(element) {
-	var nodes = [];
+	var pairs = [];
 
 	walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
 	while (walker.nextNode()) {
@@ -98,18 +100,18 @@ function Terminal(target, bps) {
 	    var text = node.textContent;
 
 	    node.textContent = "";
-	    nodes.push(node);
+	    pairs.push([node, text]);
 	}
 
-	element._terminalNodes = nodes;
+	return pairs;
     }
 	
 
     // The main entry point: works like appendChild
     this.append = function(element) {
-	prepare(element);
+	pairs = prepare(element);
 	target.appendChild(element);
-	outq.push(element);
+	outq.push(pairs);
 	start();
     }
 
@@ -117,8 +119,8 @@ function Terminal(target, bps) {
     // A cool effect where it despools children in parallel
     this.appendShallow = function(element) {
 	for (var child of element.childNodes) {
-	    prepare(child);
-	    outq.push(child);
+	    pairs = prepare(child);
+	    outq.push(pairs);
 	}
 	target.appendChild(element);
 	start();
