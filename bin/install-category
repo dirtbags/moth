@@ -74,6 +74,7 @@ EOF
 
 cat=$(basename $indir)
 outdir=$(dirname $(dirname $0))/packages/$cat
+outdir=$(cd $outdir; /bin/pwd)
 uanswers=$outdir/answers.unsorted
 usummary=$outdir/summary.unsorted
 umap=$outdir/map.unsorted
