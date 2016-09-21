@@ -46,7 +46,7 @@ for cat, biggest in pairs(max_by_cat) do
    end
    if (points == biggest) then
       io.write(',\n')
-      io.write('  [0, ""] // Category complete')
+      io.write('  [0, ""]')
    end
    io.write('\n ]')
 end

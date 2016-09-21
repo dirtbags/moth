@@ -42,12 +42,12 @@ find state/points.new -type f | while read fn; do
 	rm -f $fn
 done
 
-# Generate new puzzles.html
-if bin/puzzles $basedir > www/puzzles.new; then
-	mv www/puzzles.new www/puzzles.json
+# Generate new puzzles.json
+if bin/puzzles $basedir > state/puzzles.json.new; then
+	mv state/puzzles.json.new state/puzzles.json
 fi
 
 # Generate new points.json
-if bin/points $basedir > www/points.new; then
-	mv www/points.new www/points.json
+if bin/points $basedir > state/points.json.new; then
+	mv state/points.json.new state/points.json
 fi
