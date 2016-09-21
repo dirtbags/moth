@@ -1,27 +1,24 @@
 #! /usr/bin/lua5.3
 
+local basedir = arg[1]
+local statedir = basedir .. "/state"
+
 io.write('{\n "points": [\n')
 local teams = {}
 local teamnames = {}
 local nteams = 0
 local NR = 0
 
-local statedir = arg[1]
+for line in io.lines(statedir .. "/points.log") do
+   local ts, hash, cat, points = line:match("(%d+) (%g+) (%g+) (%d+)")
+   local teamno = teams[hash]
 
-local f = io.open(statedir .. "/points.log")
-for line in f:lines() do
-   ts, hash, cat, points = line:match("(%d+) (%g+) (%g+) (%d+)")
-   teamno = teams[hash]
    if not teamno then
       teamno = nteams
       teams[hash] = teamno
       nteams = nteams + 1
 
-      tf = io.open(statedir .. "/teams/" .. hash)
-      teamname = tf:read()
-      tf:close()
-
-      teamnames[hash] = teamname
+      teamnames[hash] = io.lines(statedir .. "/teams/" .. hash)()
    end
 
    if NR > 0 then

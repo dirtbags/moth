@@ -1,6 +1,11 @@
 #! /bin/sh
 
-cd $(dirname $0)/..
+if [ -n "$1" ]; then
+    cd $1
+else
+    cd $(dirname $0)/..
+fi
+basedir=$(pwd)
 
 # Do nothing if `disabled` is present
 if [ -f disabled ]; then
@@ -13,6 +18,14 @@ if [ -f reset ]; then
 	: > state/points.log
 	rm -f reset
 fi
+
+# Create a list of currently-active categories
+: > state/categories.txt.new
+for dn in packages/*; do
+    cat=${dn##packages/}
+    echo "$cat" >> state/categories.txt.new
+done
+mv state/categories.txt.new state/categories.txt
 
 # Collect new points
 find state/points.new -type f | while read fn; do
@@ -30,11 +43,11 @@ find state/points.new -type f | while read fn; do
 done
 
 # Generate new puzzles.html
-if www/cgi-bin/puzzles.cgi > www/puzzles.new; then
-	mv www/puzzles.new www/puzzles.html
+if bin/puzzles $basedir > www/puzzles.new; then
+	mv www/puzzles.new www/puzzles.json
 fi
 
 # Generate new points.json
-if bin/points state > www/points.new; then
+if bin/points $basedir > www/points.new; then
 	mv www/points.new www/points.json
 fi
