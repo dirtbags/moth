@@ -1,46 +1,48 @@
-#! /usr/bin/awk -f
+#! /usr/bin/lua5.3
 
-BEGIN {
-	nteams = 0;
-	print "{";
-	print "  \"points\": [";
-}
+io.write('{\n "points": [\n')
+local teams = {}
+local teamnames = {}
+local nteams = 0
+local NR = 0
 
-{
-	ts = $1;
-	hash = $2;
-	cat = $3;
-	points = $4;
-	
-	teamno = teams[hash];
-	if (! teamno) {
-		teamno = ++nteams;
-		teams[hash] = teamno;
-		
-		getline teamnames[hash] < ("state/teams/" hash)
-	}
-	
-	if (NR > 1) {
-		# JSON sucks.
-		print ",";
-	}
-	printf("[%d, \"%s\", \"%s\", %d]", ts, hash, cat, points);
-}
+local statedir = arg[1]
 
-END {
-	print "";
-	print "  ],";
-	print "  \"teams\": {";
+local f = io.open(statedir .. "/points.log")
+for line in f:lines() do
+   ts, hash, cat, points = line:match("(%d+) (%g+) (%g+) (%d+)")
+   teamno = teams[hash]
+   if not teamno then
+      teamno = nteams
+      teams[hash] = teamno
+      nteams = nteams + 1
 
-	i = 0
-	for (hash in teamnames) {
-	    if (i++) {
-		print ",";
-	    }
-	    printf("\"%s\": \"%s\"", hash, teamnames[hash]);
-	}
-	
-	print "";
-	print "  }";
-	print "}";
-}
+      tf = io.open(statedir .. "/teams/" .. hash)
+      teamname = tf:read()
+      tf:close()
+
+      teamnames[hash] = teamname
+   end
+
+   if NR > 0 then
+      -- JSON sucks, barfs if you have a comma with nothing after it
+      io.write(",\n")
+   end
+   NR = NR + 1
+
+   io.write('  [' .. ts .. ', "' .. teamno .. '", "' .. cat .. '", ' .. points .. ']')
+end
+
+io.write('\n],\n "teams": {\n')
+
+NR = 0
+for hash,teamname in pairs(teamnames) do
+   if NR > 0 then
+      io.write(",\n")
+   end
+   NR = NR + 1
+
+   teamno = teams[hash]
+   io.write('  "' .. teamno .. '": "' .. teamname .. '"')
+end
+io.write('\n }\n}\n')

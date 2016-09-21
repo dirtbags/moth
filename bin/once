@@ -35,6 +35,6 @@ if www/cgi-bin/puzzles.cgi > www/puzzles.new; then
 fi
 
 # Generate new points.json
-if bin/points state/points.log > www/points.new; then
+if bin/points state > www/points.new; then
 	mv www/points.new www/points.json
 fi
