@@ -1,75 +1,32 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width">
-		<title>Welcome</title>
-		<link rel="stylesheet" href="style.css" type="text/css">
-	</head>
-	<body>
-		<h1><img src="images/tf6.png" alt="Tracer FIRE"></h1>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="res/style.css">
+    <link rel="icon" href="res/luna-moth.svg">
+    <link rel="icon" href="res/luna-moth.png">
 
-		<nav>
-			<ul>
-				<li><a href="register.html">Register</a></li>
-				<li><a href="puzzles.html">Puzzles</a></li>
-				<li><a href="scoreboard.html">Scoreboard</a></li>
-			</ul>
-		</nav>
-		
-		<section>
-			<h2>Getting Started</h2>
-		
-			<p>
-				Here is what you need to do:
-			</p>
+    <script src="res/terminal.js"></script>
+    <script src="res/overview.js"></script>
+    <script src="res/messages.js"></script>
+    <script src="res/puzzles.js"></script>
+    <script src="res/main.js"></script>
 
-			<ol>
-				<li>
-					<a href="register.html">Register</a> your team.
-					This only needs to happen once per team,
-					so if somebody else on your team has already done it,
-					you don't need to.
-				</li>
-
-				<li>
-					Get an <a href="puzzles.html">overview of puzzles</a>,
-					and start working on something.
-					The list of open puzzles changes over time,
-					you need to reload the page to get the current version!
-				</li>
-
-				<li>
-					Check the <a href="scoreboard.html">scoreboard</a>
-					in another tab,
-					to see how your team is doing.
-				</li>
-			</ol>
-		</section>
-		
-		<section>
-			<h2>Reading Material</h2>
-			
-			<p>
-				Stuck? Taking a break?
-				Here are some things to read.
-			</p>
-			
-			<ul>
-				<li><a href="credits.html">Credits</a></li>
-				<li>
-					<a href="scoring.html">About Scoring</a>
-					explains how we calculate scores,
-					and why.
-					Reading this will help you formulate a strategy to win.
-				</li>
-			</ul>
-		</section>
-
-		<section id="sponsors">
-			<img src="images/lanl.png" alt="Los Alamos National Laboratory">
-			<img src="images/doe.png" alt="US Department Of Energy">
-			<img src="images/sandia.png" alt="Sandia National Laboratories">
-		</section>
-	</body>
+    <title>MOTH Dashboard</title>
+  </head>
+  <body>
+    <div id="overview" class="terminal">
+      <h1>Monarch Of The Hill</h1>
+      <p>Brought to you by dirtbags.net</p>
+    </div>
+    <div id="messages" class="terminal">
+      If you turn on JavaScript this will look a lot cooler.
+    </div>
+    <div id="puzzles" class="terminal">
+      🌮 🌮 🌮 🌮 🌮 🌮 🌮 🌮
+    </div>
+    <div id="main" class="terminal">
+    </div>
+  </body>
 </html>
