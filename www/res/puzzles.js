@@ -1,45 +1,60 @@
-var puzzles_terminal;
+var puzzlesTerminal;
+var puzzlesJsonUrl = "puzzles.json";
 
-var puzzles_url = "hack/puzzles.html";
-
-function Puzzles(element) {
-    var term = new Terminal(element);
-    var refreshInterval;
-
-    function loaded() {
-	var doc = this.response;
-	var puzzles = doc.getElementById("puzzles");
-	var h1 = document.createElement("h1");
-
-	h1.textContent = "Puzzles";
-
-	term.clear();
-	term.append(h1);
-	term.appendShallow(puzzles);
-    }
-
-    function refresh() {
-	var myRequest = new XMLHttpRequest();
-	myRequest.responseType = "document";
-	myRequest.addEventListener("load", loaded);
-	myRequest.open("GET", puzzles_url);
-	myRequest.send();
-    }
-
-    function start() {
-	refreshInterval = setInterval(refresh, 20 * 1000);
-	refresh();
-    }
-
-    term.clear();
-    term.par("Loading…");
-
-    setTimeout(start, 3000);
+function loadPuzzle(cat, id, points) {
+    console.log("Requested " + cat + "/" + id + "(" + points + ")");
 }
 
+function puzzlesRefresh(term, obj) {
+    term.clear();
+
+    for (var cat in obj) {
+	var puzzles = obj[cat];
+
+	var pdiv = createElement('div');
+	pdiv.className = 'category';
+
+	var h = createElement('h2');
+	pdiv.appendChild(h);
+	h.textContent = cat;
+
+	var l = createElement('ul');
+	pdiv.appendChild(l);
+
+	for (var puzzle of puzzles) {
+	    var points = puzzle[0];
+	    var id = puzzle[1];
+
+	    var i = createElement('li');
+	    l.appendChild(i);
+
+	    if (points == 0) {
+		i.textContent = "‡";
+	    } else {
+		var a = createElement('span');
+		i.appendChild(a);
+		a.className = "link";
+		a.textContent = points;
+		a.addEventListener("click", loadPuzzle.bind(undefined, cat, id, points));
+	    }
+	}
+
+	term.appendShallow(pdiv);
+    }
+}
 
 function puzzles_start() {
-    puzzles_terminal = new Puzzles(document.getElementById("puzzles"));
+    var element = document.getElementById("puzzles");
+    var puzzlesTerminal = new Terminal(element);
+    var refreshInterval = 40 * 1000;
+
+    var refreshCallback = puzzlesRefresh.bind(undefined, puzzlesTerminal);
+    var refreshFunction = loadJSON.bind(undefined, puzzlesJsonUrl, refreshCallback);
+
+    puzzlesTerminal.clear();
+    puzzlesTerminal.par("Loading...");
+    refreshFunction();
+    setInterval(refreshFunction, refreshInterval);
 }
 
 window.addEventListener("load", puzzles_start);

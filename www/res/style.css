@@ -48,16 +48,25 @@ h1 {
     font-size: 120%;
 }
 
-a:link {
+a:link, .link {
     color: #13a5de;
+    cursor: pointer;
 }
 
-#puzzles dl {
+.category h2 {
+    margin: 0;
+    font-size: 100%;
+}
+.category ul {
+    margin: 0;
+    padding-left: 1em;
+    font-size: 90%;
+}
+.category li {
     display: inline;
 }
-#puzzles dd {
-    margin: 0;
-    margin-left: 1em;
+.category li + li:before {
+    content: " ";
 }
 
 @media (max-width: 52em) {
