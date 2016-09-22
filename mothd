@@ -1,0 +1,14 @@
+#! /bin/sh
+
+cd ${1:-$(dirname $0)}
+KOTH_BASE=$(pwd)
+
+echo "Running koth instances in $KOTH_BASE"
+
+while true; do
+	for i in $KOTH_BASE/*/assigned.txt; do
+		dir=${i%/*}
+		$dir/bin/once
+	done
+	sleep 5
+done

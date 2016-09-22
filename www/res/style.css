@@ -1,13 +1,13 @@
-/* @import url(https://fonts.googleapis.com/css?family=Lato:400,700,400italic); */
-/* @import "maven_pro.css"; */
-@import "lato.css";
+/* @import url(https://fonts.googleapis.com/css?family=Lato:400,700,400italic); /* */
+/* @import "maven_pro.css"; /* */
+@import "Lato.css"; /* */
 
 html {
     background: rgba(61, 50, 44, 0) url(brown-lines.jpg) no-repeat center center fixed;
     background-size: cover;
     color: #ccb;
     height: 100%;
-    font-family: Lato;
+    font-family: Lato, sans-serif;
 }
 
 body {
