@@ -13,6 +13,16 @@ function createElement(tagName) {
     return document.createElement(tagName);
 }
 
+function djb2hash(str) {
+    var hash = 5381;
+
+    for (var i = 0; i < str.length; i += 1) {
+	var c = str.charCodeAt(i);
+	hash = ((hash * 33) + c) & 0xffffffff;
+    }
+    return hash;
+}
+
 // Make code readable by providing Function.prototype.bind in older JS environments
 if (!Function.prototype.bind) {
   Function.prototype.bind = function(oThis) {
