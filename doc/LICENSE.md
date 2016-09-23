@@ -152,18 +152,10 @@ Both came with the following license:
 > OTHER DEALINGS IN THE FONT SOFTWARE.
 
 
-JavaScript xxtea library
+Javascript MD5 Library
 ======================
 
-Obtained from <http://www.movable-type.co.uk/scripts/tea-block.html>,
-which says:
+Obtained from <https://github.com/blueimp/JavaScript-MD5>, which says:
 
-> I offer these formulæ & scripts for free use and adaptation as my
-> contribution to the open-source info-sphere from which I have
-> received so much. You are welcome to re-use these scripts (under a
-> simple [attribution](http://creativecommons.org/licenses/by/3.0/)
-> license, without any warranty express or implied) provided solely
-> that you retain my copyright notice and a link to this page.
-
-Confusingly, the code itself says "MIT License". Both are compatible
-with the larger project, however.
+> The JavaScript MD5 script is released under the
+> [MIT license](http://www.opensource.org/licenses/MIT).
