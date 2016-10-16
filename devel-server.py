@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import glob
 import http.server
 import mistune
 import pathlib
@@ -22,7 +23,12 @@ def page(title, body):
 </html>""".format(title, body)
 
 def mdpage(body):
-    title, _ = body.split('\n', 1)
+    try:
+        title, _ = body.split('\n', 1)
+    except ValueError:
+        title = "Result"
+    title = title.lstrip("#")
+    title = title.strip()
     return page(title, mistune.markdown(body))
 
 
@@ -33,7 +39,9 @@ class MothHandler(http.server.CGIHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             self.serve_front()
-        elif self.path.startswith("/files/"):
+        elif self.path.startswith("/puzzles"):
+            self.serve_puzzles()
+        elif self.path.startswith("/files"):
             self.serve_file()
         else:
             self.send_error(HTTPStatus.NOT_FOUND, "File not found")
@@ -60,6 +68,18 @@ If you use this development server to run a contest,
 you are a fool.
 """
         self.serve_md(page)
+
+    def serve_puzzles(self):
+        body = []
+        parts = self.path.split("/")
+        if len(parts) < 3:
+            body.append("# Puzzle Categories")
+            # List all categories
+            for i in glob.glob("puzzles/*/"):
+                body.append("* [{}](/{})".format(i, i))
+        else:
+            body.append("# Not Implemented Yet")
+        self.serve_md('\n'.join(body))
 
     def serve_file(self):
         if self.path.endswith(".md"):

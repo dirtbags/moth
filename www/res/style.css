@@ -39,6 +39,7 @@ body {
 
 pre, tt {
     font-family: 'Dosis', monospace;
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .terminal {

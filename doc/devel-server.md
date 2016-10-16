@@ -26,7 +26,7 @@ In the directory containing `devel-server.py`, you would run something like:
 
     git clone /path/to/my/puzzles-repository puzzles
 
-or
+or on Unix:
 
     ln -s /path/to/my/puzzles-repository puzzles
 
