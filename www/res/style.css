@@ -55,7 +55,9 @@ pre, tt {
     padding: 0.25em 0.5em;
 }
 
-#body {
+#preview {
+    background-image: url(preview.png);
+    background-size: contain;
     max-width: 40em;
     display: block;
     margin: 1% auto;
