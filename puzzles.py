@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 
-import hmac
-import base64
 import argparse
+import base64
 import glob
+import hmac
 import json
-import os
 import mistune
+import multidict
+import os
 import random
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -17,12 +18,19 @@ def djb2hash(buf):
         h = ((h * 33) + c) & 0xffffffff
     return h
 
-class Puzzle:
-    def __init__(self, stream):
+class Puzzle(multidict.MultiDict):
+
+    def __init__(self, seed):
+        super().__init__()
+
         self.message = bytes(random.choice(messageChars) for i in range(20))
-        self.fields = {}
-        self.answers = []
-        self.hashes = []
+        self.body = ''
+
+        self.rand = random.Random(seed)
+
+    @classmethod
+    def from_stream(cls, stream):
+        pzl = cls(None)
 
         body = []
         header = True
@@ -35,34 +43,32 @@ class Puzzle:
                 key, val = line.split(':', 1)
                 key = key.lower()
                 val = val.strip()
-                self._add_field(key, val)
+                pzl.add(key, val)
             else:
                 body.append(line)
-        self.body = ''.join(body)
+        pzl.body = ''.join(body)
+        return pzl
 
-    def _add_field(self, key, val):
+    def add(self, key, value):
+        super().add(key, value)
         if key == 'answer':
-            h = djb2hash(val.encode('utf8'))
-            self.answers.append(val)
-            self.hashes.append(h)
-        else:
-            self.fields[key] = val
+            super().add(hash, djb2hash(value.encode('utf8')))
 
     def htmlify(self):
         return mistune.markdown(self.body)
 
     def publish(self):
         obj = {
-            'author': self.fields['author'],
-            'hashes': self.hashes,
+            'author': self['author'],
+            'hashes': self.getall('hash'),
             'body': self.htmlify(),
         }
         return obj
 
     def secrets(self):
         obj = {
-            'answers': self.answers,
-            'summary': self.fields['summary'],
+            'answers': self.getall('answer'),
+            'summary': self['summary'],
         }
         return obj
     
@@ -78,7 +84,7 @@ if __name__ == '__main__':
             filename = os.path.basename(puzzlePath)
             points, ext = os.path.splitext(filename)
             points = int(points)
-            puzzle = Puzzle(open(puzzlePath))
+            puzzle = Puzzle.from_stream(open(puzzlePath))
             puzzles[points] = puzzle
 
         for points in sorted(puzzles):
