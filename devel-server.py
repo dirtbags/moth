@@ -3,6 +3,7 @@
 import glob
 import http.server
 import mistune
+import os
 import pathlib
 import socketserver
 
@@ -73,10 +74,22 @@ you are a fool.
         body = []
         parts = self.path.split("/")
         if len(parts) < 3:
-            body.append("# Puzzle Categories")
             # List all categories
-            for i in glob.glob("puzzles/*/"):
+            body.append("# Puzzle Categories")
+            for i in glob.glob(os.path.join("puzzles", "*", "")):
                 body.append("* [{}](/{})".format(i, i))
+        elif len(parts) == 4:
+            # List all point values in a category
+            body.append("# Puzzles in category `{}`".format(parts[2]))
+            puzzles = []
+            for i in glob.glob(os.path.join("puzzles", parts[2], "*", "")):
+                pparts = os.path.split(i[:-1])
+                points = int(pparts[-1])
+                puzzles.append(points)
+            for puzzle in sorted(puzzles):
+                body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=puzzle))
+        elif len(parts) == 5:
+            body.append("# {} puzzle {}".format(parts[2], parts[3]))
         else:
             body.append("# Not Implemented Yet")
         self.serve_md('\n'.join(body))
