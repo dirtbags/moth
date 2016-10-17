@@ -93,7 +93,7 @@ you are a fool.
                 body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=puzzle))
         elif len(parts) == 4:
             body.append("# {} puzzle {}".format(parts[2], parts[3]))
-            with open("puzzles/{}/{}.moth".format(parts[2], parts[3])) as f:
+            with open("puzzles/{}/{}.moth".format(parts[2], parts[3]), encoding="utf-8") as f:
                 p = puzzles.Puzzle(f)
             body.append("* Author: `{}`".format(p.fields.get("author")))
             body.append("* Summary: `{}`".format(p.fields.get("summary")))
@@ -126,7 +126,7 @@ you are a fool.
         content = mdpage(text)
 
         self.send_response(http.server.HTTPStatus.OK)
-        self.send_header("Content-type", "text/html; encoding=utf-8")
+        self.send_header("Content-type", "text/html; charset=utf-8")
         self.send_header("Content-Length", len(content))
         try:
             fs = fspath.stat()
