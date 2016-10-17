@@ -8,7 +8,14 @@ import pathlib
 import puzzles
 import socketserver
 
-HTTPStatus = http.server.HTTPStatus
+
+#HTTPStatus = http.server.HTTPStatus
+if hasattr(http.server, 'HTTPStatus'):
+    HTTPStatus = http.HTTPStatus
+else:
+    class HTTPStatus:
+        NOT_FOUND = 404
+        OK = 200
 
 def page(title, body):
     return """<!DOCTYPE html>
@@ -125,7 +132,7 @@ you are a fool.
                 return None
         content = mdpage(text)
 
-        self.send_response(http.server.HTTPStatus.OK)
+        self.send_response(HTTPStatus.OK)
         self.send_header("Content-type", "text/html; encoding=utf-8")
         self.send_header("Content-Length", len(content))
         try:
