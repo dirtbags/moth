@@ -5,6 +5,7 @@ import http.server
 import mistune
 import os
 import pathlib
+import puzzles
 import socketserver
 
 HTTPStatus = http.server.HTTPStatus
@@ -17,7 +18,7 @@ def page(title, body):
     <link rel="stylesheet" href="/files/www/res/style.css">
   </head>
   <body>
-    <div id="body" class="terminal">
+    <div id="preview" class="terminal">
       {}
     </div>
   </body>
@@ -72,24 +73,37 @@ you are a fool.
 
     def serve_puzzles(self):
         body = []
-        parts = self.path.split("/")
+        path = self.path.rstrip('/')
+        parts = path.split("/")
         if len(parts) < 3:
             # List all categories
             body.append("# Puzzle Categories")
             for i in glob.glob(os.path.join("puzzles", "*", "")):
                 body.append("* [{}](/{})".format(i, i))
-        elif len(parts) == 4:
+        elif len(parts) == 3:
             # List all point values in a category
             body.append("# Puzzles in category `{}`".format(parts[2]))
-            puzzles = []
-            for i in glob.glob(os.path.join("puzzles", parts[2], "*", "")):
-                pparts = os.path.split(i[:-1])
-                points = int(pparts[-1])
-                puzzles.append(points)
-            for puzzle in sorted(puzzles):
+            puzz = []
+            for i in glob.glob(os.path.join("puzzles", parts[2], "*.moth")):
+                base = os.path.basename(i)
+                root, _ = os.path.splitext(base)
+                points = int(root)
+                puzz.append(points)
+            for puzzle in sorted(puzz):
                 body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=puzzle))
-        elif len(parts) == 5:
+        elif len(parts) == 4:
             body.append("# {} puzzle {}".format(parts[2], parts[3]))
+            with open("puzzles/{}/{}.moth".format(parts[2], parts[3])) as f:
+                p = puzzles.Puzzle(f)
+            body.append("* Author: `{}`".format(p.fields.get("author")))
+            body.append("* Summary: `{}`".format(p.fields.get("summary")))
+            body.append('')
+            body.append("## Body")
+            body.append(p.body)
+            body.append("## Answers:")
+            for a in p.answers:
+                body.append("* `{}`".format(a))
+            body.append("")
         else:
             body.append("# Not Implemented Yet")
         self.serve_md('\n'.join(body))
