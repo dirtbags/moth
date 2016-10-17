@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import glob
+import http
 import http.server
 import mistune
 import os
@@ -8,7 +9,13 @@ import pathlib
 import puzzles
 import socketserver
 
-HTTPStatus = http.server.HTTPStatus
+if hasattr(http, 'HTTPStatus'):
+    HTTPStatus = http.HTTPStatus
+else:
+    class HTTPStatus:
+        NOT_FOUND = 404
+        OK = 200
+        
 
 def page(title, body):
     return """<!DOCTYPE html>
