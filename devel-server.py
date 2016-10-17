@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import glob
-import http
 import http.server
 import mistune
 import os
@@ -9,7 +8,7 @@ import pathlib
 import puzzles
 import socketserver
 
-if hasattr(http, 'HTTPStatus'):
+if hasattr(http.server, 'HTTPStatus'):
     HTTPStatus = http.HTTPStatus
 else:
     class HTTPStatus:
