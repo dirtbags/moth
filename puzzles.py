@@ -64,7 +64,7 @@ class Puzzle:
         self.body = ''
 
         if not os.path.exists(path):
-            raise ValueError("No puzzle at path: {]".format(path))
+            raise ValueError("No puzzle at path: {}".format(path))
         elif os.path.isdir(path):
             # Expected format is path/<points_int>.moth
             pathname = os.path.split(path)[-1]
@@ -86,7 +86,7 @@ class Puzzle:
         else:
             raise ValueError("Unacceptable file type for puzzle at {}".format(path))
 
-        self._seed = hashlib.sha1(category_seed + bytes(self['points'])).digest()
+        self._seed = category_seed * self['points']
         self.rand = random.Random(self._seed)
 
         # Set our 'files' as a dict, since we want register them uniquely by name.
@@ -269,3 +269,23 @@ if __name__ == '__main__':
         for points in sorted(puzzles):
             puzzle = puzzles[points]
             print(puzzle.secrets())
+
+
+class Category:
+    def __init__(self, path, seed):
+        self.path = path
+        self.seed = seed
+        self.pointvals = []
+        for fpath in glob.glob(os.path.join(path, "[0-9]*")):
+            pn = os.path.basename(fpath)
+            points = int(pn)
+            self.pointvals.append(points)
+        self.pointvals.sort()
+
+    def puzzle(self, points):
+        path = os.path.join(self.path, str(points))
+        return Puzzle(path, self.seed)
+
+    def puzzles(self):
+        for points in self.pointvals:
+            yield self.puzzle(points)
