@@ -146,9 +146,9 @@ you are a fool.
         self.wfile.write(content.encode('utf-8'))
 
 
-def run(address=('', 8080)):
+def run(address=('localhost', 8080)):
     httpd = ThreadingServer(address, MothHandler)
-    print("=== Listening on http://{}:{}/".format(address[0] or "localhost", address[1]))
+    print("=== Listening on http://{}:{}/".format(address[0], address[1]))
     httpd.serve_forever()
 
 if __name__ == '__main__':

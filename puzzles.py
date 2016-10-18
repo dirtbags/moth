@@ -86,11 +86,8 @@ class Puzzle:
         else:
             raise ValueError("Unacceptable file type for puzzle at {}".format(path))
 
-        self._seed = category_seed * self['points']
+        self._seed = category_seed * self.points
         self.rand = random.Random(self._seed)
-
-        # Set our 'files' as a dict, since we want register them uniquely by name.
-        self['files'] = dict()
 
         # A list of temporary files we've created that will need to be deleted.
         self._temp_files = []
