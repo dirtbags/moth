@@ -47,10 +47,21 @@ class Puzzle:
     ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                          'answer_words.txt'))]
 
-    def __init__(self, path, category_seed):
-        """Puzzle objects need a path to a puzzle description (
-        :param path:
-        :param category_seed:
+    def __init__(self, category_seed, path=None):
+        """A MOTH Puzzle
+        :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
+                              It is combined with the puzzle points.
+        :param path: An optional path to a puzzle directory. The point value for the puzzle is taken
+                     from the puzzle directories name (it must be an integer greater than zero).
+                     Within this directory, we expect:
+            (optional) A puzzle.moth file in RFC2822 format. The puzzle will get its attributes
+                       from the headers, and the body will be the puzzle description in
+                       Markdown format.
+            (optional) A puzzle.py file. This is expected to have a callable called make
+                       that takes a single positional argument (this puzzle object).
+                       This callable can then do whatever it needs to with this object.
+            If neither of the above are given, the point value for the puzzle will have to
+            be set manually.
         """
 
         super().__init__()
@@ -63,6 +74,16 @@ class Puzzle:
         self.message = bytes(random.choice(messageChars) for i in range(20))
         self.body = ''
 
+        self._seed = hashlib.sha1(category_seed + bytes(self['points'])).digest()
+        self.rand = random.Random(self._seed)
+
+        # Set our 'files' as a dict, since we want register them uniquely by name.
+        self['files'] = dict()
+
+        # A list of temporary files we've created that will need to be deleted.
+        self._temp_files = []
+
+        # All internal variables must be initialized before the following runs
         if not os.path.exists(path):
             raise ValueError("No puzzle at path: {]".format(path))
         elif os.path.isdir(path):
@@ -85,15 +106,6 @@ class Puzzle:
                     puzzle_mod.make(self)
         else:
             raise ValueError("Unacceptable file type for puzzle at {}".format(path))
-
-        self._seed = hashlib.sha1(category_seed + bytes(self['points'])).digest()
-        self.rand = random.Random(self._seed)
-
-        # Set our 'files' as a dict, since we want register them uniquely by name.
-        self['files'] = dict()
-
-        # A list of temporary files we've created that will need to be deleted.
-        self._temp_files = []
 
     def cleanup(self):
         """Cleanup any outstanding temporary files."""
