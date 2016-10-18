@@ -12,15 +12,15 @@ import markdown
 import random
 import zipfile
 
-messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-def djb2hash(buf):
-    h = 5381
-    for c in buf:
-        h = ((h * 33) + c) & 0xffffffff
-    return h
+import puzzles
 
 def write_kv_pairs(ziphandle, filename, kv):
+    """ Write out a sorted map to file
+    :param ziphandle: a zipfile object
+    :param filename: The filename to write within the zipfile object
+    :param kv:  the map to write out
+    :return:
+    """
     filehandle = io.StringIO()
     for key in sorted(kv.keys()):
         if type(kv[key])  == type([]):
@@ -30,123 +30,73 @@ def write_kv_pairs(ziphandle, filename, kv):
             filehandle.write("%s: %s%s" % (key, kv[key], os.linesep))
     filehandle.seek(0)
     ziphandle.writestr(filename, filehandle.read())
+   
+if __name__ == '__main__':        
+    parser = argparse.ArgumentParser(description='Build a puzzle category')
+    parser.add_argument('seed', help='contest seed')
+    parser.add_argument('puzzledir', nargs='+', help='Directory of puzzle source')
+    parser.add_argument('outdir', help='Output directory')
+    args = parser.parse_args()
 
-class Puzzle:
-    def __init__(self, stream):
-        self.message = bytes(random.choice(messageChars) for i in range(20))
-        self.fields = {}
-        self.answers = []
-        self.hashes = []
 
-        body = []
-        header = True
-        for line in stream:
-            if header:
-                line = line.strip()
-                if not line.strip():
-                    header = False
-                    continue
-                key, val = line.split(':', 1)
-                key = key.lower()
-                val = val.strip()
-                self._add_field(key, val)
-            else:
-                body.append(line)
-        self.body = ''.join(body)
+    for puzzledir in args.puzzledir:
+        puzzles = {}
+        secrets = {}
 
-    def _add_field(self, key, val):
-        if key == 'answer':
-            h = djb2hash(val.encode('utf8'))
-            self.answers.append(val)
-            self.hashes.append(h)
-        else:
-            self.fields[key] = val
 
-    def publish(self):
-        obj = {
-            'author': self.fields['author'],
-            'hashes': self.hashes,
-            'body': markdown.markdown(self.body),
-        }
-        return obj
-
-    def secrets(self):
-        obj = {
-            'answers': self.answers,
-            'summary': self.fields['summary'],
-        }
-        return obj
-    
+        categoryname = os.path.basename(puzzledir.strip(os.sep))
         
-parser = argparse.ArgumentParser(description='Build a puzzle category')
-parser.add_argument('seed', help='contest seed')
-parser.add_argument('puzzledir', nargs='+', help='Directory of puzzle source')
-parser.add_argument('outdir', help='Output directory')
-args = parser.parse_args()
+        # build puzzle seed
+        puzzle_seed = hashlib.new('sha1')
+        puzzle_seed.update(categoryname.encode('utf-8'))
+        puzzle_seed.update(args.seed.encode('utf-8'))
+        puzzle_seed = puzzle_seed.hexdigest()
 
+        # create zipfile
+        zipfilename = os.path.join(args.outdir, "%s.zip" % categoryname)
+        if os.path.exists(zipfilename):
+    # assume blank state for now
+            pass
+    #        # open and gather some state
+    #        zf = zipfile.ZipFile(zipfilename, 'a')
+        else:
+            # create and read in state
+            zf = zipfile.ZipFile(zipfilename, 'w')
 
-for puzzledir in args.puzzledir:
-    puzzles = {}
-    secrets = {}
+        # read in puzzle details (will be pflarr in future)
+        for puzzlePath in glob.glob(os.path.join(puzzledir, "*.moth")):
+            filename = os.path.basename(puzzlePath)
+            points, ext = os.path.splitext(filename)
+            points = int(points)
+            puzzle = puzzles.Puzzle(open(puzzlePath))
+            puzzles[points] = puzzle
 
+        # build mapping, answers, and summary
+        mapping = {}
+        answers = {}
+        summary = {}
+        for points in sorted(puzzles):
+            puzzle = puzzles[points]
+            hashmap = hashlib.sha1(args.seed.encode('utf-8'))
+            hashmap.update(categoryname.encode('utf-8'))
+            hashmap.update(str(points).encode('utf-8'))
+            mapping[points] = hashmap.hexdigest()
+            answers[points] = puzzle.answers
+            summary[points] = puzzle.fields['summary']
 
-    categoryname = os.path.basename(puzzledir.strip(os.sep))
-    
-    # build puzzle seed
-    puzzle_seed = hashlib.new('sha1')
-    puzzle_seed.update(categoryname.encode('utf-8'))
-    puzzle_seed.update(args.seed.encode('utf-8'))
-    puzzle_seed = puzzle_seed.hexdigest()
+        # write mapping, answers, and summary
+        write_kv_pairs(zf, os.path.join(categoryname, 'map.txt'), mapping)
+        write_kv_pairs(zf, os.path.join(categoryname, 'answers.txt'), answers)
+        write_kv_pairs(zf, os.path.join(categoryname, 'summary.txt'), summary)
 
-    # create zipfile
-    zipfilename = os.path.join(args.outdir, "%s.zip" % categoryname)
-    if os.path.exists(zipfilename):
-# assume blank state for now
-        pass
-#        # open and gather some state
-#        zf = zipfile.ZipFile(zipfilename, 'a')
-    else:
-        # create and read in state
-        zf = zipfile.ZipFile(zipfilename, 'w')
-
-    # read in puzzle details (will be pflarr in future)
-    for puzzlePath in glob.glob(os.path.join(puzzledir, "*.moth")):
-        filename = os.path.basename(puzzlePath)
-        points, ext = os.path.splitext(filename)
-        points = int(points)
-        puzzle = Puzzle(open(puzzlePath))
-        puzzles[points] = puzzle
-
-    # build mapping, answers, and summary
-    mapping = {}
-    answers = {}
-    summary = {}
-    for points in sorted(puzzles):
-        puzzle = puzzles[points]
-        print(args.seed)
-        print(categoryname)
-        print(points)
-
-        hashmap = hashlib.sha1(args.seed.encode('utf-8'))
-        hashmap.update(categoryname.encode('utf-8'))
-        hashmap.update(str(points).encode('utf-8'))
-        mapping[points] = hashmap.hexdigest()
-        answers[points] = puzzle.answers
-        summary[points] = puzzle.fields['summary']
-
-    # write mapping, answers, and summary
-    write_kv_pairs(zf, os.path.join(categoryname, 'map.txt'), mapping)
-    write_kv_pairs(zf, os.path.join(categoryname, 'answers.txt'), answers)
-    write_kv_pairs(zf, os.path.join(categoryname, 'summary.txt'), summary)
-
-    # write out puzzles
-    for points in sorted(puzzles):
-        puzzle = puzzles[points]
-        puzzledir = os.path.join(categoryname, "content", mapping[points])
-        # test write
-        write_kv_pairs(zf, os.path.join(puzzledir, 'summary.txt'), summary)
-        # build json
-
-
+        # write out puzzles
+        for points in sorted(puzzles):
+            puzzle = puzzles[points]
+            puzzledir = os.path.join(categoryname, 'content', mapping[points])
+            # build/write json
+            ziphandle.writestr(filename, filehandle.read())
+            zf.writestr(os.path.join(puzzledir, 'puzzle.json'), \
+                                    json.dumps(puzzle.publish()))
+            # write associated files
 
 #vim:py
