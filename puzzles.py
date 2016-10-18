@@ -21,6 +21,15 @@ def djb2hash(buf):
 # We use a named tuple rather than a full class, because any random name generation has
 # to be done with Puzzle's random number generator, and it's cleaner to not pass that around.
 PuzzleFile = namedtuple('PuzzleFile', ['path', 'handle', 'name', 'visible'])
+PuzzleFile.__doc__ = """A file associated with a puzzle.
+    path: The path to the original input file. May be None (when this is created from a file handle
+          and there is no original input.
+    handle: A File-like object set to read the file from. You should be able to read straight
+            from it without having to seek to the beginning of the file.
+    name: The name of the output file.
+    visible: A boolean indicating whether this file should visible to the user. If False,
+             the file is still expected to be accessible, but it's path must be known
+             (or figured out) to retrieve it."""
 
 
 class Puzzle:
@@ -37,7 +46,6 @@ class Puzzle:
     REQUIRED_KEYS = [
         'author',
         'answer',
-        'points'
     ]
     SINGULAR_KEYS = [
         'name'
@@ -47,16 +55,36 @@ class Puzzle:
     ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                          'answer_words.txt'))]
 
-    def __init__(self, path, category_seed):
-        """Puzzle objects need a path to a puzzle description (
-        :param path:
-        :param category_seed:
+    def __init__(self, category_seed, path=None, points=None):
+        """A MOTH Puzzle.
+        :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
+                              It is combined with the puzzle points.
+        :param path: An optional path to a puzzle directory. The point value for the puzzle is taken
+                     from the puzzle directories name (it must be an integer greater than zero).
+                     Within this directory, we expect:
+            (optional) A puzzle.moth file in RFC2822 format. The puzzle will get its attributes
+                       from the headers, and the body will be the puzzle description in
+                       Markdown format.
+            (optional) A puzzle.py file. This is expected to have a callable called make
+                       that takes a single positional argument (this puzzle object).
+                       This callable can then do whatever it needs to with this object.
+        :param points: The point value of the puzzle. Mutually exclusive with path.
+            If neither of the above are given, the point value for the puzzle will have to
+            be set at instantiation.
+
+        For puzzle attributes, this class acts like a dictionary that in most cases assigns
+        always returns a list. Certain keys, however behave differently:
+          - Keys in Puzzle.SINGULAR_KEYS can only have one value, and writing to these overwrites
+            that value.
+          - The keys 'hidden', 'file', and 'resource' all create a new PuzzleFile object that
+            gets added under the 'files' key.
+          - The 'answer' also adds a new hash under the the 'hash' key.
         """
 
         super().__init__()
 
-        if not os.path.isdir(path):
-            raise ValueError("No such directory: {}".format(path))
+        if (points is None and path is None) or (points is not None and path is not None):
+            raise ValueError("Either points or path must be set, but not both.")
 
         self._dict = defaultdict(lambda: [])
         if os.path.isdir(path):
@@ -68,30 +96,36 @@ class Puzzle:
 
         # A list of temporary files we've created that will need to be deleted.
         self._temp_files = []
+        if path is not None:
+            if not os.path.isdir(path):
+                raise ValueError("No such directory: {}".format(path))
 
-        # Expected format is path/<points_int>.moth
-        pathname = os.path.split(path)[-1]
-        try:
-            self.points = int(pathname)
-        except ValueError:
-            raise ValueError("Directory name must be a point value: {}".format(path))
-        files = os.listdir(path)
+            pathname = os.path.split(path)[-1]
+            try:
+                self.points = int(pathname)
+            except ValueError:
+                raise ValueError("Directory name must be a point value: {}".format(path))
+        elif points is not None:
+            self.points = points
 
         self._seed = category_seed * self.points
         self.rand = random.Random(self._seed)
 
-        if 'puzzle.moth' in files:
-            self._read_config(open(os.path.join(path, 'puzzle.moth')))
+        if path is not None:
+            files = os.listdir(path)
 
-        if 'puzzle.py' in files:
-            # Good Lord this is dangerous as fuck.
-            loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'puzzle.py'))
-            puzzle_mod = loader.load_module()
-            if hasattr(puzzle_mod, 'make'):
-                self.body = '# `puzzle.body` was not set by the `make` function'
-                puzzle_mod.make(self)
-            else:
-                self.body = '# `puzzle.py` does not define a `make` function'
+            if 'puzzle.moth' in files:
+                self._read_config(open(os.path.join(path, 'puzzle.moth')))
+
+            if 'puzzle.py' in files:
+                # Good Lord this is dangerous as fuck.
+                loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'puzzle.py'))
+                puzzle_mod = loader.load_module()
+                if hasattr(puzzle_mod, 'make'):
+                    self.body = '# `puzzle.body` was not set by the `make` function'
+                    puzzle_mod.make(self)
+                else:
+                    self.body = '# `puzzle.py` does not define a `make` function'
 
     def cleanup(self):
         """Cleanup any outstanding temporary files."""
@@ -189,8 +223,8 @@ class Puzzle:
 
         if key == 'answer':
             # Handle adding answers to the puzzle
-            self._dict['hashes'].append(djb2hash(value.encode('utf8')))
-            self._dict['answers'].append(value)
+            self._dict['hash'].append(djb2hash(value.encode('utf8')))
+            self._dict['answer'].append(value)
         elif key == 'file':
             # Handle adding files to the puzzle
             path = os.path.join(self._puzzle_dir, 'files', value)
