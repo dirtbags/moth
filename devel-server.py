@@ -1,5 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
+import cgi
 import glob
 import http.server
 import mistune
@@ -7,6 +8,8 @@ import os
 import pathlib
 import puzzles
 import socketserver
+import sys
+import traceback
 
 try:
     from http.server import HTTPStatus
@@ -14,7 +17,10 @@ except ImportError:
     class HTTPStatus:
         NOT_FOUND = 404
         OK = 200
-        
+
+# XXX: This will eventually cause a problem. Do something more clever here.
+seed = 1
+
 
 def page(title, body):
     return """<!DOCTYPE html>
@@ -45,7 +51,20 @@ class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     pass
 
 
-class MothHandler(http.server.CGIHTTPRequestHandler):
+class MothHandler(http.server.SimpleHTTPRequestHandler):
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except:
+            tbtype, value, tb = sys.exc_info()
+            tblist = traceback.format_tb(tb, None) + traceback.format_exception_only(tbtype, value)
+            page = ("# Traceback (most recent call last)\n" +
+                    "    " +
+                    "    ".join(tblist[:-1]) +
+                    tblist[-1])
+            self.serve_md(page)
+            
+                    
     def do_GET(self):
         if self.path == "/":
             self.serve_front()
@@ -91,25 +110,22 @@ you are a fool.
         elif len(parts) == 3:
             # List all point values in a category
             body.append("# Puzzles in category `{}`".format(parts[2]))
-            puzz = []
-            for i in glob.glob(os.path.join("puzzles", parts[2], "*.moth")):
-                base = os.path.basename(i)
-                root, _ = os.path.splitext(base)
-                points = int(root)
-                puzz.append(points)
-            for puzzle in sorted(puzz):
-                body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=puzzle))
+            fpath = os.path.join("puzzles", parts[2])
+            cat = puzzles.Category(fpath, seed)
+            for points in cat.pointvals:
+                body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=points))
         elif len(parts) == 4:
             body.append("# {} puzzle {}".format(parts[2], parts[3]))
-            with open("puzzles/{}/{}.moth".format(parts[2], parts[3])) as f:
-                p = puzzles.Puzzle(f)
-            body.append("* Author: `{}`".format(p.fields.get("author")))
-            body.append("* Summary: `{}`".format(p.fields.get("summary")))
+            fpath = os.path.join("puzzles", parts[2])
+            cat = puzzles.Category(fpath, seed)
+            p = cat.puzzle(int(parts[3]))
+            body.append("* Author: `{}`".format(p['author']))
+            body.append("* Summary: `{}`".format(p['summary']))
             body.append('')
             body.append("## Body")
             body.append(p.body)
-            body.append("## Answers:")
-            for a in p.answers:
+            body.append("## Answers")
+            for a in p['answers']:
                 body.append("* `{}`".format(a))
             body.append("")
         else:
@@ -121,7 +137,7 @@ you are a fool.
             self.serve_md()
         else:
             super().do_GET()
-        
+
     def serve_md(self, text=None):
         fspathstr = self.translate_path(self.path)
         fspath = pathlib.Path(fspathstr)
@@ -133,8 +149,9 @@ you are a fool.
                 return None
         content = mdpage(text)
 
-        self.send_response(http.server.HTTPStatus.OK)
-        self.send_header("Content-type", "text/html; encoding=utf-8")
+        self.send_response(HTTPStatus.OK)
+
+        self.send_header("Content-type", "text/html; charset=utf-8")
         self.send_header("Content-Length", len(content))
         try:
             fs = fspath.stat()
@@ -145,9 +162,9 @@ you are a fool.
         self.wfile.write(content.encode('utf-8'))
 
 
-def run(address=('', 8080)):
+def run(address=('localhost', 8080)):
     httpd = ThreadingServer(address, MothHandler)
-    print("=== Listening on http://{}:{}/".format(address[0] or "localhost", address[1]))
+    print("=== Listening on http://{}:{}/".format(address[0], address[1]))
     httpd.serve_forever()
 
 if __name__ == '__main__':
