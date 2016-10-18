@@ -85,8 +85,9 @@ if __name__ == '__main__':
             hashmap.update(categoryname.encode('utf-8'))
             hashmap.update(str(points).encode('utf-8'))
             mapping[points] = hashmap.hexdigest()
-            answers[points] = puzzle.answers
-            summary[points] = puzzle.fields['summary']
+            answers[points] = puzzle['answer']
+            if len(puzzle['summary']) > 0:
+                summary[points] = puzzle['summary']
 
         # write mapping, answers, and summary
         write_kv_pairs(zf, os.path.join(categoryname, 'map.txt'), mapping)
@@ -96,13 +97,28 @@ if __name__ == '__main__':
         # write out puzzles
         for points in sorted(puzzles_dict):
             puzzle = puzzles_dict[points]
+            puzzlebody = [json.dumps(puzzle.publish())]
             puzzledir = os.path.join(categoryname, 'content', mapping[points])
             # build/write json
-            ziphandle.writestr(filename, filehandle.read())
-            zf.writestr(os.path.join(puzzledir, 'puzzle.json'), \
-                                    json.dumps(puzzle.publish()))
+
             # write associated files
+            assoc_files = []
             for fobj in puzzle['files']:
+                if fobj.visible == True:
+                    assoc_files.append(fobj.name)
                 zf.writestr(os.path.join(puzzledir, fobj.name), \
                                     fobj.handle.read())
+
+
+            if len(assoc_files) > 0:
+                puzzlebody.append("")
+                puzzlebody.append("## Associated Files:")
+                for f in assoc_files:
+                    puzzlebody.append(f)
+
+            puzzlebody = os.linesep.join(puzzlebody)
+
+            # non-optimal writing of file-like objects, but it works
+            zf.writestr(os.path.join(puzzledir, 'puzzle.json'), \
+                                    json.dumps(puzzle.publish()))
 #vim:py
