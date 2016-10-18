@@ -335,7 +335,7 @@ class BlockLexer(object):
 
             rest = len(item)
             if i != length - 1 and rest:
-                _next = item[rest-1] == '\n'
+                _next = item[rest - 1] == '\n'
                 if not loose:
                     loose = _next
 

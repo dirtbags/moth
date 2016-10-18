@@ -15,6 +15,7 @@ except ImportError:
         NOT_FOUND = 404
         OK = 200
 
+
 def page(title, body):
     return """<!DOCTYPE html>
 <html>
@@ -120,7 +121,7 @@ you are a fool.
             self.serve_md()
         else:
             super().do_GET()
-        
+
     def serve_md(self, text=None):
         fspathstr = self.translate_path(self.path)
         fspath = pathlib.Path(fspathstr)
