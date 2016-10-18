@@ -66,12 +66,13 @@ if __name__ == '__main__':
         for categorypath in glob.glob(os.path.join(categorydir, "*", "puzzle.moth")):
             points = categorypath.split(os.sep)[-2] # directory before '/puzzle.moth'
             categorypath = os.path.dirname(categorypath)
+            print(categorypath)
             try:
                 points = int(points)
             except:
                 print("Failed to identify points on: %s" % categorypath, file=sys.stderr)
                 continue
-            puzzle = puzzles.Puzzle(open(categorypath), category_seed)
+            puzzle = puzzles.Puzzle(category_seed, categorypath)
             puzzles_dict[points] = puzzle
 
         # build mapping, answers, and summary
