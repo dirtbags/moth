@@ -8,11 +8,9 @@ import pathlib
 import puzzles
 import socketserver
 
-
-#HTTPStatus = http.server.HTTPStatus
-if hasattr(http.server, 'HTTPStatus'):
-    HTTPStatus = http.HTTPStatus
-else:
+try:
+    from http.server import HTTPStatus
+except ImportError:
     class HTTPStatus:
         NOT_FOUND = 404
         OK = 200
@@ -31,6 +29,7 @@ def page(title, body):
   </body>
 </html>""".format(title, body)
 
+
 def mdpage(body):
     try:
         title, _ = body.split('\n', 1)
@@ -43,6 +42,7 @@ def mdpage(body):
 
 class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     pass
+
 
 class MothHandler(http.server.CGIHTTPRequestHandler):
     def do_GET(self):
@@ -143,6 +143,7 @@ you are a fool.
             pass
         self.end_headers()
         self.wfile.write(content.encode('utf-8'))
+
 
 def run(address=('', 8080)):
     httpd = ThreadingServer(address, MothHandler)
