@@ -23,6 +23,7 @@ def djb2hash(buf):
 # to be done with Puzzle's random number generator, and it's cleaner to not pass that around.
 PuzzleFile = namedtuple('PuzzleFile', ['path', 'handle', 'name', 'visible'])
 
+
 class Puzzle:
 
     KNOWN_KEYS = [
@@ -197,7 +198,6 @@ class Puzzle:
 
         return answer
 
-
     def htmlify(self):
         return mistune.markdown(self.body)
 
@@ -227,8 +227,8 @@ class Puzzle:
             'summary': self['summary'],
         }
         return obj
-    
-if __name__ == '__main__':        
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a puzzle category')
     parser.add_argument('puzzledir', nargs='+', help='Directory of puzzle source')
     args = parser.parse_args()
@@ -246,4 +246,3 @@ if __name__ == '__main__':
         for points in sorted(puzzles):
             puzzle = puzzles[points]
             print(puzzle.secrets())
-
