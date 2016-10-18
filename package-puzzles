@@ -10,6 +10,7 @@ import json
 import os
 import markdown
 import random
+import sys
 import zipfile
 
 import puzzles
@@ -32,25 +33,23 @@ def write_kv_pairs(ziphandle, filename, kv):
     ziphandle.writestr(filename, filehandle.read())
    
 if __name__ == '__main__':        
-    parser = argparse.ArgumentParser(description='Build a puzzle category')
+    parser = argparse.ArgumentParser(description='Build a category package')
     parser.add_argument('seed', help='contest seed')
-    parser.add_argument('puzzledir', nargs='+', help='Directory of puzzle source')
+    parser.add_argument('categorydirs', nargs='+', help='Directory of category source')
     parser.add_argument('outdir', help='Output directory')
     args = parser.parse_args()
 
-
-    for puzzledir in args.puzzledir:
-        puzzles = {}
+    for categorydir in args.categorydirs:
+        puzzles_dict = {}
         secrets = {}
 
-
-        categoryname = os.path.basename(puzzledir.strip(os.sep))
+        categoryname = os.path.basename(categorydir.strip(os.sep))
         
-        # build puzzle seed
-        puzzle_seed = hashlib.new('sha1')
-        puzzle_seed.update(categoryname.encode('utf-8'))
-        puzzle_seed.update(args.seed.encode('utf-8'))
-        puzzle_seed = puzzle_seed.hexdigest()
+        # build category seed
+        category_seed = hashlib.new('sha1')
+        category_seed.update(categoryname.encode('utf-8'))
+        category_seed.update(args.seed.encode('utf-8'))
+        category_seed = category_seed.hexdigest()
 
         # create zipfile
         zipfilename = os.path.join(args.outdir, "%s.zip" % categoryname)
@@ -63,20 +62,24 @@ if __name__ == '__main__':
             # create and read in state
             zf = zipfile.ZipFile(zipfilename, 'w')
 
-        # read in puzzle details (will be pflarr in future)
-        for puzzlePath in glob.glob(os.path.join(puzzledir, "*.moth")):
-            filename = os.path.basename(puzzlePath)
-            points, ext = os.path.splitext(filename)
-            points = int(points)
-            puzzle = puzzles.Puzzle(open(puzzlePath))
-            puzzles[points] = puzzle
+        # read in category details (will be pflarr in future)
+        for categorypath in glob.glob(os.path.join(categorydir, "*", "puzzle.moth")):
+            points = categorypath.split(os.sep)[-2] # directory before '/puzzle.moth'
+            categorypath = os.path.dirname(categorypath)
+            try:
+                points = int(points)
+            except:
+                print("Failed to identify points on: %s" % categorypath, file=sys.stderr)
+                continue
+            puzzle = puzzles.Puzzle(open(categorypath), category_seed)
+            puzzles_dict[points] = puzzle
 
         # build mapping, answers, and summary
         mapping = {}
         answers = {}
         summary = {}
-        for points in sorted(puzzles):
-            puzzle = puzzles[points]
+        for points in sorted(puzzles_dict):
+            puzzle = puzzles_dict[points]
             hashmap = hashlib.sha1(args.seed.encode('utf-8'))
             hashmap.update(categoryname.encode('utf-8'))
             hashmap.update(str(points).encode('utf-8'))
@@ -90,13 +93,16 @@ if __name__ == '__main__':
         write_kv_pairs(zf, os.path.join(categoryname, 'summary.txt'), summary)
 
         # write out puzzles
-        for points in sorted(puzzles):
-            puzzle = puzzles[points]
+        for points in sorted(puzzles_dict):
+            puzzle = puzzles_dict[points]
             puzzledir = os.path.join(categoryname, 'content', mapping[points])
             # build/write json
             ziphandle.writestr(filename, filehandle.read())
             zf.writestr(os.path.join(puzzledir, 'puzzle.json'), \
                                     json.dumps(puzzle.publish()))
             # write associated files
+            for fobj in puzzle['files']:
+                zf.writestr(os.path.join(puzzledir, fobj.name), \
+                                    fobj.handle.read())
 
 #vim:py
