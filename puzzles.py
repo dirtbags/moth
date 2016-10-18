@@ -21,6 +21,15 @@ def djb2hash(buf):
 # We use a named tuple rather than a full class, because any random name generation has
 # to be done with Puzzle's random number generator, and it's cleaner to not pass that around.
 PuzzleFile = namedtuple('PuzzleFile', ['path', 'handle', 'name', 'visible'])
+PuzzleFile.__doc__ = """A file associated with a puzzle.
+    path: The path to the original input file. May be None (when this is created from a file handle
+          and there is no original input.
+    handle: A File-like object set to read the file from. You should be able to read straight
+            from it without having to seek to the beginning of the file.
+    name: The name of the output file.
+    visible: A boolean indicating whether this file should visible to the user. If False,
+             the file is still expected to be accessible, but it's path must be known
+             (or figured out) to retrieve it."""
 
 
 class Puzzle:
