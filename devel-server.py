@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import cgi
 import glob
 import http.server
 import mistune
@@ -7,6 +8,8 @@ import os
 import pathlib
 import puzzles
 import socketserver
+import sys
+import traceback
 
 try:
     from http.server import HTTPStatus
@@ -48,7 +51,20 @@ class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     pass
 
 
-class MothHandler(http.server.CGIHTTPRequestHandler):
+class MothHandler(http.server.SimpleHTTPRequestHandler):
+    def handle_one_request(self):
+        try:
+            super().handle_one_request()
+        except:
+            tbtype, value, tb = sys.exc_info()
+            tblist = traceback.format_tb(tb, None) + traceback.format_exception_only(tbtype, value)
+            page = ("# Traceback (most recent call last)\n" +
+                    "    " +
+                    "    ".join(tblist[:-1]) +
+                    tblist[-1])
+            self.serve_md(page)
+            
+                    
     def do_GET(self):
         if self.path == "/":
             self.serve_front()
