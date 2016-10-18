@@ -55,6 +55,9 @@ class Puzzle:
 
         super().__init__()
 
+        if not os.path.isdir(path):
+            raise ValueError("No such directory: {}".format(path))
+
         self._dict = defaultdict(lambda: [])
         if os.path.isdir(path):
             self._puzzle_dir = path
@@ -63,37 +66,32 @@ class Puzzle:
         self.message = bytes(random.choice(messageChars) for i in range(20))
         self.body = ''
 
-        if not os.path.exists(path):
-            raise ValueError("No puzzle at path: {]".format(path))
-        elif os.path.isdir(path):
-            # Expected format is path/<points_int>.moth
-            pathname = os.path.split(path)[-1]
-            try:
-                self.points = int(pathname)
-            except ValueError:
-                pass
-            files = os.listdir(path)
-
-            if 'puzzle.moth' in files:
-                self._read_config(open(os.path.join(path, 'puzzle.moth')))
-
-            if 'puzzle.py' in files:
-                # Good Lord this is dangerous as fuck.
-                loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'puzzle.py'))
-                puzzle_mod = loader.load_module()
-                if hasattr(puzzle_mod, 'make'):
-                    puzzle_mod.make(self)
-        else:
-            raise ValueError("Unacceptable file type for puzzle at {}".format(path))
-
-        self._seed = hashlib.sha1(category_seed + bytes(self['points'])).digest()
-        self.rand = random.Random(self._seed)
-
-        # Set our 'files' as a dict, since we want register them uniquely by name.
-        self['files'] = dict()
-
         # A list of temporary files we've created that will need to be deleted.
         self._temp_files = []
+
+        # Expected format is path/<points_int>.moth
+        pathname = os.path.split(path)[-1]
+        try:
+            self.points = int(pathname)
+        except ValueError:
+            raise ValueError("Directory name must be a point value: {}".format(path))
+        files = os.listdir(path)
+
+        self._seed = category_seed * self.points
+        self.rand = random.Random(self._seed)
+
+        if 'puzzle.moth' in files:
+            self._read_config(open(os.path.join(path, 'puzzle.moth')))
+
+        if 'puzzle.py' in files:
+            # Good Lord this is dangerous as fuck.
+            loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'puzzle.py'))
+            puzzle_mod = loader.load_module()
+            if hasattr(puzzle_mod, 'make'):
+                self.body = '# `puzzle.body` was not set by the `make` function'
+                puzzle_mod.make(self)
+            else:
+                self.body = '# `puzzle.py` does not define a `make` function'
 
     def cleanup(self):
         """Cleanup any outstanding temporary files."""
@@ -217,15 +215,12 @@ class Puzzle:
     def __getitem__(self, item):
         return self._dict[item.lower()]
 
-    def make_answer(self, word_count, sep=b' '):
+    def make_answer(self, word_count, sep=' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
         :param int word_count: The number of words to include in the answer.
         :param str|bytes sep: The word separator.
-        :returns: The answer bytes
+        :returns: The answer string
         """
-
-        if type(sep) == str:
-            sep = sep.encode('ascii')
 
         answer = sep.join(self.rand.sample(self.ANSWER_WORDS, word_count))
         self['answer'] = answer
@@ -250,8 +245,8 @@ class Puzzle:
             'summary': self['summary'],
         }
         return obj
-    
-if __name__ == '__main__':        
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a puzzle category')
     parser.add_argument('puzzledir', nargs='+', help='Directory of puzzle source')
     args = parser.parse_args()
@@ -270,3 +265,22 @@ if __name__ == '__main__':
             puzzle = puzzles[points]
             print(puzzle.secrets())
 
+
+class Category:
+    def __init__(self, path, seed):
+        self.path = path
+        self.seed = seed
+        self.pointvals = []
+        for fpath in glob.glob(os.path.join(path, "[0-9]*")):
+            pn = os.path.basename(fpath)
+            points = int(pn)
+            self.pointvals.append(points)
+        self.pointvals.sort()
+
+    def puzzle(self, points):
+        path = os.path.join(self.path, str(points))
+        return Puzzle(path, self.seed)
+
+    def puzzles(self):
+        for points in self.pointvals:
+            yield self.puzzle(points)
