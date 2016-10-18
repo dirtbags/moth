@@ -12,7 +12,6 @@ import tempfile
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-
 def djb2hash(buf):
     h = 5381
     for c in buf:
@@ -27,12 +26,12 @@ PuzzleFile = namedtuple('PuzzleFile', ['path', 'handle', 'name', 'visible'])
 class Puzzle:
 
     KNOWN_KEYS = [
-        'file',
-        'resource',
-        'temp_file',
         'answer',
-        'points',
         'author',
+        'file',
+        'hidden',
+        'name'
+        'resource',
         'summary'
     ]
     REQUIRED_KEYS = [
@@ -41,7 +40,7 @@ class Puzzle:
         'points'
     ]
     SINGULAR_KEYS = [
-        'points'
+        'name'
     ]
 
     # Get a big list of clean words for our answer file.
@@ -49,6 +48,11 @@ class Puzzle:
                                                          'answer_words.txt'))]
 
     def __init__(self, path, category_seed):
+        """Puzzle objects need a path to a puzzle description (
+        :param path:
+        :param category_seed:
+        """
+
         super().__init__()
 
         self._dict = defaultdict(lambda: [])
@@ -61,32 +65,21 @@ class Puzzle:
 
         if not os.path.exists(path):
             raise ValueError("No puzzle at path: {]".format(path))
-        elif os.path.isfile(path):
-            try:
-                # Expected format is path/<points_int>.moth
-                self['points'] = int(os.path.split(path)[-1].split('.')[0])
-            except (IndexError, ValueError):
-                raise ValueError("Invalid puzzle config. "
-                                 "Expected something like <point_value>.moth")
-
-            stream = open(path)
-            self._read_config(stream)
         elif os.path.isdir(path):
+            # Expected format is path/<points_int>.moth
+            pathname = os.path.split(path)[-1]
             try:
-                # Expected format is path/<points_int>.moth
-                self['points'] = int(os.path.split(path)[-1])
-            except (IndexError, ValueError):
-                raise ValueError("Invalid puzzle config. Expected an integer point value for a "
-                                 "directory name.")
-
+                self.points = int(pathname)
+            except ValueError:
+                pass
             files = os.listdir(path)
 
-            if 'config.moth' in files:
-                self._read_config(open(os.path.join(path, 'config.moth')))
+            if 'puzzle.moth' in files:
+                self._read_config(open(os.path.join(path, 'puzzle.moth')))
 
-            if 'make.py' in files:
+            if 'puzzle.py' in files:
                 # Good Lord this is dangerous as fuck.
-                loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'make.py'))
+                loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'puzzle.py'))
                 puzzle_mod = loader.load_module()
                 if hasattr(puzzle_mod, 'make'):
                     puzzle_mod.make(self)
@@ -99,6 +92,18 @@ class Puzzle:
         # Set our 'files' as a dict, since we want register them uniquely by name.
         self['files'] = dict()
 
+        # A list of temporary files we've created that will need to be deleted.
+        self._temp_files = []
+
+    def cleanup(self):
+        """Cleanup any outstanding temporary files."""
+        for path in self._temp_files:
+            if os.path.exists(path):
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
+
     def _read_config(self, stream):
         """Read a configuration file (ISO 2822)"""
         body = []
@@ -110,7 +115,6 @@ class Puzzle:
                     header = False
                     continue
                 key, val = line.split(':', 1)
-                key = key.lower()
                 val = val.strip()
                 self[key] = val
             else:
@@ -122,7 +126,11 @@ class Puzzle:
         return hashlib.sha1(str(self.rand.random()).encode('ascii')).digest()
 
     def _puzzle_file(self, path, name, visible=True):
-        """Make a puzzle file instance for the given file.
+        """Make a puzzle file instance for the given file. To add files as you would in the config
+        file (to 'file', 'hidden', or 'resource', simply assign to that keyword in the object:
+          puzzle['file'] = 'some_file.txt'
+          puzzle['hidden'] = 'some_hidden_file.txt'
+          puzzle['resource'] = 'some_file_in_the_category_resource_directory_omg_long_name.txt'
         :param path: The path to the file
         :param name: The name of the file. If set to None, the published file will have
                      a random hash as a name and have visible set to False.
@@ -137,20 +145,46 @@ class Puzzle:
 
         return PuzzleFile(path=path, handle=file, name=name, visible=visible)
 
-    def make_file(self, name=None, mode='rw+b'):
-        """Get a file object for adding dynamically generated data to the puzzle.
-        :param name: The name of the file for links within the puzzle. If this is None,
-        the file will be hidden with a random hash as the name.
+    def make_temp_file(self, name=None, mode='rw+b', visible=True):
+        """Get a file object for adding dynamically generated data to the puzzle. When you're
+        done with this file, flush it, but don't close it.
+        :param name: The name of the file for links within the puzzle. If this is None, a name
+                     will be generated for you.
+        :param mode: The mode under which
+        :param visible: Whether or not the file will be visible to the user.
         :return: A file object for writing
         """
 
-        file = tempfile.TemporaryFile(mode=mode, delete=False)
+        if name is None:
+            name = self.random_hash()
 
-        self._dict['files'].append(self._puzzle_file(file.name, name))
+        file = tempfile.NamedTemporaryFile(mode=mode, delete=False)
+        file_read = open(file.name, 'rb')
+
+        self._dict['files'][name] = PuzzleFile(path=file.name, handle=file_read,
+                                               name=name, visible=visible)
 
         return file
 
+    def make_handle_file(self, handle, name, visible=True):
+        """Add a file to the puzzle from a file handle.
+        :param handle: A file object or equivalent.
+        :param name: The name of the file in the final puzzle.
+        :param visible: Whether or not it's visible.
+        :return: None
+        """
+
     def __setitem__(self, key, value):
+        """Set a value for this puzzle, as if it were set in the config file. Most values default
+        being added to a list. Files (regardless of type) go in a dict under ['files']. Keys
+        in Puzzle.SINGULAR_KEYS are single values that get overwritten with subsequent assignments.
+        Only keys in Puzzle.KNOWN_KEYS are accepted.
+        :param key:
+        :param value:
+        :return:
+        """
+
+        key = key.lower()
 
         if key in ('file', 'resource', 'hidden') and self._puzzle_dir is None:
             raise KeyError("Cannot set a puzzle file for single file puzzles.")
@@ -181,7 +215,7 @@ class Puzzle:
             raise KeyError("Invalid Attribute: {}".format(key))
 
     def __getitem__(self, item):
-        return self._dict[item]
+        return self._dict[item.lower()]
 
     def make_answer(self, word_count, sep=b' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
@@ -199,21 +233,10 @@ class Puzzle:
         return answer
 
     def htmlify(self):
+        """Format and return the markdown for the puzzle body."""
         return mistune.markdown(self.body)
 
-    def publish(self, dest):
-        """Deploy the puzzle to the given directory, and return the info needed for describing
-        the puzzle and accepting answers in MOTH."""
-
-        if not os.path.exists(dest):
-            raise ValueError("Puzzle destination directory does not exist.")
-
-        # Delete the original directory
-
-        # Save puzzle html file
-
-        # Copy over all the files.
-
+    def publish(self):
         obj = {
             'author': self['author'],
             'hashes': self['hashes'],
