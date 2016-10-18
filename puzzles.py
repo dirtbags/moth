@@ -313,7 +313,7 @@ class Category:
 
     def puzzle(self, points):
         path = os.path.join(self.path, str(points))
-        return Puzzle(path, self.seed)
+        return Puzzle(self.seed, path)
 
     def puzzles(self):
         for points in self.pointvals:
