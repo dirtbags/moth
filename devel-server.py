@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 
 import glob
 import http.server
@@ -14,6 +14,9 @@ except ImportError:
     class HTTPStatus:
         NOT_FOUND = 404
         OK = 200
+
+# XXX: This will eventually cause a problem. Do something more clever here.
+seed = 1
 
 
 def page(title, body):
@@ -91,25 +94,22 @@ you are a fool.
         elif len(parts) == 3:
             # List all point values in a category
             body.append("# Puzzles in category `{}`".format(parts[2]))
-            puzz = []
-            for i in glob.glob(os.path.join("puzzles", parts[2], "*.moth")):
-                base = os.path.basename(i)
-                root, _ = os.path.splitext(base)
-                points = int(root)
-                puzz.append(points)
-            for puzzle in sorted(puzz):
-                body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=puzzle))
+            fpath = os.path.join("puzzles", parts[2])
+            cat = puzzles.Category(fpath, seed)
+            for points in cat.pointvals:
+                body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=points))
         elif len(parts) == 4:
             body.append("# {} puzzle {}".format(parts[2], parts[3]))
-            with open("puzzles/{}/{}.moth".format(parts[2], parts[3]), encoding="utf-8") as f:
-                p = puzzles.Puzzle(f)
-            body.append("* Author: `{}`".format(p.fields.get("author")))
-            body.append("* Summary: `{}`".format(p.fields.get("summary")))
+            fpath = os.path.join("puzzles", parts[2])
+            cat = puzzles.Category(fpath, seed)
+            p = cat.puzzle(int(parts[3]))
+            body.append("* Author: `{}`".format(p['author']))
+            body.append("* Summary: `{}`".format(p['summary']))
             body.append('')
             body.append("## Body")
             body.append(p.body)
-            body.append("## Answers:")
-            for a in p.answers:
+            body.append("## Answers")
+            for a in p['answers']:
                 body.append("* `{}`".format(a))
             body.append("")
         else:
