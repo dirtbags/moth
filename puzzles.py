@@ -46,7 +46,6 @@ class Puzzle:
     REQUIRED_KEYS = [
         'author',
         'answer',
-        'points'
     ]
     SINGULAR_KEYS = [
         'name'
@@ -57,7 +56,7 @@ class Puzzle:
                                                          'answer_words.txt'))]
 
     def __init__(self, category_seed, path=None, points=None):
-        """A MOTH Puzzle
+        """A MOTH Puzzle.
         :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
                               It is combined with the puzzle points.
         :param path: An optional path to a puzzle directory. The point value for the puzzle is taken
@@ -72,6 +71,14 @@ class Puzzle:
         :param points: The point value of the puzzle. Mutually exclusive with path.
             If neither of the above are given, the point value for the puzzle will have to
             be set at instantiation.
+
+        For puzzle attributes, this class acts like a dictionary that in most cases assigns
+        always returns a list. Certain keys, however behave differently:
+          - Keys in Puzzle.SINGULAR_KEYS can only have one value, and writing to these overwrites
+            that value.
+          - The keys 'hidden', 'file', and 'resource' all create a new PuzzleFile object that
+            gets added under the 'files' key.
+          - The 'answer' also adds a new hash under the the 'hash' key.
         """
 
         super().__init__()
@@ -216,8 +223,8 @@ class Puzzle:
 
         if key == 'answer':
             # Handle adding answers to the puzzle
-            self._dict['hashes'].append(djb2hash(value.encode('utf8')))
-            self._dict['answers'].append(value)
+            self._dict['hash'].append(djb2hash(value.encode('utf8')))
+            self._dict['answer'].append(value)
         elif key == 'file':
             # Handle adding files to the puzzle
             path = os.path.join(self._puzzle_dir, 'files', value)
