@@ -56,7 +56,7 @@ class Puzzle:
     ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                          'answer_words.txt'))]
 
-    def __init__(self, category_seed, path=None):
+    def __init__(self, category_seed, path=None, points=None):
         """A MOTH Puzzle
         :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
                               It is combined with the puzzle points.
@@ -69,11 +69,15 @@ class Puzzle:
             (optional) A puzzle.py file. This is expected to have a callable called make
                        that takes a single positional argument (this puzzle object).
                        This callable can then do whatever it needs to with this object.
+        :param points: The point value of the puzzle. Mutually exclusive with path.
             If neither of the above are given, the point value for the puzzle will have to
-            be set manually.
+            be set at instantiation.
         """
 
         super().__init__()
+
+        if (points is None and path is None) or (points is not None and path is not None):
+            raise ValueError("Either points or path must be set, but not both.")
 
         self._dict = defaultdict(lambda: [])
         if os.path.isdir(path):
@@ -83,25 +87,24 @@ class Puzzle:
         self.message = bytes(random.choice(messageChars) for i in range(20))
         self.body = ''
 
-        self._seed = hashlib.sha1(category_seed + bytes(self['points'])).digest()
-        self.rand = random.Random(self._seed)
-
-        # Set our 'files' as a dict, since we want register them uniquely by name.
-        self['files'] = dict()
-
         # A list of temporary files we've created that will need to be deleted.
         self._temp_files = []
+        if path is not None:
+            if not os.path.isdir(path):
+                raise ValueError("No such directory: {}".format(path))
 
-        # All internal variables must be initialized before the following runs
-        if not os.path.exists(path):
-            raise ValueError("No puzzle at path: {]".format(path))
-        elif os.path.isdir(path):
-            # Expected format is path/<points_int>.moth
             pathname = os.path.split(path)[-1]
             try:
                 self.points = int(pathname)
             except ValueError:
-                pass
+                raise ValueError("Directory name must be a point value: {}".format(path))
+        elif points is not None:
+            self.points = points
+
+        self._seed = category_seed * self.points
+        self.rand = random.Random(self._seed)
+
+        if path is not None:
             files = os.listdir(path)
 
             if 'puzzle.moth' in files:
@@ -112,9 +115,10 @@ class Puzzle:
                 loader = SourceFileLoader('puzzle_mod', os.path.join(path, 'puzzle.py'))
                 puzzle_mod = loader.load_module()
                 if hasattr(puzzle_mod, 'make'):
+                    self.body = '# `puzzle.body` was not set by the `make` function'
                     puzzle_mod.make(self)
-        else:
-            raise ValueError("Unacceptable file type for puzzle at {}".format(path))
+                else:
+                    self.body = '# `puzzle.py` does not define a `make` function'
 
     def cleanup(self):
         """Cleanup any outstanding temporary files."""
@@ -238,15 +242,12 @@ class Puzzle:
     def __getitem__(self, item):
         return self._dict[item.lower()]
 
-    def make_answer(self, word_count, sep=b' '):
+    def make_answer(self, word_count, sep=' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
         :param int word_count: The number of words to include in the answer.
         :param str|bytes sep: The word separator.
-        :returns: The answer bytes
+        :returns: The answer string
         """
-
-        if type(sep) == str:
-            sep = sep.encode('ascii')
 
         answer = sep.join(self.rand.sample(self.ANSWER_WORDS, word_count))
         self['answer'] = answer
@@ -271,8 +272,8 @@ class Puzzle:
             'summary': self['summary'],
         }
         return obj
-    
-if __name__ == '__main__':        
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a puzzle category')
     parser.add_argument('puzzledir', nargs='+', help='Directory of puzzle source')
     args = parser.parse_args()
@@ -291,3 +292,22 @@ if __name__ == '__main__':
             puzzle = puzzles[points]
             print(puzzle.secrets())
 
+
+class Category:
+    def __init__(self, path, seed):
+        self.path = path
+        self.seed = seed
+        self.pointvals = []
+        for fpath in glob.glob(os.path.join(path, "[0-9]*")):
+            pn = os.path.basename(fpath)
+            points = int(pn)
+            self.pointvals.append(points)
+        self.pointvals.sort()
+
+    def puzzle(self, points):
+        path = os.path.join(self.path, str(points))
+        return Puzzle(path, self.seed)
+
+    def puzzles(self):
+        for points in self.pointvals:
+            yield self.puzzle(points)
