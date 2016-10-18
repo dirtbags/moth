@@ -171,7 +171,7 @@ class Puzzle:
 
         # Make sure it actually exists.
         if not os.path.exists(path):
-            raise ValueError("Included file {} does not exist.")
+            raise ValueError("Included file {} does not exist.".format(path))
 
         file = open(path, 'rb')
 
