@@ -137,17 +137,40 @@ you are a fool.
             for pzl_file in pzl['files']:
                 body.append("* [puzzles/{cat}/{points}/{filename}]({filename})"
                             .format(cat=parts[2], points=pzl.points, filename=pzl_file))
+
+            if len(pzl.logs) > 0:
+                body.extend(["", "## Logs"])
+                body.append("* [Full Log File](_logs)"
+                            .format(cat=parts[2], points=pzl.points))
+                body.extend(["", "### Logs Head"])
+                for log in pzl.logs[:10]:
+                    body.append("* `{}`".format(log))
+                body.extend(["", "### Logs Tail"])
+                for log in pzl.logs[-10:]:
+                    body.append("* `{}`".format(log))
             self.serve_md('\n'.join(body))
             return
         elif len(parts) == 5:
-            try:
-                self.serve_puzzle_file(pzl['files'][parts[4]])
-            except KeyError:
-                self.send_error(HTTPStatus.NOT_FOUND, "File not found")
-                return
+            if parts[4] == '_logs':
+                self.serve_puzzle_logs(pzl.logs)
+            else:
+                try:
+                    self.serve_puzzle_file(pzl['files'][parts[4]])
+                except KeyError:
+                    self.send_error(HTTPStatus.NOT_FOUND, "File not found")
+                    return
         else:
             body.append("# Not Implemented Yet")
             self.serve_md('\n'.join(body))
+
+    def serve_puzzle_logs(self, logs):
+        """Serve a PuzzleFile object."""
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-type", "text/plain; charset=utf-8")
+        self.end_headers()
+        for log in logs:
+            self.wfile.write(log.encode('ascii'))
+            self.wfile.write(b"\n")
 
     CHUNK_SIZE = 4096
     def serve_puzzle_file(self, file):
