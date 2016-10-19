@@ -94,6 +94,9 @@ class Puzzle:
         self.message = bytes(random.choice(messageChars) for i in range(20))
         self.body = ''
 
+        # This defaults to a dict, not a list like most things
+        self._dict['files'] = {}
+
         # A list of temporary files we've created that will need to be deleted.
         self._temp_files = []
         if path is not None:
@@ -171,18 +174,17 @@ class Puzzle:
 
         # Make sure it actually exists.
         if not os.path.exists(path):
-            raise ValueError("Included file {} does not exist.")
+            raise ValueError("Included file {} does not exist.".format(path))
 
         file = open(path, 'rb')
 
         return PuzzleFile(path=path, handle=file, name=name, visible=visible)
 
-    def make_temp_file(self, name=None, mode='rw+b', visible=True):
+    def make_temp_file(self, name=None, visible=True):
         """Get a file object for adding dynamically generated data to the puzzle. When you're
         done with this file, flush it, but don't close it.
         :param name: The name of the file for links within the puzzle. If this is None, a name
                      will be generated for you.
-        :param mode: The mode under which
         :param visible: Whether or not the file will be visible to the user.
         :return: A file object for writing
         """
@@ -190,7 +192,7 @@ class Puzzle:
         if name is None:
             name = self.random_hash()
 
-        file = tempfile.NamedTemporaryFile(mode=mode, delete=False)
+        file = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
         file_read = open(file.name, 'rb')
 
         self._dict['files'][name] = PuzzleFile(path=file.name, handle=file_read,
@@ -313,7 +315,7 @@ class Category:
 
     def puzzle(self, points):
         path = os.path.join(self.path, str(points))
-        return Puzzle(path, self.seed)
+        return Puzzle(self.seed, path=path)
 
     def puzzles(self):
         for points in self.pointvals:

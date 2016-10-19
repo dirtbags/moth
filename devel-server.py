@@ -102,35 +102,69 @@ you are a fool.
         body = []
         path = self.path.rstrip('/')
         parts = path.split("/")
+        #raise ValueError(parts)
         if len(parts) < 3:
             # List all categories
             body.append("# Puzzle Categories")
             for i in glob.glob(os.path.join("puzzles", "*", "")):
                 body.append("* [{}](/{})".format(i, i))
-        elif len(parts) == 3:
+            self.serve_md('\n'.join(body))
+            return
+
+        fpath = os.path.join("puzzles", parts[2])
+        cat = puzzles.Category(fpath, seed)
+        if len(parts) == 3:
             # List all point values in a category
             body.append("# Puzzles in category `{}`".format(parts[2]))
-            fpath = os.path.join("puzzles", parts[2])
-            cat = puzzles.Category(fpath, seed)
             for points in cat.pointvals:
                 body.append("* [puzzles/{cat}/{points}](/puzzles/{cat}/{points}/)".format(cat=parts[2], points=points))
-        elif len(parts) == 4:
+            self.serve_md('\n'.join(body))
+            return
+
+        pzl = cat.puzzle(int(parts[3]))
+        if len(parts) == 4:
             body.append("# {} puzzle {}".format(parts[2], parts[3]))
-            fpath = os.path.join("puzzles", parts[2])
-            cat = puzzles.Category(fpath, seed)
-            p = cat.puzzle(int(parts[3]))
-            body.append("* Author: `{}`".format(p['author']))
-            body.append("* Summary: `{}`".format(p['summary']))
+            body.append("* Author: `{}`".format(pzl['author']))
+            body.append("* Summary: `{}`".format(pzl['summary']))
             body.append('')
             body.append("## Body")
-            body.append(p.body)
+            body.append(pzl.body)
             body.append("## Answers")
-            for a in p['answers']:
+            for a in pzl['answer']:
                 body.append("* `{}`".format(a))
             body.append("")
+            body.append("## Files")
+            for pzl_file in pzl['files']:
+                body.append("* [puzzles/{cat}/{points}/{filename}]({filename})"
+                            .format(cat=parts[2], points=pzl.points, filename=pzl_file))
+            self.serve_md('\n'.join(body))
+            return
+        elif len(parts) == 5:
+            try:
+                self.serve_puzzle_file(pzl['files'][parts[4]])
+            except KeyError:
+                self.send_error(HTTPStatus.NOT_FOUND, "File not found")
+                return
         else:
             body.append("# Not Implemented Yet")
-        self.serve_md('\n'.join(body))
+            self.serve_md('\n'.join(body))
+
+    CHUNK_SIZE = 4096
+    def serve_puzzle_file(self, file):
+        """Serve a PuzzleFile object."""
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-type", "application/octet-stream")
+        self.send_header('Content-Disposition', 'attachment; filename="{}"'.format(file.name))
+        if file.path is not None:
+            fs = os.stat(file.path)
+            self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+
+        # We're using application/octet stream, so we can send the raw bytes.
+        self.end_headers()
+        chunk = file.handle.read(self.CHUNK_SIZE)
+        while chunk:
+            self.wfile.write(chunk)
+            chunk = file.handle.read(self.CHUNK_SIZE)
 
     def serve_file(self):
         if self.path.endswith(".md"):
