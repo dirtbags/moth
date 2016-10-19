@@ -88,9 +88,9 @@ class Puzzle:
 
         self._dict = defaultdict(lambda: [])
         if os.path.isdir(path):
-            self._puzzle_dir = path
+            self.puzzle_dir = path
         else:
-            self._puzzle_dir = None
+            self.puzzle_dir = None
         self.message = bytes(random.choice(messageChars) for i in range(20))
         self.body = ''
 
@@ -113,6 +113,8 @@ class Puzzle:
 
         self._seed = category_seed * self.points
         self.rand = random.Random(self._seed)
+
+        self._logs = []
 
         if path is not None:
             files = os.listdir(path)
@@ -138,6 +140,25 @@ class Puzzle:
                     os.unlink(path)
                 except OSError:
                     pass
+
+    def log(self, msg):
+        """Add a new log message to this puzzle."""
+        self._logs.append(msg)
+
+    @property
+    def logs(self):
+        """Get all the log messages, as strings."""
+
+        _logs = []
+        for log in self._logs:
+            if type(log) is bytes:
+                log = log.decode('utf-8')
+            elif type(log) is not str:
+                log = str(log)
+
+            _logs.append(log)
+
+        return _logs
 
     def _read_config(self, stream):
         """Read a configuration file (ISO 2822)"""
@@ -220,7 +241,7 @@ class Puzzle:
 
         key = key.lower()
 
-        if key in ('file', 'resource', 'hidden') and self._puzzle_dir is None:
+        if key in ('file', 'resource', 'hidden') and self.puzzle_dir is None:
             raise KeyError("Cannot set a puzzle file for single file puzzles.")
 
         if key == 'answer':
@@ -229,15 +250,15 @@ class Puzzle:
             self._dict['answer'].append(value)
         elif key == 'file':
             # Handle adding files to the puzzle
-            path = os.path.join(self._puzzle_dir, 'files', value)
+            path = os.path.join(self.puzzle_dir, 'files', value)
             self._dict['files'][value] = self._puzzle_file(path, value)
         elif key == 'resource':
             # Handle adding category files to the puzzle
-            path = os.path.join(self._puzzle_dir, '../res', value)
+            path = os.path.join(self.puzzle_dir, '../res', value)
             self._dict['files'].append(self._puzzle_file(path, value))
         elif key == 'hidden':
             # Handle adding secret, 'hidden' files to the puzzle.
-            path = os.path.join(self._puzzle_dir, 'files', value)
+            path = os.path.join(self.puzzle_dir, 'files', value)
             name = self.random_hash()
             self._dict['files'].append(self._puzzle_file(path, name, visible=False))
         elif key in self.SINGULAR_KEYS:
