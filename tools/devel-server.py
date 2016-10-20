@@ -27,7 +27,7 @@ def page(title, body):
 <html>
   <head>
     <title>{}</title>
-    <link rel="stylesheet" href="/files/www/res/style.css">
+    <link rel="stylesheet" href="/files/src/www/res/style.css">
   </head>
   <body>
     <div id="preview" class="terminal">
