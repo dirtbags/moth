@@ -25,6 +25,21 @@ Please check out [the overview](doc/overview.md)
 for details.
 
 
+Getting Started Developing
+-------------------------------
+
+    $ git clone $your_puzzles_repo puzzles
+    $ python3 tools/devel-server.py
+
+Then point a web browser at http://localhost:8080/
+and start hacking on things in your `puzzles` directory.
+
+
+Running A Production Server
+====================
+
+XXX: Update this
+
 How to set it up
 --------------------
 
