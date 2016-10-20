@@ -97,9 +97,8 @@ if __name__ == '__main__':
         # write out puzzles
         for points in sorted(puzzles_dict):
             puzzle = puzzles_dict[points]
-            puzzlebody = [json.dumps(puzzle.publish())]
             puzzledir = os.path.join(categoryname, 'content', mapping[points])
-            # build/write json
+            puzzlejson = puzzle.publish()
 
             # write associated files
             assoc_files = []
@@ -109,14 +108,8 @@ if __name__ == '__main__':
                 zf.writestr(os.path.join(puzzledir, fobj.name), \
                                     fobj.handle.read())
 
-
             if len(assoc_files) > 0:
-                puzzlebody.append("")
-                puzzlebody.append("## Associated Files:")
-                for f in assoc_files:
-                    puzzlebody.append(f)
-
-            puzzlebody = os.linesep.join(puzzlebody)
+                puzzlejson["associated_files"] = assoc_files
 
             # non-optimal writing of file-like objects, but it works
             zf.writestr(os.path.join(puzzledir, 'puzzle.json'), \
