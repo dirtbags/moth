@@ -55,7 +55,7 @@ class Puzzle:
     ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                          'answer_words.txt'))]
 
-    def __init__(self, category_seed, path=None, points=None):
+    def __init__(self, category_seed, path=None, points=None, category=None):
         """A MOTH Puzzle.
         :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
                               It is combined with the puzzle points.
@@ -83,11 +83,14 @@ class Puzzle:
 
         super().__init__()
 
-        if (points is None and path is None) or (points is not None and path is not None):
-            raise ValueError("Either points or path must be set, but not both.")
+        assert any([
+            points is None and path is not None,
+            points is not None and path is None,
+            points is not None and category is not None]), \
+            "Either points or path must be set, but not both."
 
         self._dict = defaultdict(lambda: [])
-        if os.path.isdir(path):
+        if path is not None and os.path.isdir(path):
             self.puzzle_dir = path
         else:
             self.puzzle_dir = None
@@ -131,6 +134,9 @@ class Puzzle:
                     puzzle_mod.make(self)
                 else:
                     self.body = '# `puzzle.py` does not define a `make` function'
+        elif category is not None and points is not None:
+            category.make(self, points)
+
 
     def cleanup(self):
         """Cleanup any outstanding temporary files."""
@@ -328,15 +334,36 @@ class Category:
         self.path = path
         self.seed = seed
         self.pointvals = []
+        self.catmod = None
+
+        try:
+            catmod = SourceFileLoader(
+                'catmod',
+                os.path.join(path, 'category.py')).load_module()
+            assert all([
+                hasattr(catmod, 'make'),
+                hasattr(catmod, 'points'),
+                type(catmod.points) is list,
+            ])
+            self.catmod = catmod
+            self.pointvals.extend(catmod.points)
+        except:
+            pass
+
         for fpath in glob.glob(os.path.join(path, "[0-9]*")):
             pn = os.path.basename(fpath)
             points = int(pn)
             self.pointvals.append(points)
+
         self.pointvals.sort()
 
     def puzzle(self, points):
-        path = os.path.join(self.path, str(points))
-        return Puzzle(self.seed, path)
+        print("Category.puzzle! %r %r" % (points, self.catmod.points))
+        if self.catmod is not None and points in self.catmod.points:
+            return Puzzle(self.seed, points=points, category=self.catmod)
+        else:
+            path = os.path.join(self.path, str(points))
+            return Puzzle(self.seed, path=path)
 
     def puzzles(self):
         for points in self.pointvals:
