@@ -4,9 +4,9 @@ import cgi
 import glob
 import http.server
 import mistune
+import moth
 import os
 import pathlib
-import puzzles
 import socketserver
 import sys
 import traceback
@@ -27,7 +27,7 @@ def page(title, body):
 <html>
   <head>
     <title>{}</title>
-    <link rel="stylesheet" href="/files/www/res/style.css">
+    <link rel="stylesheet" href="/files/src/www/res/style.css">
   </head>
   <body>
     <div id="preview" class="terminal">
@@ -112,7 +112,7 @@ you are a fool.
             return
 
         fpath = os.path.join("puzzles", parts[2])
-        cat = puzzles.Category(fpath, seed)
+        cat = moth.Category(fpath, seed)
         if len(parts) == 3:
             # List all point values in a category
             body.append("# Puzzles in category `{}`".format(parts[2]))
