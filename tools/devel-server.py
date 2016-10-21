@@ -90,8 +90,8 @@ There's stuff you can do here:
 
 * [Available puzzles](/puzzles)
 * [Raw filesystem view](/files/)
-* [Documentation](/files/doc/)
-* [Instructions](/files/doc/devel-server.md) for using this server
+* [Documentation](/files/docs/)
+* [Instructions](/files/docs/devel-server.md) for using this server
 
 If you use this development server to run a contest,
 you are a fool.
