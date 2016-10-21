@@ -7,13 +7,14 @@ which in the past has been called
 "Project 2",
 "HACK",
 "Queen Of The Hill",
-and "Cyber FIRE".
+"Cyber Spark",
+and "Cyber Fire".
 
 Information about these events is at
 http://dirtbags.net/contest/
 
 This software serves up puzzles in a manner similar to Jeopardy.
-It also track scores,
+It also tracks scores,
 and comes with a JavaScript-based scoreboard to display team rankings.
 
 
@@ -21,7 +22,7 @@ How everything works
 ---------------------------
 
 This section wound up being pretty long.
-Please check out [the overview](doc/overview.md)
+Please check out [the overview](docs/overview.md)
 for details.
 
 
@@ -33,6 +34,9 @@ Getting Started Developing
 
 Then point a web browser at http://localhost:8080/
 and start hacking on things in your `puzzles` directory.
+
+More on how the devel sever works in
+[the devel server documentation](docs/devel-server.md)
 
 
 Running A Production Server
