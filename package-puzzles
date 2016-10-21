@@ -110,7 +110,7 @@ if __name__ == '__main__':
 
             # non-optimal writing of file-like objects, but it works
             zf.writestr(os.path.join(puzzledir, 'puzzle.json'), \
-                                    json.dumps(puzzle.publish()))
+                                    json.dumps(puzzlejson))
         
         # clean up
         zf.close()
