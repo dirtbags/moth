@@ -95,7 +95,16 @@ if __name__ == '__main__':
         for points in sorted(puzzles_dict):
             puzzle = puzzles_dict[points]
             puzzledir = os.path.join(categoryname, 'content', mapping[points])
-            puzzlejson = puzzle.publish()
+            puzzledict = {
+                'author': puzzle.author,
+                'hashes': puzzle.hashes(),
+                'files': [f.name for f in puzzle.files if f.visible],
+                'body': puzzle.html_body(),
+            }
+            secretsdict = {
+                'summary': puzzle.summary,
+                'answers': puzzle.answers,
+            }
 
             # write associated files
             assoc_files = []
