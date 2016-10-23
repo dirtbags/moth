@@ -113,14 +113,21 @@ you are a fool.
         path = self.path.rstrip('/')
         parts = path.split("/")
         title = None
+        fpath = None
+        points = None
         cat = None
+        puzzle = None
 
         try:
             fpath = os.path.join("puzzles", parts[2])
-            cat = moth.Category(path, seed)
-            puzzle = cat.puzzle(int(parts[3]))
+            points = int(parts[3])
         except:
             pass
+
+        if fpath:
+            cat = moth.Category(fpath, seed)
+        if points:
+            puzzle = cat.puzzle(int(parts[3]))
 
         if not cat:
             title = "Puzzle Categories"
@@ -133,26 +140,26 @@ you are a fool.
             title = "Puzzles in category `{}`".format(parts[2])
             body.write("<ul>")
             for points in cat.pointvals:
-                body.write('<li><a href="/puzzles/{cat}{points}">puzzles/{cat}{points}</a></li>'.format(cat=parts[2], points=points))
+                body.write('<li><a href="/puzzles/{cat}/{points}">puzzles/{cat}/{points}</a></li>'.format(cat=parts[2], points=points))
             body.write("</ul>")
-        if len(parts) == 4:
+        elif len(parts) == 4:
             # Serve up a puzzle
             title = "{} puzzle {}".format(parts[2], parts[3])
-            body.write("<h2>Author</h2><p>{}</p>".format(puzzle.author))
-            body.write("<h2>Summary</h2><p>{}</p>".format(puzzle.summary))
             body.write("<h2>Body</h2>")
             body.write(puzzle.html_body())
+            body.write("<h2>Files</h2>")
+            body.write("<ul>")
+            for name in puzzle.files:
+                body.write('<li><a href="/{cat}/{points}/{filename}">{filename}</a></li>'
+                            .format(cat=parts[2], points=puzzle.points, filename=name))
+            body.write("</ul>")
             body.write("<h2>Answers</h2>")
             body.write("<ul>")
             for a in puzzle.answers:
                 body.write("<li><code>{}</code></li>".format(html.escape(a)))
             body.write("</ul>")
-            body.write("<h2>Files</h2>")
-            body.write("<ul>")
-            for f in puzzle.files:
-                body.write('<li><a href="/{cat}/{points}/{filename}">{filename}</a></li>'
-                            .format(cat=parts[2], points=puzzle.points, filename=f.name))
-            body.write("</ul>")
+            body.write("<h2>Author</h2><p>{}</p>".format(puzzle.author))
+            body.write("<h2>Summary</h2><p>{}</p>".format(puzzle.summary))
             body.write("<h2>Debug Log</h2>")
             body.write('<ul class="log">')
             for l in puzzle.logs:
@@ -195,7 +202,7 @@ you are a fool.
             except OSError:
                 self.send_error(HTTPStatus.NOT_FOUND, "File not found")
                 return
-            if fspath.endswith(".md"):
+            if path.endswith(".md"):
                 ctype = "text/html; charset=utf-8"
                 content = mdpage(payload.decode('utf-8'))
                 payload = content.encode('utf-8')

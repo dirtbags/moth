@@ -9,6 +9,7 @@ import importlib.machinery
 import mistune
 import os
 import random
+import string
 import tempfile
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -124,7 +125,7 @@ class Puzzle:
 
     def random_hash(self):
         """Create a file basename (no extension) with our number generator."""
-        return ''.join(self.random.choice(string.ascii_lowercase) for i in range(8))
+        return ''.join(self.rand.choice(string.ascii_lowercase) for i in range(8))
 
     def make_temp_file(self, name=None, visible=True):
         """Get a file object for adding dynamically generated data to the puzzle. When you're
@@ -136,12 +137,14 @@ class Puzzle:
         :return: A file object for writing
         """
 
+        stream = tempfile.TemporaryFile()
+        self.add_stream(stream, name, visible)
+        return stream
+
+    def add_stream(self, stream, name=None, visible=True):
         if name is None:
             name = self.random_hash()
-
-        stream = tempfile.TemporaryFile()
         self.files[name] = PuzzleFile(stream, name, visible)
-        return stream
 
     def make_answer(self, word_count, sep=' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
@@ -150,7 +153,7 @@ class Puzzle:
         :returns: The answer string
         """
 
-        answer = sep.join(self.rand.sample(self.ANSWER_WORDS, word_count))
+        answer = sep.join(self.rand.sample(ANSWER_WORDS, word_count))
         self.answers.append(answer)
         return answer
 
