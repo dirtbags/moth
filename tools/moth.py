@@ -358,7 +358,6 @@ class Category:
         self.pointvals.sort()
 
     def puzzle(self, points):
-        print("Category.puzzle! %r %r" % (points, self.catmod.points))
         if self.catmod is not None and points in self.catmod.points:
             return Puzzle(self.seed, points=points, category=self.catmod)
         else:
