@@ -55,12 +55,14 @@ class Puzzle:
     ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                          'answer_words.txt'))]
 
-    def __init__(self, category_seed, path=None, points=None):
+    def __init__(self, category_seed, path):
         """A MOTH Puzzle.
         :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
                               It is combined with the puzzle points.
         :param path: An optional path to a puzzle directory. The point value for the puzzle is taken
-                     from the puzzle directories name (it must be an integer greater than zero).
+                     from the puzzle directory's name (it must be an integer greater than zero). Note
+                     that this directory need not actually exist (which will typically be the case
+                     when puzzles are generated dymanically for a whole category).
                      Within this directory, we expect:
             (optional) A puzzle.moth file in RFC2822 format. The puzzle will get its attributes
                        from the headers, and the body will be the puzzle description in
@@ -68,9 +70,6 @@ class Puzzle:
             (optional) A puzzle.py file. This is expected to have a callable called make
                        that takes a single positional argument (this puzzle object).
                        This callable can then do whatever it needs to with this object.
-        :param points: The point value of the puzzle. Mutually exclusive with path.
-            If neither of the above are given, the point value for the puzzle will have to
-            be set at instantiation.
 
         For puzzle attributes, this class acts like a dictionary that in most cases assigns
         always returns a list. Certain keys, however behave differently:
@@ -82,9 +81,6 @@ class Puzzle:
         """
 
         super().__init__()
-
-        if (points is None and path is None) or (points is not None and path is not None):
-            raise ValueError("Either points or path must be set, but not both.")
 
         self._dict = defaultdict(lambda: [])
         if os.path.isdir(path):
@@ -99,24 +95,19 @@ class Puzzle:
 
         # A list of temporary files we've created that will need to be deleted.
         self._temp_files = []
-        if path is not None:
-            if not os.path.isdir(path):
-                raise ValueError("No such directory: {}".format(path))
 
-            pathname = os.path.split(path)[-1]
-            try:
-                self.points = int(pathname)
-            except ValueError:
-                raise ValueError("Directory name must be a point value: {}".format(path))
-        elif points is not None:
-            self.points = points
+        pathname = os.path.basename(path)
+        try:
+            self.points = int(pathname)
+        except ValueError:
+            raise ValueError("Directory name must be a point value: {}".format(path))
 
         self._seed = category_seed * self.points
         self.rand = random.Random(self._seed)
 
         self._logs = []
 
-        if path is not None:
+        if os.path.isdir(path):
             files = os.listdir(path)
 
             if 'puzzle.moth' in files:
@@ -325,18 +316,58 @@ if __name__ == '__main__':
 
 class Category:
     def __init__(self, path, seed):
+        """Represents a new category of puzzles.  
+        Gathers the point values for all the puzzles in the category.          
+          1. It pulls the points from the POINTS attribute of path/category.py, if it exists.
+          2. Any path/<integer_dir> is counted as a puzzle as well.
+        When puzzles are generated, they are first built using the completely optional
+        puzzle directory, then passed to the category.make function if it is in 
+        category.POINTS.
+        :param str path: Path to the category directory.
+        :param float seed: The random seed for this categories random number generator."""
+        
         self.path = path
         self.seed = seed
+        
+        if 'category.py' in os.listdir(path):
+            # Good Lord this is forking dangerous.
+            mod_path = os.path.join(path, 'category.py')
+            loader = SourceFileLoader('category_mod', mod_path)
+            category_mod = loader.load_module()
+            if hasattr(category_mod, 'POINTS') and hasattr(category_mod, 'make'):
+                self.category_mod = category_mod
+                self.points.extend([int(p) for p in category_mod.POINTS])
+            else:
+                raise RuntimeError("Trying to use the category module at {}, but it must have a "
+                                   "POINTS sequence and make(puzzle, points) function defined.".format(mod_path))
+        else:
+            self.category_mod = None
+        
         self.pointvals = []
+        if hasattr(category_mod, 'POINTS'):
+            # Points should be a sequence type.
+            self.pointvals.extend(category_mod.POINTS)
+        
         for fpath in glob.glob(os.path.join(path, "[0-9]*")):
-            pn = os.path.basename(fpath)
-            points = int(pn)
+            points = int(os.path.basename(fpath))
             self.pointvals.append(points)
+            
         self.pointvals.sort()
 
     def puzzle(self, points):
-        path = os.path.join(self.path, str(points))
-        return Puzzle(self.seed, path)
+        """Returns the puzzle object for the given point value, or raises a KeyError if no
+        such point value puzzle is defined."""
+        if points not in self.pointvals:
+            raise KeyError("No such puzzle {}".format(points))
+        
+        path = os.path.join(self.path, str(points)
+        puzzle = Puzzle(self.seed, path)
+        
+        # Only run the 'make' function on puzzles in category_mod.POINTS
+        if self.category_mod and points in self.category_mod.POINTS:
+            self.category_mod.make(puzzle, points)
+        
+        return puzzle
 
     def puzzles(self):
         for points in self.pointvals:
