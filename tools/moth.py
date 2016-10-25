@@ -194,7 +194,8 @@ class Category:
         puzzle = Puzzle(self.seed, points)
         path = os.path.join(self.path, str(points))
         if self.catmod:
-            self.catmod.make(points, puzzle)
+            with pushd(self.path):
+                self.catmod.make(points, puzzle)
         else:
             puzzle.read_directory(path)
         return puzzle
