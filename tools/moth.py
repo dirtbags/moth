@@ -177,24 +177,16 @@ class Category:
         self.pointvals = []
         self.catmod = None
 
-        try:
-            catmod = SourceFileLoader(
+        if os.path.exists(os.path.join(path, 'category.py')):
+            self.catmod = importlib.machinery.SourceFileLoader(
                 'catmod',
                 os.path.join(path, 'category.py')).load_module()
-            assert all([
-                hasattr(catmod, 'make'),
-                hasattr(catmod, 'points'),
-                type(catmod.points) is list,
-            ])
-            self.catmod = catmod
-            self.pointvals.extend(catmod.points)
-        except:
-            pass
-
-        for fpath in glob.glob(os.path.join(path, "[0-9]*")):
-            pn = os.path.basename(fpath)
-            points = int(pn)
-            self.pointvals.append(points)
+            self.pointvals = self.catmod.points[:]
+        else:
+            for fpath in glob.glob(os.path.join(path, "[0-9]*")):
+                pn = os.path.basename(fpath)
+                points = int(pn)
+                self.pointvals.append(points)
 
         self.pointvals.sort()
 
@@ -202,8 +194,9 @@ class Category:
         puzzle = Puzzle(self.seed, points)
         path = os.path.join(self.path, str(points))
         if self.catmod:
-            self.catmod.make(p, points)
-        puzzle.read_directory(path)
+            self.catmod.make(points, puzzle)
+        else:
+            puzzle.read_directory(path)
         return puzzle
 
     def puzzles(self):
