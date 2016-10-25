@@ -29,15 +29,16 @@ def page(title, body):
     return """<!DOCTYPE html>
 <html>
   <head>
-    <title>{}</title>
+    <title>{title}</title>
     <link rel="stylesheet" href="/files/src/www/res/style.css">
   </head>
   <body>
+    <h1>{title}</h1>
     <div id="preview" class="terminal">
-      {}
+      {body}
     </div>
   </body>
-</html>""".format(title, body)
+</html>""".format(title=title, body=body)
 
 
 def mdpage(body):
@@ -132,7 +133,7 @@ you are a fool.
         if not cat:
             title = "Puzzle Categories"
             body.write("<ul>")
-            for i in glob.glob(os.path.join("puzzles", "*", "")):
+            for i in sorted(glob.glob(os.path.join("puzzles", "*", ""))):
                 body.write('<li><a href="{}">{}</a></li>'.format(i, i))
             body.write("</ul>")
         elif not puzzle:
@@ -155,6 +156,7 @@ you are a fool.
             body.write("</ul>")
             body.write("<h2>Answers</h2>")
             body.write("<ul>")
+            assert puzzle.answers, 'No answers defined'
             for a in puzzle.answers:
                 body.write("<li><code>{}</code></li>".format(html.escape(a)))
             body.write("</ul>")
