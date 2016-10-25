@@ -150,7 +150,7 @@ you are a fool.
             body.write("<h2>Files</h2>")
             body.write("<ul>")
             for name in puzzle.files:
-                body.write('<li><a href="/{cat}/{points}/{filename}">{filename}</a></li>'
+                body.write('<li><a href="/puzzles/{cat}/{points}/{filename}">{filename}</a></li>'
                             .format(cat=parts[2], points=puzzle.points, filename=name))
             body.write("</ul>")
             body.write("<h2>Answers</h2>")
