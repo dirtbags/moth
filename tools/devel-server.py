@@ -128,7 +128,7 @@ you are a fool.
         if fpath:
             cat = moth.Category(fpath, seed)
         if points:
-            puzzle = cat.puzzle(int(parts[3]))
+            puzzle = cat.puzzle(points)
 
         if not cat:
             title = "Puzzle Categories"

@@ -181,6 +181,7 @@ class Category:
             self.catmod = importlib.machinery.SourceFileLoader(
                 'catmod',
                 os.path.join(path, 'category.py')).load_module()
+            self.pointvals.extend(self.catmod.points)
             self.pointvals = self.catmod.points[:]
         else:
             for fpath in glob.glob(os.path.join(path, "[0-9]*")):
