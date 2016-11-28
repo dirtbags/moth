@@ -21,6 +21,8 @@ except ImportError:
         NOT_FOUND = 404
         INTERNAL_SERVER_ERROR = 500
 
+sys.dont_write_bytecode = True
+
 # XXX: This will eventually cause a problem. Do something more clever here.
 seed = 1
 
@@ -48,7 +50,7 @@ def mdpage(body):
         title = "Result"
     title = title.lstrip("#")
     title = title.strip()
-    return page(title, mistune.markdown(body))
+    return page(title, mistune.markdown(body, escape=False))
 
 
 class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
@@ -162,11 +164,12 @@ you are a fool.
             body.write("</ul>")
             body.write("<h2>Author</h2><p>{}</p>".format(puzzle.author))
             body.write("<h2>Summary</h2><p>{}</p>".format(puzzle.summary))
-            body.write("<h2>Debug Log</h2>")
-            body.write('<ul class="log">')
-            for l in puzzle.logs:
-                body.write("<li>{}</li>".format(html.escape(l)))
-            body.write("</ul>")
+            if puzzle.logs:
+                body.write("<h2>Debug Log</h2>")
+                body.write('<ul class="log">')
+                for l in puzzle.logs:
+                    body.write("<li>{}</li>".format(html.escape(l)))
+                body.write("</ul>")
         elif len(parts) == 5:
             # Serve up a puzzle file
             try:
