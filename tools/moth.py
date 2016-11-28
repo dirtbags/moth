@@ -146,6 +146,11 @@ class Puzzle:
             name = self.random_hash()
         self.files[name] = PuzzleFile(stream, name, visible)
 
+    def randword(self):
+        """Return a randomly-chosen word"""
+
+        return self.rand.choice(ANSWER_WORDS)
+
     def make_answer(self, word_count, sep=' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
         :param int word_count: The number of words to include in the answer.
@@ -153,7 +158,8 @@ class Puzzle:
         :returns: The answer string
         """
 
-        answer = sep.join(self.rand.sample(ANSWER_WORDS, word_count))
+        words = [self.randword() for i in range(word_count)]
+        answer = sep.join(words)
         self.answers.append(answer)
         return answer
 
@@ -162,7 +168,7 @@ class Puzzle:
 
     def html_body(self):
         """Format and return the markdown for the puzzle body."""
-        return mistune.markdown(self.get_body())
+        return mistune.markdown(self.get_body(), escape=False)
 
     def hashes(self):
         "Return a list of answer hashes"
