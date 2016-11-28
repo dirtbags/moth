@@ -17,10 +17,10 @@
   src: local('Lato Italic'), local('Lato-Italic'), url(Lato-Italic.ttf) format('truetype');
 }
 @font-face {
-  font-family: 'Dosis';
+  font-family: 'Inconsolata';
   font-style: normal;
   font-weight: 400;
-  src: local('Dosis Regular'), local('Dosis-Regular'), url(Dosis-Regular.ttf) format('truetype');
+  src: local('Inconsolata Regular'), local('Inconsolata-Regular'), url(Inconsolata-Regular.ttf) format('truetype');
 }
 
 
@@ -38,7 +38,7 @@ body {
 }
 
 pre, tt {
-    font-family: 'Dosis', monospace;
+    font-family: Inconsolata, monospace;
     background-color: rgba(0, 0, 0, 0.3);
 }
 
