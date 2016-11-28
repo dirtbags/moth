@@ -1,0 +1,14 @@
+Author: neale
+Summary: Static puzzle resource files
+Answer: salad
+
+You can include additional resources in a static puzzle,
+by just dropping them in the directory.
+
+You can refer to them directly in your Markdown,
+or use them however else you see fit.
+They will appear in the same directory on the web server once the exercise is running.
+
+![Leafy Green Deliciousness](salad.jpg)
+
+The answer for this page is what is featured in the photograph.
