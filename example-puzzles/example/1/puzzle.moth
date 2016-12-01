@@ -15,7 +15,7 @@ Puzzle categories are laid out on the filesystem:
     ├─10
     │  └─puzzle.moth
     └─100
-        └─puzzle.py
+       └─puzzle.py
 
 In this example,
 there are puzzles with point values 1, 2, 3, 10, and 100.
