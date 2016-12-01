@@ -13,17 +13,17 @@ Puzzle categories are laid out on the filesystem:
     ├─3
     │  └─puzzle.py
     ├─10
-    │  └─puzzle.py
+    │  └─puzzle.moth
     └─100
-       └─puzzle.moth
+        └─puzzle.py
 
 In this example,
 there are puzzles with point values 1, 2, 3, 10, and 100.
 
-Puzzles 1, 2, and 100 are "static" puzzles:
+Puzzles 1, 2, and 10 are "static" puzzles:
 their content was written by hand.
 
-Puzzles 3 and 10 are "dynamic" puzzles:
+Puzzles 3 and 100 are "dynamic" puzzles:
 they are generated from a Python module.
 
 To create a static puzzle, all you must have is a

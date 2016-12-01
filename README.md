@@ -29,7 +29,6 @@ for details.
 Getting Started Developing
 -------------------------------
 
-    $ git clone $your_puzzles_repo puzzles
     $ python3 tools/devel-server.py
 
 Then point a web browser at http://localhost:8080/

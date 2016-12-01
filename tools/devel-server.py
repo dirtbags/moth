@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# To pick up any changes to this file without restarting anything:
+#     while true; do ./tools/devel-server.py --once; done
+# It's kludgy, but it gets the job done.
+# Feel free to make it suck less, for example using the `tcpserver` program.
+
 import glob
 import html
 import http.server
@@ -25,7 +30,6 @@ sys.dont_write_bytecode = True
 
 # XXX: This will eventually cause a problem. Do something more clever here.
 seed = 1
-
 
 def page(title, body):
     return """<!DOCTYPE html>
@@ -58,6 +62,8 @@ class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 
 class MothHandler(http.server.SimpleHTTPRequestHandler):
+    puzzles_dir = "puzzles"
+
     def handle_one_request(self):
         try:
             super().handle_one_request()
@@ -122,7 +128,7 @@ you are a fool.
         puzzle = None
 
         try:
-            fpath = os.path.join("puzzles", parts[2])
+            fpath = os.path.join(self.puzzles_dir, parts[2])
             points = int(parts[3])
         except:
             pass
@@ -135,15 +141,16 @@ you are a fool.
         if not cat:
             title = "Puzzle Categories"
             body.write("<ul>")
-            for i in sorted(glob.glob(os.path.join("puzzles", "*", ""))):
-                body.write('<li><a href="{}">{}</a></li>'.format(i, i))
+            for i in sorted(glob.glob(os.path.join(self.puzzles_dir, "*", ""))):
+                bn = os.path.basename(i.strip('/\\'))
+                body.write('<li><a href="/puzzles/{}">puzzles/{}/</a></li>'.format(bn, bn))
             body.write("</ul>")
         elif not puzzle:
             # List all point values in a category
             title = "Puzzles in category `{}`".format(parts[2])
             body.write("<ul>")
             for points in cat.pointvals:
-                body.write('<li><a href="/puzzles/{cat}/{points}">puzzles/{cat}/{points}</a></li>'.format(cat=parts[2], points=points))
+                body.write('<li><a href="/puzzles/{cat}/{points}/">puzzles/{cat}/{points}/</a></li>'.format(cat=parts[2], points=points))
             body.write("</ul>")
         elif len(parts) == 4:
             # Serve up a puzzle
@@ -175,7 +182,7 @@ you are a fool.
             try:
                 pfile = puzzle.files[parts[4]]
             except KeyError:
-                self.send_error(HTTPStatus.NOT_FOUND, "File not found")
+                self.send_error(HTTPStatus.NOT_FOUND, "File not found. Did you add it to the Files: header or puzzle.add_stream?")
                 return
             ctype = self.guess_type(pfile.name)
             self.send_response(HTTPStatus.OK)
@@ -226,10 +233,22 @@ you are a fool.
         self.wfile.write(payload)
 
 
-def run(address=('localhost', 8080)):
+def run(address=('localhost', 8080), once=False):
     httpd = ThreadingServer(address, MothHandler)
     print("=== Listening on http://{}:{}/".format(address[0], address[1]))
-    httpd.serve_forever()
+    if once:
+        httpd.handle_request()
+    else:
+        httpd.serve_forever()
 
 if __name__ == '__main__':
-    run()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="MOTH puzzle development server")
+    parser.add_argument('--puzzles', default='puzzles',
+                        help="Directory containing your puzzles")
+    parser.add_argument('--once', default=False, action='store_true',
+                        help="Serve one page, then exit. For debugging the server.")
+    args = parser.parse_args()
+    MothHandler.puzzles_dir = args.puzzles
+    run(once=args.once)
