@@ -22,9 +22,9 @@ try:
     from http.server import HTTPStatus
 except ImportError:
     class HTTPStatus:
-        OK = (200, 'OK', 'Request fulfilled, document follows')
-        NOT_FOUND = (404, 'Not Found', 'Nothing matches the given URI')
-        INTERNAL_SERVER_ERROR = (500, 'Internal Server Error', 'Server got itself in trouble')
+        OK = 200
+        NOT_FOUND = 404
+        INTERNAL_SERVER_ERROR = 500
 
 sys.dont_write_bytecode = True
 
