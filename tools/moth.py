@@ -86,6 +86,7 @@ class Puzzle:
                     continue
                 key, val = line.split(':', 1)
                 key = key.lower()
+                val = val.strip()
                 if key == 'author':
                     self.author = val
                 elif key == 'summary':
@@ -178,7 +179,7 @@ class Puzzle:
     def hashes(self):
         "Return a list of answer hashes"
 
-        return [djbhash(a) for a in self.answers]
+        return [djb2hash(a.encode('utf-8')) for a in self.answers]
 
 
 class Category:
@@ -212,6 +213,6 @@ class Category:
             puzzle.read_directory(path)
         return puzzle
 
-    def puzzles(self):
+    def __iter__(self):
         for points in self.pointvals:
             yield self.puzzle(points)
