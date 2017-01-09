@@ -74,7 +74,7 @@ class Puzzle:
 
     def log(self, msg):
         """Add a new log message to this puzzle."""
-        self.logs.append(msg)
+        self.logs.append(str(msg))
 
     def read_stream(self, stream):
         header = True
@@ -86,6 +86,7 @@ class Puzzle:
                     continue
                 key, val = line.split(':', 1)
                 key = key.lower()
+                val = val.strip()
                 if key == 'author':
                     self.author = val
                 elif key == 'summary':
@@ -116,12 +117,12 @@ class Puzzle:
         except FileNotFoundError:
             puzzle_mod = None
 
-        if puzzle_mod:
-            with pushd(path):
+        with pushd(path):
+            if puzzle_mod:
                 puzzle_mod.make(self)
-        else:
-            with open(os.path.join(path, 'puzzle.moth')) as f:
-                self.read_stream(f)
+            else:
+                with open('puzzle.moth') as f:
+                    self.read_stream(f)
 
     def random_hash(self):
         """Create a file basename (no extension) with our number generator."""
@@ -146,12 +147,17 @@ class Puzzle:
             name = self.random_hash()
         self.files[name] = PuzzleFile(stream, name, visible)
 
+    def add_file(self, filename, visible=True):
+        fd = open(filename, 'rb')
+        name = os.path.basename(filename)
+        self.add_stream(fd, name=name, visible=visible)
+
     def randword(self):
         """Return a randomly-chosen word"""
 
         return self.rand.choice(ANSWER_WORDS)
 
-    def make_answer(self, word_count, sep=' '):
+    def make_answer(self, word_count=4, sep=' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
         :param int word_count: The number of words to include in the answer.
         :param str|bytes sep: The word separator.
@@ -173,7 +179,7 @@ class Puzzle:
     def hashes(self):
         "Return a list of answer hashes"
 
-        return [djbhash(a) for a in self.answers]
+        return [djb2hash(a.encode('utf-8')) for a in self.answers]
 
 
 class Category:
@@ -207,6 +213,6 @@ class Category:
             puzzle.read_directory(path)
         return puzzle
 
-    def puzzles(self):
+    def __iter__(self):
         for points in self.pointvals:
             yield self.puzzle(points)
