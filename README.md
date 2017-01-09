@@ -29,10 +29,16 @@ for details.
 Getting Started Developing
 -------------------------------
 
-    $ git clone $your_puzzles_repo puzzles
+If you don't have a `puzzles` directory,
+you can copy the example puzzles as a starting point:
+
+    $ cp -r example-puzzles puzzles
+
+Then launch the development server:
+
     $ python3 tools/devel-server.py
 
-Then point a web browser at http://localhost:8080/
+Point a web browser at http://localhost:8080/
 and start hacking on things in your `puzzles` directory.
 
 More on how the devel sever works in
