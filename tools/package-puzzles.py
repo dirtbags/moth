@@ -31,6 +31,57 @@ def write_kv_pairs(ziphandle, filename, kv):
             filehandle.write("%s: %s%s" % (key, kv[key], os.linesep))
     filehandle.seek(0)
     ziphandle.writestr(filename, filehandle.read())
+    
+def escape(s):
+    return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    
+def generate_html(ziphandle, puzzle, puzzledir, category, points, author, files):
+    html_content = io.StringIO()
+    file_content = io.StringIO()
+    if files:
+        file_content.write(
+'''        <section id="files">
+            <h2>Associated files:</h2>
+            <ul>
+''')
+        for fn in files:
+            file_content.write('                <li><a href="{fn}">{efn}</a></li>\n'.format(fn=fn, efn=escape(fn)))
+        file_content.write(
+'''            </ul>
+        </section>
+''')
+        
+    html_content.write(
+'''<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <title>{category} {points}</title>
+        <link rel="stylesheet" href="../../style.css">
+    </head>
+    <body>
+        <h1>{category} for {points} points</h1>
+        <section id="readme">
+{body}        </section>
+{file_content}        <section id="form">
+            <form id="puzzler" action="../../cgi-bin/puzzler.cgi" method="get" accept-charset="utf-8" autocomplete="off">
+                <input type="hidden" name="c" value="{category}">
+                <input type="hidden" name="p" value="{points}">
+                <div>Team hash:<input name="t" size="8"></div>
+                <div>Answer:<input name="a" size="20"></div>
+                <input type="submit" value="submit">
+            </form>
+        </section>
+        <address>Puzzle by <span class="author" data-handle="{author}">{author}</span></address>
+        <section id="sponsors">
+            <img src="../../images/lanl.png" alt="Los Alamos National Laboratory">
+            <img src="../../images/doe.png" alt="US Department Of Energy">
+            <img src="../../images/sandia.png" alt="Sandia National Laboratories">
+        </section>
+    </body>
+</html>'''.format(category=category, points=points, body=puzzle.html_body(), file_content=file_content.getvalue(), author=author))
+    ziphandle.writestr(os.path.join(puzzledir, 'index.html'), html_content.getvalue())
 
 def build_category(categorydir, outdir):
     zipfileraw = tempfile.NamedTemporaryFile(delete=False)
@@ -88,6 +139,7 @@ def build_category(categorydir, outdir):
         }
         puzzlejson = json.dumps(puzzledict)
         zf.writestr(os.path.join(puzzledir, 'puzzle.json'), puzzlejson)
+        generate_html(zf, puzzle, puzzledir, categoryname, puzzle.points, puzzle.author, files)
 
     write_kv_pairs(zf, 'map.txt', mapping)
     write_kv_pairs(zf, 'answers.txt', answers)
