@@ -169,6 +169,71 @@ class Puzzle:
         self.answers.append(answer)
         return answer
 
+    hexdump_stdch = stdch = (
+        '················'
+        '················'
+        ' !"#$%&\'()*+,-./'
+        '0123456789:;<=>?'
+        '@ABCDEFGHIJKLMNO'
+        'PQRSTUVWXYZ[\]^_'
+        '`abcdefghijklmno'
+        'pqrstuvwxyz{|}~·'
+        '················'
+        '················'
+        '················'
+        '················'
+        '················'
+        '················'
+        '················'
+        '················'
+    )
+
+    def hexdump(self, buf, charset=hexdump_stdch, gap=('�', '⌷')):
+        hexes, chars = [], []
+        out = []
+
+        for b in buf:
+            if len(chars) == 16:
+                out.append((hexes, chars))
+                hexes, chars = [], []
+
+            if b is None:
+                h, c = gap
+            else:
+                h = '{:02x}'.format(b)
+                c = charset[b]
+            chars.append(c)
+            hexes.append(h)
+
+        out.append((hexes, chars))
+
+        offset = 0
+        elided = False
+        lastchars = None
+        self.body.write('<pre>')
+        for hexes, chars in out:
+            if chars == lastchars:
+                if not elided:
+                    self.body.write('*\n')
+                    elided = True
+                continue
+            lastchars = chars[:]
+            elided = False
+
+            pad = 16 - len(chars)
+            hexes += ['  '] * pad
+
+            self.body.write('{:08x}  '.format(offset))
+            self.body.write(' '.join(hexes[:8]))
+            self.body.write('  ')
+            self.body.write(' '.join(hexes[8:]))
+            self.body.write('  |')
+            self.body.write(''.join(chars))
+            self.body.write('|\n')
+            offset += len(chars)
+        self.body.write('{:08x}\n'.format(offset))
+        self.body.write('</pre>')
+
     def get_body(self):
         return self.body.getvalue()
 
