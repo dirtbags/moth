@@ -26,9 +26,9 @@ def write_kv_pairs(ziphandle, filename, kv):
     for key in sorted(kv.keys()):
         if type(kv[key])  == type([]):
             for val in kv[key]:
-                filehandle.write("%s: %s%s" % (key, val, os.linesep))
+                filehandle.write("%s %s\n" % (key, val))
         else:
-            filehandle.write("%s: %s%s" % (key, kv[key], os.linesep))
+            filehandle.write("%s %s\n" % (key, kv[key]))
     filehandle.seek(0)
     ziphandle.writestr(filename, filehandle.read())
     

@@ -1,185 +1,23 @@
 #! /bin/sh -e
 
-indir=$1
-if ! [ -n "$indir" -a -d $indir ]; then
-	echo "Usage: $0 PUZZLEDIR"
+package=$1
+if ! [ -n "$package" -a -f $package ]; then
+	echo "Usage: $0 PACKAGE"
 	exit 1
 fi
 shift
 
-die () {
-	echo "$@" 1>&2
-	exit 1
-}
 
-escape () {
-	sed 's/&/\&amp;/g;s/</\&lt;/g;s/>/\&gt;/g'
-}
-
-template () {
-	cat="$1"; shift
-	points="$1"; shift
-	author=$(echo $1 | escape); shift
-
-	cat <<EOF
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width">
-		<title>$cat $points</title>
-		<link rel="stylesheet" href="../../style.css">
-	</head>
-	<body>
-		<h1>$cat for $points points</h1>
-EOF
-
-	echo "<section id=\"readme\">"
-	cat
-	echo "</section>"
-
-	if [ $# -gt 0 ]; then
-	echo "<section id=\"files\">"
-			echo "<h2>Associated files:</h2>"
-			echo "<ul>"
-			while [ $# -gt 0 ]; do
-					fn="$1"; shift
-					efn="$(echo $fn | escape)"
-					echo "<li><a href=\"$fn\">$efn</a></li>"
-			done
-			echo "</ul>"
-	echo "</section>"
-	fi
-
-	cat <<EOF
-		<section id="form">
-			<form id="puzzler" action="../../cgi-bin/puzzler.cgi" method="get" accept-charset="utf-8" autocomplete="off">
-				<input type="hidden" name="c" value="$cat">
-				<input type="hidden" name="p" value="$points">
-				<div>Team hash:<input name="t" size="8"></div>
-				<div>Answer:<input name="a" size="20"></div>
-				<input type="submit" value="submit">
-			</form>
-		</section>
-		<address>Puzzle by <span class="author" data-handle="$author">$author</span></address>
-		<section id="sponsors">
-			<img src="../../images/lanl.png" alt="Los Alamos National Laboratory">
-			<img src="../../images/doe.png" alt="US Department Of Energy">
-			<img src="../../images/sandia.png" alt="Sandia National Laboratories">
-		</section>
-	</body>
-</html>
-EOF
-}
-
-cat=$(basename $indir)
+cat=$(basename $package .zip)
 outdir=$(dirname $(dirname $0))/packages/$cat
-outdir=$(cd $outdir; /bin/pwd)
-uanswers=$outdir/answers.unsorted
-usummary=$outdir/summary.unsorted
-umap=$outdir/map.unsorted
 
+echo "Extracting to $outdir..."
 mkdir -p $outdir
-if ! [ -r $outdir/salt ]; then
-	dd if=/dev/urandom bs=1 count=16 2>/dev/null | md5sum | cut -c1-16 > $outdir/salt
-fi
-read salt < $outdir/salt
+unzip -o -d $outdir $package
 
-> $uanswers
-rm -f $usummary
+echo "Fixing permissions..."
+chmod a+rx $outdir/*/ $outdir/*/*
+chmod -R a+r $outdir
 
-for dn in $indir/[0-9]*; do
-	[ -d $dn ] || continue
-	points=$(basename $dn)
-
-	echo $dn
-
-	odn=$(printf "%s/%s/%s" "$salt" "$cat" "$points" | md5sum | sed 's/\(....\)/\1./g' | cut -b 1-19)
-	tgt=$outdir/puzzles/$odn
-	mkdir -p $tgt
-	#touch $tgt/index.html
-
-	if [ -f $dn/Makefile ]; then
-		# If there's a Makefile, run make
-		make DESTDIR=$tgt -C $dn || exit 1
-		files=$(ls -1 $tgt | grep -v index.html || true)
-	elif [ -f $dn/00manifest.txt ]; then
-		# If there's a manifest, use that
-		files=
-		while read fn; do
-			cp $dn/$fn $tgt/
-			case $fn in
-			,*)
-				;;
-			*)
-				files="$files $fn"
-				;;
-			esac
-		done < $dn/00manifest.txt
-	else
-		# Otherwise, look for special files and copy the rest
-		files=
-		for fn in $dn/*; do
-			case $(basename $fn) in
-			00*)
-				# Handle meta-information later
-				;;
-			*~|"#"*)
-				# Don't copy temporary or backup files
-				;;
-			,*)
-				# Copy but don't list
-				cp $fn $tgt/
-				;;
-			*)
-				#ext=$(echo $fn | sed -ne 's/.*\././p')
-				cfn=$(md5sum $fn | cut -b -8)$ext
-				cp $fn $tgt/$cfn
-				files="$files $cfn"
-				;;
-			esac
-		done
-	fi
-
-	# Append answers 
-	if [ -f $dn/00answer.txt ]; then
-		awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/00answer.txt >> $uanswers
-	else
-		die "$dn/00answer.txt: No such file or directory"
-	fi
-
-	# Append summary
-	if [ -f $dn/00summary.txt ]; then
-		awk -v P=$points '/./ { printf("%d %s\n", P, $0); }' < $dn/00summary.txt >> $usummary
-	fi
-
-	# Read author
-	if [ -f $dn/00author.txt ]; then
-		author=$(cat $dn/00author.txt)
-	else
-		die "$dn/00author.txt does not exist."
-	fi
-
-	# Generate index now that we have a list of files
-	if [ -f $dn/00index.mdwn ]; then
-		markdown --html4tags $dn/00index.mdwn
-	fi | template $cat $points "$author" $files > $tgt/index.html
-
-	# Write to map
-	printf "%d %s\n" $points $odn >> $umap
-done
-
-echo "Generating URL map"
-sort -n $umap > $outdir/map.txt
-
-echo "Generating answers list"
-sort -n $uanswers > $outdir/answers.txt
-
-echo "Generating summary"
-[ -f $usummary ] && sort -ns $usummary > $outdir/summary.txt
-
-echo "Linking into web space"
-ln -sf ../packages/$cat/puzzles $outdir/../../www/$cat
-
-echo "Cleaning up"
-rm -f $uanswers $usummary $umap
+echo "Linking into web space..."
+ln -sf ../packages/$cat/content $outdir/../../www/$cat
