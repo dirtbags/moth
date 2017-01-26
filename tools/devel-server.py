@@ -159,9 +159,16 @@ you are a fool.
             body.write(puzzle.html_body())
             body.write("<h2>Files</h2>")
             body.write("<ul>")
-            for name in puzzle.files:
-                body.write('<li><a href="/puzzles/{cat}/{points}/{filename}">{filename}</a></li>'
-                            .format(cat=parts[2], points=puzzle.points, filename=name))
+            for name,puzzlefile in sorted(puzzle.files.items()):
+                if puzzlefile.visible:
+                    visibility = 'listed as a generated file'
+                else:
+                    visibility = 'unlisted'
+                body.write('<li><a href="/puzzles/{cat}/{points}/{filename}">{filename}</a> ({visibility})</li>'
+                            .format(cat=parts[2],
+                                    points=puzzle.points,
+                                    filename=name,
+                                    visibility=visibility))
             body.write("</ul>")
             body.write("<h2>Answers</h2>")
             body.write("<ul>")
