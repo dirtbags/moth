@@ -176,7 +176,7 @@ you are a fool.
             for a in puzzle.answers:
                 body.write("<li><code>{}</code></li>".format(html.escape(a)))
             body.write("</ul>")
-            body.write("<h2>Author</h2><p>{}</p>".format(puzzle.author))
+            body.write("<h2>Authors</h2><p>{}</p>".format(', '.join(puzzle.get_authors())))
             body.write("<h2>Summary</h2><p>{}</p>".format(puzzle.summary))
             if puzzle.logs:
                 body.write("<h2>Debug Log</h2>")

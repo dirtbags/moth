@@ -35,7 +35,7 @@ def write_kv_pairs(ziphandle, filename, kv):
 def escape(s):
     return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     
-def generate_html(ziphandle, puzzle, puzzledir, category, points, author, files):
+def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files):
     html_content = io.StringIO()
     file_content = io.StringIO()
     if files:
@@ -73,14 +73,14 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, author, files)
                 <input type="submit" value="submit">
             </form>
         </section>
-        <address>Puzzle by <span class="author" data-handle="{author}">{author}</span></address>
+        <address>Puzzle by <span class="authors" data-handle="{authors}">{authors}</span></address>
         <section id="sponsors">
             <img src="../../images/lanl.png" alt="Los Alamos National Laboratory">
             <img src="../../images/doe.png" alt="US Department Of Energy">
             <img src="../../images/sandia.png" alt="Sandia National Laboratories">
         </section>
     </body>
-</html>'''.format(category=category, points=points, body=puzzle.html_body(), file_content=file_content.getvalue(), author=author))
+</html>'''.format(category=category, points=points, body=puzzle.html_body(), file_content=file_content.getvalue(), authors=', '.join(authors)))
     ziphandle.writestr(os.path.join(puzzledir, 'index.html'), html_content.getvalue())
 
 def build_category(categorydir, outdir):
@@ -132,14 +132,14 @@ def build_category(categorydir, outdir):
             zf.writestr(os.path.join(puzzledir, fn), payload)
 
         puzzledict = {
-            'author': puzzle.author,
+            'authors': puzzle.authors,
             'hashes': puzzle.hashes(),
             'files': files,
             'body': puzzle.html_body(),
         }
         puzzlejson = json.dumps(puzzledict)
         zf.writestr(os.path.join(puzzledir, 'puzzle.json'), puzzlejson)
-        generate_html(zf, puzzle, puzzledir, categoryname, puzzle.points, puzzle.author, files)
+        generate_html(zf, puzzle, puzzledir, categoryname, puzzle.points, puzzle.get_authors(), files)
 
     write_kv_pairs(zf, 'map.txt', mapping)
     write_kv_pairs(zf, 'answers.txt', answers)
