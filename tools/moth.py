@@ -63,8 +63,8 @@ class Puzzle:
         super().__init__()
 
         self.points = points
-        self.author = None
         self.summary = None
+        self.authors = []
         self.answers = []
         self.files = {}
         self.body = io.StringIO()
@@ -88,7 +88,7 @@ class Puzzle:
                 key = key.lower()
                 val = val.strip()
                 if key == 'author':
-                    self.author = val
+                    self.authors.append(val)
                 elif key == 'summary':
                     self.summary = val
                 elif key == 'answer':
@@ -233,6 +233,9 @@ class Puzzle:
             offset += len(chars)
         self.body.write('{:08x}\n'.format(offset))
         self.body.write('</pre>')
+
+    def get_authors(self):
+        return self.authors or [self.author]
 
     def get_body(self):
         return self.body.getvalue()
