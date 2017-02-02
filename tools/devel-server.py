@@ -151,7 +151,7 @@ you are a fool.
             # List all point values in a category
             title = "Puzzles in category `{}`".format(parts[2])
             body.write("<ul>")
-            for points in cat.pointvals:
+            for points in cat.pointvals():
                 body.write('<li><a href="/puzzles/{cat}/{points}/">puzzles/{cat}/{points}/</a></li>'.format(cat=parts[2], points=points))
             body.write("</ul>")
         elif len(parts) == 4:
