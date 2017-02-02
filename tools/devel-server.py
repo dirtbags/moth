@@ -57,7 +57,9 @@ def mdpage(body):
     return page(title, mistune.markdown(body, escape=False))
 
 
-class ThreadingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+# XXX: What horrors did we unleash with our chdir shenanigans that
+# makes this serve 404 and 500 when we mix in ThreadingMixIn?
+class ThreadingServer(socketserver.ForkingMixIn, http.server.HTTPServer):
     pass
 
 
