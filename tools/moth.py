@@ -29,6 +29,13 @@ def pushd(newdir):
     finally:
         os.chdir(curdir)
 
+
+def loadmod(name, path):
+    abspath = os.path.abspath(path)
+    loader = importlib.machinery.SourceFileLoader(name, abspath)
+    return loader.load_module()
+
+
 # Get a big list of clean words for our answer file.
 ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                      'answer_words.txt'))]
@@ -112,9 +119,7 @@ class Puzzle:
 
     def read_directory(self, path):
         try:
-            fn = os.path.abspath(os.path.join(path, "puzzle.py"))
-            loader = importlib.machinery.SourceFileLoader('puzzle_mod', fn)
-            puzzle_mod = loader.load_module()
+            puzzle_mod = loadmod("puzzle", os.path.join(path, "puzzle.py"))
         except FileNotFoundError:
             puzzle_mod = None
 
@@ -255,22 +260,24 @@ class Category:
     def __init__(self, path, seed):
         self.path = path
         self.seed = seed
-        self.pointvals = []
         self.catmod = None
 
-        if os.path.exists(os.path.join(path, 'category.py')):
-            with pushd(path):
-                fn = os.path.abspath('category.py')
-                loader = importlib.machinery.SourceFileLoader('category', fn)
-                self.catmod = loader.load_module()
-                self.pointvals.extend(self.catmod.pointvals())
+        try:
+            self.catmod = loadmod('category', os.path.join(path, 'category.py'))
+        except FileNotFoundError:
+            self.catmod = None
+
+    def pointvals(self):
+        if self.catmod:
+            with pushd(self.path):
+                pointvals = self.catmod.pointvals()
         else:
-            for fpath in glob.glob(os.path.join(path, "[0-9]*")):
+            pointvals = []
+            for fpath in glob.glob(os.path.join(self.path, "[0-9]*")):
                 pn = os.path.basename(fpath)
                 points = int(pn)
-                self.pointvals.append(points)
-
-        self.pointvals.sort()
+                pointvals.append(points)
+        return sorted(pointvals)
 
     def puzzle(self, points):
         puzzle = Puzzle(self.seed, points)
@@ -283,5 +290,5 @@ class Category:
         return puzzle
 
     def __iter__(self):
-        for points in self.pointvals:
+        for points in self.pointvals():
             yield self.puzzle(points)
