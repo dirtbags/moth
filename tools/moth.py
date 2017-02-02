@@ -112,7 +112,7 @@ class Puzzle:
 
     def read_directory(self, path):
         try:
-            fn = os.path.join(path, "puzzle.py")
+            fn = os.path.abspath(os.path.join(path, "puzzle.py"))
             loader = importlib.machinery.SourceFileLoader('puzzle_mod', fn)
             puzzle_mod = loader.load_module()
         except FileNotFoundError:
@@ -260,9 +260,10 @@ class Category:
 
         if os.path.exists(os.path.join(path, 'category.py')):
             with pushd(path):
-                loader = importlib.machinery.SourceFileLoader('catmod', 'category.py')
+                fn = os.path.abspath('category.py')
+                loader = importlib.machinery.SourceFileLoader('category', fn)
                 self.catmod = loader.load_module()
-                self.pointvals.extend(self.catmod.points)
+                self.pointvals.extend(self.catmod.pointvals())
         else:
             for fpath in glob.glob(os.path.join(path, "[0-9]*")):
                 pn = os.path.basename(fpath)
