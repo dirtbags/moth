@@ -31,11 +31,12 @@ function puzzlesRefresh(term, obj) {
 	    if (points == 0) {
 		i.textContent = "‡";
 	    } else {
-		var a = createElement('span');
+		var a = createElement('a');
 		i.appendChild(a);
 		a.className = "link";
 		a.textContent = points;
-		a.addEventListener("click", loadPuzzle.bind(undefined, cat, id, points));
+                a.href = cat + "/" + id + "/index.html";
+		// a.addEventListener("click", loadPuzzle.bind(undefined, cat, id, points));
 	    }
 	}
 
