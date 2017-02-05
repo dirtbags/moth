@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# Starts a standalone server using tcpsvd and eris
+
+tcpserver 
