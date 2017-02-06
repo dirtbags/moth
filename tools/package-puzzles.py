@@ -31,10 +31,10 @@ def write_kv_pairs(ziphandle, filename, kv):
             filehandle.write("%s %s\n" % (key, kv[key]))
     filehandle.seek(0)
     ziphandle.writestr(filename, filehandle.read())
-    
+
 def escape(s):
     return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    
+
 def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files):
     html_content = io.StringIO()
     file_content = io.StringIO()
@@ -50,7 +50,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
 '''            </ul>
         </section>
 ''')
-        
+
     html_content.write(
 '''<!DOCTYPE html>
 <html>
@@ -77,7 +77,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
         <section id="sponsors">
             <img src="../../images/lanl.png" alt="Los Alamos National Laboratory">
             <img src="../../images/doe.png" alt="US Department Of Energy">
-            <img src="../../images/sandia.png" alt="Sandia National Laboratories">
+            <img src="../../images/inl.png" alt="Idaho National Laboratory">
         </section>
     </body>
 </html>'''.format(category=category, points=points, body=puzzle.html_body(), file_content=file_content.getvalue(), authors=', '.join(authors)))
@@ -118,7 +118,7 @@ def build_category(categorydir, outdir):
         hashmap = hashlib.sha1(category_seed)
         hashmap.update(str(puzzle.points).encode('utf-8'))
         puzzlehash = hashmap.hexdigest()
-        
+
         mapping[puzzle.points] = puzzlehash
         answers[puzzle.points] = puzzle.answers
         summary[puzzle.points] = puzzle.summary
@@ -149,9 +149,9 @@ def build_category(categorydir, outdir):
     zf.close()
 
     shutil.move(zipfileraw.name, zipfilename)
-    
-   
-if __name__ == '__main__':        
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a category package')
     parser.add_argument('categorydirs', nargs='+', help='Directory of category source')
     parser.add_argument('outdir', help='Output directory')
