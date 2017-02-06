@@ -1,0 +1,62 @@
+#!/bin/bash
+p='
+BEGIN {
+	%H; %S; %AH;
+	sub mx {  # measure solved
+		my ($count, $max) = @_;
+		my $m = $count <= $max ? "*" : "=";
+		$count = $count <= $max ? $count : $max;
+		return $m x $count;
+	}
+	sub mz {  # measure not solved
+		my ($count, $max) = @_;
+		$count = $count <= $max ? $count : $max;
+		return "." x ($max - $count);
+	}
+	sub bt {  # box top
+		my ($name, $width) = @_;
+		printf "%d in %s\n", $width, $name;
+		printf "%5s : %s+\n", "----<", (qq/-/ x $width);
+	}
+	sub bb {  # box bottom
+		my ($width) = @_;
+		printf "%5s : %s+\n\n", "----<", (qq/-/ x $width);
+	}
+}
+
+my ($ts, $hash, $puzz, $points, $comment) = @F;
+
+$H{$puzz} = {} unless $H{$puzz};
+$H{$puzz}->{$points}++;
+
+$S{$puzz} = {} unless $S{$puzz};
+$S{$puzz}->{$hash}++;
+
+$AH{$hash}++;
+
+END {
+	$s = scalar keys %AH;
+	for my $p (sort keys %H) {
+		bt($p, $s);
+		my %hist = %{ $H{$p} };
+		printf "%5d : %s%s|\n", $_, mx($hist{$_}, $s), mz($hist{$_}, $s)
+			for sort { ($hist{$a} <=> $hist{$b}) || ($b <=> $a) } keys %hist;
+		bb($s);
+	}
+}
+'
+colors='sed 
+	-e s/\([0-9]\+\)/[1;34m\1[0m/g
+	-e s/\([*]\+\)/[1;32m\1[0m/g
+	-e s/\([.]\+\)/[1;30m\1[0m/g
+	-e s/\([=]\+\)/[1;33m\1[0m/g
+	-e s/\([>+-]\+\)/[1;30m\1[0m/g
+	-e s/\(\sin\s\)\(\S\+\)/\1[1;37m\2[0m/g
+'
+
+cd $(dirname $0)/..
+
+LINES=${LINES-$(tput lines)}
+COLUMNS=${COLUMNS-$(tput lines)}
+
+while true; do clear; perl -lane $"${p}" < state/points.log | column -e | $colors; sleep 10; done
