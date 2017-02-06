@@ -44,6 +44,7 @@ setup() {
 	hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > $DESTDIR/assigned.txt
     fi
 
+	mkdir -p $DESTDIR/www
     ln -sf ../state/points.json $DESTDIR/www
     ln -sf ../state/puzzles.json $DESTDIR/www
 }
