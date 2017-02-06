@@ -86,8 +86,11 @@ You're also going to need a web server if you want people to be able to play.
 How to run a web server
 -----------------------------
 
-Your web server needs to serve up files for you contest out of
+Your web server needs to serve up files for your contest out of
 `$mothinst/www`.
+It needs to be able to execute CGI either from the `cgi-bin` directory,
+or for files ending in `.cgi`.
+The user running the CGI needs to be the same one that's running `mothd`.
 
 If you don't want to fuss around with setting up a full-featured web server,
 you can use `tcpserver` and `eris`,
