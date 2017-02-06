@@ -30,4 +30,4 @@ end
 f:write(team)
 f:close()
 
-koth.page("Success", "Okay, your team has been named and you may begin using your hash!")
+koth.page("Success", "Okay, your team has been named and you may begin using your hash! <a href='/puzzles.html'>Puzzles</a>")

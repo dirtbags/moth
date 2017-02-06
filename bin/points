@@ -1,4 +1,4 @@
-#! /usr/bin/lua5.3
+#! /usr/bin/lua5.1
 
 local basedir = arg[1]
 local statedir = basedir .. "/state"
@@ -10,7 +10,7 @@ local nteams = 0
 local NR = 0
 
 for line in io.lines(statedir .. "/points.log") do
-   local ts, hash, cat, points = line:match("(%d+) (%g+) (%g+) (%d+)")
+   local ts, hash, cat, points = line:match("(%d+) ([^%s]+) ([^%s]+) (%d+)")
    local teamno = teams[hash]
 
    if not teamno then

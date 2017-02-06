@@ -1,4 +1,4 @@
-#! /usr/bin/lua5.3
+#! /usr/bin/lua5.1
 
 local basedir = arg[1]
 local statedir = basedir .. "/state"
@@ -9,7 +9,7 @@ for cat in io.lines(statedir .. "/categories.txt") do
 end
 
 for line in io.lines(statedir .. "/points.log") do
-   local ts, team, cat, points = line:match("^(%d+) (%g+) (%g+) (%d+)")
+   local ts, team, cat, points = line:match("^(%d+) ([^%s]+) ([^%s]+) (%d+)")
    points = tonumber(points) or 0
 	
    -- Skip scores for removed categories
