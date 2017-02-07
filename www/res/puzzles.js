@@ -1,5 +1,7 @@
 var puzzlesTerminal;
-var puzzlesJsonUrl = "puzzles.json";
+var ms=new Date().getTime()
+var puzzlesJsonUrl = "puzzles.json?" + ms;
+console.log(puzzlesJsonUrl);
 
 function loadPuzzle(cat, id, points) {
     console.log("Requested " + cat + "/" + id + "(" + points + ")");
