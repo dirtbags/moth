@@ -4,6 +4,7 @@ import contextlib
 import glob
 import io
 import importlib.machinery
+import logging
 import mistune
 import os
 import random
@@ -95,9 +96,13 @@ class Puzzle:
                 if not line:
                     header = False
                     continue
-                key, val = line.split(':', 1)
-                key = key.lower()
-                val = val.strip()
+                try:
+                    key, val = line.split(':', 1)
+                    key = key.lower()
+                    val = val.strip()
+                except ValueError:
+                    raise ValueError("Invalid header line: [%s]" % (line))
+
                 if key == 'author':
                     self.authors.append(val)
                 elif key == 'summary':
@@ -116,7 +121,8 @@ class Puzzle:
                         pass
                     self.files[name] = PuzzleFile(stream, name, not hidden)
                 else:
-                    raise ValueError("Unrecognized header field: {}".format(key))
+                    raise ValueError(
+                        "Unrecognized header field: {}".format(key))
             else:
                 self.body.write(line)
 
@@ -293,6 +299,7 @@ class Category:
             with pushd(self.path):
                 self.catmod.make(points, puzzle)
         else:
+            logging.info("category.puzzle: %d" % (points))
             puzzle.read_directory(path)
         return puzzle
 
