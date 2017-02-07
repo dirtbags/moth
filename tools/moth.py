@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
-import argparse
 import contextlib
 import glob
-import hashlib
 import io
 import importlib.machinery
 import mistune
@@ -14,11 +12,13 @@ import tempfile
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
+
 def djb2hash(buf):
     h = 5381
     for c in buf:
         h = ((h * 33) + c) & 0xffffffff
     return h
+
 
 @contextlib.contextmanager
 def pushd(newdir):
@@ -40,17 +40,19 @@ def loadmod(name, path):
 ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                      'answer_words.txt'))]
 
+
 class PuzzleFile:
     """A file associated with a puzzle.
 
-    path: The path to the original input file. May be None (when this is created from a file handle
-          and there is no original input.
-    handle: A File-like object set to read the file from. You should be able to read straight
-            from it without having to seek to the beginning of the file.
+    path: The path to the original input file. May be None (when this is
+        created from a file handle and there is no original input.
+    handle: A File-like object set to read the file from. You should be able to
+        read straight from it without having to seek to the beginning of the
+        file.
     name: The name of the output file.
-    visible: A boolean indicating whether this file should visible to the user. If False,
-             the file is still expected to be accessible, but it's path must be known
-             (or figured out) to retrieve it."""
+    visible: A boolean indicating whether this file should visible to the user.
+        If False, the file is still expected to be accessible, but it's path
+        must be known (or figured out) to retrieve it."""
 
     def __init__(self, stream, name, visible=True):
         self.stream = stream
@@ -62,8 +64,8 @@ class Puzzle:
     def __init__(self, category_seed, points):
         """A MOTH Puzzle.
 
-        :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
-                              It is combined with the puzzle points.
+        :param category_seed: A byte string to use as a seed for random numbers
+            for this puzzle.  It is combined with the puzzle points.
         :param points: The point value of the puzzle.
         """
 
@@ -76,7 +78,8 @@ class Puzzle:
         self.files = {}
         self.body = io.StringIO()
         self.logs = []
-        self.randseed = category_seed * self.points
+        self.category_seed = category_seed
+        self.randseed = self.category_seed * self.points
         self.rand = random.Random(self.randseed)
 
     def log(self, *vals):
@@ -132,14 +135,15 @@ class Puzzle:
 
     def random_hash(self):
         """Create a file basename (no extension) with our number generator."""
-        return ''.join(self.rand.choice(string.ascii_lowercase) for i in range(8))
+        return ''.join(
+            self.rand.choice(string.ascii_lowercase) for i in range(8))
 
     def make_temp_file(self, name=None, visible=True):
-        """Get a file object for adding dynamically generated data to the puzzle. When you're
-        done with this file, flush it, but don't close it.
+        """Get a file object for adding dynamically generated data to the
+        puzzle. When you're done with this file, flush it, but don't close it.
 
-        :param name: The name of the file for links within the puzzle. If this is None, a name
-                     will be generated for you.
+        :param name: The name of the file for links within the puzzle. If this
+            is None, a name will be generated for you.
         :param visible: Whether or not the file will be visible to the user.
         :return: A file object for writing
         """
@@ -164,7 +168,9 @@ class Puzzle:
         return self.rand.choice(ANSWER_WORDS)
 
     def make_answer(self, word_count=4, sep=' '):
-        """Generate and return a new answer. It's automatically added to the puzzle answer list.
+        """Generate and return a new answer. It's automatically added to the
+            puzzle answer list.
+
         :param int word_count: The number of words to include in the answer.
         :param str|bytes sep: The word separator.
         :returns: The answer string
@@ -263,7 +269,8 @@ class Category:
         self.catmod = None
 
         try:
-            self.catmod = loadmod('category', os.path.join(path, 'category.py'))
+            self.catmod = loadmod(
+                'category', os.path.join(path, 'category.py'))
         except FileNotFoundError:
             self.catmod = None
 
