@@ -1,116 +1,163 @@
 function loadJSON(url, callback) {
-	function loaded(e) {
-		callback(e.target.response);
-	}
-	var xhr = new XMLHttpRequest()
-	xhr.onload = loaded;
-	xhr.open("GET", url, true);
-	xhr.responseType = "json";
-	xhr.send();
+    function loaded(e) {
+	callback(e.target.response);
+    }
+    var xhr = new XMLHttpRequest()
+    xhr.onload = loaded;
+    xhr.open("GET", url, true);
+    xhr.responseType = "json";
+    xhr.send();
+}
+
+function scoreboardHistoryPush(pointslog) {
+    let pointsHistory = JSON.parse(localStorage.getItem("pointsHistory")) || [];
+    if (pointsHistory.length >= 20) {
+	pointsHistory.shift();
+    }
+    pointsHistory.push(pointslog);
+    localStorage.setItem("pointsHistory", JSON.stringify(pointsHistory));
 }
 
 function scoreboard(element, continuous) {
-	function update(state) {
-		var teamnames = state["teams"];
-		var pointslog = state["points"];
-		var pointshistory = JSON.parse(localStorage.getItem("pointshistory")) || [];
-		if (pointshistory.length >= 20){
-			pointshistory.shift();
+    function update(state) {
+	let teamNames = state["teams"];
+	let pointsLog = state["points"];
+
+        // Establish scores, calculate category maximums
+        let categories = {};
+        let maxPointsByCategory = {};
+        let totalPointsByTeamByCategory = {};
+        for (let entry of pointsLog) {
+            let entryTimeStamp = entry[0];
+            let entryTeamHash = entry[1];
+            let entryCategory = entry[2];
+            let entryPoints = entry[3];
+
+            // Populate list of all categories
+            categories[entryCategory] = entryCategory;
+            
+            // Add points to team's points for that category
+            let points = totalPointsByTeamByCategory[entryTeamHash] || {};
+            let categoryPoints = points[entryCategory] || 0;
+            categoryPoints += entryPoints;
+            points[entryCategory] = categoryPoints;
+            totalPointsByTeamByCategory[entryTeamHash] = points;
+
+            // Calculate maximum points scored in each category
+            let m = maxPointsByCategory[entryCategory] || 0;
+            maxPointsByCategory[entryCategory] = Math.max(m, categoryPoints);
+        }
+
+        // Calculate overall scores
+        let overallScore = {};
+        let orderedOverallScores = [];
+	for (let teamHash in teamNames) {
+	    var score = 0;
+            for (let cat in categories) {
+		var catPoints = totalPointsByTeamByCategory[teamHash][cat] || 0;
+		if (catPoints > 0) {
+                    score += catPoints / maxPointsByCategory[cat];
 		}
-		pointshistory.push(pointslog);
-		localStorage.setItem("pointshistory", JSON.stringify(pointshistory));
-		var highscore = {};
-		var teams = {};
+            }
+            overallScore[teamHash] = score;
+            orderedOverallScores.push([score, teamHash]);
+        }
+        orderedOverallScores.sort();
+	orderedOverallScores.reverse();
 
-		// Dole out points
-		for (var i in pointslog) {
-			var entry = pointslog[i];
-			var timestamp = entry[0];
-			var teamhash = entry[1];
-			var category = entry[2];
-			var points = entry[3];
-
-			var team = teams[teamhash] || {__hash__: teamhash};
-
-			// Add points to team's points for that category
-			team[category] = (team[category] || 0) + points;
-
-			// Record highest score in a category
-			highscore[category] = Math.max(highscore[category] || 0, team[category]);
-
-			teams[teamhash] = team;
-		}
-
-		// Sort by team score
-		function teamScore(t) {
-			var score = 0;
-
-			for (var category in highscore) {
-				score += (t[category] || 0) / highscore[category];
-			}
-			// XXX: This function really shouldn't have side effects.
-			t.__score__ = score;
-			return score;
-		}
-		function teamCompare(a, b) {
-			return teamScore(a) - teamScore(b);
-		}
-
-		var winners = [];
-		for (var i in teams) {
-			winners.push(teams[i]);
-		}
-		if (winners.length == 0) {
-			// No teams!
-			return;
-		}
-		winners.sort(teamCompare);
-		winners.reverse();
-
-		// Clear out the element we're about to populate
-		while (element.lastChild) {
-			element.removeChild(element.lastChild);
-		}
-
-		// Populate!
-		var topActualScore = winners[0].__score__;
-
-		// (100 / ncats) * (ncats / topActualScore);
-		var maxWidth = 100 / topActualScore;
-		for (var i in winners) {
-			var team = winners[i];
-			var row = document.createElement("div");
-			var ncat = 0;
-			for (var category in highscore) {
-				var catHigh = highscore[category];
-				var catTeam = team[category] || 0;
-				var catPct = catTeam / catHigh;
-				var width = maxWidth * catPct;
-
-				var bar = document.createElement("span");
-				bar.classList.add("cat" + ncat);
-				bar.style.width = width + "%";
-				bar.textContent = category + ": " + catTeam;
-				bar.title = bar.textContent;
-
-				row.appendChild(bar);
-				ncat += 1;
-			}
-
-			var te = document.createElement("span");
-			te.classList.add("teamname");
-			te.textContent = teamnames[team.__hash__];
-			row.appendChild(te);
-
-			element.appendChild(row);
-		}
+	// Clear out the element we're about to populate
+	while (element.lastChild) {
+	    element.removeChild(element.lastChild);
 	}
 
-	function once() {
-		loadJSON("points.json", update);
+	// Set up scoreboard structure
+	let spansByTeamByCategory = {};
+	for (let pair of orderedOverallScores) {
+	    let teamHash = pair[1];
+	    let teamName = teamNames[teamHash];
+	    let teamRow = document.createElement("div");
+	    let ncat = 0;
+	    spansByTeamByCategory[teamHash] = {};
+	    for (let cat in categories) {
+		let catSpan = document.createElement("span");
+		catSpan.classList.add("cat" + ncat);
+		catSpan.style.width = "0%";
+		catSpan.textContent = cat + ": 0";
+
+		spansByTeamByCategory[teamHash][cat] = catSpan;
+
+		teamRow.appendChild(catSpan);
+		ncat += 1;
+	    }
+
+	    var te = document.createElement("span");
+	    te.classList.add("teamname");
+	    te.textContent = teamName;
+	    teamRow.appendChild(te);
+
+	    element.appendChild(teamRow);
 	}
-	if (continuous) {
-		setInterval(once, 60000);
+
+	// How many categories are there?
+	var numCategories = 0;
+	for (var cat in categories) {
+	    numCategories += 1;
 	}
-	once();
+
+	// Replay points log, displaying scoreboard at each step
+	let replayTimer = null;
+	let replayIndex = 0;
+	function replayStep(event) {
+	    if (replayIndex > pointsLog.length) {
+		clearInterval(replayTimer);
+		return;
+	    }
+
+	    // Replay log up until replayIndex
+	    let totalPointsByTeamByCategory = {};
+	    for (let index = 0; index < replayIndex; index += 1) {
+		let entry = pointsLog[index];
+		let entryTimeStamp = entry[0];
+		let entryTeamHash = entry[1];
+		let entryCategory = entry[2];
+		let entryPoints = entry[3];
+
+		// Add points to team's points for that category
+		let points = totalPointsByTeamByCategory[entryTeamHash] || {};
+		let categoryPoints = points[entryCategory] || 0;
+		categoryPoints += entryPoints;
+		points[entryCategory] = categoryPoints;
+		totalPointsByTeamByCategory[entryTeamHash] = points;
+	    }
+
+	    // Figure out everybody's score
+	    for (let teamHash in teamNames) {
+		for (let cat in categories) {
+		    let totalPointsByCategory = totalPointsByTeamByCategory[teamHash] || {};
+		    let points = totalPointsByCategory[cat] || 0;
+		    if (points > 0) {
+			let score = points / maxPointsByCategory[cat];
+			let span = spansByTeamByCategory[teamHash][cat];
+			let width = (100.0 / numCategories) * score;
+
+			span.style.width = width + "%";
+			span.textContent = cat + ": " + points;
+			span.title = span.textContent;
+		    }
+		}
+	    }
+
+	    replayIndex += 1;
+	}
+	replayStep();
+	replayTimer = setInterval(replayStep, 20);
+    }
+
+    function once() {
+	loadJSON("points.json", update);
+    }
+    if (continuous) {
+	setInterval(once, 60000);
+    }
+    once();
 }
