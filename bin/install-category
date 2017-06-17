@@ -18,6 +18,9 @@ unzip -o -d $outdir $package
 echo "Fixing permissions..."
 chmod a+rx $outdir/*/ $outdir/*/*
 chmod -R a+r $outdir
+chmod a+rx $outdir/content/*/*.cgi
 
-echo "Linking into web space..."
-ln -sf ../packages/$cat/content $outdir/../../www/$cat
+if [ ! -h $outdir/../../www/$cat ]; then
+    echo "Linking into web space..."
+    ln -sf ../packages/$cat/content $outdir/../../www/$cat
+fi
