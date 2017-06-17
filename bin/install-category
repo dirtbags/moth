@@ -18,7 +18,7 @@ unzip -o -d $outdir $package
 echo "Fixing permissions..."
 chmod a+rx $outdir/*/ $outdir/*/*
 chmod -R a+r $outdir
-chmod a+rx $outdir/content/*/*.cgi
+find $outdir/content -name \*.cgi -exec chmod a+rx {} \;
 
 if [ ! -h $outdir/../../www/$cat ]; then
     echo "Linking into web space..."
