@@ -7,7 +7,7 @@ else
 fi
 basedir=$(pwd)
 
-printf "Updating moth instance in %s\n" $(pwd)
+[ -n "$DEBUG" ] && printf "Updating moth instance in %s\n" $(pwd)
 
 # Do nothing if `disabled` is present
 if [ -f disabled ]; then
