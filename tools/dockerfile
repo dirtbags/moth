@@ -1,0 +1,44 @@
+FROM alpine
+
+ENV base /srv/moth/default
+ENV user ftp
+
+# Get all packages
+RUN apk --no-cache add git build-base
+RUN apk --no-cache add lua5.3
+RUN apk --no-cache add s6-networking
+
+# Get source code
+WORKDIR /usr/local/src
+RUN git clone --branch master https://github.com/dirtbags/moth
+RUN git clone https://github.com/nealey/eris
+
+# Set up moth
+WORKDIR /usr/local/src/moth
+RUN mkdir -p $base
+RUN cp tools/mothd /srv/moth
+RUN cp -r www $base/www
+RUN cp -r bin $base/bin
+RUN mkdir $base/packages
+RUN hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > $base/assigned.txt
+RUN ln -s ../state/points.json $base/www/points.json
+RUN ln -s ../state/puzzles.json $base/www/puzzles.json
+RUN mkdir $base/state
+RUN mkdir $base/state/teams
+RUN touch $base/state/points.log
+RUN mkdir -p $base/state/points.new
+RUN mkdir -p $base/state/points.tmp
+RUN chown -R $user $base/state
+RUN ln -s lua5.3 /usr/bin/lua
+
+# Set up eris
+WORKDIR /usr/local/src/eris
+RUN make
+RUN cp eris /usr/local/bin
+
+# Now, go
+WORKDIR /
+COPY run-moth /usr/local/bin
+EXPOSE 80
+CMD /usr/local/bin/run-moth $user
+
