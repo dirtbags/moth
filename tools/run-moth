@@ -1,0 +1,10 @@
+#! /bin/sh
+
+user=$1
+uid=$(id -u $user)
+
+su -s /srv/moth/mothd $user &
+
+cd /srv/moth/default/www
+exec s6-tcpserver -u $uid 0.0.0.0 80 /usr/local/bin/eris -. -c
+
