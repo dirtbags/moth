@@ -7,18 +7,34 @@ else
 fi
 basedir=$(pwd)
 
-[ -n "$DEBUG" ] && printf "Updating moth instance in %s\n" $(pwd)
+log () {
+	echo "moth: $@" 1>&2
+}
 
 # Do nothing if `disabled` is present
 if [ -f disabled ]; then
+	log "Instance disabled: doing nothing"
 	exit
 fi
 
 # Reset to initial state if `reset` is present
 if [ -f reset ]; then
+	log "Resetting state"
 	rm -f state/teams/* state/points.new/* state/points.tmp/*
 	: > state/points.log
 	rm -f reset
+fi
+
+# Create some team names if needed
+if [ ! -f state/assigned.txt ]; then
+	log "Generating team names"
+	hd </dev/urandom | awk '{print $3 $4 $5 $6;}' | head -n 100 > state/assigned.txt
+fi
+
+# Helpful error message
+if [ $(ls packages | wc -l) -eq 0 ]; then
+	log "error: No packages installed"
+	exit
 fi
 
 # Create a list of currently-active categories
