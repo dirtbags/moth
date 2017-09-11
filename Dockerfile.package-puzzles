@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3-alpine
 
 COPY tools/package-puzzles.py /pp/
 COPY tools/moth.py /pp/

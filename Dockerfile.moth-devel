@@ -1,0 +1,12 @@
+FROM python:3-alpine
+
+COPY tools/devel-server.py /moth/
+COPY tools/moth.py /moth/
+COPY tools/mistune.py /moth/
+COPY tools/answer_words.txt /moth/
+COPY www /moth/src/www
+COPY example-puzzles /moth/puzzles
+COPY docs /moth/docs
+
+WORKDIR /moth/
+ENTRYPOINT ["python3", "/moth/devel-server.py"]
