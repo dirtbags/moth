@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#o/usr/bin/env python3
 
 # To pick up any changes to this file without restarting anything:
 #     while true; do ./tools/devel-server.py --once; done
@@ -36,7 +36,7 @@ def page(title, body):
 <html>
   <head>
     <title>{title}</title>
-    <link rel="stylesheet" href="/files/www/res/style.css">
+    <link rel="stylesheet" href="/files/src/www/res/style.css">
   </head>
   <body>
     <h1>{title}</h1>
@@ -242,7 +242,7 @@ you are a fool.
         self.wfile.write(payload)
 
 
-def run(address=('localhost', 8080), once=False):
+def run(address=('0.0.0.0', 8080), once=False):
     httpd = ThreadingServer(address, MothHandler)
     print("=== Listening on http://{}:{}/".format(address[0], address[1]))
     if once:

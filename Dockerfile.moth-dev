@@ -1,8 +1,0 @@
-FROM python:3
-
-COPY tools/devel-server.py /pp/
-COPY tools/moth.py /pp/
-COPY tools/mistune.py /pp/
-COPY tools/answer_words.txt /pp/
-
-ENTRYPOINT ["python3", "/pp/devel-server.py"]
