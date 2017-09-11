@@ -153,8 +153,8 @@ def build_category(categorydir, outdir):
    
 if __name__ == '__main__':        
     parser = argparse.ArgumentParser(description='Build a category package')
-    parser.add_argument('categorydirs', nargs='+', help='Directory of category source')
     parser.add_argument('outdir', help='Output directory')
+    parser.add_argument('categorydirs', nargs='+', help='Directory of category source')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG)
