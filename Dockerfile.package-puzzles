@@ -1,4 +1,6 @@
-FROM python:3-alpine
+FROM alpine
+
+RUN apk --no-cache add python3 py3-pillow
 
 COPY tools/package-puzzles.py /pp/
 COPY tools/moth.py /pp/
