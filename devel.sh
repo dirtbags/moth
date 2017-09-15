@@ -1,8 +1,10 @@
-#!/bin/bash -e
+#!/bin/sh
 #
 # Script to clone and start a development server
 
-if [[ -f tools/devel-server.py ]]; then
+set -e
+
+if [ -f tools/devel-server.py ]; then
 	cat <<EOM
 This script is intended to be used to bootstrap a moth development server. It
 looks like you're running the script from a moth repository working directory.
@@ -14,8 +16,8 @@ EOM
 	exit 1
 fi
 
-[[ -d puzzles  ]] || mkdir -p puzzles
-[[ -d moth/bin ]] || git clone https://github.com/dirtbags/moth.git
+[ -d puzzles  ] || mkdir -p puzzles
+[ -d moth/bin ] || git clone https://github.com/dirtbags/moth.git
 
 cd moth
 puzzles="$(readlink -e ../puzzles)"
