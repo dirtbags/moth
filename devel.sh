@@ -11,7 +11,7 @@ looks like you're running the script from a moth repository working directory.
 
     $ mkdir /tmp/moth
     $ cd /tmp/moth
-    $ curl https://raw.githubusercontent.com/dirtbags/moth/master/devel.sh | bash
+    $ curl https://raw.githubusercontent.com/dirtbags/moth/master/devel.sh | sh
 EOM
 	exit 1
 fi
