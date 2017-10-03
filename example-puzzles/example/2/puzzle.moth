@@ -1,15 +1,38 @@
 Author: neale
 Summary: Static puzzle resource files
-File: salad.jpg
+File: salad.jpg s.jpg
+File: salad2.jpg s2.jpg hidden
 Answer: salad
 
 You can include additional resources in a static puzzle,
-by just dropping them in the directory.
+by dropping them in the directory and listing them in a `File:` header field.
 
-You can refer to them directly in your Markdown,
+The format is:
+
+    File: filename [translatedname] [hidden]
+
+If `translatedname` is provided,
+the filename is changed to it when the puzzle category is built.
+You can use this to give good filenames while building,
+but obscure them during build.
+On this page, we obscure `salad.jpg` to `s.jpg`,
+and `salad2.jpg` to `s2.jpg`,
+so that people can't guess the answer based on filename.
+
+The word `hidden`, if present,
+prevents a file from being listed at the bottom of the page.
+
+Here are the `File:` fields in this page:
+
+    File: salad.jpg s.jpg
+	File: salad2.jpg s2.jpg hidden
+
+You can refer to resources directly in your Markdown,
 or use them however else you see fit.
 They will appear in the same directory on the web server once the exercise is running.
+Check the source for this puzzle to see how it was created.
 
-![Leafy Green Deliciousness](salad.jpg)
+![Leafy Green Deliciousness](s.jpg)
+![Mmm so good](s2.jpg)
 
 The answer for this page is what is featured in the photograph.
