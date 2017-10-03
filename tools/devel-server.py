@@ -163,10 +163,10 @@ you are a fool.
             body.write("<ul>")
             for name,puzzlefile in sorted(puzzle.files.items()):
                 if puzzlefile.visible:
-                    visibility = 'listed as a generated file'
+                    visibility = ''
                 else:
-                    visibility = 'unlisted'
-                body.write('<li><a href="/puzzles/{cat}/{points}/{filename}">{filename}</a> ({visibility})</li>'
+                    visibility = '(unlisted)'
+                body.write('<li><a href="/puzzles/{cat}/{points}/{filename}">{filename}</a> {visibility}</li>'
                             .format(cat=parts[2],
                                     points=puzzle.points,
                                     filename=name,

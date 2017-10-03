@@ -108,7 +108,7 @@ class Puzzle:
                     stream = open(name, 'rb')
                     try:
                         name = parts[1]
-                        hidden = parts[2]
+                        hidden = (parts[2].lower() == "hidden")
                     except IndexError:
                         pass
                     self.files[name] = PuzzleFile(stream, name, not hidden)
