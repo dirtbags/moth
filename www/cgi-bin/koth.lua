@@ -98,7 +98,7 @@ end
 
 -- Traverse up to find assigned.txt
 for i = 0, 5 do
-	local f = io.open(koth.path("assigned.txt"))
+	local f = io.open(koth.path("state/assigned.txt"))
 	if (f) then
 		f:close()
 		break

@@ -85,7 +85,7 @@ There are five entries in each instance directory, described in detail below:
 
 
 
-`assigned.txt`
+`state/assigned.txt`
 ----------------
 
 This is just a list of tokens that have been assigned.
