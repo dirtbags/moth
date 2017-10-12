@@ -13,7 +13,7 @@ hash = hash:match("[0-9a-f]*")
 
 if ((hash == "") or (team == "")) then
 	koth.page("Invalid Entry", "Oops! Are you sure you got that right?")
-elseif (not koth.anchored_search(koth.path("assigned.txt"), hash)) then
+elseif (not koth.anchored_search(koth.path("state/assigned.txt"), hash)) then
 	koth.page("Invalid Hash", "Oops! I don't have a record of that hash. Did you maybe use capital letters accidentally?")
 end
 
