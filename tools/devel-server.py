@@ -31,12 +31,13 @@ sys.dont_write_bytecode = True
 # XXX: This will eventually cause a problem. Do something more clever here.
 seed = 1
 
-def page(title, body):
+def page(title, body, scripts=[]):
     return """<!DOCTYPE html>
 <html>
   <head>
     <title>{title}</title>
     <link rel="stylesheet" href="/files/src/www/res/style.css">
+    {scripts}
   </head>
   <body>
     <h1>{title}</h1>
@@ -44,17 +45,21 @@ def page(title, body):
       {body}
     </div>
   </body>
-</html>""".format(title=title, body=body)
+</html>""".format(
+        title=title,
+        body=body,
+        scripts="\n".join('<script src="{}"></script>'.format(s) for s in scripts),
+    )
 
 
-def mdpage(body):
+def mdpage(body, scripts=[]):
     try:
         title, _ = body.split('\n', 1)
     except ValueError:
         title = "Result"
     title = title.lstrip("#")
     title = title.strip()
-    return page(title, mistune.markdown(body, escape=False))
+    return page(title, mistune.markdown(body, escape=False), scripts=scripts)
 
 
 # XXX: What horrors did we unleash with our chdir shenanigans that
@@ -123,6 +128,7 @@ you are a fool.
         body = io.StringIO()
         path = self.path.rstrip('/')
         parts = path.split("/")
+        scripts = []
         title = None
         fpath = None
         points = None
@@ -156,6 +162,7 @@ you are a fool.
             body.write("</ul>")
         elif len(parts) == 4:
             # Serve up a puzzle
+            scripts = puzzle.scripts
             title = "{} puzzle {}".format(parts[2], parts[3])
             body.write("<h2>Body</h2>")
             body.write(puzzle.html_body())
@@ -200,7 +207,7 @@ you are a fool.
             shutil.copyfileobj(pfile.stream, self.wfile)
             return
 
-        payload = page(title, body.getvalue()).encode('utf-8')
+        payload = page(title, body.getvalue(), scripts=scripts).encode('utf-8')
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", len(payload))
