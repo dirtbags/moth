@@ -73,6 +73,7 @@ class Puzzle:
         self.summary = None
         self.authors = []
         self.answers = []
+        self.scripts = []
         self.files = {}
         self.body = io.StringIO()
         self.logs = []
@@ -112,6 +113,11 @@ class Puzzle:
                     except IndexError:
                         pass
                     self.files[name] = PuzzleFile(stream, name, not hidden)
+                elif key == 'script':
+                    stream = open(val, 'rb')
+                    # Make sure this shows up in the header block of the HTML output.
+                    self.files[val] = PuzzleFile(stream, val, visible=False)
+                    self.scripts.append(val)
                 else:
                     raise ValueError("Unrecognized header field: {}".format(key))
             else:

@@ -1,5 +1,8 @@
 FROM alpine
 
+ARG http_proxy
+ENV http_proxy=${http_proxy}
+
 RUN apk --no-cache add python3 py3-pillow
 
 COPY tools/devel-server.py /moth/

@@ -50,6 +50,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
 '''            </ul>
         </section>
 ''')
+    scripts = ['<script src="{}"></script>'.format(s) for s in puzzle.scripts]
         
     html_content.write(
 '''<!DOCTYPE html>
@@ -59,6 +60,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
         <meta name="viewport" content="width=device-width">
         <title>{category} {points}</title>
         <link rel="stylesheet" href="../../style.css">
+        {scripts}
     </head>
     <body>
         <h1>{category} for {points} points</h1>
@@ -80,7 +82,14 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
             <img src="../../images/sandia.png" alt="Sandia National Laboratories">
         </section>
     </body>
-</html>'''.format(category=category, points=points, body=puzzle.html_body(), file_content=file_content.getvalue(), authors=', '.join(authors)))
+</html>'''.format(
+        category=category,
+        points=points,
+        body=puzzle.html_body(),
+        file_content=file_content.getvalue(),
+        authors=', '.join(authors)),
+        scripts='\n'.join(scripts),
+    )
     ziphandle.writestr(os.path.join(puzzledir, 'index.html'), html_content.getvalue())
 
 def build_category(categorydir, outdir):
@@ -151,7 +160,7 @@ def build_category(categorydir, outdir):
     shutil.move(zipfileraw.name, zipfilename)
     
    
-if __name__ == '__main__':        
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a category package')
     parser.add_argument('outdir', help='Output directory')
     parser.add_argument('categorydirs', nargs='+', help='Directory of category source')
