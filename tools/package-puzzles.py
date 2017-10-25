@@ -83,12 +83,13 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
         </section>
     </body>
 </html>'''.format(
-        category=category,
-        points=points,
-        body=puzzle.html_body(),
-        file_content=file_content.getvalue(),
-        authors=', '.join(authors)),
-        scripts='\n'.join(scripts),
+            category=category,
+            points=points,
+            body=puzzle.html_body(),
+            file_content=file_content.getvalue(),
+            authors=', '.join(authors),
+            scripts='\n'.join(scripts),
+	)
     )
     ziphandle.writestr(os.path.join(puzzledir, 'index.html'), html_content.getvalue())
 

@@ -11,7 +11,7 @@ local points = cgi.fields['p'] or ""
 local answer = cgi.fields['a'] or ""
 
 -- Defang category name; prevent directory traversal
-category = category:gsub("[^A-Za-z0-9]", "-")
+category = category:gsub("[^A-Za-z0-9_]", "-")
 
 -- Check answer
 local needle = points .. " " .. answer
