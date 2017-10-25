@@ -40,6 +40,15 @@ function koth.page(title, body)
 		print(body)
 		print("</section>")
 	end
+
+	print('<nav>')
+	print('<ul>')
+	print('<li><a href="../register.html">Register</a></li>')
+	print('<li><a href="../puzzles.html">Puzzles</a></li>')
+	print('<li><a href="../scoreboard.html">Scoreboard</a></li>')
+	print('</ul>')
+	print('</nav>')
+
 	print('<section id="sponsors">')
 	print('<img src="../images/lanl.png" alt="Los Alamos National Laboratory">')
 	print('<img src="../images/doe.png" alt="US Department Of Energy">')
