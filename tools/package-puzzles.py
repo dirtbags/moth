@@ -71,7 +71,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
                 <input type="hidden" name="c" value="{category}">
                 <input type="hidden" name="p" value="{points}">
                 <div>Team hash:<input name="t" size="8"></div>
-                <div>Answer:<input name="a" size="20"></div>
+                <div>Answer:<input name="a" id="answer" size="20"></div>
                 <input type="submit" value="submit">
             </form>
         </section>

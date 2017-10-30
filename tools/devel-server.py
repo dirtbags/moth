@@ -165,7 +165,9 @@ you are a fool.
             scripts = puzzle.scripts
             title = "{} puzzle {}".format(parts[2], parts[3])
             body.write("<h2>Body</h2>")
+            body.write("<div id='body' style='border: solid 1px silver;'>")
             body.write(puzzle.html_body())
+            body.write("</div>")
             body.write("<h2>Files</h2>")
             body.write("<ul>")
             for name,puzzlefile in sorted(puzzle.files.items()):
@@ -180,6 +182,7 @@ you are a fool.
                                     visibility=visibility))
             body.write("</ul>")
             body.write("<h2>Answers</h2>")
+            body.write("<p>Input box (for scripts): <input id='answer' name='a'>")
             body.write("<ul>")
             assert puzzle.answers, 'No answers defined'
             for a in puzzle.answers:
