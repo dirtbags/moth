@@ -1,4 +1,4 @@
-#o/usr/bin/env python3
+#!/usr/bin/python3
 
 # To pick up any changes to this file without restarting anything:
 #     while true; do ./tools/devel-server.py --once; done
