@@ -12,7 +12,7 @@ log () {
 }
 
 # Do nothing if `disabled` is present
-if [ -f disabled ]; then
+if [ -f state/disabled ]; then
 	log "Instance disabled; doing nothing"
 	exit
 fi
