@@ -9,9 +9,7 @@ Tan: #e1caa5
 @import "fonts/maven_pro.css";
 
 html {
-/*	background: #35170c url(images/tf6bg.png) center top;*/
-/*	background-repeat: repeat-x;*/
-  background: #35170c url(images/tf6bg.png) no-repeat center center fixed; 
+  background: #35170c url(images/background.png) no-repeat center center fixed; 
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
