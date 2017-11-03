@@ -1,17 +1,14 @@
 FROM neale/eris
 
-RUN apk --no-cache add lua5.2
-RUN apk --no-cache add lua5.3
+RUN apk --no-cache add lua5.2 lua5.3
 RUN ln -s lua5.2 /usr/bin/lua
 
 # Install MOTH. This could be less obtuse.
-COPY www /moth/www
-COPY bin /moth/bin
-RUN ln -s ../state/puzzles.json /moth/www/puzzles.json
-RUN ln -s ../state/points.json /moth/www/points.json
+COPY www /moth/www/
+COPY bin /moth/bin/
+COPY src/moth-init /moth/init
+RUN ln -s ../state/puzzles.json /moth/www/puzzles.json && \
+    ln -s ../state/points.json /moth/www/points.json
 
-COPY src/moth-init /usr/sbin/moth-init
-
-WORKDIR /
-CMD ["/usr/sbin/moth-init"]
+CMD ["/moth/init"]
 

@@ -172,9 +172,8 @@ nav li + li:before {
 }
 
 #sponsors img {
-	max-width: 33%;
+	max-width: 25%;
 	max-height: 5em;
-	margin: 1em;
 }
 
 
