@@ -76,11 +76,6 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
             </form>
         </section>
         <address>Puzzle by <span class="authors" data-handle="{authors}">{authors}</span></address>
-        <section id="sponsors">
-            <img src="../../images/lanl.png" alt="Los Alamos National Laboratory">
-            <img src="../../images/doe.png" alt="US Department Of Energy">
-            <img src="../../images/sandia.png" alt="Sandia National Laboratories">
-        </section>
     </body>
 </html>'''.format(
             category=category,
