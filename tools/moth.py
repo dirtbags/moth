@@ -102,6 +102,10 @@ class Puzzle:
                     self.summary = val
                 elif key == 'answer':
                     self.answers.append(val)
+                elif key == 'hint':
+                    pass
+                elif key == 'name':
+                    pass
                 elif key == 'file':
                     parts = val.split()
                     name = parts[0]
