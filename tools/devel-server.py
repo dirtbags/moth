@@ -31,12 +31,12 @@ sys.dont_write_bytecode = True
 # XXX: This will eventually cause a problem. Do something more clever here.
 seed = 1
 
-def page(title, body, scripts=[]):
+def page(title, body, baseurl, scripts=[]):
     return """<!DOCTYPE html>
 <html>
   <head>
     <title>{title}</title>
-    <link rel="stylesheet" href="/files/src/www/res/style.css">
+    <link rel="stylesheet" href="{baseurl}/files/src/www/res/style.css">
     {scripts}
   </head>
   <body>
@@ -48,18 +48,11 @@ def page(title, body, scripts=[]):
 </html>""".format(
         title=title,
         body=body,
+        baseurl=baseurl,
         scripts="\n".join('<script src="{}"></script>'.format(s) for s in scripts),
     )
 
 
-def mdpage(body, scripts=[]):
-    try:
-        title, _ = body.split('\n', 1)
-    except ValueError:
-        title = "Result"
-    title = title.lstrip("#")
-    title = title.strip()
-    return page(title, mistune.markdown(body, escape=False), scripts=scripts)
 
 
 # XXX: What horrors did we unleash with our chdir shenanigans that
@@ -70,6 +63,17 @@ class ThreadingServer(socketserver.ForkingMixIn, http.server.HTTPServer):
 
 class MothHandler(http.server.SimpleHTTPRequestHandler):
     puzzles_dir = "puzzles"
+    base_url = ""
+    
+    def mdpage(self, body, scripts=[]):
+        try:
+            title, _ = body.split('\n', 1)
+        except ValueError:
+            title = "Result"
+        title = title.lstrip("#")
+        title = title.strip()
+        return page(title, mistune.markdown(body, escape=False), self.base_url, scripts=scripts)
+    
 
     def handle_one_request(self):
         try:
@@ -89,9 +93,9 @@ class MothHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             self.serve_front()
-        elif self.path.startswith("/puzzles"):
-            self.serve_puzzles()
-        elif self.path.startswith("/files"):
+        elif self.path.startswith("/puzzles/"):
+            self.serve_puzzles(self.path)
+        elif self.path.startswith("/files/"):
             self.serve_file(self.translate_path(self.path))
         else:
             self.send_error(HTTPStatus.NOT_FOUND, "File not found")
@@ -109,24 +113,24 @@ MOTH Development Server Front Page
 Yo, it's the front page.
 There's stuff you can do here:
 
-* [Available puzzles](/puzzles)
-* [Raw filesystem view](/files/)
-* [Documentation](/files/docs/)
-* [Instructions](/files/docs/devel-server.md) for using this server
+* [Available puzzles](puzzles/)
+* [Raw filesystem view](files/)
+* [Documentation](files/docs/)
+* [Instructions](files/docs/devel-server.md) for using this server
 
 If you use this development server to run a contest,
 you are a fool.
 """
-        payload = mdpage(body).encode('utf-8')
+        payload = self.mdpage(body).encode('utf-8')
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", len(payload))
         self.end_headers()
         self.wfile.write(payload)
 
-    def serve_puzzles(self):
+    def serve_puzzles(self, path):
         body = io.StringIO()
-        path = self.path.rstrip('/')
+        path = path.rstrip('/')
         parts = path.split("/")
         scripts = []
         title = None
@@ -151,14 +155,14 @@ you are a fool.
             body.write("<ul>")
             for i in sorted(glob.glob(os.path.join(self.puzzles_dir, "*", ""))):
                 bn = os.path.basename(i.strip('/\\'))
-                body.write('<li><a href="/puzzles/{}">puzzles/{}/</a></li>'.format(bn, bn))
+                body.write('<li><a href="{}/">puzzles/{}/</a></li>'.format(bn, bn))
             body.write("</ul>")
         elif not puzzle:
             # List all point values in a category
             title = "Puzzles in category `{}`".format(parts[2])
             body.write("<ul>")
             for points in cat.pointvals():
-                body.write('<li><a href="/puzzles/{cat}/{points}/">puzzles/{cat}/{points}/</a></li>'.format(cat=parts[2], points=points))
+                body.write('<li><a href="{points}/">puzzles/{cat}/{points}/</a></li>'.format(cat=parts[2], points=points))
             body.write("</ul>")
         elif len(parts) == 4:
             # Serve up a puzzle
@@ -175,7 +179,7 @@ you are a fool.
                     visibility = ''
                 else:
                     visibility = '(unlisted)'
-                body.write('<li><a href="/puzzles/{cat}/{points}/{filename}">{filename}</a> {visibility}</li>'
+                body.write('<li><a href="{filename}">{filename}</a> {visibility}</li>'
                             .format(cat=parts[2],
                                     points=puzzle.points,
                                     filename=name,
@@ -210,7 +214,7 @@ you are a fool.
             shutil.copyfileobj(pfile.stream, self.wfile)
             return
 
-        payload = page(title, body.getvalue(), scripts=scripts).encode('utf-8')
+        payload = page(title, body.getvalue(), self.base_url, scripts=scripts).encode('utf-8')
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", len(payload))
@@ -235,7 +239,7 @@ you are a fool.
                 return
             if path.endswith(".md"):
                 ctype = "text/html; charset=utf-8"
-                content = mdpage(payload.decode('utf-8'))
+                content = self.mdpage(payload.decode('utf-8'))
                 payload = content.encode('utf-8')
             try:
                 fs = fspath.stat()
@@ -252,7 +256,7 @@ you are a fool.
         self.wfile.write(payload)
 
 
-def run(address=('0.0.0.0', 8080), once=False):
+def run(address=('127.0.0.1', 8080), once=False):
     httpd = ThreadingServer(address, MothHandler)
     print("=== Listening on http://{}:{}/".format(address[0], address[1]))
     if once:
@@ -264,10 +268,25 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="MOTH puzzle development server")
-    parser.add_argument('--puzzles', default='puzzles',
-                        help="Directory containing your puzzles")
-    parser.add_argument('--once', default=False, action='store_true',
-                        help="Serve one page, then exit. For debugging the server.")
+    parser.add_argument(
+        '--puzzles', default='puzzles',
+        help="Directory containing your puzzles"
+    )
+    parser.add_argument(
+        '--once', default=False, action='store_true',
+        help="Serve one page, then exit. For debugging the server."
+    )
+    parser.add_argument(
+        '--bind', default="127.0.0.1:8080",
+        help="Bind to ip:port"
+    )
+    parser.add_argument(
+        '--base', default="",
+        help="Base URL to this server, for reverse proxy setup"
+    )
     args = parser.parse_args()
+    addr, port = args.bind.split(":")
+    port = int(port)
     MothHandler.puzzles_dir = args.puzzles
-    run(once=args.once)
+    MothHandler.base_url = args.base
+    run(address=(addr, port), once=args.once)
