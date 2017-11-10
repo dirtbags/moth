@@ -7,7 +7,7 @@ HTMLCollection.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 
 function Terminal(target, bps) {
-    bps = bps || 1200;
+    bps = bps || 9600;
 
     var outq = [];
     var outTimer;
@@ -18,42 +18,42 @@ function Terminal(target, bps) {
     // So now it leaves the scrollbar in place, and the user has to scroll.
     // This is how the Plan 9 terminal (1991) works.
     function tx(pairs, bps, scroll) {
-	var drawTimer;
+      var drawTimer;
+      
+      // Looks like EMCAScript 6 has a yield statement.
+      // That would make this mess a lot easier to understand.
+      
+      var pairIndex = 0;
+      var pair = pairs[0];
+      
+      var textIndex = 0;
+      var text = "";
+      
+      function draw() {
+          var node = pair[0];
+          var src = pair[1];
+          var c = src[textIndex];
+      
+          text += c;
+          node.textContent = text;
+      
+          textIndex += 1;
+          if (textIndex == src.length) {
+            textIndex = 0;
+            text = "";
+            
+            pairIndex += 1;
+            if (pairIndex == pairs.length) {
+                clearInterval(drawTimer);
+                return;
+            }
+          pair = pairs[pairIndex];
+      }
 
-	// Looks like EMCAScript 6 has a yield statement.
-	// That would make this mess a lot easier to understand.
-
-	var pairIndex = 0;
-	var pair = pairs[0];
-
-	var textIndex = 0;
-	var text = "";
-
-	function draw() {
-	    var node = pair[0];
-	    var src = pair[1];
-	    var c = src[textIndex];
-
-	    text += c;
-	    node.textContent = text;
-
-	    textIndex += 1;
-	    if (textIndex == src.length) {
-		textIndex = 0;
-		text = "";
-
-		pairIndex += 1;
-		if (pairIndex == pairs.length) {
-		    clearInterval(drawTimer);
-		    return;
-		}
-		pair = pairs[pairIndex];
-	    }
-
-	    if (scroll) {
-		node.scrollIntoView();
-	    }
-	}
+      if (scroll) {
+        node.scrollIntoView();
+      }
+  }
 
 	// N81 uses 1 stop bit, and 1 parity bit.
 	// That works out to exactly 10 bits per byte.
@@ -66,7 +66,7 @@ function Terminal(target, bps) {
 
     function start() {
 	if (! outTimer) {
-	    outTimer = setInterval(drawElement, 75);
+	    outTimer = setInterval(drawElement, 25);
 	}
     }
 
