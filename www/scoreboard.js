@@ -161,3 +161,4 @@ function scoreboard(element, continuous) {
     }
     once();
 }
+
