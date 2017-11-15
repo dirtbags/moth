@@ -24,7 +24,7 @@ function scoreboard(element, continuous, mode, interval) {
 		clearInterval(updateInterval);
 	}
 	function update(state) {
-		console.log("Updating");
+		//console.log("Updating");
 		var teamnames = state["teams"];
 		var pointslog = state["points"];
 		var highscore = {};
@@ -130,7 +130,7 @@ function scoreboard(element, continuous, mode, interval) {
 
 		if(mode == "time")
 		{
-			var colorScale = d3.schemeCategory10;
+			var colorScale = d3.schemeCategory20;
 			
 			var teamLines = {};
 			var reverseTeam = {};
@@ -161,7 +161,7 @@ function scoreboard(element, continuous, mode, interval) {
 			
 			var graph = document.createElement("svg");
 			graph.id = "graph";
-			graph.style.width="90%";
+			graph.style.width="100%";
 			graph.style.height="40em";
 			graph.style.backgroundColor = "white";
 			graph.style.display = "table";
@@ -172,6 +172,7 @@ function scoreboard(element, continuous, mode, interval) {
 			holdingDiv.appendChild(graph);
 			
 			var margins = 40;
+			var marginsX = 120;
 
 			var width = graph.offsetWidth;
 			var height = graph.offsetHeight;
@@ -179,7 +180,7 @@ function scoreboard(element, continuous, mode, interval) {
 			//var xScale = d3.scaleLinear().range([minTime, maxTime]);
 			//var yScale = d3.scaleLinear().range([0, topActualScore]);
 			var originTime = (maxTime - minTime) / 60;
-			var xScale = d3.scaleLinear().range([margins, width - margins]);
+			var xScale = d3.scaleLinear().range([marginsX, width - margins]);
 			xScale.domain([0, originTime]);
 			var yScale = d3.scaleLinear().range([height - margins, margins]);
 			yScale.domain([0, topActualScore]);
@@ -237,7 +238,7 @@ function scoreboard(element, continuous, mode, interval) {
 					.data(curTeam)
 					.enter()
 					.append("line")
-					.style("stroke", colorScale[curEntry])
+					.style("stroke", colorScale[curEntry * 2])
 					.attr("stroke-width", 4)
 					.attr("class", "team_" + entry)
 					.style("z-index", maxNumEntry - curEntry)
@@ -268,7 +269,7 @@ function scoreboard(element, continuous, mode, interval) {
 					.data(curTeam)
 					.enter()
 					.append("circle")
-					.style("fill", colorScale[curEntry])
+					.style("fill", colorScale[curEntry * 2])
 					.style("z-index", maxNumEntry - curEntry)
 					.attr("class", "team_" + entry)
 					.attr("r", 5)
@@ -304,18 +305,18 @@ function scoreboard(element, continuous, mode, interval) {
 				.text("Time (minutes)");
 
 			var legend = graph.append("g");
-			var legendRowHeight = 40;
+			var legendRowHeight = (height) / 10;
 			legend.selectAll("rect")
 				.data(winningTeams)
 				.enter()
 				.append("rect")
 				.attr("class", function(d){ return "team_" + d; })
-				.attr("fill", function(d, i){ return colorScale[i]; })
+				.attr("fill", function(d, i){ return colorScale[i * 2 + 1]; })
 				.style("z-index", function(d, i){ return i; })
-				.attr("x", margins)
-				.attr("y", function(d, i){ return margins + legendRowHeight * i; })
+				.attr("x", 0)
+				.attr("y", function(d, i){ return legendRowHeight * i; })
 				.attr("height", legendRowHeight)
-				.attr("width", 150)
+				.attr("width", marginsX)
 				.on("mouseover", handleMouseoverLegend)
 				.on("mouseout", handleMouseoutLegend);
 
@@ -326,11 +327,24 @@ function scoreboard(element, continuous, mode, interval) {
 				//.attr("class", function(d){ return "team_" + d; })
 				.attr("fill", "black")
 				.style("z-index", function(d, i){ return i; })
-				.attr("dx", margins)
-				.attr("dy", function(d, i){ return margins + legendRowHeight * (i + .5); })
-				.text(function(d){ return d; })
+				.attr("dx", 0)
+				.attr("dy", function(d, i){ return legendRowHeight * (i + .5); })
+				.text(function(d, i){ return i + ": " + d; })
 				.attr("dominant-baseline", "central")
 				.style("pointer-events", "none");
+
+			//legend.append("g").selectAll("text")
+			//	.data(winningTeams)
+			//	.enter()
+			//	.append("text")
+			//	.attr("class", function(d){ return "team_" + d; })
+			//	.attr("fill", function(d, i){ return colorScale[i]; })
+			//	.style("z-index", function(d, i){ return i; })
+			//	.attr("dx", margins)
+			//	.attr("dy", function(d, i){ return margins + legendRowHeight * (i); })
+			//	.text(function(d){ return d; });
+				//.attr("dominant-baseline", "central");
+				//.style("pointer-events", "none");
 				
 
 			function handleMouseover(d, i)
@@ -350,8 +364,11 @@ function scoreboard(element, continuous, mode, interval) {
 					var curClass = d3.select(this).attr("class");
 					var zIndex = d3.select(this).style("z-index");
 					d3.select("body").selectAll("." + curClass)
-						.style("stroke", colorScale[maxNumEntry - zIndex])
-						.style("fill", colorScale[maxNumEntry - zIndex]);
+						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2])
+						.style("fill", colorScale[(maxNumEntry - zIndex) * 2]);
+					legend.selectAll("." + curClass)
+						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2 + 1])
+						.style("fill", colorScale[(maxNumEntry - zIndex) * 2 + 1]);
 					d3.select("body").selectAll("text")
 						.style("stroke-width", 0);
 				}
@@ -396,8 +413,11 @@ function scoreboard(element, continuous, mode, interval) {
 					var curClass = d3.select(this).attr("class");
 					var zIndex = d3.select(this).style("z-index");
 					d3.select("body").selectAll("." + curClass)
-						.style("stroke", colorScale[maxNumEntry - zIndex])
-						.style("fill", colorScale[maxNumEntry - zIndex]);
+						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2])
+						.style("fill", colorScale[(maxNumEntry - zIndex) * 2]);
+					legend.selectAll("." + curClass)
+						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2 + 1])
+						.style("fill", colorScale[(maxNumEntry - zIndex) * 2 + 1]);
 					d3.select("body").selectAll("text")
 						.style("stroke-width", 0);
 				}
@@ -419,8 +439,11 @@ function scoreboard(element, continuous, mode, interval) {
 					var curClass = d3.select(this).attr("class");
 					var zIndex = d3.select(this).style("z-index");
 					d3.select("body").selectAll("." + curClass)
-						.style("stroke", colorScale[zIndex])
-						.style("fill", colorScale[zIndex]);
+						.style("stroke", colorScale[zIndex * 2])
+						.style("fill", colorScale[zIndex * 2]);
+					legend.selectAll("." + curClass)
+						.style("stroke", colorScale[(zIndex) * 2 + 1])
+						.style("fill", colorScale[(zIndex) * 2 + 1]);
 					d3.select("body").selectAll("text")
 						.style("stroke-width", 0);
 				}
@@ -485,7 +508,7 @@ function scoreboard(element, continuous, mode, interval) {
 					var numLeft = catHigh["total"] - catTeam;
 					
 					//bar.classList.add("cat" + ncat);
-					bar.style.backgroundColor = colorScale[ncat];
+					bar.style.backgroundColor = colorScale[ncat % 20];
 					bar.style.color = "white";
 					bar.style.width = width + "%";
 					bar.textContent = category + ": " + catTeam;
@@ -500,7 +523,7 @@ function scoreboard(element, continuous, mode, interval) {
 					{
 						var noBar = document.createElement("span");
 						//noBar.classList.add("cat" + ncat);
-						noBar.style.backgroundColor = colorScale[ncat];
+						noBar.style.backgroundColor = colorScale[ncat % 20];
 						noBar.style.width = width + "%";
 						noBar.textContent = numLeft;
 						noBar.title = bar.textContent;

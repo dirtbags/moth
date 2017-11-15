@@ -35,6 +35,26 @@ function updateType(newType)
 function init() {
 	var sb = document.getElementById("scoreboard");
 	scoreboard(sb, true, type, interval);
+	window.addEventListener("resize", reScoreboardCaller);
+}
+
+var resizeCallback;
+
+function reScoreboardCaller()
+{
+	if(resizeCallback)
+	{
+		clearInterval(resizeCallback);
+	}
+	resizeCallback = setInterval(reScoreboard, 400);
+}
+
+function reScoreboard()
+{
+	clearInterval(resizeCallback);
+	console.log("resizing");
+	var sb = document.getElementById("scoreboard");
+	scoreboard(sb, true, type, interval);
 }
 
 window.addEventListener("load", preinit);
