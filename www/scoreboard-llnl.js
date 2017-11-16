@@ -491,7 +491,7 @@ function scoreboard(element, continuous, mode, interval) {
 			{
 				numCats++;
 			}
-			var maxWidth = 100 / (0.0 + numCats);
+			var maxWidth = Math.floor(100 / (0.0 + numCats));
 			//console.log(maxWidth);
 
 			for (var i in winners) {
