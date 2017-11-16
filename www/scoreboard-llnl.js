@@ -499,13 +499,13 @@ function scoreboard(element, continuous, mode, interval) {
 				var row = document.createElement("div");
 				var ncat = 0;
 				for (var category in allQuestions) {
-					var catHigh = allQuestions[category];
+					var catHigh = highscore[category];
 					var catTeam = team[category] || 0;
-					var catPct = (0.0 + catTeam) / (0.0 + catHigh["total"]);
+					var catPct = (0.0 + catTeam) / (0.0 + catHigh);
 					var width = maxWidth * catPct;
 					var bar = document.createElement("span");
 					
-					var numLeft = catHigh["total"] - catTeam;
+					var numLeft = catHigh - catTeam;
 					
 					//bar.classList.add("cat" + ncat);
 					bar.style.backgroundColor = colorScale[ncat % 20];
