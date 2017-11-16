@@ -467,7 +467,12 @@ function scoreboard(element, continuous, mode, interval) {
 				for (var category in allQuestions) {
 					var catHigh = highscore[category];
 					var catTeam = team[category] || 0;
-					var catPct = (0.0 + catTeam) / (0.0 + catHigh);
+					var catPct = 0;
+					if (catHigh > 30000) {
+						catPct = (0.0 + Math.log(1+catTeam)) / (0.0 + Math.log(1+catHigh));
+					} else {
+						catPct = (0.0 + catTeam) / (0.0 + catHigh);
+					}
 					var width = maxWidth * catPct;
 					var bar = document.createElement("span");
 					
