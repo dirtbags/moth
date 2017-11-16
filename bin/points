@@ -43,3 +43,4 @@ for hash,teamname in pairs(teamnames) do
    io.write('  "' .. teamno .. '": "' .. teamname .. '"')
 end
 io.write('\n }\n}\n')
+

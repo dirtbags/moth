@@ -502,19 +502,28 @@ function scoreboard(element, continuous, mode, interval) {
 					var catHigh = allQuestions[category];
 					var catTeam = team[category] || 0;
 					var catPct = (0.0 + catTeam) / (0.0 + catHigh["total"]);
+					if(catPct > 1)
+					{
+						catPct = 1;
+					}
 					var width = maxWidth * catPct;
-					var bar = document.createElement("span");
 					
 					var numLeft = catHigh["total"] - catTeam;
+
+					if(width > 0)
+					{
+						var bar = document.createElement("span");
 					
-					//bar.classList.add("cat" + ncat);
-					bar.style.backgroundColor = colorScale[ncat % 20];
-					bar.style.color = "white";
-					bar.style.width = width + "%";
-					bar.textContent = category + ": " + catTeam;
-					bar.title = bar.textContent;
 					
-					row.appendChild(bar);
+						//bar.classList.add("cat" + ncat);
+						bar.style.backgroundColor = colorScale[ncat % 20];
+						bar.style.color = "white";
+						bar.style.width = width + "%";
+						bar.textContent = category + ": " + catTeam;
+						bar.title = bar.textContent;
+					
+						row.appendChild(bar);
+					}
 					
 					ncat++;
 					
