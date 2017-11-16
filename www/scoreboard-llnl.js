@@ -19,8 +19,7 @@ function toObject(arr) {
 var updateInterval;
 
 function scoreboard(element, continuous, mode, interval) {
-	if(updateInterval)
-	{
+	if(updateInterval) {
 		clearInterval(updateInterval);
 	}
 	function update(state) {
@@ -39,8 +38,7 @@ function scoreboard(element, continuous, mode, interval) {
 
 		var allQuestions = {};
 		
-		for (var i in pointslog)
-		{
+		for (var i in pointslog) {
 			var entry = pointslog[i];
 			var timestamp = entry[0];
 			var teamhash = entry[1];
@@ -48,22 +46,16 @@ function scoreboard(element, continuous, mode, interval) {
 			var points = entry[3];
 			
 			var catPoints = {};
-			if(category in allQuestions)
-			{
+			if(category in allQuestions) {
 				catPoints = allQuestions[category];
-			}
-			else
-			{
+			} else {
 				catPoints["total"] = 0;
 			}
 			
-			if(!(points in catPoints))
-			{
+			if(!(points in catPoints)) {
 				catPoints[points] = 1;
 				catPoints["total"] = catPoints["total"] + points;
-			}
-			else
-			{
+			} else {
 				catPoints[points] = catPoints[points] + 1;
 			}
 			
@@ -100,8 +92,7 @@ function scoreboard(element, continuous, mode, interval) {
 			t.__score__ = score;
 			return score;
 		}
-		function pointScore(points, category)
-		{
+		function pointScore(points, category) {
 			return points / highscore[category]
 		}
 		function teamCompare(a, b) {
@@ -128,14 +119,12 @@ function scoreboard(element, continuous, mode, interval) {
 		var topActualScore = winners[0].__score__;
 		
 
-		if(mode == "time")
-		{
+		if(mode == "time") {
 			var colorScale = d3.schemeCategory20;
 			
 			var teamLines = {};
 			var reverseTeam = {};
-			for(var i in pointslog)
-			{
+			for(var i in pointslog) {
 				var entry = pointslog[i];
 				var timestamp = entry[0];
 				var teamhash = entry[1];
@@ -145,13 +134,10 @@ function scoreboard(element, continuous, mode, interval) {
 				reverseTeam[teamname] = teamhash;
 				points = pointScore(points, category);
 
-				if(!(teamname in teamLines))
-				{
+				if(!(teamname in teamLines)) {
 					var teamHistory = [[timestamp, points, category, entry[3], [minTime, 0, category, 0]]];
 					teamLines[teamname] = teamHistory;
-				}
-				else
-				{
+				} else {
 					var teamHistory = teamLines[teamname];
 					teamHistory.push([timestamp, points + teamHistory[teamHistory.length - 1][1], category, entry[3], teamHistory[teamHistory.length - 1]]);
 				}
@@ -201,11 +187,9 @@ function scoreboard(element, continuous, mode, interval) {
 			var maxNumEntry = 10;
 			//var curEntry = 0;
 			var winningTeams = [];
-			for(entry in winners)
-			{
+			for(entry in winners) {
 				var curEntry = entry;
-				if(curEntry >= maxNumEntry)
-				{
+				if(curEntry >= maxNumEntry) {
 					break;
 				}
 				entry = teamnames[winners[entry].__hash__];
@@ -243,23 +227,19 @@ function scoreboard(element, continuous, mode, interval) {
 					.attr("class", "team_" + entry)
 					.style("z-index", maxNumEntry - curEntry)
 					.attr("x1",
-						function(d)
-						{
+						function(d) {
 							return xScale((d[4][0] - minTime) / 60);
 						})
 					.attr("x2",
-						function(d)
-						{
+						function(d) {
 							return xScale((d[0] - minTime) / 60);
 						})
 					.attr("y1",
-						function(d)
-						{
+						function(d) {
 							return yScale(d[4][1]);
 						})
 					.attr("y2",
-						function(d)
-						{
+						function(d) {
 							return yScale(d[1]);
 						})
 					.on("mouseover", handleMouseover)
@@ -274,13 +254,11 @@ function scoreboard(element, continuous, mode, interval) {
 					.attr("class", "team_" + entry)
 					.attr("r", 5)
 					.attr("cx",
-						function(d)
-						{
+						function(d) {
 							return xScale((d[0] - minTime) / 60);
 						})
 					.attr("cy",
-						function(d)
-						{
+						function(d) {
 							return yScale(d[1]);
 						})
 					.on("mouseover", handleMouseoverCircle)
@@ -347,8 +325,7 @@ function scoreboard(element, continuous, mode, interval) {
 				//.style("pointer-events", "none");
 				
 
-			function handleMouseover(d, i)
-				{
+			function handleMouseover(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
 					var curClass = d3.select(this).attr("class");
 					d3.select("body").selectAll("." + curClass)
@@ -358,8 +335,7 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("stroke-width", 0);
 				}
 
-			function handleMouseout(d, i)
-				{
+			function handleMouseout(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
 					var curClass = d3.select(this).attr("class");
 					var zIndex = d3.select(this).style("z-index");
@@ -374,8 +350,7 @@ function scoreboard(element, continuous, mode, interval) {
 				}
 			
 			var tooltipPadding = 10;
-			function handleMouseoverCircle(d, i)
-				{
+			function handleMouseoverCircle(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
 					var curClass = d3.select(this).attr("class");
 					d3.select("body").selectAll("." + curClass)
@@ -393,13 +368,11 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("font-weight", "bolder")
 						.style("font-size", "large")
 						.attr("dx",
-							function()
-							{
+							function() {
 								return xScale((d[0] - minTime) / 60);
 							})
 						.attr("dy",
-							function()
-							{
+							function() {
 								return yScale(d[1]) - tooltipPadding;
 							})
 						.text(function(){ return d[2] + " " + d[3]; })
@@ -407,8 +380,7 @@ function scoreboard(element, continuous, mode, interval) {
 					
 				}
 
-			function handleMouseoutCircle(d, i)
-				{
+			function handleMouseoutCircle(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
 					var curClass = d3.select(this).attr("class");
 					var zIndex = d3.select(this).style("z-index");
@@ -422,8 +394,7 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("stroke-width", 0);
 				}
 
-			function handleMouseoverLegend(d, i)
-				{
+			function handleMouseoverLegend(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
 					var curClass = d3.select(this).attr("class");
 					d3.select("body").selectAll("." + curClass)
@@ -433,8 +404,7 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("stroke-width", 0);
 				}
 
-			function handleMouseoutLegend(d, i)
-				{
+			function handleMouseoutLegend(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
 					var curClass = d3.select(this).attr("class");
 					var zIndex = d3.select(this).style("z-index");
@@ -449,9 +419,7 @@ function scoreboard(element, continuous, mode, interval) {
 				}
 
 
-		}
-		else if(mode == "original")
-		{
+		} else if(mode == "original") {
 			// (100 / ncats) * (ncats / topActualScore);
 			var maxWidth = 100 / topActualScore;
 			for (var i in winners) {
@@ -482,13 +450,11 @@ function scoreboard(element, continuous, mode, interval) {
 				element.appendChild(row);
 			}
 		}
-		if(mode == "total")
-		{
+		if(mode == "total") {
 			var colorScale = d3.schemeCategory20;
 			
 			var numCats = 0;
-			for(entry in allQuestions)
-			{
+			for(entry in allQuestions) {
 				numCats++;
 			}
 			var maxWidth = Math.floor(100 / (0.0 + numCats));
@@ -519,8 +485,7 @@ function scoreboard(element, continuous, mode, interval) {
 					ncat++;
 					
 					width = maxWidth * (1 - catPct);
-					if(width > 0)
-					{
+					if(width > 0) {
 						var noBar = document.createElement("span");
 						//noBar.classList.add("cat" + ncat);
 						noBar.style.backgroundColor = colorScale[ncat % 20];
