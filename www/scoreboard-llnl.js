@@ -151,7 +151,6 @@ function scoreboard(element, continuous, mode, interval) {
 			graph.style.height = "100vh";
 			var titleHeight = document.getElementById("title").clientHeight;
 			titleHeight += document.getElementById("title").offsetTop * 2;
-			console.log(titleHeight);
 			graph.style.backgroundColor = "white";
 			graph.style.display = "table";
 			var holdingDiv = document.createElement("div");
