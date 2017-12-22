@@ -148,12 +148,17 @@ function scoreboard(element, continuous, mode, interval) {
 			var graph = document.createElement("svg");
 			graph.id = "graph";
 			graph.style.width="100%";
-			graph.style.height="40em";
+			graph.style.height = "100vh";
+			var titleHeight = document.getElementById("title").clientHeight;
+			titleHeight += document.getElementById("title").offsetTop * 2;
+			console.log(titleHeight);
 			graph.style.backgroundColor = "white";
 			graph.style.display = "table";
 			var holdingDiv = document.createElement("div");
 			holdingDiv.align="center";
 			holdingDiv.id="holding";
+			holdingDiv.style.height = "100%";
+			element.style.height = "100%";
 			element.appendChild(holdingDiv);
 			holdingDiv.appendChild(graph);
 			
@@ -162,6 +167,7 @@ function scoreboard(element, continuous, mode, interval) {
 
 			var width = graph.offsetWidth;
 			var height = graph.offsetHeight;
+			height = height - titleHeight - margins;
 
 			//var xScale = d3.scaleLinear().range([minTime, maxTime]);
 			//var yScale = d3.scaleLinear().range([0, topActualScore]);
@@ -283,13 +289,13 @@ function scoreboard(element, continuous, mode, interval) {
 				.text("Time (minutes)");
 
 			var legend = graph.append("g");
-			var legendRowHeight = (height) / 10;
+			var legendRowHeight = (height - margins) / 10;
 			legend.selectAll("rect")
 				.data(winningTeams)
 				.enter()
 				.append("rect")
 				.attr("class", function(d){ return "team_" + d; })
-				.attr("fill", function(d, i){ return colorScale[i * 2 + 1]; })
+				.attr("fill", function(d, i){ return colorScale[i * 2]; })
 				.style("z-index", function(d, i){ return i; })
 				.attr("x", 0)
 				.attr("y", function(d, i){ return legendRowHeight * i; })
@@ -343,8 +349,8 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2])
 						.style("fill", colorScale[(maxNumEntry - zIndex) * 2]);
 					legend.selectAll("." + curClass)
-						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2 + 1])
-						.style("fill", colorScale[(maxNumEntry - zIndex) * 2 + 1]);
+						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2])
+						.style("fill", colorScale[(maxNumEntry - zIndex) * 2]);
 					d3.select("body").selectAll("text")
 						.style("stroke-width", 0);
 				}
@@ -388,8 +394,8 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2])
 						.style("fill", colorScale[(maxNumEntry - zIndex) * 2]);
 					legend.selectAll("." + curClass)
-						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2 + 1])
-						.style("fill", colorScale[(maxNumEntry - zIndex) * 2 + 1]);
+						.style("stroke", colorScale[(maxNumEntry - zIndex) * 2])
+						.style("fill", colorScale[(maxNumEntry - zIndex) * 2]);
 					d3.select("body").selectAll("text")
 						.style("stroke-width", 0);
 				}
@@ -412,8 +418,8 @@ function scoreboard(element, continuous, mode, interval) {
 						.style("stroke", colorScale[zIndex * 2])
 						.style("fill", colorScale[zIndex * 2]);
 					legend.selectAll("." + curClass)
-						.style("stroke", colorScale[(zIndex) * 2 + 1])
-						.style("fill", colorScale[(zIndex) * 2 + 1]);
+						.style("stroke", colorScale[(zIndex) * 2])
+						.style("fill", colorScale[(zIndex) * 2]);
 					d3.select("body").selectAll("text")
 						.style("stroke-width", 0);
 				}
@@ -521,4 +527,3 @@ function scoreboard(element, continuous, mode, interval) {
 	}
 	once();
 }
-
