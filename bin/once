@@ -17,6 +17,17 @@ if [ -f state/disabled ]; then
 	exit
 fi
 
+# Are we stopping at a certain time?
+if [ -f state/until ]; then
+	read -r until < state/until
+	when=$(date -d "$until" +%s)
+	now=$(date +%s)
+	if [ $now -ge $when ]; then
+		log "End time reached; doing nothing"
+		exit
+	fi
+fi
+
 # Reset to initial state?
 if [ ! -f state/initialized ]; then
 	log "Resetting contest state"
