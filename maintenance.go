@@ -42,7 +42,7 @@ func tidy() {
 	newCategories := []string{}
 	for f := range(allfiles(mothPath("packages"))) {
 		filename := f.Name()
-		filepath := mothPath(path.Join("packages", filename))
+		filepath := mothPath("packages", filename)
 		if ! strings.HasSuffix(filename, ".mb") {
 			continue
 		}
@@ -58,9 +58,21 @@ func tidy() {
 	//
 	// Collect new points
 	//
+	pointsLog = os.OpenFile(statePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	for f := range allfiles(statePath("points.new")) {
-		
+		filename := statePath("points.new", f.Name())
+		s := ioutil.ReadFile(filename)
+		award, err := ParseAward(s)
+		if (err != nil) {
+			log.Printf("Can't parse award file %s: %s", filename, err)
+			continue
+		}
+		fmt.Fprintf(pointsLog, "%s\n", award.String())
+		log.Print(award.String())
+		pointsLog.Sync()
+		os.Remove(filename)
 	}
+	pointsLog.Close()
 }
 
 // maintenance is the goroutine that runs a periodic maintenance task
