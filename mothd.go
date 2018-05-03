@@ -17,46 +17,6 @@ var basePath = "."
 var maintenanceInterval = 20 * time.Second
 var categories = []string{}
 
-type Award struct {
-	when time.Time,
-	team string,
-	category string,
-	points int,
-	comment string
-}
-
-func ParseAward(s string) (*Award, error) {
-	ret := Award{}
-	
-	parts := strings.SplitN(s, " ", 5)
-	if len(parts) < 4 {
-		return nil, Error("Malformed award string")
-	}
-	
-	whenEpoch, err = strconv.Atoi(parts[0])
-	if (err != nil) {
-		return nil, Errorf("Malformed timestamp: %s", parts[0])
-	}
-	ret.when = time.Unix(whenEpoch, 0)
-	
-	ret.team = parts[1]
-	ret.category = parts[2]
-	
-	points, err = strconv.Atoi(parts[3])
-	if (err != nil) {
-		return nil, Errorf("Malformed points: %s", parts[3])
-	}
-	
-	if len(parts) == 5 {
-		ret.comment = parts[4]
-	}
-	
-	return &ret
-}
-
-func (a *Award) String() string {
-	return fmt.Sprintf("%d %s %s %d %s", a.when.Unix(), a.team, a.category, a.points, a.comment)
-}
 
 func mooHandler(w http.ResponseWriter, req *http.Request) {
 	moo := req.FormValue("moo")

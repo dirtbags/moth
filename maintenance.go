@@ -16,6 +16,7 @@ func allfiles(dirpath) []string {
 	return files
 }
 
+
 // maintenance runs
 func tidy() {
 	// Skip if we've been disabled
@@ -55,24 +56,7 @@ func tidy() {
 	}
 	categories = newCategories
 	
-	//
-	// Collect new points
-	//
-	pointsLog = os.OpenFile(statePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	for f := range allfiles(statePath("points.new")) {
-		filename := statePath("points.new", f.Name())
-		s := ioutil.ReadFile(filename)
-		award, err := ParseAward(s)
-		if (err != nil) {
-			log.Printf("Can't parse award file %s: %s", filename, err)
-			continue
-		}
-		fmt.Fprintf(pointsLog, "%s\n", award.String())
-		log.Print(award.String())
-		pointsLog.Sync()
-		os.Remove(filename)
-	}
-	pointsLog.Close()
+	collectPoints()
 }
 
 // maintenance is the goroutine that runs a periodic maintenance task
