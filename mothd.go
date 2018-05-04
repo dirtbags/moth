@@ -1,41 +1,90 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"html"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"io/ioutil"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 )
 
-var basePath = "."
+var basePath = "/home/neale/src/moth"
 var maintenanceInterval = 20 * time.Second
 var categories = []string{}
 
+// anchoredSearch looks for needle in filename,
+// skipping the first skip space-delimited words
+func anchoredSearch(filename string, needle string, skip int) bool {
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Print("Can't open %s: %s", filename, err)
+		return false
+	}
+	defer f.Close()
+	
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(" ", line, skip+1)
+		if parts[skip+1] == needle {
+			return true
+		}
+	}
 
-func mooHandler(w http.ResponseWriter, req *http.Request) {
-	moo := req.FormValue("moo")
-	fmt.Fprintf(w, "Hello, %q. %s", html.EscapeString(req.URL.Path), html.EscapeString(moo))
+	return false
 }
 
-func rootHandler(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/" {
-		http.NotFound(w, req)
-		return
+
+func awardPoints(teamid string, category string, points int) error {
+	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
+	tmpfn := statePath("points.tmp", fn)
+	newfn := statePath("points.new", fn)
+	
+	contents := fmt.Sprintf("%d %s %s %d\n", time.Now().Unix(), teamid, points)
+	
+	if err := ioutil.WriteFile(tmpfn, []byte(contents), 0644); err != nil {
+		return err
 	}
+	
+	if err := os.Rename(tmpfn, newfn); err != nil {
+		return err
+	}
+	
+	return nil
+}
+
+func showPage(w http.ResponseWriter, title string, body string) {
+	w.WriteHeader(http.StatusOK)
+
+	fmt.Fprintf(w, "<!DOCTYPE html>")
+	fmt.Fprintf(w, "<html><head>")
+	fmt.Fprintf(w, "<title>%s</title>", title)
+	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"../style.css\">")
+	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\"></head>")
+	fmt.Fprintf(w, "<body><h1>%s</h1>", title)
+	fmt.Fprintf(w, "<section>%s</section>", body)
+	fmt.Fprintf(w, "<nav>")
+	fmt.Fprintf(w, "<ul>")
+	fmt.Fprintf(w, "<li><a href=\"../register.html\">Register</a></li>")
+	fmt.Fprintf(w, "<li><a href=\"../puzzles.html\">Puzzles</a></li>")
+	fmt.Fprintf(w, "<li><a href=\"../scoreboard.html\">Scoreboard</a></li>")
+	fmt.Fprintf(w, "</ul>")
+	fmt.Fprintf(w, "</nav>")
+	fmt.Fprintf(w, "</body></html>")
 }
 
 func mothPath(parts ...string) string {
-	return path.Join(basePath, parts...)
+	tail := path.Join(parts...)
+	return path.Join(basePath, tail)
 }
 
 func statePath(parts ...string) string {
-	return path.Join(basePath, "state", parts...)
+	tail := path.Join(parts...)
+	return path.Join(basePath, "state", tail)
 }
 
 func exists(filename string) bool {
@@ -48,8 +97,9 @@ func exists(filename string) bool {
 func main() {
 	log.Print("Sup")
 	go maintenance();
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/moo/", mooHandler)
+	http.HandleFunc("/register", registerHandler)
+	http.HandleFunc("/token", tokenHandler)
+	http.HandleFunc("/answer", answerHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 

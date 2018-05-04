@@ -1,17 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Award struct {
-	when time.Time,
-	team string,
-	category string,
-	points int,
-	comment string
+	when time.Time
+	team string
+	category string
+	points int
 }
 
 func ParseAward(s string) (*Award, error) {
@@ -19,53 +23,86 @@ func ParseAward(s string) (*Award, error) {
 	
 	parts := strings.SplitN(s, " ", 5)
 	if len(parts) < 4 {
-		return nil, Error("Malformed award string")
+		return nil, fmt.Errorf("Malformed award string")
 	}
 	
-	whenEpoch, err = strconv.Atoi(parts[0])
+	whenEpoch, err := strconv.ParseInt(parts[0], 10, 64)
 	if (err != nil) {
-		return nil, Errorf("Malformed timestamp: %s", parts[0])
+		return nil, fmt.Errorf("Malformed timestamp: %s", parts[0])
 	}
 	ret.when = time.Unix(whenEpoch, 0)
 	
 	ret.team = parts[1]
 	ret.category = parts[2]
 	
-	points, err = strconv.Atoi(parts[3])
+	points, err := strconv.Atoi(parts[3])
 	if (err != nil) {
-		return nil, Errorf("Malformed points: %s", parts[3])
+		return nil, fmt.Errorf("Malformed points: %s", parts[3])
 	}
-	
-	if len(parts) == 5 {
-		ret.comment = parts[4]
-	}
-	
-	return &ret
+	ret.points = points
+
+	return &ret, nil
 }
 
 func (a *Award) String() string {
-	return fmt.Sprintf("%d %s %s %d %s", a.when.Unix(), a.team, a.category, a.points, a.comment)
+	return fmt.Sprintf("%d %s %s %d", a.when.Unix(), a.team, a.category, a.points)
+}
+
+func pointsLog() []Award {
+	var ret []Award
+
+	fn := statePath("points.log")
+	f, err := os.Open(fn)
+	if err != nil {
+		log.Printf("Unable to open %s: %s", fn, err)
+		return ret
+	}
+	defer f.Close()
+	
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		cur, err := ParseAward(line)
+		if err != nil {
+			log.Printf("Skipping malformed award line %s: %s", line, err)
+			continue
+		}
+		ret = append(ret, *cur)
+	}
+	
+	return ret
 }
 
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func collectPoints() {
-	pointsLog = os.OpenFile(statePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	defer pointsLog.Close()
+	logf, err := os.OpenFile(statePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Printf("Can't append to points log: %s", err)
+		return
+	}
+	defer logf.Close()
 	
-	for f := range allfiles(statePath("points.new")) {
+	files, err := ioutil.ReadDir(statePath("points.new"))
+	if err != nil {
+		log.Printf("Error reading packages: %s", err)
+	}
+	for _, f := range files {
 		filename := statePath("points.new", f.Name())
-		s := ioutil.ReadFile(filename)
-		award, err := ParseAward(s)
-		if (err != nil) {
+		s, err := ioutil.ReadFile(filename)
+		if err != nil {
+			log.Printf("Can't read points file %s: %s", filename, err)
+			continue
+		}
+		award, err := ParseAward(string(s))
+		if err != nil {
 			log.Printf("Can't parse award file %s: %s", filename, err)
 			continue
 		}
-		fmt.Fprintf(pointsLog, "%s\n", award.String())
+		fmt.Fprintf(logf, "%s\n", award.String())
 		log.Print(award.String())
-		pointsLog.Sync()
-		err := os.Remove(filename)
-		if (err != nil) {
+		logf.Sync()
+		if err := os.Remove(filename); err != nil {
 			log.Printf("Unable to remove %s: %s", filename, err)
 		}
 	}
