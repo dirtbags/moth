@@ -4,18 +4,13 @@ import (
 	"log"
 	"io/ioutil"
 	"time"
+	"os"
 	"strings"
 )
 
-func allfiles(dirpath) []string {
-	files, err := ioutil.ReadDir(dirpath)
-	if (err != nil) {
-		log.Printf("Error reading directory %s: %s", dirpath, err)
-		return []
-	}
-	return files
+func cacheMothball(filepath string, categoryName string) {
+	log.Printf("I'm exploding a mothball %s %s", filepath, categoryName)
 }
-
 
 // maintenance runs
 func tidy() {
@@ -37,11 +32,17 @@ func tidy() {
 	
 	log.Print("Hello, I'm maintaining!")
 	
-	//
+	// Make sure points directories exist
+	os.Mkdir(statePath("points.tmp"), 0755)
+	os.Mkdir(statePath("points.new"), 0755)
+
 	// Get current list of categories
-	//
 	newCategories := []string{}
-	for f := range(allfiles(mothPath("packages"))) {
+	files, err := ioutil.ReadDir(mothPath("packages"))
+	if err != nil {
+		log.Printf("Error reading packages: %s", err)
+	}
+	for _, f := range files {
 		filename := f.Name()
 		filepath := mothPath("packages", filename)
 		if ! strings.HasSuffix(filename, ".mb") {
