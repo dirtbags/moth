@@ -277,7 +277,7 @@ if __name__ == '__main__':
         help="Serve one page, then exit. For debugging the server."
     )
     parser.add_argument(
-        '--bind', default="127.0.0.1:8080",
+        '--bind', default="0.0.0.0:8080",
         help="Bind to ip:port"
     )
     parser.add_argument(
