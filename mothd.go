@@ -2,18 +2,19 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"time"
 )
 
-var basePath = "/home/neale/src/moth"
-var maintenanceInterval = 20 * time.Second
+var moduleDir string
+var stateDir string
+var cacheDir string
 var categories = []string{}
 
 // anchoredSearch looks for needle in filename,
@@ -38,25 +39,6 @@ func anchoredSearch(filename string, needle string, skip int) bool {
 	return false
 }
 
-
-func awardPoints(teamid string, category string, points int) error {
-	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
-	tmpfn := statePath("points.tmp", fn)
-	newfn := statePath("points.new", fn)
-	
-	contents := fmt.Sprintf("%d %s %s %d\n", time.Now().Unix(), teamid, points)
-	
-	if err := ioutil.WriteFile(tmpfn, []byte(contents), 0644); err != nil {
-		return err
-	}
-	
-	if err := os.Rename(tmpfn, newfn); err != nil {
-		return err
-	}
-	
-	return nil
-}
-
 func showPage(w http.ResponseWriter, title string, body string) {
 	w.WriteHeader(http.StatusOK)
 
@@ -77,30 +59,97 @@ func showPage(w http.ResponseWriter, title string, body string) {
 	fmt.Fprintf(w, "</body></html>")
 }
 
-func mothPath(parts ...string) string {
+func modulesPath(parts ...string) string {
 	tail := path.Join(parts...)
-	return path.Join(basePath, tail)
+	return path.Join(moduleDir, tail)
 }
 
 func statePath(parts ...string) string {
 	tail := path.Join(parts...)
-	return path.Join(basePath, "state", tail)
+	return path.Join(stateDir, tail)
 }
 
-func exists(filename string) bool {
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return false;
+func cachePath(parts ...string) string {
+	tail := path.Join(parts...)
+	return path.Join(cacheDir, tail)
+}
+
+func setup() error {
+	// Roll over and die if directories aren't even set up
+	if _, err := os.Stat(modulesPath()); os.IsNotExist(err) {
+		return err
 	}
-	return true;
+	if _, err := os.Stat(statePath()); os.IsNotExist(err) {
+		return err
+	}
+	if _, err := os.Stat(cachePath()); os.IsNotExist(err) {
+		return err
+	}
+	
+	// Make sure points directories exist
+	os.Mkdir(statePath("points.tmp"), 0755)
+	os.Mkdir(statePath("points.new"), 0755)
+
+	// Preseed available team ids if file doesn't exist
+	if f, err := os.OpenFile(statePath("teamids.txt"), os.O_WRONLY | os.O_CREATE | os.O_EXCL, 0644); err == nil {
+		defer f.Close()
+		for i := 0; i <= 9999; i += 1 {
+			fmt.Fprintf(f, "%04d\n", i)
+		}
+	}
+	
+	return nil
+}
+
+func logRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func main() {
-	log.Print("Sup")
-	go maintenance();
+	flag.StringVar(
+		&moduleDir,
+		"modules",
+		"/modules",
+		"Path where your moth modules live",
+	)
+	flag.StringVar(
+		&stateDir,
+		"state",
+		"/state",
+		"Path where state should be written",
+	)
+	flag.StringVar(
+		&cacheDir,
+		"cache",
+		"/cache",
+		"Path for ephemeral cache",
+	)
+	maintenanceInterval := flag.Duration(
+		"maint",
+		20 * time.Second,
+		"Maintenance interval",
+	)
+	listen := flag.String(
+		"listen",
+		":8080",
+		"[host]:port to bind and listen",
+	)
+	
+	if err := setup(); err != nil {
+		log.Fatal(err)
+	}
+	go maintenance(*maintenanceInterval)
+
+	http.HandleFunc("/", rootHandler)
+	http.Handle("/static/", http.FileServer(http.Dir(cacheDir)))
+
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/token", tokenHandler)
 	http.HandleFunc("/answer", answerHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
 
-// docker run --rm -it -p 5880:8080 -v $HOME:$HOME:ro -w $(pwd) golang go run mothd.go
+	log.Printf("Listening on %s", *listen)
+	log.Fatal(http.ListenAndServe(*listen, logRequest(http.DefaultServeMux)))
+}

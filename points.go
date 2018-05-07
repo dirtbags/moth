@@ -73,6 +73,25 @@ func pointsLog() []Award {
 	return ret
 }
 
+// awardPoints gives points points to team teamid in category category
+func awardPoints(teamid string, category string, points int) error {
+	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
+	tmpfn := statePath("points.tmp", fn)
+	newfn := statePath("points.new", fn)
+	
+	contents := fmt.Sprintf("%d %s %s %d\n", time.Now().Unix(), teamid, points)
+	
+	if err := ioutil.WriteFile(tmpfn, []byte(contents), 0644); err != nil {
+		return err
+	}
+	
+	if err := os.Rename(tmpfn, newfn); err != nil {
+		return err
+	}
+	
+	return nil
+}
+
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func collectPoints() {
