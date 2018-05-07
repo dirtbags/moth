@@ -22,7 +22,7 @@ func registerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	
-	if ! anchoredSearch(statePath("assigned.txt"), teamid, 0) {
+	if ! anchoredSearch(statePath("teamids.txt"), teamid, 0) {
 		showPage(w, "Invalid Team ID", "I don't have a record of that team ID. Maybe you used capital letters accidentally?")
 		return
 	}
@@ -97,7 +97,7 @@ func answerHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Check answer
 	needle := fmt.Sprintf("%s %s", points, answer)
-	haystack := mothPath("packages", category, "answers.txt")
+	haystack := cachePath(category, "answers.txt")
 	if ! anchoredSearch(haystack, needle, 0) {
 		showPage(w, "Wrong answer", err.Error())
 	}
@@ -109,3 +109,30 @@ func answerHandler(w http.ResponseWriter, req *http.Request) {
 	showPage(w, "Points awarded", fmt.Sprintf("%d points for %s!", points, teamid))
 }
 
+// staticHandler serves up static files.
+func rootHandler(w http.ResponseWriter, req *http.Request) {
+	if req.URL.Path == "/" {
+		showPage(
+			w,
+			"Welcome",
+			`
+			  <h2>Register your team</h2>
+			  
+			  <form action="register" action="post">
+			    Team ID: <input name="h"> <br>
+			    Team name: <input name="n">
+			    <input type="submit" value="Register">
+			  </form>
+			  
+			  <div>
+			    If someone on your team has already registered,
+			    proceed to the
+			    <a href="puzzles">puzzles overview</a>.
+			  </div>
+			`,
+		)
+		return
+	}
+	
+	http.NotFound(w, req)
+}
