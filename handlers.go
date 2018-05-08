@@ -109,6 +109,20 @@ func answerHandler(w http.ResponseWriter, req *http.Request) {
 	showPage(w, "Points awarded", fmt.Sprintf("%d points for %s!", points, teamid))
 }
 
+func puzzlesHandler(w http.ResponseWriter, req *http.Request) {
+	puzzles := map[string][]interface{}{}
+	// 	v := map[string][]interface{}{"Moo": {1, "0177f85ae895a33e2e7c5030c3dc484e8173e55c"}}
+  // j, _ := json.Marshal(v)
+	
+	for _, category := range categories {
+		
+	}
+}
+
+func pointsHandler(w http.ResponseWriter, req *http.Request) {
+	
+}
+
 // staticHandler serves up static files.
 func rootHandler(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path == "/" {
