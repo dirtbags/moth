@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"flag"
+	"github.com/namsral/flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,15 +45,16 @@ func showPage(w http.ResponseWriter, title string, body string) {
 	fmt.Fprintf(w, "<!DOCTYPE html>")
 	fmt.Fprintf(w, "<html><head>")
 	fmt.Fprintf(w, "<title>%s</title>", title)
-	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"../style.css\">")
+	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"static/style.css\">")
 	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\"></head>")
+	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/luna-moth.svg\" type=\"image/svg+xml\">")
+  fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/luna-moth.png\" type=\"image/png\">")
 	fmt.Fprintf(w, "<body><h1>%s</h1>", title)
 	fmt.Fprintf(w, "<section>%s</section>", body)
 	fmt.Fprintf(w, "<nav>")
 	fmt.Fprintf(w, "<ul>")
-	fmt.Fprintf(w, "<li><a href=\"../register.html\">Register</a></li>")
-	fmt.Fprintf(w, "<li><a href=\"../puzzles.html\">Puzzles</a></li>")
-	fmt.Fprintf(w, "<li><a href=\"../scoreboard.html\">Scoreboard</a></li>")
+	fmt.Fprintf(w, "<li><a href=\"static/puzzles.html\">Puzzles</a></li>")
+	fmt.Fprintf(w, "<li><a href=\"static/scoreboard.html\">Scoreboard</a></li>")
 	fmt.Fprintf(w, "</ul>")
 	fmt.Fprintf(w, "</nav>")
 	fmt.Fprintf(w, "</body></html>")
@@ -72,6 +73,13 @@ func statePath(parts ...string) string {
 func cachePath(parts ...string) string {
 	tail := path.Join(parts...)
 	return path.Join(cacheDir, tail)
+}
+
+func logRequest(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("HTTP %s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }
 
 func setup() error {
@@ -101,55 +109,59 @@ func setup() error {
 	return nil
 }
 
-func logRequest(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
-
 func main() {
-	flag.StringVar(
+	var maintenanceInterval time.Duration
+	var listen string
+	
+	fs := flag.NewFlagSetWithEnvPrefix(os.Args[0], "MOTH", flag.ExitOnError)
+	fs.StringVar(
 		&moduleDir,
 		"modules",
-		"/modules",
+		"/moth/modules",
 		"Path where your moth modules live",
 	)
-	flag.StringVar(
+	fs.StringVar(
 		&stateDir,
 		"state",
-		"/state",
+		"/moth/state",
 		"Path where state should be written",
 	)
-	flag.StringVar(
+	fs.StringVar(
 		&cacheDir,
 		"cache",
-		"/cache",
+		"/moth/cache",
 		"Path for ephemeral cache",
 	)
-	maintenanceInterval := flag.Duration(
+	fs.DurationVar(
+		&maintenanceInterval,
 		"maint",
 		20 * time.Second,
 		"Maintenance interval",
 	)
-	listen := flag.String(
+	fs.StringVar(
+		&listen,
 		"listen",
 		":8080",
 		"[host]:port to bind and listen",
 	)
+	fs.Parse(os.Args[1:])
 	
 	if err := setup(); err != nil {
 		log.Fatal(err)
 	}
-	go maintenance(*maintenanceInterval)
+	go maintenance(maintenanceInterval)
 
+	fileserver := http.FileServer(http.Dir(cacheDir))
 	http.HandleFunc("/", rootHandler)
-	http.Handle("/static/", http.FileServer(http.Dir(cacheDir)))
+	http.Handle("/static/", http.StripPrefix("/static", fileserver))
 
 	http.HandleFunc("/register", registerHandler)
 	http.HandleFunc("/token", tokenHandler)
 	http.HandleFunc("/answer", answerHandler)
+	
+	http.HandleFunc("/puzzles.json", puzzlesHandler)
+	http.HandleFunc("/points.json", pointsHandler)
 
-	log.Printf("Listening on %s", *listen)
-	log.Fatal(http.ListenAndServe(*listen, logRequest(http.DefaultServeMux)))
+	log.Printf("Listening on %s", listen)
+	log.Fatal(http.ListenAndServe(listen, logRequest(http.DefaultServeMux)))
 }

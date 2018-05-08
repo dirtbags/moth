@@ -34,8 +34,6 @@ func tidy() {
 		}
 	}
 	
-	log.Print("Hello, I'm maintaining!")
-	
 	// Get current list of categories
 	newCategories := []string{}
 	files, err := ioutil.ReadDir(modulesPath())

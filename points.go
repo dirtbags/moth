@@ -13,7 +13,7 @@ import (
 
 type Award struct {
 	when time.Time
-	team string
+	teamid string
 	category string
 	points int
 }
@@ -32,7 +32,7 @@ func ParseAward(s string) (*Award, error) {
 	}
 	ret.when = time.Unix(whenEpoch, 0)
 	
-	ret.team = parts[1]
+	ret.teamid = parts[1]
 	ret.category = parts[2]
 	
 	points, err := strconv.Atoi(parts[3])
@@ -45,7 +45,7 @@ func ParseAward(s string) (*Award, error) {
 }
 
 func (a *Award) String() string {
-	return fmt.Sprintf("%d %s %s %d", a.when.Unix(), a.team, a.category, a.points)
+	return fmt.Sprintf("%d %s %s %d", a.when.Unix(), a.teamid, a.category, a.points)
 }
 
 func pointsLog() []Award {
@@ -89,6 +89,7 @@ func awardPoints(teamid string, category string, points int) error {
 		return err
 	}
 	
+	log.Printf("Award %s %s %d", teamid, category, points)
 	return nil
 }
 
