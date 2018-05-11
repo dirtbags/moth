@@ -2,6 +2,6 @@ FROM alpine
 
 RUN apk --no-cache add python3 py3-pillow
 
-COPY tools/package-puzzles.py tools/moth.py tools/mistune.py tools/answer_words.txt /moth/
+COPY . /moth/
 
-ENTRYPOINT ["python3", "/moth/package-puzzles.py"]
+ENTRYPOINT ["python3", "/moth/tools/mothballer.py"]
