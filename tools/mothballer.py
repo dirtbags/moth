@@ -89,15 +89,11 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
     ziphandle.writestr(os.path.join(puzzledir, 'index.html'), html_content.getvalue())
 
 def build_category(categorydir, outdir):
-    zipfileraw = tempfile.NamedTemporaryFile(delete=False)
-    zf = zipfile.ZipFile(zipfileraw, 'x')
-
     category_seed = binascii.b2a_hex(os.urandom(20))
     puzzles_dict = {}
     secrets = {}
 
     categoryname = os.path.basename(categorydir.strip(os.sep))
-    seedfn = os.path.join("category_seed.txt")
     zipfilename = os.path.join(outdir, "%s.zip" % categoryname)
     logging.info("Building {} from {}".format(zipfilename, categorydir))
 
@@ -111,16 +107,27 @@ def build_category(categorydir, outdir):
         existing.close()
     logging.debug("Using PRNG seed {}".format(category_seed))
 
-    zf.writestr(seedfn, category_seed)
+    zipfileraw = tempfile.NamedTemporaryFile(delete=False)
+    mothball = package(categoryname, categorydir, zfraw)
+    shutil.copyfileobj(mothball, zipfileraw)
+    zipfileraw.close()
+    shutil.move(zipfileraw.name, zipfilename)
 
-    cat = moth.Category(categorydir, category_seed)
+
+# Returns a file-like object containing the contents of the new zip file
+def package(categoryname, categorydir, seed):
+    zfraw = io.BytesIO()
+    zf = zipfile.ZipFile(zfraw, 'x')
+    zf.writestr("category_seed.txt", seed)
+
+    cat = moth.Category(categorydir, seed)
     mapping = {}
     answers = {}
     summary = {}
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
 
-        hashmap = hashlib.sha1(category_seed)
+        hashmap = hashlib.sha1(seed.encode('utf-8'))
         hashmap.update(str(puzzle.points).encode('utf-8'))
         puzzlehash = hashmap.hexdigest()
         
@@ -152,8 +159,8 @@ def build_category(categorydir, outdir):
 
     # clean up
     zf.close()
-
-    shutil.move(zipfileraw.name, zipfilename)
+    zfraw.seek(0)
+    return zfraw
     
    
 if __name__ == '__main__':
