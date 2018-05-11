@@ -1,14 +1,14 @@
 FROM neale/eris
 
+RUN apk --no-cache add lua5.1 lua5.2 lua5.3
+RUN ln -s lua5.2 /usr/bin/lua
+
 # Install MOTH. This could be less obtuse.
 COPY www /moth/www/
 COPY bin /moth/bin/
 COPY src/moth-init /moth/init
 RUN ln -s ../state/puzzles.json /moth/www/puzzles.json && \
-    ln -s ../state/points.json /moth/www/points.json && \ 
-    apk --no-cache add lua5.2 lua5.3 && \
-    ln -s lua5.2 /usr/bin/lua
-
+    ln -s ../state/points.json /moth/www/points.json
 
 CMD ["/moth/init"]
 

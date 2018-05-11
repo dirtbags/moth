@@ -1,14 +1,10 @@
 FROM alpine
 
-ARG http_proxy
-ENV http_proxy=${http_proxy}
+RUN apk --no-cache add python3 py3-pillow && \
+  pip3 install aiohttp
 
-RUN apk --no-cache add python3 py3-pillow
-
-COPY tools/devel-server.py tools/moth.py tools/mistune.py tools/answer_words.txt /moth/
-COPY www /moth/src/www
-COPY example-puzzles /moth/puzzles
-COPY docs /moth/docs
+COPY . /moth/
+COPY example-puzzles /puzzles/
 
 WORKDIR /moth/
-ENTRYPOINT ["python3", "/moth/devel-server.py"]
+ENTRYPOINT ["python3", "/moth/tools/devel-server.py", "--bind", ":8080", "--puzzles", "/puzzles"]

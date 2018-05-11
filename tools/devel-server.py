@@ -1,268 +1,163 @@
 #!/usr/bin/python3
 
-# To pick up any changes to this file without restarting anything:
-#     while true; do ./tools/devel-server.py --once; done
-# It's kludgy, but it gets the job done.
-# Feel free to make it suck less, for example using the `tcpserver` program.
-
+import asyncio
 import glob
 import html
-import http.server
+from aiohttp import web
 import io
-import mistune
+import mimetypes
 import moth
+import logging
 import os
 import pathlib
+import random
 import shutil
 import socketserver
 import sys
 import traceback
 
-try:
-    from http.server import HTTPStatus
-except ImportError:
-    class HTTPStatus:
-        OK = 200
-        NOT_FOUND = 404
-        INTERNAL_SERVER_ERROR = 500
+sys.dont_write_bytecode = True  # Don't write .pyc files
 
-sys.dont_write_bytecode = True
+def mkseed():
+    return bytes(random.choice(b'abcdef0123456789') for i in range(40))
 
-# XXX: This will eventually cause a problem. Do something more clever here.
-seed = 1
-
-def page(title, body, baseurl, scripts=[]):
-    return """<!DOCTYPE html>
-<html>
-  <head>
-    <title>{title}</title>
-    <link rel="stylesheet" href="{baseurl}/files/src/www/res/style.css">
-    {scripts}
-  </head>
-  <body>
-    <h1>{title}</h1>
-    <div id="preview" class="terminal">
-      {body}
-    </div>
-  </body>
-</html>""".format(
-        title=title,
-        body=body,
-        baseurl=baseurl,
-        scripts="\n".join('<script src="{}"></script>'.format(s) for s in scripts),
-    )
-
-
-
-
-# XXX: What horrors did we unleash with our chdir shenanigans that
-# makes this serve 404 and 500 when we mix in ThreadingMixIn?
-class ThreadingServer(socketserver.ForkingMixIn, http.server.HTTPServer):
-    pass
-
-
-class MothHandler(http.server.SimpleHTTPRequestHandler):
-    puzzles_dir = "puzzles"
-    base_url = ""
-    
-    def mdpage(self, body, scripts=[]):
-        try:
-            title, _ = body.split('\n', 1)
-        except ValueError:
-            title = "Result"
-        title = title.lstrip("#")
-        title = title.strip()
-        return page(title, mistune.markdown(body, escape=False), self.base_url, scripts=scripts)
-    
-
-    def handle_one_request(self):
-        try:
-            super().handle_one_request()
-        except:
-            tbtype, value, tb = sys.exc_info()
-            tblist = traceback.format_tb(tb, None) + traceback.format_exception_only(tbtype, value)
-            payload = ("Traceback (most recent call last)\n" +
-                    "".join(tblist[:-1]) +
-                    tblist[-1]).encode('utf-8')
-            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.send_header("Content-Length", payload)
-            self.end_headers()
-            self.wfile.write(payload)
-                    
-    def do_GET(self):
-        if self.path == "/":
-            self.serve_front()
-        elif self.path.startswith("/puzzles/"):
-            self.serve_puzzles(self.path)
-        elif self.path.startswith("/files/"):
-            self.serve_file(self.translate_path(self.path))
+class Page:
+    def __init__(self, title, depth=0):
+        self.title = title
+        if depth:
+            self.base = "/".join([".."] * depth)
         else:
-            self.send_error(HTTPStatus.NOT_FOUND, "File not found")
+            self.base = "."
+        self.body = io.StringIO()
+        self.scripts = []
+        
+    def add_script(self, path):
+        self.scripts.append(path)
+        
+    def write(self, s):
+        self.body.write(s)
+        
+    def text(self):
+        ret = io.StringIO()
+        ret.write("<!DOCTYPE html>\n")
+        ret.write("<html>\n")
+        ret.write("  <head>\n")
+        ret.write("    <title>{}</title>\n".format(self.title))
+        ret.write("    <link rel=\"stylesheet\" href=\"{}/files/www/res/style.css\">\n".format(self.base))
+        for s in self.scripts:
+            ret.write("    {}\n".format(s))
+        ret.write("  </head>\n")
+        ret.write("  <body>\n")
+        ret.write("    <h1>{}</h1>\n".format(self.title))
+        ret.write("    <div id=\"preview\" class=\"terminal\">\n")
+        ret.write(self.body.getvalue())
+        ret.write("    </div>\n")
+        ret.write("  </body>\n")
+        ret.write("</html>\n")
+        return ret.getvalue()
+        
+    def response(self, request):
+        return web.Response(text=self.text(), content_type="text/html")
 
-    def translate_path(self, path):
-        if path.startswith('/files'):
-            path = path[7:]
-        return super().translate_path(path)
+async def handle_front(request):
+    p = Page("Devel Server", 0)
+    p.write("<p>Yo, it's the front page!</p>")
+    p.write("<ul>")
+    p.write("<li><a href=\"puzzles/\">Available puzzles</a></li>")
+    p.write("<li><a href=\"files/\">Raw filesystem view</a></li>")
+    p.write("<li><a href=\"https://github.com/dirtbags/moth/tree/master/docs\">Documentation</a></li>")
+    p.write("<li><a href=\"https://github.com/dirtbags/moth/blob/master/docs/devel-server.md\"Instructions</a> for using this server")
+    p.write("</ul>")
+    p.write("<p>If you use this development server to run a contest, you are a fool.</p>")
+    return p.response(request)
 
-    def serve_front(self):
-        body = """
-MOTH Development Server Front Page
-====================
+async def handle_puzzlelist(request):
+    p = Page("Puzzle Categories", 1)
+    p.write("<ul>")
+    for i in sorted(glob.glob(os.path.join(request.app["puzzles_dir"], "*", ""))):
+        bn = os.path.basename(i.strip('/\\'))
+        p.write('<li><a href="{}/">puzzles/{}/</a></li>'.format(bn, bn))
+    p.write("</ul>")
+    return p.response(request)
 
-Yo, it's the front page.
-There's stuff you can do here:
+async def handle_category(request):
+    seed = request.query.get("seed", mkseed())
+    category = request.match_info.get("category")
+    cat = moth.Category(os.path.join(request.app["puzzles_dir"], category), seed)
+    p = Page("Puzzles in category {}".format(category), 2)
+    p.write("<ul>")
+    for points in cat.pointvals():
+        p.write('<li><a href="{points}/">puzzles/{category}/{points}/</a></li>'.format(category=category, points=points))
+    p.write("</ul>")
+    return p.response(request)
 
-* [Available puzzles](puzzles/)
-* [Raw filesystem view](files/)
-* [Documentation](files/docs/)
-* [Instructions](files/docs/devel-server.md) for using this server
+async def handle_puzzle(request):
+    seed = request.query.get("seed", mkseed())
+    category = request.match_info.get("category")
+    points = int(request.match_info.get("points"))
+    cat = moth.Category(os.path.join(request.app["puzzles_dir"], category), seed)
+    puzzle = cat.puzzle(points)
 
-If you use this development server to run a contest,
-you are a fool.
-"""
-        payload = self.mdpage(body).encode('utf-8')
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", len(payload))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    def serve_puzzles(self, path):
-        body = io.StringIO()
-        path = path.rstrip('/')
-        parts = path.split("/")
-        scripts = []
-        title = None
-        fpath = None
-        points = None
-        cat = None
-        puzzle = None
-
-        try:
-            fpath = os.path.join(self.puzzles_dir, parts[2])
-            points = int(parts[3])
-        except:
-            pass
-
-        if fpath:
-            cat = moth.Category(fpath, seed)
-        if points:
-            puzzle = cat.puzzle(points)
-
-        if not cat:
-            title = "Puzzle Categories"
-            body.write("<ul>")
-            for i in sorted(glob.glob(os.path.join(self.puzzles_dir, "*", ""))):
-                bn = os.path.basename(i.strip('/\\'))
-                body.write('<li><a href="{}/">puzzles/{}/</a></li>'.format(bn, bn))
-            body.write("</ul>")
-        elif not puzzle:
-            # List all point values in a category
-            title = "Puzzles in category `{}`".format(parts[2])
-            body.write("<ul>")
-            for points in cat.pointvals():
-                body.write('<li><a href="{points}/">puzzles/{cat}/{points}/</a></li>'.format(cat=parts[2], points=points))
-            body.write("</ul>")
-        elif len(parts) == 4:
-            # Serve up a puzzle
-            scripts = puzzle.scripts
-            title = "{} puzzle {}".format(parts[2], parts[3])
-            body.write("<h2>Body</h2>")
-            body.write("<div id='body' style='border: solid 1px silver;'>")
-            body.write(puzzle.html_body())
-            body.write("</div>")
-            body.write("<h2>Files</h2>")
-            body.write("<ul>")
-            for name,puzzlefile in sorted(puzzle.files.items()):
-                if puzzlefile.visible:
-                    visibility = ''
-                else:
-                    visibility = '(unlisted)'
-                body.write('<li><a href="{filename}">{filename}</a> {visibility}</li>'
-                            .format(cat=parts[2],
-                                    points=puzzle.points,
-                                    filename=name,
-                                    visibility=visibility))
-            body.write("</ul>")
-            body.write("<h2>Answers</h2>")
-            body.write("<p>Input box (for scripts): <input id='answer' name='a'>")
-            body.write("<ul>")
-            assert puzzle.answers, 'No answers defined'
-            for a in puzzle.answers:
-                body.write("<li><code>{}</code></li>".format(html.escape(a)))
-            body.write("</ul>")
-            body.write("<h2>Authors</h2><p>{}</p>".format(', '.join(puzzle.get_authors())))
-            body.write("<h2>Summary</h2><p>{}</p>".format(puzzle.summary))
-            if puzzle.logs:
-                body.write("<h2>Debug Log</h2>")
-                body.write('<ul class="log">')
-                for l in puzzle.logs:
-                    body.write("<li>{}</li>".format(html.escape(l)))
-                body.write("</ul>")
-        elif len(parts) == 5:
-            # Serve up a puzzle file
-            try:
-                pfile = puzzle.files[parts[4]]
-            except KeyError:
-                self.send_error(HTTPStatus.NOT_FOUND, "File not found. Did you add it to the Files: header or puzzle.add_stream?")
-                return
-            ctype = self.guess_type(pfile.name)
-            self.send_response(HTTPStatus.OK)
-            self.send_header("Content-Type", ctype)
-            self.end_headers()
-            shutil.copyfileobj(pfile.stream, self.wfile)
-            return
-
-        payload = page(title, body.getvalue(), self.base_url, scripts=scripts).encode('utf-8')
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", len(payload))
-        self.end_headers()
-        self.wfile.write(payload)
-
-    def serve_file(self, path):
-        lastmod = None
-        fspath = pathlib.Path(path)
-
-        if fspath.is_dir():
-            ctype = "text/html; charset=utf-8"
-            payload = self.list_directory(path)
-            # it sends headers but not body
-            shutil.copyfileobj(payload, self.wfile)
+    p = Page("{} puzzle {}".format(category, points), 3)
+    for s in puzzle.scripts:
+        p.add_script(s)
+    p.write("<h2>Body</h2>")
+    p.write("<div id='body' style='border: solid 1px silver;'>")
+    p.write(puzzle.html_body())
+    p.write("</div>")
+    p.write("<h2>Files</h2>")
+    p.write("<ul>")
+    for name,puzzlefile in sorted(puzzle.files.items()):
+        if puzzlefile.visible:
+            visibility = ''
         else:
-            ctype = self.guess_type(path)
-            try:
-                payload = fspath.read_bytes()
-            except OSError:
-                self.send_error(HTTPStatus.NOT_FOUND, "File not found")
-                return
-            if path.endswith(".md"):
-                ctype = "text/html; charset=utf-8"
-                content = self.mdpage(payload.decode('utf-8'))
-                payload = content.encode('utf-8')
-            try:
-                fs = fspath.stat()
-                lastmod = self.date_time_string(fs.st_mtime)
-            except:
-                pass
+            visibility = '(unlisted)'
+        p.write('<li><a href="{filename}">{filename}</a> {visibility}</li>'
+                    .format(cat=category,
+                            points=puzzle.points,
+                            filename=name,
+                            visibility=visibility))
+    p.write("</ul>")
+    p.write("<h2>Answers</h2>")
+    p.write("<p>Input box (for scripts): <input id='answer' name='a'>")
+    p.write("<ul>")
+    assert puzzle.answers, 'No answers defined'
+    for a in puzzle.answers:
+        p.write("<li><code>{}</code></li>".format(html.escape(a)))
+    p.write("</ul>")
+    p.write("<h2>Authors</h2><p>{}</p>".format(', '.join(puzzle.get_authors())))
+    p.write("<h2>Summary</h2><p>{}</p>".format(puzzle.summary))
+    if puzzle.logs:
+        p.write("<h2>Debug Log</h2>")
+        p.write('<ul class="log">')
+        for l in puzzle.logs:
+            p.write("<li>{}</li>".format(html.escape(l)))
+        p.write("</ul>")
+        
+    return p.response(request)
 
-        self.send_response(HTTPStatus.OK)
-        self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", len(payload))
-        if lastmod:
-            self.send_header("Last-Modified", lastmod)
-        self.end_headers()
-        self.wfile.write(payload)
+async def handle_puzzlefile(request):
+    seed = request.query.get("seed", mkseed())
+    category = request.match_info.get("category")
+    points = int(request.match_info.get("points"))
+    filename = request.match_info.get("filename")
+    cat = moth.Category(os.path.join(request.app["puzzles_dir"], category), seed)
+    puzzle = cat.puzzle(points)
 
+    try:
+        file = puzzle.files[filename]
+    except KeyError:
+        return web.Response(status=404)
+    
+    resp = web.Response()
+    resp.content_type, _ = mimetypes.guess_type(file.name)
+    # This is the line where I decided Go was better than Python at multiprocessing
+    # You should be able to chain the puzzle file's output to the async output,
+    # without having to block. But if there's a way to do that, it certainly
+    # isn't documented anywhere.
+    resp.body = file.stream.read()
+    return resp
 
-def run(address=('127.0.0.1', 8080), once=False):
-    httpd = ThreadingServer(address, MothHandler)
-    print("=== Listening on http://{}:{}/".format(address[0], address[1]))
-    if once:
-        httpd.handle_request()
-    else:
-        httpd.serve_forever()
 
 if __name__ == '__main__':
     import argparse
@@ -273,11 +168,7 @@ if __name__ == '__main__':
         help="Directory containing your puzzles"
     )
     parser.add_argument(
-        '--once', default=False, action='store_true',
-        help="Serve one page, then exit. For debugging the server."
-    )
-    parser.add_argument(
-        '--bind', default="0.0.0.0:8080",
+        '--bind', default="127.0.0.1:8080",
         help="Bind to ip:port"
     )
     parser.add_argument(
@@ -285,8 +176,21 @@ if __name__ == '__main__':
         help="Base URL to this server, for reverse proxy setup"
     )
     args = parser.parse_args()
-    addr, port = args.bind.split(":")
-    port = int(port)
-    MothHandler.puzzles_dir = args.puzzles
-    MothHandler.base_url = args.base
-    run(address=(addr, port), once=args.once)
+    parts = args.bind.split(":")
+    addr = parts[0] or "0.0.0.0"
+    port = int(parts[1])
+    
+    logging.basicConfig(level=logging.INFO)
+    
+    mydir = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
+    
+    app = web.Application()
+    app["puzzles_dir"] = args.puzzles
+    app["base_url"] = args.base
+    app.router.add_route("GET", "/", handle_front)
+    app.router.add_route("GET", "/puzzles/", handle_puzzlelist)
+    app.router.add_route("GET", "/puzzles/{category}/", handle_category)
+    app.router.add_route("GET", "/puzzles/{category}/{points}/", handle_puzzle)
+    app.router.add_route("GET", "/puzzles/{category}/{points}/{filename}", handle_puzzlefile)
+    app.router.add_static("/files/", mydir, show_index=True)
+    web.run_app(app, host=addr, port=port)
