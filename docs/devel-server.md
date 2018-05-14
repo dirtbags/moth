@@ -53,7 +53,7 @@ like this:
 
 ### With Docker
 
-	docker run --rm -t -v /path/to/my/puzzles:/moth/puzzles:ro -p 8080:8080 dirtbags/moth-devel
+	docker run --rm -t -v /path/to/my/puzzles:/puzzles:ro -p 8080:8080 dirtbags/moth-devel
 
 
 ### Without Docker
