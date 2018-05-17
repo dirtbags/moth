@@ -10,7 +10,7 @@ local token = cgi.fields['k'] or ""
 
 -- Check answer
 local needle = token
-local haystack = koth.path("tokens.txt")
+local haystack = koth.path("state/tokens.txt")
 local found, err = koth.anchored_search(haystack, needle)
 
 if (not found) then
