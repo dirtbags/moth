@@ -18,6 +18,15 @@ It also tracks scores,
 and comes with a JavaScript-based scoreboard to display team rankings.
 
 
+Getting Started Developing
+-------------------------------
+
+You'll want to start out with the Development Server.
+
+More on how the devel sever works in
+[the devel server documentation](docs/devel-server.md)
+
+
 How everything works
 ---------------------------
 
@@ -26,29 +35,11 @@ Please check out [the overview](docs/overview.md)
 for details.
 
 
-Getting Started Developing
--------------------------------
-
-If you don't have a `puzzles` directory,
-you can copy the example puzzles as a starting point:
-
-    $ cp -r example-puzzles puzzles
-
-Then launch the development server:
-
-    $ python3 tools/devel-server.py
-
-Point a web browser at http://localhost:8080/
-and start hacking on things in your `puzzles` directory.
-
-More on how the devel sever works in
-[the devel server documentation](docs/devel-server.md)
-
-
 Running A Production Server
 ====================
 
-XXX: Update this
+Please submit a merge request to improve this section ;)
+
 
 How to install it
 --------------------
