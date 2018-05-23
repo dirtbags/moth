@@ -72,6 +72,11 @@ GetState()
 
 Return all current state of the puzzle server.
 
+### Parameters
+
+None
+
+
 ### Return data
 
 * puzzles: dictionary mapping from category to one of the following:
