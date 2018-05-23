@@ -48,7 +48,7 @@ RegisterTeam(teamId, teamName)
 
 Register a team name with a team hash.
 
-Parameters:
+### Parameters
 
 * teamId: Team's unique identifier (usually a hex value)
 * teamName: Team's human-readable name
@@ -56,13 +56,13 @@ Parameters:
 On success, no data is returned.
 On failure, message contains an English explanation of why.
 
-Example:
+### Example
 
     https://server/RegisterTeam?teamId=8b1292ca
 
     {
       status: "success",
-      data: nil
+      data: null
     }
 
 
@@ -71,12 +71,12 @@ GetPuzzleList()
 
 Return all currently-open puzzles.
 
-Return data:
+### Return data
 
 * puzzles: dictionary mapping from category to a list of point values.
 
 
-Example:
+### Example
 
     https://server/GetPuzzleList
 
@@ -96,12 +96,12 @@ GetPuzzle(category, points)
 
 Return a puzzle.
 
-Parameters:
+### Parameters
 
 * category: name of category to fetch from
 * points: point value of the puzzle to fetch
 
-Return data:
+### Return data
 
 * authors: List of puzzle authors
 * hashes: list of djbhash values of acceptable answers
@@ -109,7 +109,7 @@ Return data:
 * body: HTML body of the puzzle
 
 
-Example:
+### Example
 
     https://server/GetPuzzle?category=sequence&points=1
 
@@ -130,7 +130,7 @@ GetPointsLog()
 
 Return the entire points log, and team names.
 
-Return data:
+### Return data
 
 * teams: mapping from team number (int) to team name
 * log: list of (timestamp, team number, category, points)
@@ -138,7 +138,7 @@ Return data:
 Note: team number may change between calls.
 
 
-Example:
+### Example
 
     https://server/GetEventsLog
 
@@ -163,20 +163,27 @@ SubmitAnswer(teamId, category, points, answer)
 
 Submit an answer to a puzzle.
 
-Parameters:
+### Parameters
 
 * teamId: Team ID (optional: if ommitted, answer is verified but no points are awarded)
 * category: category name of puzzle
 * points: point value of puzzle
 * answer: attempted answer
 
-Example:
+
+### Return Data
+
+* epilogue: HTML to display as an "epilogue" to the puzzle
+
+### Example
 
     https://server/SubmitAnswer?teamId=8b1292ca&category=sequence&points=1&answer=6
 
     {
       status: "success",
-      data: null
+      data: {
+        epilogue: "That's right: in base 10, 5 + 1 = 6."
+      }
     }
 
 SubmitToken(teamId, token)
@@ -184,18 +191,18 @@ SubmitToken(teamId, token)
 
 Submit a token for points
 
-Parameters:
+### Parameters
 
 * teamId: Team ID
 * token: Token being submitted
 
-Return data:
+### Return data
 
 * category: category for which this token awarded points
 * points: number of points awarded
 
 
-Example:
+### Example
 
     https://server/SubmitToken?teamId=8b1292ca&token=wat:30:xylep-radar-nanox
 
