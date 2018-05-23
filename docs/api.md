@@ -56,6 +56,7 @@ Register a team name with a team hash.
 On success, no data is returned.
 On failure, message contains an English explanation of why.
 
+
 ### Example
 
     https://server/RegisterTeam?teamId=8b1292ca&teamName=Lexical+Pedants
@@ -100,6 +101,7 @@ Return a puzzle.
 
 * category: name of category to fetch from
 * points: point value of the puzzle to fetch
+
 
 ### Return data
 
@@ -175,6 +177,7 @@ Submit an answer to a puzzle.
 
 * epilog: HTML to display upon successfully answering the puzzle
 
+
 ### Example
 
     https://server/SubmitAnswer?teamId=8b1292ca&category=sequence&points=1&answer=6
@@ -195,6 +198,7 @@ Submit a token for points
 
 * teamId: Team ID
 * token: Token being submitted
+
 
 ### Return data
 
