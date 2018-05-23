@@ -96,6 +96,11 @@ GetPuzzle(category, points)
 
 Return a puzzle.
 
+Parameters:
+
+* category: name of category to fetch from
+* points: point value of the puzzle to fetch
+
 Return data:
 
 * authors: List of puzzle authors
@@ -158,6 +163,13 @@ SubmitAnswer(teamId, category, points, answer)
 
 Submit an answer to a puzzle.
 
+Parameters:
+
+* teamId: Team ID (optional: if ommitted, answer is verified but no points are awarded)
+* category: category name of puzzle
+* points: point value of puzzle
+* answer: attempted answer
+
 Example:
 
     https://server/SubmitAnswer?teamId=8b1292ca&category=sequence&points=1&answer=6
@@ -171,6 +183,11 @@ SubmitToken(teamId, token)
 ---------------------
 
 Submit a token for points
+
+Parameters:
+
+* teamId: Team ID
+* token: Token being submitted
 
 Return data:
 
