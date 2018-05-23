@@ -16,7 +16,7 @@ Specification
 
 You make requests as HTTP GET query arguments:
 
-    https://server/path/to/endpoint?var1=val1&var2=val2
+    https://server/path/elements/api/v3/endpoint?var1=val1&var2=val2
 
 The server returns a
 [JSend](https://labs.omniti.com/labs/jsend) response:
@@ -59,7 +59,7 @@ On failure, message contains an English explanation of why.
 
 ### Example
 
-    https://server/RegisterTeam?teamId=8b1292ca&teamName=Lexical+Pedants
+    https://server/api/v3/RegisterTeam?teamId=8b1292ca&teamName=Lexical+Pedants
 
     {
       "status": "success",
@@ -79,7 +79,7 @@ Return all currently-open puzzles.
 
 ### Example
 
-    https://server/GetPuzzleList
+    https://server/api/v3/GetPuzzleList
 
     {
       "status": "success",
@@ -113,7 +113,7 @@ Return a puzzle.
 
 ### Example
 
-    https://server/GetPuzzle?category=sequence&points=1
+    https://server/api/v3/GetPuzzle?category=sequence&points=1
 
     {
       "status": "success",
@@ -142,7 +142,7 @@ Note: team number may change between calls.
 
 ### Example
 
-    https://server/GetEventsLog
+    https://server/api/v3/GetEventsLog
 
     {
       "status": "success",
@@ -180,7 +180,7 @@ Submit an answer to a puzzle.
 
 ### Example
 
-    https://server/SubmitAnswer?teamId=8b1292ca&category=sequence&points=1&answer=6
+    https://server/api/v3/SubmitAnswer?teamId=8b1292ca&category=sequence&points=1&answer=6
 
     {
       "status": "success",
@@ -209,7 +209,7 @@ Submit a token for points
 
 ### Example
 
-    https://server/SubmitToken?teamId=8b1292ca&token=wat:30:xylep-radar-nanox
+    https://server/api/v3/SubmitToken?teamId=8b1292ca&token=wat:30:xylep-radar-nanox
 
     {
       "status": "success",
