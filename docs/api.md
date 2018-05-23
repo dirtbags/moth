@@ -91,7 +91,8 @@ Example:
     }
 
 
-### GetPuzzle(category, points)
+GetPuzzle(category, points)
+--------------------
 
 Return a puzzle.
 
@@ -119,7 +120,8 @@ Example:
     }
 
 
-### GetPointsLog()
+GetPointsLog()
+---------------
 
 Return the entire points log, and team names.
 
@@ -151,7 +153,8 @@ Example:
     }
 
 
-### SubmitAnswer(teamId, category, points, answer)
+SubmitAnswer(teamId, category, points, answer)
+----------------------
 
 Submit an answer to a puzzle.
 
@@ -164,7 +167,8 @@ Example:
       data: null
     }
 
-### SubmitToken(teamId, token)
+SubmitToken(teamId, token)
+---------------------
 
 Submit a token for points
 
