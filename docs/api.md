@@ -89,7 +89,7 @@ None
 
 ### Example
 
-    https://server/api/v3/GetPuzzleList
+    https://server/api/v3/GetState
 
     {
       "status": "success",
