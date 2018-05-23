@@ -67,14 +67,19 @@ On failure, message contains an English explanation of why.
     }
 
 
-GetPuzzleList()
----------------
+GetState()
+----------
 
-Return all currently-open puzzles.
+Return all current state of the puzzle server.
 
 ### Return data
 
-* puzzles: dictionary mapping from category to a list of point values.
+* puzzles: dictionary mapping from category to one of the following:
+  * list of point values currently open
+  * URL to puzzle root (intended for token-based puzzles)
+* teams: mapping from anonymized team ID to team name
+* log: list of (timestamp, team number, category, points)
+* notices: list of HTML broadcast notices to display to the user
 
 
 ### Example
@@ -87,7 +92,21 @@ Return all currently-open puzzles.
         "puzzles": {
           "sequence": [1, 2],
           "codebreaking": [10],
-        }
+          "wopr": "https://appspot.com/dooted-bagel-8372/entry"
+        },
+        "teams": {
+          "0": "Zelda",
+          "1": "Defender"
+        },
+        "log": [
+          [1526478368, "0", "sequence", 1],
+          [1526478524, "1", "sequence", 1],
+          [1526478536, "0", "nocode", 1]
+        ],
+        "notices": [
+          "<a href=\"https://appspot.com/dooted-bagel-8372/entry\">WOPR category</a> is now open",
+          "Event closes at 18:00 today, and will resume tomorrow at 08:00"
+        ]
       }
     }
 
@@ -126,38 +145,6 @@ Return a puzzle.
         "body": "<pre><code>1 2 3 4 5 _\n</code></pre>\n"
     }
 
-
-GetPointsLog()
----------------
-
-Return the entire points log, and team names.
-
-### Return data
-
-* teams: mapping from team number (int) to team name
-* log: list of (timestamp, team number, category, points)
-
-Note: team number may change between calls.
-
-
-### Example
-
-    https://server/api/v3/GetEventsLog
-
-    {
-      "status": "success",
-      "data": {
-        "teams": {
-          0: "Zelda",
-          1: "Defender"
-        },
-        "log": [
-          [1526478368, 0, "sequence", 1],
-          [1526478524, 1, "sequence", 1],
-          [1526478536, 0, "nocode", 1]
-        ]
-      }
-    }
 
 
 SubmitAnswer(teamId, category, points, answer)
