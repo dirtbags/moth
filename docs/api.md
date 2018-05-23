@@ -200,6 +200,7 @@ Submit a token for points
 
 * category: category for which this token awarded points
 * points: number of points awarded
+* epilogue: HTML to display as an "epilogue" to the puzzle
 
 
 ### Example
@@ -210,6 +211,7 @@ Submit a token for points
       "status": "success",
       "data": {
         "category": "wat",
-        "points": 30
+        "points": 30,
+        "epilogue": ""
       }
     }
