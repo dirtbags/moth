@@ -22,8 +22,8 @@ The server returns a
 [JSend](https://labs.omniti.com/labs/jsend) response:
 
     {
-      status: "success",
-      data: "Any JS data type here"
+      "status": "success",
+      "data": "Any JS data type here"
     }
 
 
@@ -61,8 +61,8 @@ On failure, message contains an English explanation of why.
     https://server/RegisterTeam?teamId=8b1292ca
 
     {
-      status: "success",
-      data: null
+      "status": "success",
+      "data": null
     }
 
 
@@ -81,8 +81,8 @@ Return all currently-open puzzles.
     https://server/GetPuzzleList
 
     {
-      status: "success",
-      data: {
+      "status": "success",
+      "data": {
         "puzzles": {
           "sequence": [1, 2],
           "codebreaking": [10],
@@ -114,8 +114,8 @@ Return a puzzle.
     https://server/GetPuzzle?category=sequence&points=1
 
     {
-      status: "success",
-      data: {
+      "status": "success",
+      "data": {
         "authors": ["neale"],
         "hashes": [177627],
         "files": {
@@ -143,13 +143,13 @@ Note: team number may change between calls.
     https://server/GetEventsLog
 
     {
-      status: "success",
-      data: {
-        teams: {
+      "status": "success",
+      "data": {
+        "teams": {
           0: "Zelda",
           1: "Defender"
         },
-        log: [
+        "log": [
           [1526478368, 0, "sequence", 1],
           [1526478524, 1, "sequence", 1],
           [1526478536, 0, "nocode", 1]
@@ -180,9 +180,9 @@ Submit an answer to a puzzle.
     https://server/SubmitAnswer?teamId=8b1292ca&category=sequence&points=1&answer=6
 
     {
-      status: "success",
-      data: {
-        epilogue: "That's right: in base 10, 5 + 1 = 6."
+      "status": "success",
+      "data": {
+        "epilogue": "That's right: in base 10, 5 + 1 = 6."
       }
     }
 
@@ -207,9 +207,9 @@ Submit a token for points
     https://server/SubmitToken?teamId=8b1292ca&token=wat:30:xylep-radar-nanox
 
     {
-      status: "success",
-      data: {
-        category: "wat",
-        points: 30
+      "status": "success",
+      "data": {
+        "category": "wat",
+        "points": 30
       }
     }
