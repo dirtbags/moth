@@ -173,7 +173,7 @@ Submit an answer to a puzzle.
 
 ### Return Data
 
-* epilogue: HTML to display as an "epilogue" to the puzzle
+* epilog: HTML to display upon successfully answering the puzzle
 
 ### Example
 
@@ -182,7 +182,7 @@ Submit an answer to a puzzle.
     {
       "status": "success",
       "data": {
-        "epilogue": "That's right: in base 10, 5 + 1 = 6."
+        "epilog": "That's right: in base 10, 5 + 1 = 6."
       }
     }
 
@@ -200,7 +200,7 @@ Submit a token for points
 
 * category: category for which this token awarded points
 * points: number of points awarded
-* epilogue: HTML to display as an "epilogue" to the puzzle
+* epilog: HTML to display upon successfully answering the puzzle
 
 
 ### Example
@@ -212,6 +212,6 @@ Submit a token for points
       "data": {
         "category": "wat",
         "points": 30,
-        "epilogue": ""
+        "epilog": ""
       }
     }
