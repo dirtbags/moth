@@ -58,7 +58,7 @@ On failure, message contains an English explanation of why.
 
 ### Example
 
-    https://server/RegisterTeam?teamId=8b1292ca
+    https://server/RegisterTeam?teamId=8b1292ca&teamName=Lexical+Pedants
 
     {
       "status": "success",
