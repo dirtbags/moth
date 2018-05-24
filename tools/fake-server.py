@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 
 from aiohttp import web
+import time
 
 async def fake_register(request):
     teamId = request.query.get("teamId")
@@ -44,6 +45,7 @@ async def fake_state(request):
                 "<a href=\"https://appspot.com/dooted-bagel-8372/entry\">WOPR category</a> is now open",
                 "Event closes at 18:00 today, and will resume tomorrow at 08:00"
             ],
+            "now": int(time.time()),
         }
     }
     return web.json_response(resp)
