@@ -85,6 +85,7 @@ None
 * teams: mapping from anonymized team ID to team name
 * log: list of (timestamp, team number, category, points)
 * notices: list of HTML broadcast notices to display to the user
+* now: current server time (unix epoch)
 
 
 ### Example
@@ -111,7 +112,8 @@ None
         "notices": [
           "<a href=\"https://appspot.com/dooted-bagel-8372/entry\">WOPR category</a> is now open",
           "Event closes at 18:00 today, and will resume tomorrow at 08:00"
-        ]
+        ],
+        "now": 1527170088
       }
     }
 
