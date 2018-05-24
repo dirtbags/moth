@@ -56,7 +56,7 @@ function puzzles_start() {
   var refreshInterval = 40 * 1000;
 
   var refreshCallback = puzzlesRefresh.bind(undefined, puzzlesTerminal);
-  var refreshFunction = loadJSON.bind(undefined, puzzlesJsonUrl, refreshCallback);
+  var refreshFunction = loadJSON.bind(undefined, puzzlesJsonUrl + '?_=' + new Date().getTime(), refreshCallback);
 
   puzzlesTerminal.clear();
   puzzlesTerminal.par("Loading...");
