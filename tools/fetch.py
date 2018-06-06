@@ -3,13 +3,15 @@
 import requests
 import zipfile
 
-url = "https://puzzles.cyberfire.training/foundry/"
+instance = "foundry"
+
+url = "https://puzzles.cyberfire.training/{}/".format(instance)
 url = url.rstrip("/")
 
 r = requests.get(url + "/puzzles.json")
 puzzles = r.json()
 
-zf = zipfile.ZipFile("/tmp/foundry.zip", "w")
+zf = zipfile.ZipFile("/tmp/{}.zip".format(instance), "w")
 for cat, entries in puzzles.items():
     if cat == "wopr":
         continue
@@ -25,5 +27,6 @@ for cat, entries in puzzles.items():
         
         for fn in files:
             path = "{}/{}/{}".format(cat, points, fn)
-            data = requests.get(u).content
+            furl="{}/{}/{}/{}".format(url, cat, dn, fn)
+            data = requests.get(furl).content
             zf.writestr(path, data)
