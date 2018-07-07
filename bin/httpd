@@ -3,7 +3,7 @@
 # Starts a standalone server using tcpsvd and eris
 
 echo "Figuring out web user..."
-for www in www-data http tc _ _www; do
+for www in www www-data http tc _ _www; do
     id $www && break
 done
 if [ $www = _ ]; then
