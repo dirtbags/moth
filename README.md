@@ -87,7 +87,7 @@ which is what we use to run our contests.
 `tcpserver` is part of the `uscpi-tcp` package in Ubuntu.
 You can also use busybox's `tcpsvd` (my preference, but a PITA on Ubuntu).
 
-`eris` can be obtained at https://woozle.org/neale/g.cgi/net/eris/about/
+`eris` can be obtained at https://github.com/nealey/eris
 
     $ mothinst=/srv/moth/mycontest
     $ $mothinst/bin/httpd
