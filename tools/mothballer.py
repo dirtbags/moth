@@ -2,7 +2,6 @@
 
 import argparse
 import binascii
-import glob
 import hashlib
 import io
 import json
@@ -10,10 +9,11 @@ import logging
 import moth
 import os
 import shutil
-import string
-import sys
 import tempfile
 import zipfile
+
+SEEDFN = "SEED"
+
 
 def write_kv_pairs(ziphandle, filename, kv):
     """ Write out a sorted map to file
@@ -24,17 +24,19 @@ def write_kv_pairs(ziphandle, filename, kv):
     """
     filehandle = io.StringIO()
     for key in sorted(kv.keys()):
-        if type(kv[key])  == type([]):
+        if isinstance(kv[key], type([])):
             for val in kv[key]:
                 filehandle.write("%s %s\n" % (key, val))
         else:
             filehandle.write("%s %s\n" % (key, kv[key]))
     filehandle.seek(0)
     ziphandle.writestr(filename, filehandle.read())
-    
+
+
 def escape(s):
     return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-    
+
+
 def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files):
     html_content = io.StringIO()
     file_content = io.StringIO()
@@ -51,7 +53,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
         </section>
 ''')
     scripts = ['<script src="{}"></script>'.format(s) for s in puzzle.scripts]
-        
+
     html_content.write(
 '''<!DOCTYPE html>
 <html>
@@ -84,14 +86,13 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
             file_content=file_content.getvalue(),
             authors=', '.join(authors),
             scripts='\n'.join(scripts),
-	)
+            )
     )
     ziphandle.writestr(os.path.join(puzzledir, 'index.html'), html_content.getvalue())
 
+
 def build_category(categorydir, outdir):
     category_seed = binascii.b2a_hex(os.urandom(20))
-    puzzles_dict = {}
-    secrets = {}
 
     categoryname = os.path.basename(categorydir.strip(os.sep))
     zipfilename = os.path.join(outdir, "%s.zip" % categoryname)
@@ -101,14 +102,14 @@ def build_category(categorydir, outdir):
         # open and gather some state
         existing = zipfile.ZipFile(zipfilename, 'r')
         try:
-            category_seed = existing.open(seedfn).read().strip()
-        except:
+            category_seed = existing.open(SEEDFN).read().strip()
+        except Exception:
             pass
         existing.close()
     logging.debug("Using PRNG seed {}".format(category_seed))
 
     zipfileraw = tempfile.NamedTemporaryFile(delete=False)
-    mothball = package(categoryname, categorydir, zfraw)
+    mothball = package(categoryname, categorydir, category_seed)
     shutil.copyfileobj(mothball, zipfileraw)
     zipfileraw.close()
     shutil.move(zipfileraw.name, zipfilename)
@@ -127,10 +128,10 @@ def package(categoryname, categorydir, seed):
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
 
-        hashmap = hashlib.sha1(seed.encode('utf-8'))
+        hashmap = hashlib.sha1(seed)
         hashmap.update(str(puzzle.points).encode('utf-8'))
         puzzlehash = hashmap.hexdigest()
-        
+
         mapping[puzzle.points] = puzzlehash
         answers[puzzle.points] = puzzle.answers
         summary[puzzle.points] = puzzle.summary
@@ -161,8 +162,8 @@ def package(categoryname, categorydir, seed):
     zf.close()
     zfraw.seek(0)
     return zfraw
-    
-   
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a category package')
     parser.add_argument('outdir', help='Output directory')
@@ -173,4 +174,3 @@ if __name__ == '__main__':
 
     for categorydir in args.categorydirs:
         build_category(categorydir, args.outdir)
-
