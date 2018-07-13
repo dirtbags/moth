@@ -24,7 +24,7 @@ def write_kv_pairs(ziphandle, filename, kv):
     """
     filehandle = io.StringIO()
     for key in sorted(kv.keys()):
-        if isinstance(kv[key], type([])):
+        if isinstance(kv[key], list):
             for val in kv[key]:
                 filehandle.write("%s %s\n" % (key, val))
         else:
