@@ -99,7 +99,7 @@ Installing Puzzle Categories
 Puzzle categories are distributed in a different way than the server.
 After setting up (see above), just run
 
-	$ /srv/koth/mycontest/bin/install-category /path/to/my/category
+	$ /srv/moth/mycontest/bin/install-category /path/to/my/category
 	
 
 Permissions
