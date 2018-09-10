@@ -23,8 +23,9 @@ Getting Started Developing
 
 You'll want to start out with the Development Server.
 
-More on how the devel sever works in
-[the devel server documentation](docs/devel-server.md)
+More on how the devel sever works in [the devel server documentation](docs/devel-server.md)
+
+To get started quickly, use the Docker image like so `docker run --tm -v /path/to/raw/puzzles/:/puzzles:ro -p 8080:8080 dirtbags/moth-devel` and browse to `http://my_server:8080`
 
 
 How everything works
@@ -38,8 +39,18 @@ for details.
 Running A Production Server
 ====================
 
-Please submit a merge request to improve this section ;)
+Using Docker
+-------------------
 
+Dockerfiles and Docker images are provided. 
+
+1. Compile puzzles by running `docker run --rm -v /path/to/puzzle/files:/puzzles:ro -v /path/to/compiled/puzzle/output:/output dirtbags/moth-compile /output /puzzle/<name of category 1> /puzzle/<name of category 2> . . . /puzzle/<name of category N>`. Compiled puzzle zip files are deposited in `/path/to/compiled/puzzle/output`
+
+2. If you want to create pre-specified team hashes, create the file `/path/to/moth/state/assigned.txt` and populate it with valid team hashes, one per line. Otherwise, Moth will auto-generate 100 team hashes
+
+3. Start the Moth server by running `docker run --rm -v /path/to/compiled/puzzle/output/:/moth/puzzles:ro -v /path/to/moth/state/:/moth/state/ -p <listen_port>:80 dirtbags/moth`
+
+4. Use a web browser to visit `http://my_server`
 
 How to install it
 --------------------
