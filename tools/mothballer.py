@@ -61,7 +61,7 @@ def generate_html(ziphandle, puzzle, puzzledir, category, points, authors, files
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
         <title>{category} {points}</title>
-        <link rel="stylesheet" href="../../style.css">
+        <link rel="stylesheet" href="../../css/style.css">
         {scripts}
     </head>
     <body>

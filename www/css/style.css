@@ -6,17 +6,16 @@ Light brown: #432115
 Tan: #e1caa5
 */
 
-@import "fonts/maven_pro.css";
+@import "../fonts/maven_pro.css";
 
 html {
-  background: #35170c url(images/background.png) no-repeat center center fixed; 
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-/*	min-height: 100%;*/
-	font-family: "Maven Pro", Ubuntu, sans-serif;
-	overflow-y: auto;
+    background: #35170c url(../images/background.png) no-repeat center center fixed; 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    font-family: "Maven Pro", Ubuntu, sans-serif;
+    overflow-y: auto;
 }
 
 h1, h2, h3 {
@@ -258,4 +257,37 @@ nav li + li:before {
 	float: right;
 	font-size: small;
 	text-align: center;
+}
+
+#puzzles {
+   width: 24%;
+   height: 20%;
+}
+
+.category h2 {
+    margin: 0;
+    font-size: 100%;
+}
+
+.category ul {
+    margin: 0;
+    padding-left: 1em;
+    font-size: 90%;
+}
+
+.category li {
+    display: inline;
+}
+
+.category li + li:before {
+    content: " ";
+}
+
+.category a:link, .link {
+    color: #13a5de;
+    cursor: pointer;
+}
+
+.category a:visited {
+    color: #999999;
 }
