@@ -1,0 +1,85 @@
+html {
+    color: #ccb;
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    height: 100%
+}
+
+pre, tt {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.terminal {
+    background: rgba(80, 70, 60, 0.96);
+    display: inline-block;
+    margin: 1%;
+    border: solid black 0.2em;
+    border-radius: 1em 1em 0.5em 1em;
+    overflow: auto;
+}
+
+.terminal p {
+    padding: 0.25em 0.5em;
+}
+
+#overview, #messages {
+    width: 47%;
+    height: 20%;
+}
+
+#puzzles {
+    width: 24%;
+    height: 70%;
+}
+
+#main {
+    width: 70%;
+    height: 70%;
+}
+
+.download {
+  background: #080;
+  color: white;
+  display: inline-block;
+}
+.download:link {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+h1 {
+    text-align: center;
+    font-size: 120%;
+}
+
+a:link, .link {
+    color: #13a5de;
+    cursor: pointer;
+}
+
+a:visited {
+    color: #999999;
+}
+
+@media (max-width: 52em) {
+    #overview, #messages, #puzzles, #main {
+	width: 96%;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 0.7em;
+}
+ 
+::-webkit-scrollbar-track {
+    /* -webkit-box-shadow: inset 0 0 0.5em rgba(200, 200, 200, 0.3); */
+    background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 1em;
+}

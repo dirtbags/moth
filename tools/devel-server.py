@@ -45,7 +45,7 @@ class Page:
         ret.write("<html>\n")
         ret.write("  <head>\n")
         ret.write("    <title>{}</title>\n".format(self.title))
-        ret.write("    <link rel=\"stylesheet\" href=\"{}/files/www/res/style.css\">\n".format(self.base))
+        ret.write("    <link rel=\"stylesheet\" href=\"{}/files/www/css/style.css\">\n".format(self.base))
         for s in self.scripts:
             ret.write("    {}\n".format(s))
         ret.write("  </head>\n")
