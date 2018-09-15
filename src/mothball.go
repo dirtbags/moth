@@ -1,9 +1,10 @@
-package mothball
+package main
 
 import (
 	"archive/zip"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"time"
 )
@@ -14,7 +15,7 @@ type Mothball struct {
 	mtime time.Time
 }
 
-func Open(filename string) (*Mothball, error) {
+func OpenMothball(filename string) (*Mothball, error) {
 	var m Mothball
 	
 	m.filename = filename
@@ -38,7 +39,7 @@ func (m *Mothball) Refresh() (error) {
 	}
 	mtime := info.ModTime()
 	
-	if mtime == m.mtime {
+	if ! mtime.After(m.mtime) {
 		return nil
 	}
 	
@@ -64,4 +65,15 @@ func (m *Mothball) Open(filename string) (io.ReadCloser, error) {
 		}
 	}
 	return nil, fmt.Errorf("File not found: %s in %s", filename, m.filename)
+}
+
+func (m *Mothball) ReadFile(filename string) ([]byte, error) {
+	f, err := m.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	
+	bytes, err := ioutil.ReadAll(f)
+	return bytes, err
 }

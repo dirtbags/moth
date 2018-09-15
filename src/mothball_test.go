@@ -1,4 +1,4 @@
-package mothball
+package main
 
 import (
 	"archive/zip"
@@ -35,7 +35,7 @@ func TestMothball(t *testing.T) {
 	tf.Close()
 	
 	// Now read it in
-	mb, err := Open(tf.Name())
+	mb, err := OpenMothball(tf.Name())
 	if err != nil {
 		t.Error(err)
 		return
