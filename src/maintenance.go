@@ -1,22 +1,25 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"io/ioutil"
-	"time"
+	"log"
 	"os"
 	"strings"
-	"fmt"
+	"time"
 )
 
 // maintenance runs
 func (ctx *Instance) Tidy() {
+	// Do they want to reset everything?
+	ctx.MaybeInitialize()
+
 	// Skip if we've been disabled
 	if _, err := os.Stat(ctx.StatePath("disabled")); err == nil {
 		log.Print("disabled file found, suspending maintenance")
 		return
 	}
-	
+
 	// Skip if we've expired
 	untilspec, err := ioutil.ReadFile(ctx.StatePath("until"))
 	if err == nil {
@@ -30,7 +33,7 @@ func (ctx *Instance) Tidy() {
 			}
 		}
 	}
-	
+
 	// Any new categories?
 	files, err := ioutil.ReadDir(ctx.MothballPath())
 	if err != nil {
@@ -39,24 +42,25 @@ func (ctx *Instance) Tidy() {
 	for _, f := range files {
 		filename := f.Name()
 		filepath := ctx.MothballPath(filename)
-		if ! strings.HasSuffix(filename, ".mb") {
+		if !strings.HasSuffix(filename, ".mb") {
 			continue
 		}
 		categoryName := strings.TrimSuffix(filename, ".mb")
-		
+
 		if _, ok := ctx.Categories[categoryName]; !ok {
 			mb, err := OpenMothball(filepath)
 			if err != nil {
 				log.Printf("Error opening %s: %s", filepath, err)
 				continue
 			}
+			log.Printf("New category: %s", filename)
 			ctx.Categories[categoryName] = mb
 		}
 	}
 
 	// Any old categories?
 	log.Print("XXX: Check for and reap old categories")
-	
+
 	ctx.CollectPoints()
 }
 
@@ -69,7 +73,7 @@ func (ctx *Instance) CollectPoints() {
 		return
 	}
 	defer logf.Close()
-	
+
 	files, err := ioutil.ReadDir(ctx.StatePath("points.new"))
 	if err != nil {
 		log.Printf("Error reading packages: %s", err)
@@ -95,11 +99,9 @@ func (ctx *Instance) CollectPoints() {
 	}
 }
 
-
-
 // maintenance is the goroutine that runs a periodic maintenance task
 func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
-	for ;; time.Sleep(maintenanceInterval) {
+	for ; ; time.Sleep(maintenanceInterval) {
 		ctx.Tidy()
 	}
 }
