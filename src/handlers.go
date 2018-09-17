@@ -7,18 +7,18 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
-func respond(w http.ResponseWriter, req *http.Request, status Status, short string, description string) {
+func respond(w http.ResponseWriter, req *http.Request, status Status, short string, format string, a ...interface{}) {
+	long := fmt.Sprintf(format, a...)
 	// This is a kludge. Do proper parsing when this causes problems.
 	accept := req.Header.Get("Accept")
 	if strings.Contains(accept, "application/json") {
-		ShowJSend(w, status, short, description)
+		ShowJSend(w, status, short, long)
 	} else {
-		ShowHtml(w, status, short, description)
+		ShowHtml(w, status, short, long)
 	}
 }
 
@@ -71,40 +71,50 @@ func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
-	teamid := req.FormValue("t")
-	token := req.FormValue("k")
+	teamid := req.FormValue("id")
+	token := req.FormValue("token")
 
-	// Check answer
-	if !anchoredSearchFile(ctx.StatePath("tokens.txt"), token, 0) {
+	var category string
+	var points int
+	var fluff string
+
+	stoken := strings.Replace(token, ":", " ", 2)
+	n, err := fmt.Sscanf(stoken, "%s %d %s", &category, &points, &fluff)
+	if err != nil || n != 3 {
 		respond(
 			w, req, Fail,
-			"Unrecognized token",
-			"I don't recognize that token. Did you type in the whole thing?",
+			"Malformed token",
+			"That doesn't look like a token: %v.", err,
 		)
 		return
 	}
 
-	parts := strings.Split(token, ":")
-	category := ""
-	pointstr := ""
-	if len(parts) >= 2 {
-		category = parts[0]
-		pointstr = parts[1]
-	}
-	points, err := strconv.Atoi(pointstr)
-	if err != nil {
-		points = 0
-	}
-	// Defang category name; prevent directory traversal
-	if matched, _ := regexp.MatchString("^[A-Za-z0-9_-]", category); matched {
-		category = ""
+	if (category == "") || (points <= 0) {
+		respond(
+			w, req, Fail,
+			"Weird token",
+			"That token doesn't make any sense.",
+		)
+		return
 	}
 
-	if (category == "") || (points == 0) {
+	f, err := ctx.OpenCategoryFile(category, "tokens.txt")
+	if err != nil {
+		respond(
+			w, req, Fail,
+			"Cannot list valid tokens",
+			err.Error(),
+		)
+		return
+	}
+	defer f.Close()
+
+	// Make sure the token is in the list
+	if !anchoredSearch(f, token, 0) {
 		respond(
 			w, req, Fail,
 			"Unrecognized token",
-			"Something doesn't look right about that token",
+			"I don't recognize that token. Did you type in the whole thing?",
 		)
 		return
 	}
@@ -120,38 +130,32 @@ func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
 	respond(
 		w, req, Success,
 		"Points awarded",
-		fmt.Sprintf("%d points for %s!", points, teamid),
+		"%d points for %s!", points, teamid,
 	)
 }
 
 func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
-	teamid := req.FormValue("t")
-	category := req.FormValue("c")
-	pointstr := req.FormValue("p")
-	answer := req.FormValue("a")
+	teamid := req.FormValue("id")
+	category := req.FormValue("cat")
+	pointstr := req.FormValue("points")
+	answer := req.FormValue("answer")
 
 	points, err := strconv.Atoi(pointstr)
 	if err != nil {
-		points = 0
-	}
-
-	catmb, ok := ctx.Categories[category]
-	if !ok {
 		respond(
 			w, req, Fail,
-			"Category does not exist",
-			"The requested category does not exist. Sorry!",
+			"Cannot parse point value",
+			"This doesn't look like an integer: %s", pointstr,
 		)
 		return
 	}
 
-	// Get the answers
-	haystack, err := catmb.Open("answers.txt")
+	haystack, err := ctx.OpenCategoryFile(category, "answers.txt")
 	if err != nil {
 		respond(
-			w, req, Error,
-			"Answers do not exist",
-			"Please tell the contest people that the mothball for this category has no answers.txt in it!",
+			w, req, Fail,
+			"Cannot list answers",
+			"Unable to read the list of answers for this category.",
 		)
 		return
 	}
@@ -163,7 +167,7 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		respond(
 			w, req, Fail,
 			"Wrong answer",
-			err.Error(),
+			"That is not the correct answer for %s %d.", category, points,
 		)
 		return
 	}
@@ -204,16 +208,18 @@ func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 		scanner := bufio.NewScanner(mf)
 		for scanner.Scan() {
 			line := scanner.Text()
-			parts := strings.Split(line, " ")
-			if len(parts) != 2 {
-				continue
-			}
-			pointval, err := strconv.Atoi(parts[0])
+
+			var pointval int
+			var dir string
+
+			n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
 			if err != nil {
-				log.Print(err)
+				log.Printf("Parsing map for %s: %v", catName, err)
+				continue
+			} else if n != 2 {
+				log.Printf("Parsing map for %s: short read", catName)
 				continue
 			}
-			dir := parts[1]
 
 			pm = append(pm, PuzzleMap{pointval, dir})
 			log.Print(pm)
