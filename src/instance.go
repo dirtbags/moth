@@ -1,28 +1,31 @@
 package main
 
 import (
-	"os"
-	"log"
 	"bufio"
 	"fmt"
-	"time"
 	"io/ioutil"
+	"log"
+	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 type Instance struct {
-	Base string
-	MothballDir string
-	StateDir string
-	Categories map[string]*Mothball
+	Base         string
+	MothballDir  string
+	StateDir     string
+	ResourcesDir string
+	Categories   map[string]*Mothball
 }
 
-func NewInstance(base, mothballDir, stateDir string) (*Instance, error) {
+func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
 	ctx := &Instance{
-		Base: strings.TrimRight(base, "/"),
-		MothballDir: mothballDir,
-		StateDir: stateDir,
+		Base:         strings.TrimRight(base, "/"),
+		MothballDir:  mothballDir,
+		StateDir:     stateDir,
+		ResourcesDir: resourcesDir,
+		Categories:   map[string]*Mothball{},
 	}
 
 	// Roll over and die if directories aren't even set up
@@ -33,28 +36,46 @@ func NewInstance(base, mothballDir, stateDir string) (*Instance, error) {
 		return nil, err
 	}
 
-	ctx.Initialize()
-	
+	ctx.MaybeInitialize()
+
 	return ctx, nil
 }
 
-func (ctx *Instance) Initialize () {
-	// Make sure points directories exist
+func (ctx *Instance) MaybeInitialize() {
+	// Only do this if it hasn't already been done
+	if _, err := os.Stat(ctx.StatePath("initialized")); err == nil {
+		return
+	}
+	log.Print("initialized file missing, re-initializing")
+
+	// Remove any extant control and state files
+	os.Remove(ctx.StatePath("until"))
+	os.Remove(ctx.StatePath("disabled"))
+	os.Remove(ctx.StatePath("points.log"))
+	os.RemoveAll(ctx.StatePath("points.tmp"))
+	os.RemoveAll(ctx.StatePath("points.new"))
+	os.RemoveAll(ctx.StatePath("teams"))
+
+	// Make sure various subdirectories exist
 	os.Mkdir(ctx.StatePath("points.tmp"), 0755)
 	os.Mkdir(ctx.StatePath("points.new"), 0755)
+	os.Mkdir(ctx.StatePath("teams"), 0755)
 
 	// Preseed available team ids if file doesn't exist
-	if f, err := os.OpenFile(ctx.StatePath("teamids.txt"), os.O_WRONLY | os.O_CREATE | os.O_EXCL, 0644); err == nil {
+	if f, err := os.OpenFile(ctx.StatePath("teamids.txt"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		defer f.Close()
 		for i := 0; i <= 9999; i += 1 {
 			fmt.Fprintf(f, "%04d\n", i)
 		}
 	}
-	
-	if f, err := os.OpenFile(ctx.StatePath("initialized"), os.O_WRONLY | os.O_CREATE | os.O_EXCL, 0644); err == nil {
-		defer f.Close()
-		fmt.Println("Remove this file to reinitialize the contest")
+
+	// Create initialized file that signals whether we're set up
+	f, err := os.OpenFile(ctx.StatePath("initialized"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		log.Print(err)
 	}
+	defer f.Close()
+	fmt.Fprintln(f, "Remove this file to reinitialize the contest")
 }
 
 func (ctx Instance) MothballPath(parts ...string) string {
@@ -67,7 +88,6 @@ func (ctx *Instance) StatePath(parts ...string) string {
 	return path.Join(ctx.StateDir, tail)
 }
 
-
 func (ctx *Instance) PointsLog() []Award {
 	var ret []Award
 
@@ -78,7 +98,7 @@ func (ctx *Instance) PointsLog() []Award {
 		return ret
 	}
 	defer f.Close()
-	
+
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -89,7 +109,7 @@ func (ctx *Instance) PointsLog() []Award {
 		}
 		ret = append(ret, *cur)
 	}
-	
+
 	return ret
 }
 
@@ -98,17 +118,17 @@ func (ctx *Instance) AwardPoints(teamid string, category string, points int) err
 	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
 	tmpfn := ctx.StatePath("points.tmp", fn)
 	newfn := ctx.StatePath("points.new", fn)
-	
+
 	contents := fmt.Sprintf("%d %s %s %d\n", time.Now().Unix(), teamid, category, points)
-	
+
 	if err := ioutil.WriteFile(tmpfn, []byte(contents), 0644); err != nil {
 		return err
 	}
-	
+
 	if err := os.Rename(tmpfn, newfn); err != nil {
 		return err
 	}
-	
+
 	log.Printf("Award %s %s %d", teamid, category, points)
 	return nil
 }

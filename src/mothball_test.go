@@ -16,7 +16,7 @@ func TestMothball(t *testing.T) {
 		return
 	}
 	defer os.Remove(tf.Name())
-	
+
 	w := zip.NewWriter(tf)
 	f, err := w.Create("moo.txt")
 	if err != nil {
@@ -33,7 +33,7 @@ func TestMothball(t *testing.T) {
 	}
 	w.Close()
 	tf.Close()
-	
+
 	// Now read it in
 	mb, err := OpenMothball(tf.Name())
 	if err != nil {
@@ -46,7 +46,7 @@ func TestMothball(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	
+
 	line := make([]byte, 200)
 	n, err := cow.Read(line)
 	if (err != nil) && (err != io.EOF) {
@@ -59,5 +59,5 @@ func TestMothball(t *testing.T) {
 		t.Error("Contents didn't match")
 		return
 	}
-	
+
 }

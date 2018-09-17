@@ -20,11 +20,11 @@ func TestAward(t *testing.T) {
 	if a.Points != 1 {
 		t.Error("Points parsed wrong")
 	}
-	
+
 	if a.String() != entry {
 		t.Error("String conversion wonky")
 	}
-	
+
 	if _, err := ParseAward("bad bad bad 1"); err == nil {
 		t.Error("Not throwing error on bad timestamp")
 	}

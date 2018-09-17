@@ -8,7 +8,9 @@ which in the past has been called
 "HACK",
 "Queen Of The Hill",
 "Cyber Spark",
-and "Cyber Fire".
+"Cyber Fire",
+"Cyber Fire Puzzles",
+and "Cyber Fire Foundry".
 
 Information about these events is at
 http://dirtbags.net/contest/
@@ -48,75 +50,110 @@ More on how the devel sever works in
 Running A Production Server
 ====================
 
-XXX: Update this
+Run `dirtbags/moth` (Docker) or `mothd` (native).
 
-How to install it
---------------------
+`mothd` assumes you're running a contest out of `/moth`.
+For Docker, you'll need to bind-mount your actual directories
+(`state`, `mothballs`, and optionally `resources`) into
+`/moth/`.
 
-It's made to be virtualized,
-so you can run multiple contests at once if you want.
-If you were to want to run it out of `/srv/moth`,
-do the following:
-
-    $ mothinst=/srv/moth/mycontest
-	$ mkdir -p $mothinst
-	$ install.sh $mothinst
-	
-    Yay, you've got it installed.
-
-How to run a contest
-------------------------
-
-`mothd` runs through every contest on your server every few seconds,
-and does housekeeping tasks that make the contest "run".
-If you stop `mothd`, people can still play the contest,
-but their points won't show up on the scoreboard.
-
-A handy side-effect here is that if you need to meddle with the points log,
-you can just kill `mothd`,
-do you work,
-then bring `mothd` back up.
-
-    $ cp src/mothd /srv/moth
-    $ /srv/moth/mothd
-
-You're also going to need a web server if you want people to be able to play.
+You can override any path with an option,
+run `mothd -help` for usage.
 
 
-How to run a web server
------------------------------
-
-Your web server needs to serve up files for you contest out of
-`$mothinst/www`.
-
-If you don't want to fuss around with setting up a full-featured web server,
-you can use `tcpserver` and `eris`,
-which is what we use to run our contests.
-
-`tcpserver` is part of the `uscpi-tcp` package in Ubuntu.
-You can also use busybox's `tcpsvd` (my preference, but a PITA on Ubuntu).
-
-`eris` can be obtained at https://woozle.org/neale/g.cgi/net/eris/about/
-
-    $ mothinst=/srv/moth/mycontest
-    $ $mothinst/bin/httpd
+State Directory
+===============
 
 
-Installing Puzzle Categories
-------------------------------------
+Pausing scoring
+-------------------
 
-Puzzle categories are distributed in a different way than the server.
-After setting up (see above), just run
+Create the file `state/disabled`
+to pause scoring,
+and remove it to resume.
+You can use the Unix `touch` command to create the file:
 
-	$ /srv/koth/mycontest/bin/install-category /path/to/my/category
-	
+    touch state/disabled
 
-Permissions
-----------------
+When scoring is paused,
+participants can still submit answers,
+and the system will tell them whether the answer is correct.
+As soon as you unpause,
+all correctly-submitted answers will be scored.
 
-It's up to you not to be a bonehead about permissions.
 
-Install sets it so the web user on your system can write to the files it needs to,
-but if you're using Apache,
-it plays games with user IDs when running CGI.
-You're going to have to figure out how to configure your preferred web server.
+Resetting an instance
+-------------------
+
+Remove the file `state/initialized`,
+and the server will zap everything.
+
+
+Setting up custom team IDs
+-------------------
+
+The file `state/teamids.txt` has all the team IDs,
+one per line.
+This defaults to all 4-digit natural numbers.
+You can edit it to be whatever strings you like.
+
+We sometimes to set `teamids.txt` to a bunch of random 8-digit hex values:
+
+    for i in $(seq 50); do od -x /dev/urandom | awk '{print $2 $3; exit;}'; done
+
+Remember that team IDs are essentially passwords.
+
+
+Mothball Directory
+==================
+
+Installing puzzle categories
+-------------------
+
+The development server will provide you with a `.mb` (mothball) file,
+when you click the `[mb]` link next to a category.
+
+Just drop that file into the `mothballs` directory,
+and the server will pick it up.
+
+If you remove a mothball,
+the category will vanish,
+but points scored in that category won't!
+
+
+
+Resources Directory
+===================
+
+
+Making it look better
+-------------------
+
+`mothd` provides some built-in HTML for rendering a complete contest,
+but it's rather bland.
+You can override everything by dropping a new file into the `resources` directory:
+
+* `basic.css` is used by the default HTML to pretty things up
+* `index.html` is the landing page, which asks to register a team
+* `puzzle.html` and `puzzle.js` render a puzzle from JSON
+* `puzzle-list.html` and `puzzle-list.js` render the list of active puzzles from JSON
+* `scoreboard.html` and `scoreboard.js` render the current scoreboard from JSON
+* Any other file in the `resources` directory will be served up, too.
+
+If you don't want to read through the source code, I don't blame you.
+Run a `mothd` server and pull the various static resources into your `resources` directory,
+and then you can start hacking away at them.
+
+
+Changing scoring
+--------------
+
+Believe it or not,
+scoring is determined client-side in the scoreboard,
+from the points log.
+You can hack in whatever algorithm you like.
+
+If you do hack in a new algorithm,
+please be a dear and email it to us.
+We'd love to see it!
+

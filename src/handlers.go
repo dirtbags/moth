@@ -1,65 +1,61 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
-	"strings"
 	"strconv"
-	"io"
-	"log"
-	"bufio"
+	"strings"
 )
 
-// anchoredSearch looks for needle in r,
-// skipping the first skip space-delimited words
-func anchoredSearch(r io.Reader, needle string, skip int) bool {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, " ", skip+1)
-		if (len(parts) > skip) && (parts[skip] == needle) {
-			return true
-		}
+func respond(w http.ResponseWriter, req *http.Request, status Status, short string, description string) {
+	// This is a kludge. Do proper parsing when this causes problems.
+	accept := req.Header.Get("Accept")
+	if strings.Contains(accept, "application/json") {
+		ShowJSend(w, status, short, description)
+	} else {
+		ShowHtml(w, status, short, description)
 	}
-
-	return false
 }
-
-func anchoredSearchFile(filename string, needle string, skip int) bool {
-	r, err := os.Open(filename)
-	if err != nil {
-		return false
-	}
-	defer r.Close()
-	
-	return anchoredSearch(r, needle, skip)
-}
-
 
 func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
-	teamname := req.FormValue("n")
-	teamid := req.FormValue("h")
-	
-	if matched, _ := regexp.MatchString("[^0-9a-z]", teamid); matched {
-		teamid = ""
+	teamname := req.FormValue("name")
+	teamid := req.FormValue("id")
+
+	// Keep foolish operators from shooting themselves in the foot
+	// You would have to add a pathname to your list of Team IDs to open this vulnerability,
+	// but I have learned not to overestimate people.
+	if strings.Contains(teamid, "../") {
+		teamid = "rodney"
 	}
-	
+
 	if (teamid == "") || (teamname == "") {
-		showPage(w, "Invalid Entry", "Oops! Are you sure you got that right?")
+		respond(
+			w, req, Fail,
+			"Invalid Entry",
+			"Either `id` or `name` was missing from this request.",
+		)
 		return
 	}
-	
-	if ! anchoredSearchFile(ctx.StatePath("teamids.txt"), teamid, 0) {
-		showPage(w, "Invalid Team ID", "I don't have a record of that team ID. Maybe you used capital letters accidentally?")
+
+	if !anchoredSearchFile(ctx.StatePath("teamids.txt"), teamid, 0) {
+		respond(
+			w, req, Fail,
+			"Invalid Team ID",
+			"I don't have a record of that team ID. Maybe you used capital letters accidentally?",
+		)
 		return
 	}
-	
-	f, err := os.OpenFile(ctx.StatePath(teamid), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+
+	f, err := os.OpenFile(ctx.StatePath("teams", teamid), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
-		showPage(
-			w,
+		log.Print(err)
+		respond(
+			w, req, Fail,
 			"Registration failed",
 			"Unable to register. Perhaps a teammate has already registered?",
 		)
@@ -67,7 +63,11 @@ func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer f.Close()
 	fmt.Fprintln(f, teamname)
-	showPage(w, "Success", "Okay, your team has been named and you may begin using your team ID!")
+	respond(
+		w, req, Success,
+		"Team registered",
+		"Okay, your team has been named and you may begin using your team ID!",
+	)
 }
 
 func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
@@ -75,8 +75,12 @@ func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
 	token := req.FormValue("k")
 
 	// Check answer
-	if ! anchoredSearchFile(ctx.StatePath("tokens.txt"), token, 0) {
-		showPage(w, "Unrecognized token", "I don't recognize that token. Did you type in the whole thing?")
+	if !anchoredSearchFile(ctx.StatePath("tokens.txt"), token, 0) {
+		respond(
+			w, req, Fail,
+			"Unrecognized token",
+			"I don't recognize that token. Did you type in the whole thing?",
+		)
 		return
 	}
 
@@ -95,17 +99,29 @@ func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
 	if matched, _ := regexp.MatchString("^[A-Za-z0-9_-]", category); matched {
 		category = ""
 	}
-	
+
 	if (category == "") || (points == 0) {
-		showPage(w, "Unrecognized token", "Something doesn't look right about that token")
+		respond(
+			w, req, Fail,
+			"Unrecognized token",
+			"Something doesn't look right about that token",
+		)
 		return
 	}
-	
+
 	if err := ctx.AwardPoints(teamid, category, points); err != nil {
-		showPage(w, "Error awarding points", err.Error())
+		respond(
+			w, req, Fail,
+			"Error awarding points",
+			err.Error(),
+		)
 		return
 	}
-	showPage(w, "Points awarded", fmt.Sprintf("%d points for %s!", points, teamid))
+	respond(
+		w, req, Success,
+		"Points awarded",
+		fmt.Sprintf("%d points for %s!", points, teamid),
+	)
 }
 
 func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
@@ -118,83 +134,121 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		points = 0
 	}
-	
+
 	catmb, ok := ctx.Categories[category]
-	if ! ok {
-		showPage(w, "Category does not exist", "The specified category does not exist. Sorry!")
+	if !ok {
+		respond(
+			w, req, Fail,
+			"Category does not exist",
+			"The requested category does not exist. Sorry!",
+		)
 		return
 	}
 
 	// Get the answers
 	haystack, err := catmb.Open("answers.txt")
 	if err != nil {
-		showPage(w, "Answers do not exist",
-			"Please tell the contest people that the mothball for this category has no answers.txt in it!")
+		respond(
+			w, req, Error,
+			"Answers do not exist",
+			"Please tell the contest people that the mothball for this category has no answers.txt in it!",
+		)
 		return
 	}
 	defer haystack.Close()
-	
+
 	// Look for the answer
 	needle := fmt.Sprintf("%d %s", points, answer)
-	if ! anchoredSearch(haystack, needle, 0) {
-		showPage(w, "Wrong answer", err.Error())
+	if !anchoredSearch(haystack, needle, 0) {
+		respond(
+			w, req, Fail,
+			"Wrong answer",
+			err.Error(),
+		)
 		return
 	}
 
 	if err := ctx.AwardPoints(teamid, category, points); err != nil {
-		showPage(w, "Error awarding points", err.Error())
-		return
-	}
-	showPage(w, "Points awarded", fmt.Sprintf("%d points for %s!", points, teamid))
-}
-
-func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
-	puzzles := map[string][]interface{}{}
-	// 	v := map[string][]interface{}{"Moo": {1, "0177f85ae895a33e2e7c5030c3dc484e8173e55c"}}
-  // j, _ := json.Marshal(v)
-	
-	for _, category := range ctx.Categories {
-		log.Print(puzzles, category)
-	}
-}
-
-func (ctx Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
-	
-}
-
-// staticHandler serves up static files.
-func (ctx Instance) rootHandler(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path == "/" {
-		showPage(
-			w,
-			"Welcome",
-			`
-			  <h2>Register your team</h2>
-			  
-			  <form action="register" action="post">
-			    Team ID: <input name="h"> <br>
-			    Team name: <input name="n">
-			    <input type="submit" value="Register">
-			  </form>
-			  
-			  <div>
-			    If someone on your team has already registered,
-			    proceed to the
-			    <a href="puzzles">puzzles overview</a>.
-			  </div>
-			`,
+		respond(
+			w, req, Error,
+			"Error awarding points",
+			err.Error(),
 		)
 		return
 	}
-	
-	http.NotFound(w, req)
+	respond(
+		w, req, Success,
+		"Points awarded",
+		fmt.Sprintf("%d points for %s!", points, teamid),
+	)
+}
+
+type PuzzleMap struct {
+	Points int    `json:"points"`
+	Path   string `json:"path"`
+}
+
+func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	res := map[string][]PuzzleMap{}
+	for catName, mb := range ctx.Categories {
+		mf, err := mb.Open("map.txt")
+		if err != nil {
+			log.Print(err)
+		}
+		defer mf.Close()
+
+		pm := make([]PuzzleMap, 0, 30)
+		scanner := bufio.NewScanner(mf)
+		for scanner.Scan() {
+			line := scanner.Text()
+			parts := strings.Split(line, " ")
+			if len(parts) != 2 {
+				continue
+			}
+			pointval, err := strconv.Atoi(parts[0])
+			if err != nil {
+				log.Print(err)
+				continue
+			}
+			dir := parts[1]
+
+			pm = append(pm, PuzzleMap{pointval, dir})
+			log.Print(pm)
+		}
+
+		res[catName] = pm
+		log.Print(res)
+	}
+	jres, _ := json.Marshal(res)
+	w.Write(jres)
+}
+
+func (ctx Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
+	log := ctx.PointsLog()
+	jlog, err := json.Marshal(log)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	w.Write(jlog)
+}
+
+func (ctx Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
+	ServeStatic(w, req, ctx.ResourcesDir)
 }
 
 func (ctx Instance) BindHandlers(mux *http.ServeMux) {
-	mux.HandleFunc(ctx.Base + "/", ctx.rootHandler)
-	mux.HandleFunc(ctx.Base + "/register", ctx.registerHandler)
-	mux.HandleFunc(ctx.Base + "/token", ctx.tokenHandler)
-	mux.HandleFunc(ctx.Base + "/answer", ctx.answerHandler)
-	mux.HandleFunc(ctx.Base + "/puzzles.json", ctx.puzzlesHandler)
-	mux.HandleFunc(ctx.Base + "/points.json", ctx.pointsHandler)
+	mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
+	mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
+	mux.HandleFunc(ctx.Base+"/token", ctx.tokenHandler)
+	mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
+	mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
+	mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
 }
