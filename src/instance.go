@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -131,4 +132,15 @@ func (ctx *Instance) AwardPoints(teamid string, category string, points int) err
 
 	log.Printf("Award %s %s %d", teamid, category, points)
 	return nil
+}
+
+func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.ReadCloser, error) {
+	mb, ok := ctx.Categories[category]
+	if !ok {
+		return nil, fmt.Errorf("No such category: %s", category)
+	}
+
+	filename := path.Join(parts...)
+	f, err := mb.Open(filename)
+	return f, err
 }

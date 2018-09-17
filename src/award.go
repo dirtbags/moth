@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -46,25 +45,16 @@ func ParseAward(s string) (*Award, error) {
 
 	s = strings.Trim(s, " \t\n")
 
-	parts := strings.SplitN(s, " ", 5)
-	if len(parts) < 4 {
-		return nil, fmt.Errorf("Malformed award string")
+	var whenEpoch int64
+
+	n, err := fmt.Sscanf(s, "%d %s %s %d", &whenEpoch, &ret.TeamId, &ret.Category, &ret.Points)
+	if err != nil {
+		return nil, err
+	} else if n != 4 {
+		return nil, fmt.Errorf("Malformed award string: only parsed %d fields", n)
 	}
 
-	whenEpoch, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("Malformed timestamp: %s", parts[0])
-	}
 	ret.When = time.Unix(whenEpoch, 0)
-
-	ret.TeamId = parts[1]
-	ret.Category = parts[2]
-
-	points, err := strconv.Atoi(parts[3])
-	if err != nil {
-		return nil, fmt.Errorf("Malformed Points: %s: %v", parts[3], err)
-	}
-	ret.Points = points
 
 	return &ret, nil
 }
