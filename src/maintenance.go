@@ -90,7 +90,7 @@ func (ctx *Instance) CollectPoints() {
 			log.Printf("Can't parse award file %s: %s", filename, err)
 			continue
 		}
-	
+
 		duplicate := false
 		for _, e := range ctx.PointsLog() {
 			if award.Same(e) {
@@ -98,7 +98,7 @@ func (ctx *Instance) CollectPoints() {
 				break
 			}
 		}
-		
+
 		if duplicate {
 			log.Printf("Skipping duplicate points: %s", award.String())
 		} else {

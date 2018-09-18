@@ -23,30 +23,16 @@ func respond(w http.ResponseWriter, req *http.Request, status Status, short stri
 	}
 }
 
-// anchoredSearch looks for needle in r,
-// skipping the first skip space-delimited words
-func anchoredSearch(r io.Reader, needle string, skip int) bool {
+// hasLine returns true if line appears in r.
+// The entire line must match.
+func hasLine(r io.Reader, line string) bool {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, " ", skip+1)
-		if (len(parts) > skip) && (parts[skip] == needle) {
+		if scanner.Text() == line {
 			return true
 		}
 	}
-
 	return false
-}
-
-// anchoredSearchFile performs an anchoredSearch on a given filename
-func anchoredSearchFile(filename string, needle string, skip int) bool {
-	r, err := os.Open(filename)
-	if err != nil {
-		return false
-	}
-	defer r.Close()
-
-	return anchoredSearch(r, needle, skip)
 }
 
 func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
@@ -69,7 +55,17 @@ func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !anchoredSearchFile(ctx.StatePath("teamids.txt"), teamid, 0) {
+	teamids, err := os.Open(ctx.StatePath("teamids.txt"))
+	if err != nil {
+		respond(
+			w, req, Fail,
+			"Cannot read valid team IDs",
+			"An error was encountered trying to read valid teams IDs: %v", err,
+		)
+		return
+	}
+	defer teamids.Close()
+	if !hasLine(teamids, teamid) {
 		respond(
 			w, req, Fail,
 			"Invalid Team ID",
@@ -137,7 +133,7 @@ func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
 	defer f.Close()
 
 	// Make sure the token is in the list
-	if !anchoredSearch(f, token, 0) {
+	if !hasLine(f, token) {
 		respond(
 			w, req, Fail,
 			"Unrecognized token",
@@ -190,7 +186,7 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Look for the answer
 	needle := fmt.Sprintf("%d %s", points, answer)
-	if !anchoredSearch(haystack, needle, 0) {
+	if !hasLine(haystack, needle) {
 		respond(
 			w, req, Fail,
 			"Wrong answer",
@@ -215,23 +211,46 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 type PuzzleMap struct {
-	Points int    `json:"points"`
-	Path   string `json:"path"`
+	Points int
+	Path   string
+}
+
+func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
+	if pm == nil {
+		return []byte("null"), nil
+	}
+
+	jPath, err := json.Marshal(pm.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := fmt.Sprintf("[%d,%s]", pm.Points, string(jPath))
+	return []byte(ret), nil
 }
 
 func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
+	maxByCategory := map[string]int{}
+	for _, a := range ctx.PointsLog() {
+		if a.Points > maxByCategory[a.Category] {
+			maxByCategory[a.Category] = a.Points
+		}
+	}
+
 	res := map[string][]PuzzleMap{}
 	for catName, mb := range ctx.Categories {
 		mf, err := mb.Open("map.txt")
 		if err != nil {
 			log.Print(err)
+			continue
 		}
 		defer mf.Close()
 
 		pm := make([]PuzzleMap, 0, 30)
+		completed := true
 		scanner := bufio.NewScanner(mf)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -249,11 +268,17 @@ func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 			}
 
 			pm = append(pm, PuzzleMap{pointval, dir})
-			log.Print(pm)
+
+			if pointval > maxByCategory[catName] {
+				completed = false
+				break
+			}
+		}
+		if completed {
+			pm = append(pm, PuzzleMap{0, ""})
 		}
 
 		res[catName] = pm
-		log.Print(res)
 	}
 	jres, _ := json.Marshal(res)
 	w.Write(jres)

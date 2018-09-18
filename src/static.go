@@ -120,6 +120,13 @@ input {
 li {
 	margin: 0.5em 0em;
 }
+nav {
+  border: solid black 2px;
+}
+nav li {
+	display: inline;
+	margin: 2em;
+}
 		`,
 	)
 }
@@ -158,8 +165,68 @@ func staticScoreboard(w http.ResponseWriter) {
 func staticPuzzles(w http.ResponseWriter) {
 	ShowHtml(
 		w, Success,
-		"Puzzles",
-		"XXX: This would be the puzzles overview",
+		"Open Puzzles",
+		`
+<div id="puzzles"></div>
+<script>
+
+function render(obj) {
+	let element = document.getElementById("puzzles");
+  let cats = [];
+  for (let cat in obj) {
+    cats.push(cat);
+    console.log(cat);
+  }
+  cats.sort();
+
+  for (let cat of cats) {
+    let puzzles = obj[cat];
+    
+    let pdiv = document.createElement('div');
+    pdiv.className = 'category';
+    
+    let h = document.createElement('h2');
+    pdiv.appendChild(h);
+    h.textContent = cat;
+    
+    let l = document.createElement('ul');
+    pdiv.appendChild(l);
+    
+    for (var puzzle of puzzles) {
+      var points = puzzle[0];
+      var id = puzzle[1];
+  
+      var i = document.createElement('li');
+      l.appendChild(i);
+  
+      if (points === 0) {
+  	    i.textContent = "‡";
+      } else {
+      	var a = document.createElement('a');
+      	i.appendChild(a);
+      	a.textContent = points;
+        a.href = cat + "/" + id + "/index.html";
+	    }
+  	}
+
+		element.appendChild(pdiv);
+  }
+}
+
+function init() {
+	fetch("puzzles.json")
+	.then(function(resp) {
+		return resp.json();
+	}).then(function(obj) {
+		render(obj);
+	}).catch(function(err) {
+		console.log("Error", err);
+	});
+}
+
+window.addEventListener("load", init);
+</script>
+		`,
 	)
 }
 
