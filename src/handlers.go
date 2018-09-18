@@ -199,7 +199,7 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := ctx.AwardPointsUniquely(teamid, category, points); err != nil {
+	if err := ctx.AwardPoints(teamid, category, points); err != nil {
 		respond(
 			w, req, Error,
 			"Error awarding points",

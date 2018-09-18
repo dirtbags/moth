@@ -114,27 +114,12 @@ func (ctx *Instance) PointsLog() []*Award {
 	return ret
 }
 
-// awardPoints gives points points to team teamid in category category
+// awardPoints gives points to teamid in category.
+// It first checks to make sure these are not duplicate points.
+// This is not a perfect check, you can trigger a race condition here.
+// It's just a courtesy to the user.
+// The maintenance task makes sure we never have duplicate points in the log.
 func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
-	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
-	tmpfn := ctx.StatePath("points.tmp", fn)
-	newfn := ctx.StatePath("points.new", fn)
-
-	contents := fmt.Sprintf("%d %s %s %d\n", time.Now().Unix(), teamid, category, points)
-
-	if err := ioutil.WriteFile(tmpfn, []byte(contents), 0644); err != nil {
-		return err
-	}
-
-	if err := os.Rename(tmpfn, newfn); err != nil {
-		return err
-	}
-
-	log.Printf("Award %s %s %d", teamid, category, points)
-	return nil
-}
-
-func (ctx *Instance) AwardPointsUniquely(teamid, category string, points int) error {
 	a := Award{
 		When: time.Now(),
 		TeamId: teamid,
@@ -147,8 +132,21 @@ func (ctx *Instance) AwardPointsUniquely(teamid, category string, points int) er
 			return fmt.Errorf("Points already awarded to this team in this category")
 		}
 	}
+	
+	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
+	tmpfn := ctx.StatePath("points.tmp", fn)
+	newfn := ctx.StatePath("points.new", fn)
 
-	return ctx.AwardPoints(teamid, category, points)
+	if err := ioutil.WriteFile(tmpfn, []byte(a.String()), 0644); err != nil {
+		return err
+	}
+
+	if err := os.Rename(tmpfn, newfn); err != nil {
+		return err
+	}
+
+	log.Printf("Award %s %s %d", teamid, category, points)
+	return nil
 }
 
 func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.ReadCloser, error) {
