@@ -121,10 +121,10 @@ func (ctx *Instance) PointsLog() []*Award {
 // The maintenance task makes sure we never have duplicate points in the log.
 func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 	a := Award{
-		When: time.Now(),
-		TeamId: teamid,
+		When:     time.Now(),
+		TeamId:   teamid,
 		Category: category,
-		Points: points,
+		Points:   points,
 	}
 
 	for _, e := range ctx.PointsLog() {
@@ -132,7 +132,7 @@ func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 			return fmt.Errorf("Points already awarded to this team in this category")
 		}
 	}
-	
+
 	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
 	tmpfn := ctx.StatePath("points.tmp", fn)
 	newfn := ctx.StatePath("points.new", fn)

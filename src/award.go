@@ -64,7 +64,7 @@ func (a *Award) Same(o *Award) bool {
 	case a.TeamId != o.TeamId:
 		return false
 	case a.Category != o.Category:
-  	return false
+		return false
 	case a.Points != o.Points:
 		return false
 	}
