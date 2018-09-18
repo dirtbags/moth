@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -20,6 +21,32 @@ func respond(w http.ResponseWriter, req *http.Request, status Status, short stri
 	} else {
 		ShowHtml(w, status, short, long)
 	}
+}
+
+// anchoredSearch looks for needle in r,
+// skipping the first skip space-delimited words
+func anchoredSearch(r io.Reader, needle string, skip int) bool {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.SplitN(line, " ", skip+1)
+		if (len(parts) > skip) && (parts[skip] == needle) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// anchoredSearchFile performs an anchoredSearch on a given filename
+func anchoredSearchFile(filename string, needle string, skip int) bool {
+	r, err := os.Open(filename)
+	if err != nil {
+		return false
+	}
+	defer r.Close()
+
+	return anchoredSearch(r, needle, skip)
 }
 
 func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
@@ -172,7 +199,7 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := ctx.AwardPoints(teamid, category, points); err != nil {
+	if err := ctx.AwardPointsUniquely(teamid, category, points); err != nil {
 		respond(
 			w, req, Error,
 			"Error awarding points",

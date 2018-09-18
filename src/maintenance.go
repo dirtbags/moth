@@ -90,8 +90,21 @@ func (ctx *Instance) CollectPoints() {
 			log.Printf("Can't parse award file %s: %s", filename, err)
 			continue
 		}
-		fmt.Fprintf(logf, "%s\n", award.String())
-		log.Print("XXX: check for duplicates", award.String())
+	
+		duplicate := false
+		for _, e := range ctx.PointsLog() {
+			if award.Same(e) {
+				duplicate = true
+				break
+			}
+		}
+		
+		if duplicate {
+			log.Printf("Skipping duplicate points: %s", award.String())
+		} else {
+			fmt.Fprintf(logf, "%s\n", award.String())
+		}
+
 		logf.Sync()
 		if err := os.Remove(filename); err != nil {
 			log.Printf("Unable to remove %s: %s", filename, err)

@@ -1,41 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-// anchoredSearch looks for needle in r,
-// skipping the first skip space-delimited words
-func anchoredSearch(r io.Reader, needle string, skip int) bool {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.SplitN(line, " ", skip+1)
-		if (len(parts) > skip) && (parts[skip] == needle) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// anchoredSearchFile performs an anchoredSearch on a given filename
-func anchoredSearchFile(filename string, needle string, skip int) bool {
-	r, err := os.Open(filename)
-	if err != nil {
-		return false
-	}
-	defer r.Close()
-
-	return anchoredSearch(r, needle, skip)
-}
 
 type Status int
 

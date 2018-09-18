@@ -89,8 +89,8 @@ func (ctx *Instance) StatePath(parts ...string) string {
 	return path.Join(ctx.StateDir, tail)
 }
 
-func (ctx *Instance) PointsLog() []Award {
-	var ret []Award
+func (ctx *Instance) PointsLog() []*Award {
+	var ret []*Award
 
 	fn := ctx.StatePath("points.log")
 	f, err := os.Open(fn)
@@ -108,14 +108,14 @@ func (ctx *Instance) PointsLog() []Award {
 			log.Printf("Skipping malformed award line %s: %s", line, err)
 			continue
 		}
-		ret = append(ret, *cur)
+		ret = append(ret, cur)
 	}
 
 	return ret
 }
 
 // awardPoints gives points points to team teamid in category category
-func (ctx *Instance) AwardPoints(teamid string, category string, points int) error {
+func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
 	tmpfn := ctx.StatePath("points.tmp", fn)
 	newfn := ctx.StatePath("points.new", fn)
@@ -132,6 +132,23 @@ func (ctx *Instance) AwardPoints(teamid string, category string, points int) err
 
 	log.Printf("Award %s %s %d", teamid, category, points)
 	return nil
+}
+
+func (ctx *Instance) AwardPointsUniquely(teamid, category string, points int) error {
+	a := Award{
+		When: time.Now(),
+		TeamId: teamid,
+		Category: category,
+		Points: points,
+	}
+
+	for _, e := range ctx.PointsLog() {
+		if a.Same(e) {
+			return fmt.Errorf("Points already awarded to this team in this category")
+		}
+	}
+
+	return ctx.AwardPoints(teamid, category, points)
 }
 
 func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.ReadCloser, error) {
