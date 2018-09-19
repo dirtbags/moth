@@ -38,12 +38,12 @@ function render(obj) {
       l.appendChild(i);
   
       if (points === 0) {
-  	    i.textContent = "‡";
+  	    i.textContent = "✿";
       } else {
       	var a = document.createElement('a');
       	i.appendChild(a);
       	a.textContent = points;
-        a.href = cat + "/" + id + "/index.html";
+        a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id;
 	    }
   	}
 
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", init);
     </section>
     <nav>
       <ul>
-        <li><a href="puzzles.html">Puzzles</a></li>
+        <li><a href="puzzle-list.html">Puzzles</a></li>
         <li><a href="scoreboard.html">Scoreboard</a></li>
       </ul>
     </nav>

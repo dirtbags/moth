@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"mime"
 	"net/http"
 	"time"
 )
@@ -60,6 +61,11 @@ func main() {
 		log.Fatal(err)
 	}
 	ctx.BindHandlers(http.DefaultServeMux)
+
+	// Add some MIME extensions
+	// Doing this avoids decompressing a mothball entry twice per request
+	mime.AddExtensionType(".json", "application/json")
+	mime.AddExtensionType(".zip", "application/zip")
 
 	go ctx.Maintenance(*maintenanceInterval)
 

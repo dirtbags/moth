@@ -67,7 +67,7 @@ func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
 	fmt.Fprintf(w, "<section>%s</section>", body)
 	fmt.Fprintf(w, "<nav>")
 	fmt.Fprintf(w, "<ul>")
-	fmt.Fprintf(w, "<li><a href=\"puzzles.html\">Puzzles</a></li>")
+	fmt.Fprintf(w, "<li><a href=\"puzzle-list.html\">Puzzles</a></li>")
 	fmt.Fprintf(w, "<li><a href=\"scoreboard.html\">Scoreboard</a></li>")
 	fmt.Fprintf(w, "</ul>")
 	fmt.Fprintf(w, "</nav>")
@@ -397,7 +397,7 @@ func ServeStatic(w http.ResponseWriter, req *http.Request, resourcesDir string) 
 		staticIndex(w)
 	case "/scoreboard.html":
 		staticScoreboard(w)
-	case "/puzzles.html":
+	case "/puzzle-list.html":
 		staticPuzzles(w)
 	default:
 		http.NotFound(w, req)
