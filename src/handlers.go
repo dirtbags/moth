@@ -318,6 +318,42 @@ func (ctx Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(jret)
 }
 
+func (ctx Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
+	// Prevent directory traversal
+	if strings.Contains(req.URL.Path, "/.") {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+	
+	// Be clever: use only the last three parts of the path. This may prove to be a bad idea.
+	parts := strings.Split(req.URL.Path, "/")
+	if len(parts) < 3 {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+	
+	fileName := parts[len(parts)-1]
+	puzzleId := parts[len(parts)-2]
+	categoryName := parts[len(parts)-3]
+	
+	mb, ok := ctx.Categories[categoryName]
+	if !ok {
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+	
+	mbFilename := fmt.Sprintf("content/%s/%s", puzzleId, fileName)
+	mf, err := mb.Open(mbFilename)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	}
+	defer mf.Close()
+	
+	http.ServeContent(w, req, fileName, mf.ModTime(), mf)
+}
+
 func (ctx Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	ServeStatic(w, req, ctx.ResourcesDir)
 }
@@ -327,6 +363,7 @@ func (ctx Instance) BindHandlers(mux *http.ServeMux) {
 	mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
 	mux.HandleFunc(ctx.Base+"/token", ctx.tokenHandler)
 	mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
+	mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
 	mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
 	mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
 }

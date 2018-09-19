@@ -121,7 +121,13 @@ func (ctx *Instance) CollectPoints() {
 
 // maintenance is the goroutine that runs a periodic maintenance task
 func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
-	for ; ; time.Sleep(maintenanceInterval) {
+	for {
 		ctx.Tidy()
+		select {
+			case <-ctx.update:
+				log.Print("Forced update")
+			case <-time.After(maintenanceInterval):
+				log.Print("Housekeeping...")
+		}
 	}
 }

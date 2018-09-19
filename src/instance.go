@@ -18,6 +18,7 @@ type Instance struct {
 	StateDir     string
 	ResourcesDir string
 	Categories   map[string]*Mothball
+	update       chan bool
 }
 
 func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
@@ -27,6 +28,7 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, e
 		StateDir:     stateDir,
 		ResourcesDir: resourcesDir,
 		Categories:   map[string]*Mothball{},
+		update:       make(chan bool, 10),
 	}
 
 	// Roll over and die if directories aren't even set up
@@ -145,6 +147,7 @@ func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 		return err
 	}
 
+	ctx.update <- true
 	log.Printf("Award %s %s %d", teamid, category, points)
 	return nil
 }
