@@ -1,0 +1,44 @@
+/* http://paletton.com/#uid=63T0u0k7O9o3ouT6LjHih7ltq4c */
+body {
+  font-family: sans-serif;
+  max-width: 40em;
+	background: #282a33;
+	color: #f6efdc;
+}
+a:any-link {
+	color: #8b969a;
+}
+h1 {
+	background: #5e576b;
+	color: #9e98a8;
+}
+.Fail, .Error {
+	background: #3a3119;
+	color: #ffcc98;
+}
+.Fail:before {
+	content: "Fail: ";
+}
+.Error:before {
+	content: "Error: ";
+}
+p {
+	margin: 1em 0em;
+}
+form, pre {
+	margin: 1em;
+}
+input {
+	padding: 0.6em;
+	margin: 0.2em;
+}
+nav {
+  border: solid black 2px;
+}
+nav ul, .category ul {
+  padding: 1em;
+}
+nav li, .category li {
+	display: inline;
+	margin: 1em;
+}
