@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"rand"
 	"strconv"
 	"strings"
 )
@@ -285,12 +287,14 @@ func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
-	log := ctx.PointsLog()
-	jlog, err := json.Marshal(log)
+	plog := ctx.PointsLog()
+	jlog, err := json.Marshal(plog)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// XXX: go through plog, building an array of teams, so we can anonymize team IDs
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
