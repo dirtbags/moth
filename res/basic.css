@@ -32,6 +32,10 @@ input {
 	padding: 0.6em;
 	margin: 0.2em;
 }
+#scoreboard .category {
+  border: solid white 1px;
+	display: inline-block;
+}
 nav {
   border: solid black 2px;
 }

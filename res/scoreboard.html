@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Open Puzzles</title>
+    <title>Scoreboard</title>
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
     <link rel="icon" href="res/icon.svg" type="image/svg+xml">
@@ -97,6 +97,7 @@ function scoreboard(element, continuous) {
 				var width = maxWidth * catPct;
 
 				var bar = document.createElement("span");
+				bar.classList.add("category");
 				bar.classList.add("cat" + ncat);
 				bar.style.width = width + "%";
 				bar.textContent = category + ": " + catTeam;

@@ -159,3 +159,9 @@ func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.Read
 	f, err := mb.Open(filename)
 	return f, err
 }
+
+func (ctx *Instance) TeamName(teamId string) (string, error) {
+	teamNameBytes, err := ioutil.ReadFile(ctx.StatePath("teams", teamId))
+	teamName := strings.TrimSpace(string(teamNameBytes))
+	return teamName, err
+}

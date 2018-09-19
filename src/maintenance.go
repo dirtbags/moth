@@ -34,6 +34,16 @@ func (ctx *Instance) Tidy() {
 		}
 	}
 
+	// Refresh all current categories
+	for categoryName, mb := range ctx.Categories {
+		if err := mb.Refresh(); err != nil {
+			// Backing file vanished: remove this category
+			log.Printf("Removing category: %s: %s", categoryName, err)
+			mb.Close()
+			delete(ctx.Categories, categoryName)
+		}
+	}
+
 	// Any new categories?
 	files, err := ioutil.ReadDir(ctx.MothballPath())
 	if err != nil {
@@ -57,9 +67,6 @@ func (ctx *Instance) Tidy() {
 			ctx.Categories[categoryName] = mb
 		}
 	}
-
-	// Any old categories?
-	log.Print("XXX: Check for and reap old categories")
 
 	ctx.CollectPoints()
 }

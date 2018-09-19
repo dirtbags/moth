@@ -60,10 +60,10 @@ func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
 	fmt.Fprintf(w, "<html><head>")
 	fmt.Fprintf(w, "<title>%s</title>", title)
 	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
-	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\"></head>")
+	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\">")
 	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.svg\" type=\"image/svg+xml\">")
 	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.png\" type=\"image/png\">")
-	fmt.Fprintf(w, "<body><h1 class=\"%s\">%s</h1>", statusStr, title)
+	fmt.Fprintf(w, "</head><body><h1 class=\"%s\">%s</h1>", statusStr, title)
 	fmt.Fprintf(w, "<section>%s</section>", body)
 	fmt.Fprintf(w, "<nav>")
 	fmt.Fprintf(w, "<ul>")
@@ -159,9 +159,7 @@ func staticScoreboard(w http.ResponseWriter) {
 		w, Success,
 		"Scoreboard",
 		`
-    <section>
-      <div id="scoreboard"></div>
-    </section>
+    <div id="scoreboard"></div>
     <script>
 function loadJSON(url, callback) {
 	function loaded(e) {

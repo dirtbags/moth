@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"rand"
 	"strconv"
 	"strings"
 )
@@ -287,19 +285,37 @@ func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
-	plog := ctx.PointsLog()
-	jlog, err := json.Marshal(plog)
+	var ret struct {
+		Teams map[string]string `json:"teams"`
+		Points []*Award `json:"points"`
+	}
+	ret.Teams = map[string]string{}
+	ret.Points = ctx.PointsLog()
+	
+	teamNumbersById := map[string]int{}
+	for nr, a := range ret.Points {
+		teamNumber, ok := teamNumbersById[a.TeamId]
+		if !ok {
+			teamName, err := ctx.TeamName(a.TeamId)
+			if err != nil {
+				teamName = "[unregistered]"
+			}
+			teamNumber = nr
+			teamNumbersById[a.TeamId] = teamNumber
+			ret.Teams[strconv.FormatInt(int64(teamNumber), 16)] = teamName
+		}
+		a.TeamId = strconv.FormatInt(int64(teamNumber), 16)
+	}
+	
+	jret, err := json.Marshal(ret)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// XXX: go through plog, building an array of teams, so we can anonymize team IDs
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
-	w.Write(jlog)
+	w.Write(jret)
 }
 
 func (ctx Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
