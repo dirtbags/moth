@@ -17,7 +17,7 @@ type Award struct {
 func ParseAward(s string) (*Award, error) {
 	ret := Award{}
 
-	s = strings.Trim(s, " \t\n")
+	s = strings.TrimSpace(s)
 
 	var whenEpoch int64
 
