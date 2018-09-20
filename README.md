@@ -36,7 +36,7 @@ Click the `[mb]` link by a puzzle category to compile and download a mothball th
 Running a Production Server
 ===========================
 
-    docker run --rm -it -p 8080:8080 -v /path/to/moth:/moth dirtbags/mothd
+    docker run --rm -it -p 8080:8080 -v /path/to/moth:/moth dirtbags/moth
 
 You can be more fine-grained about directories, if you like.
 Inside the container, you need the following paths:
