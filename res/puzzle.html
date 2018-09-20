@@ -7,10 +7,16 @@
     <link rel="icon" href="res/icon.svg" type="image/svg+xml">
     <link rel="icon" href="res/icon.png" type="image/png">
     <script>
-function render(obj) {
-  let body = document.getElementById("body");
-  body.innerHTML = obj.body;
-  console.log("XXX: Munge relative URLs (src= and href=) in body")
+function resize() {
+  let frame = document.getElementById("body");
+  frame.height = frame.contentDocument.documentElement.scrollHeight;
+}
+function render(obj, base) {
+  let frame = document.getElementById("body");
+  let html = "<base href='" + base + "'><link rel='stylesheet' href='../../../basic.css'>" + obj.body;
+  
+  frame.addEventListener("load", resize);
+  frame.srcdoc = html;
 }
 function init() {
   let params = new URLSearchParams(window.location.search);
@@ -18,13 +24,14 @@ function init() {
   let points = params.get("points");
   let puzzleId = params.get("pid");
 
-  let fn = "content/" + categoryName + "/" + puzzleId + "/puzzle.json";
+  let base = "content/" + categoryName + "/" + puzzleId + "/";
+  let fn =  base + "puzzle.json";
 
 	fetch(fn)
 	.then(function(resp) {
 		return resp.json();
 	}).then(function(obj) {
-		render(obj);
+		render(obj, base);
 	}).catch(function(err) {
 		console.log("Error", err);
 	});
@@ -39,7 +46,7 @@ document.addEventListener("DOMContentLoaded", init);
   <body>
     <h1>Puzzle</h1>
     <section>
-      <div id="body">Loading...</div>
+      <iframe seamless id="body">Loading...</iframe>
     </section>
 		<form action="answer" method="post">
 		  <input type="hidden" name="cat">
