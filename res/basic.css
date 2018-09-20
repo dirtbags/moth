@@ -46,3 +46,10 @@ nav li, .category li {
 	display: inline;
 	margin: 1em;
 }
+iframe#body {
+  border: inherit;
+  width: 100%;
+}
+img {
+  max-width: 100%;
+}
