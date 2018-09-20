@@ -1,14 +1,8 @@
-FROM neale/eris
+FROM alpine AS builder
+RUN apk --no-cache add go libc-dev
+COPY src /src
+RUN go build -o /mothd /src/*.go
 
-RUN apk --no-cache add lua5.1 lua5.2 lua5.3
-RUN ln -s lua5.2 /usr/bin/lua
-
-# Install MOTH. This could be less obtuse.
-COPY www /moth/www/
-COPY bin /moth/bin/
-COPY src/moth-init /moth/init
-RUN ln -s ../state/puzzles.json /moth/www/puzzles.json && \
-    ln -s ../state/points.json /moth/www/points.json
-
-CMD ["/moth/init"]
-
+FROM alpine
+COPY --from=builder /mothd /mothd
+ENTRYPOINT [ "/mothd" ]

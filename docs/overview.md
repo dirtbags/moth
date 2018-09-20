@@ -16,8 +16,142 @@ indicating score within each category,
 and overall ranking.
 
 
-How Scores are Calculated
--------------------------
+State Directory
+===============
+
+The state directory is written to by the server to preserve state.
+At no point is anything only in memory:
+if it's not on the filesystem,
+mothd doesn't think it exists.
+
+The state directory is also used to communicate actions to mothd.
+
+
+`initialized`
+-------------
+
+Remove this file to reset the state. This will blow away team assignments and the points log.
+
+
+`disabled`
+----------
+
+Create this file to pause collection of points and other maintenance.
+Contestants can still submit answers,
+but they won't show up on the scoreboard until you remove this file.
+
+This file does not normally exist.
+
+
+`until`
+-------
+
+Put an RFC3337 date/time stamp in here to have the server pause itself at a given time.
+Remember that time zones exist!
+I recommend always using Zulu time.
+
+This file does not normally exist.
+
+
+`teamids.txt`
+-------------
+
+A list of valid Team IDs, one per line.
+It defaults to all 4-digit natural numbers,
+but you can put whatever you want in here.
+
+
+`points.log`
+------------
+
+The log of awarded points:
+
+    EpochTime TeamId Category Points
+
+Do not write to this file, unless you have disabled the contest. You will lose points!
+
+
+`points.tmp`
+------------
+
+Drop points logs here.
+Filenames can be anything.
+
+When the file is complete and written out,
+move it into `points.new`,
+where a non-disabled event's maintenance loop will eventually move it into the main log.
+
+`points.new`
+------------
+
+Complete points logs should be atomically moved here.
+This is to avoid needing locks.
+[Read about Maildir](https://en.wikipedia.org/wiki/Maildir)
+if you care about the technical reasons we do things this way.
+
+
+Mothball Directory
+==================
+
+Put a mothball in this directory to open that category.
+Remove a mothball to disable that category.
+
+Overwriting a mothball with a newer version will be noticed by the server within one maintenance interval
+(20 seconds by default).
+Be sure to use the same compilation seed in the development server if you compile a new version!
+
+Removing a category does not remove points that have been scored in the category.
+
+
+Resources Directory
+===================
+
+
+Making it look better
+-------------------
+
+`mothd` provides some built-in HTML for rendering a complete contest,
+but it's rather bland.
+You can override everything by dropping a new file into the `resources` directory:
+
+* `basic.css` is used by the default HTML to pretty things up
+* `index.html` is the landing page, which asks to register a team
+* `puzzle.html` renders a puzzle from JSON
+* `puzzle-list.html` renders the list of active puzzles from JSON
+* `scoreboard.html` renders the current scoreboard from JSON
+* Any other file in the `resources` directory will be served up, too.
+
+If you don't want to read through the source code, I don't blame you.
+Run a `mothd` server and pull the various static resources into your `resources` directory,
+and then you can start hacking away at them.
+
+
+Making it look totally different
+---------------------
+
+Every handler can serve its answers up in JSON format,
+just add `application/json` to the `Accept` header of your request.
+
+This means you could completely ignore the file structure in the previous section,
+and write something like a web app that only loads static resources at startup.
+
+
+Changing scoring
+--------------
+
+Scoring is determined client-side in the scoreboard,
+from the points log.
+You can hack in whatever algorithm you like,
+and provide your own scoreboard(s).
+
+If you do hack in a new algorithm,
+please be a dear and email it to us.
+We'd love to see it!
+
+
+
+How Scores are Calculated by Default
+------------------------------------
 
 The per-category score for team `t` is computed as:
 
@@ -38,138 +172,3 @@ Because we don't award extra points for quick responses,
 teams always feel like they have the possibility to catch up if they are skilled enough.
 
 
-Requirements
--------------
-
-MOTH was written to run on a wide range of Linux systems.
-We are very careful not to require exotic extensions:
-you can run MOTH equally well on OpenWRT and Ubuntu Server.
-It might even run on BSD: if you've tried this, please email us!
-
-Its architecture also limits permissions,
-to make it easier to lock things down very tight.
-Since it writes to the filesystem slowly and atomically,
-it can be run from a USB flash drive formatted with VFAT.
-
-
-On the server, it requires:
-
-* Bourne shell (POSIX 1003.2: BASH is okay but not required)
-* Awk (POSIX 1003.2: gawk is okay but not required)
-* Lua 5.1
-
-
-On the client, it requires:
-
-* A modern web browser with JavaScript
-* Categories might add other requirements (like domain-specific tools to solve the puzzles)
-
-
-Filesystem Layout
-=================
-
-The system is set up to make it simple to run one or more contests on a single machine.
-
-I like to use `/srv/moth` as the base directory for all instances.
-So if I were running an instance called "hack",
-the instance directory would be `/srv/moth/hack`.
-
-There are five entries in each instance directory, described in detail below:
-
-    /srv/moth/hack                 # (r-x) Instance directory
-    /srv/moth/hack/assigned.txt    # (r--) List of assigned team tokens
-    /srv/moth/hack/bin/            # (r-x) Per-instance binaries
-    /srv/moth/hack/categories/     # (r-x) Installed categories
-    /srv/moth/hack/state/          # (rwx) Contest state
-    /srv/moth/hack/www/            # (r-x) Web server documentroot
-
-
-
-`state/assigned.txt`
-----------------
-
-This is just a list of tokens that have been assigned.
-One token per line, and tokens can be anything you want.
-
-For my middle school events, I make tokens all possible 4-digit numbers,
-and tell kids to use any number they want: it makes it quicker to start.
-For more advanced events,
-this doesn't work as well because people start guessing other teams' numbers to confuse each other.
-So I use hex representations of random 32-bit ints.
-But you could use anything you want in here (for specifics on allowed characters, read the registration CGI).
-
-The registration CGI checks this list to see if a token has already assigned to a team name.
-Teams enter points by token,
-which lets them use any text they want for a team name.
-Since we don't read their team name anywhere else than the registration and scoreboard generator,
-it allows some assumptions about what kind of strings tokens can be,
-resulting in simpler code.
-
-
-`categories/`
---------------
-
-`categories/` contains read-only category packages.
-Within each subdirectory there is:
-
-* `map.txt` mapping point values to directory names
-* `answers.txt` a list of answers for each point value
-* `salt` used to generate directory names (so people can't guess them to skip ahead)
-* `summary.txt` a compliation of `00summary.txt` files for puzzles, to give you a quick reference point when someone says "I need help on js 40".
-* `puzzles` is all the HTML that needs to be served up for the category
-
-
-`bin/`
-------
-
-Contains all the binaries you'll need to run an event.
-These are probably just copies from the `base` package (where this README lives).
-They're copied over in case you need to hack on them during an event.
-
-`bin/once` is of particular interest:
-it gets run periodically to do everything, including:
-
-* Gather points from `points.new` and append them to the points log.
-* Generate a new `puzzles.html` listing all open puzzles.
-* Generate a new `points.json` for the scoreboard
-
-### Pausing `once`
-
-You can pause everything `bin/once` does by touching a file in the root directory
-called `disabled`.
-This doesn't stop the game:
-it just stops points collection and generation of the files listed above.
-
-This is extremely helpful when, inevitably,
-you need to hack the points log,
-or do other maintenance tasks.
-Most times you don't even need to announce that you're doing anything:
-people can keep playing the game and their points keep collecting,
-ready to be appended to the log when you're done and you re-enable `once`.
-
-
-`www/`
------------
-
-HTML root for an event.
-It is possible to make this read-only,
-after you've set up your packages.
-You will need to symlink a few things into the `state` directory, though.
-
-
-`state/`
----------
-
-Where all game state is stored.
-This is the only part of the contest directory setup that needs to be writable,
-and tarring it up preserves exactly the entire contest.
-
-Notable, it contains the mapping from team hash to name,
-and the points log.
-
-`points.log` is replayed by the scoreboard generator to calculate the current score for each team.
-
-New points are written to `points.new`, and picked up by `bin/once` to append to `points.log`.
-When `once` is disabled (by touching a file called `disabled` at the top level for a game),
-the various points-awarding things can keep writing files into `points.new`,
-with no need for locking or "bringing down the game for maintenance".
