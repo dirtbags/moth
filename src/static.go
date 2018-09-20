@@ -289,7 +289,7 @@ document.addEventListener("DOMContentLoaded", init);
 	)
 }
 
-func staticPuzzles(w http.ResponseWriter) {
+func staticPuzzleList(w http.ResponseWriter) {
 	ShowHtml(
 		w, Success,
 		"Open Puzzles",
@@ -328,12 +328,12 @@ function render(obj) {
       l.appendChild(i);
   
       if (points === 0) {
-  	    i.textContent = "‡";
+  	    i.textContent = "✿";
       } else {
       	var a = document.createElement('a');
       	i.appendChild(a);
       	a.textContent = points;
-        a.href = cat + "/" + id + "/index.html";
+        a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id;
 	    }
   	}
 
@@ -353,6 +353,54 @@ function init() {
 	});
 }
 
+document.addEventListener("DOMContentLoaded", init);
+</script>
+		`,
+	)
+}
+
+func staticPuzzle(w http.ResponseWriter) {
+	ShowHtml(
+		w, Success,
+		"Open Puzzles",
+		`
+<section>
+  <div id="body">Loading...</div>
+</section>
+<form action="answer" method="post">
+  <input type="hidden" name="cat">
+  <input type="hidden" name="points">
+  Team ID: <input type="text" name="id"> <br>
+  Answer: <input type="text" name="answer"> <br>
+  <input type="submit" value="Submit">
+</form>
+<script>
+function render(obj) {
+  let body = document.getElementById("body");
+  body.innerHTML = obj.body;
+  console.log("XXX: Munge relative URLs (src= and href=) in body")
+}
+function init() {
+  let params = new URLSearchParams(window.location.search);
+  let categoryName = params.get("cat");
+  let points = params.get("points");
+  let puzzleId = params.get("pid");
+
+  let fn = "content/" + categoryName + "/" + puzzleId + "/puzzle.json";
+
+	fetch(fn)
+	.then(function(resp) {
+		return resp.json();
+	}).then(function(obj) {
+		render(obj);
+	}).catch(function(err) {
+		console.log("Error", err);
+	});
+	
+	document.querySelector("body > h1").innerText = categoryName + " " + points
+	document.querySelector("input[name=cat]").value = categoryName;
+	document.querySelector("input[name=points]").value = points;
+}
 document.addEventListener("DOMContentLoaded", init);
 </script>
 		`,
@@ -398,7 +446,9 @@ func ServeStatic(w http.ResponseWriter, req *http.Request, resourcesDir string) 
 	case "/scoreboard.html":
 		staticScoreboard(w)
 	case "/puzzle-list.html":
-		staticPuzzles(w)
+		staticPuzzleList(w)
+	case "/puzzle.html":
+		staticPuzzle(w)
 	default:
 		http.NotFound(w, req)
 	}

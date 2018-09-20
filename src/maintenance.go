@@ -125,9 +125,9 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 		ctx.Tidy()
 		select {
 			case <-ctx.update:
-				log.Print("Forced update")
+				// log.Print("Forced update")
 			case <-time.After(maintenanceInterval):
-				log.Print("Housekeeping...")
+				// log.Print("Housekeeping...")
 		}
 	}
 }
