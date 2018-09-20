@@ -17,9 +17,9 @@ type Mothball struct {
 }
 
 type MothballFile struct {
-	f io.ReadCloser
+	f   io.ReadCloser
 	pos int64
-	zf *zip.File
+	zf  *zip.File
 	io.Reader
 	io.Seeker
 	io.Closer
@@ -27,9 +27,9 @@ type MothballFile struct {
 
 func NewMothballFile(zf *zip.File) (*MothballFile, error) {
 	mf := &MothballFile{
-		zf: zf,
+		zf:  zf,
 		pos: 0,
-		f: nil,
+		f:   nil,
 	}
 	if err := mf.reopen(); err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (mf *MothballFile) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekEnd:
 		pos = int64(mf.zf.UncompressedSize64) - int64(offset)
 	}
-	
+
 	if pos < 0 {
 		return mf.pos, fmt.Errorf("Tried to seek %d before start of file", pos)
 	}
@@ -88,8 +88,8 @@ func (mf *MothballFile) Seek(offset int64, whence int) (int64, error) {
 			return mf.pos, err
 		}
 	}
-	
-	buf := make([]byte, 32 * 1024)
+
+	buf := make([]byte, 32*1024)
 	for pos > mf.pos {
 		l := pos - mf.pos
 		if l > int64(cap(buf)) {
@@ -103,7 +103,7 @@ func (mf *MothballFile) Seek(offset int64, whence int) (int64, error) {
 			return mf.pos, fmt.Errorf("Short read (%d bytes)", n)
 		}
 	}
-	
+
 	return mf.pos, nil
 }
 
