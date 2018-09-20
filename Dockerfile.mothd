@@ -1,0 +1,8 @@
+FROM alpine AS builder
+RUN apk --no-cache add go libc-dev
+COPY src /src
+RUN go build -o /mothd /src/*.go
+
+FROM alpine
+COPY --from=builder /mothd /mothd
+ENTRYPOINT [ "/mothd" ]

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Puzzle</title>
+    <link rel="stylesheet" href="basic.css">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" href="res/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="res/icon.png" type="image/png">
+    <script>
+function render(obj) {
+  let body = document.getElementById("body");
+  body.innerHTML = obj.body;
+  console.log("XXX: Munge relative URLs (src= and href=) in body")
+}
+function init() {
+  let params = new URLSearchParams(window.location.search);
+  let categoryName = params.get("cat");
+  let points = params.get("points");
+  let puzzleId = params.get("pid");
+
+  let fn = "content/" + categoryName + "/" + puzzleId + "/puzzle.json";
+
+	fetch(fn)
+	.then(function(resp) {
+		return resp.json();
+	}).then(function(obj) {
+		render(obj);
+	}).catch(function(err) {
+		console.log("Error", err);
+	});
+	
+	document.querySelector("body > h1").innerText = categoryName + " " + points
+	document.querySelector("input[name=cat]").value = categoryName;
+	document.querySelector("input[name=points]").value = points;
+}
+document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </head>
+  <body>
+    <h1>Puzzle</h1>
+    <section>
+      <div id="body">Loading...</div>
+    </section>
+		<form action="answer" method="post">
+		  <input type="hidden" name="cat">
+		  <input type="hidden" name="points">
+		  Team ID: <input type="text" name="id"> <br>
+		  Answer: <input type="text" name="answer"> <br>
+		  <input type="submit" value="Submit">
+		</form>
+    <nav>
+      <ul>
+        <li><a href="puzzle-list.html">Puzzles</a></li>
+        <li><a href="scoreboard.html">Scoreboard</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>

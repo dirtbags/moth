@@ -1,9 +1,0 @@
-#! /bin/sh
-
-while true; do
-	/moth/bin/once
-	sleep 20
-done &
-
-cd /moth/www
-s6-tcpserver -u $(id -u www) -g $(id -g www) 0.0.0.0 80 /usr/bin/eris -c -d -.
