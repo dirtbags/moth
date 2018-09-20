@@ -47,7 +47,7 @@ func main() {
 	)
 	listen := flag.String(
 		"listen",
-		":8000",
+		":8080",
 		"[host]:port to bind and listen",
 	)
 	flag.Parse()
