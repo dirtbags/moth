@@ -19,6 +19,8 @@ type Instance struct {
 	ResourcesDir string
 	Categories   map[string]*Mothball
 	update       chan bool
+	jPuzzleList  []byte
+	jPointsLog   []byte
 }
 
 func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {

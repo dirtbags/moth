@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -35,7 +34,7 @@ func hasLine(r io.Reader, line string) bool {
 	return false
 }
 
-func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
+func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	teamname := req.FormValue("name")
 	teamid := req.FormValue("id")
 
@@ -93,7 +92,7 @@ func (ctx Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	)
 }
 
-func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
+func (ctx *Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
 	teamid := req.FormValue("id")
 	token := req.FormValue("token")
 
@@ -157,7 +156,7 @@ func (ctx Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
 	)
 }
 
-func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
+func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	teamid := req.FormValue("id")
 	category := req.FormValue("cat")
 	pointstr := req.FormValue("points")
@@ -210,138 +209,42 @@ func (ctx Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	)
 }
 
-type PuzzleMap struct {
-	Points int
-	Path   string
-}
-
-func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
-	if pm == nil {
-		return []byte("null"), nil
-	}
-
-	jPath, err := json.Marshal(pm.Path)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := fmt.Sprintf("[%d,%s]", pm.Points, string(jPath))
-	return []byte(ret), nil
-}
-
-func (ctx Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
+func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-
-	maxByCategory := map[string]int{}
-	for _, a := range ctx.PointsLog() {
-		if a.Points > maxByCategory[a.Category] {
-			maxByCategory[a.Category] = a.Points
-		}
-	}
-
-	res := map[string][]PuzzleMap{}
-	for catName, mb := range ctx.Categories {
-		mf, err := mb.Open("map.txt")
-		if err != nil {
-			log.Print(err)
-			continue
-		}
-		defer mf.Close()
-
-		pm := make([]PuzzleMap, 0, 30)
-		completed := true
-		scanner := bufio.NewScanner(mf)
-		for scanner.Scan() {
-			line := scanner.Text()
-
-			var pointval int
-			var dir string
-
-			n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
-			if err != nil {
-				log.Printf("Parsing map for %s: %v", catName, err)
-				continue
-			} else if n != 2 {
-				log.Printf("Parsing map for %s: short read", catName)
-				continue
-			}
-
-			pm = append(pm, PuzzleMap{pointval, dir})
-
-			if pointval > maxByCategory[catName] {
-				completed = false
-				break
-			}
-		}
-		if completed {
-			pm = append(pm, PuzzleMap{0, ""})
-		}
-
-		res[catName] = pm
-	}
-	jres, _ := json.Marshal(res)
-	w.Write(jres)
+	w.Write(ctx.jPuzzleList)
 }
 
-func (ctx Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
-	var ret struct {
-		Teams map[string]string `json:"teams"`
-		Points []*Award `json:"points"`
-	}
-	ret.Teams = map[string]string{}
-	ret.Points = ctx.PointsLog()
-	
-	teamNumbersById := map[string]int{}
-	for nr, a := range ret.Points {
-		teamNumber, ok := teamNumbersById[a.TeamId]
-		if !ok {
-			teamName, err := ctx.TeamName(a.TeamId)
-			if err != nil {
-				teamName = "[unregistered]"
-			}
-			teamNumber = nr
-			teamNumbersById[a.TeamId] = teamNumber
-			ret.Teams[strconv.FormatInt(int64(teamNumber), 16)] = teamName
-		}
-		a.TeamId = strconv.FormatInt(int64(teamNumber), 16)
-	}
-	
-	jret, err := json.Marshal(ret)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+func (ctx *Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jret)
+	w.Write(ctx.jPointsLog)
 }
 
-func (ctx Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
+func (ctx *Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
 	// Prevent directory traversal
 	if strings.Contains(req.URL.Path, "/.") {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
-	
+
 	// Be clever: use only the last three parts of the path. This may prove to be a bad idea.
 	parts := strings.Split(req.URL.Path, "/")
 	if len(parts) < 3 {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
-	
+
 	fileName := parts[len(parts)-1]
 	puzzleId := parts[len(parts)-2]
 	categoryName := parts[len(parts)-3]
-	
+
 	mb, ok := ctx.Categories[categoryName]
 	if !ok {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
-	
+
 	mbFilename := fmt.Sprintf("content/%s/%s", puzzleId, fileName)
 	mf, err := mb.Open(mbFilename)
 	if err != nil {
@@ -350,15 +253,15 @@ func (ctx Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer mf.Close()
-	
+
 	http.ServeContent(w, req, fileName, mf.ModTime(), mf)
 }
 
-func (ctx Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
+func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	ServeStatic(w, req, ctx.ResourcesDir)
 }
 
-func (ctx Instance) BindHandlers(mux *http.ServeMux) {
+func (ctx *Instance) BindHandlers(mux *http.ServeMux) {
 	mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
 	mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
 	mux.HandleFunc(ctx.Base+"/token", ctx.tokenHandler)
