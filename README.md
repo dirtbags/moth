@@ -20,12 +20,33 @@ It also tracks scores,
 and comes with a JavaScript-based scoreboard to display team rankings.
 
 
-How everything works
----------------------------
+Running a Development Server
+============================
 
-This section wound up being pretty long.
-Please check out [the overview](docs/overview.md)
-for details.
+    docker run --rm -it -p 8080:8080 dirtbags/moth-devel
+
+And point a browser to http://localhost:8080/ (or whatever host is running the server).
+
+When you're ready to create your own puzzles,
+read [the devel server documentation](docs/devel-server.md).
+
+Click the `[mb]` link by a puzzle category to compile and download a mothball that the production server can read.
+
+
+Running a Production Server
+===========================
+
+    docker run --rm -it -p 8080:8080 -v /path/to/moth:/moth dirtbags/mothd
+
+You can be more fine-grained about directories, if you like.
+Inside the container, you need the following paths:
+
+* `/moth/state` (rw) Where state is stored. Read [the overview](docs/overview.md) to learn what's what in here.
+* `/moth/mothballs` (ro) Mothballs (puzzle bundles) as provided by the development server.
+* `/moth/resources` (ro) Overrides for built-in HTML/CSS resources.
+
+
+
 
 
 Getting Started Developing
@@ -120,40 +141,4 @@ If you remove a mothball,
 the category will vanish,
 but points scored in that category won't!
 
-
-
-Resources Directory
-===================
-
-
-Making it look better
--------------------
-
-`mothd` provides some built-in HTML for rendering a complete contest,
-but it's rather bland.
-You can override everything by dropping a new file into the `resources` directory:
-
-* `basic.css` is used by the default HTML to pretty things up
-* `index.html` is the landing page, which asks to register a team
-* `puzzle.html` and `puzzle.js` render a puzzle from JSON
-* `puzzle-list.html` and `puzzle-list.js` render the list of active puzzles from JSON
-* `scoreboard.html` and `scoreboard.js` render the current scoreboard from JSON
-* Any other file in the `resources` directory will be served up, too.
-
-If you don't want to read through the source code, I don't blame you.
-Run a `mothd` server and pull the various static resources into your `resources` directory,
-and then you can start hacking away at them.
-
-
-Changing scoring
---------------
-
-Believe it or not,
-scoring is determined client-side in the scoreboard,
-from the points log.
-You can hack in whatever algorithm you like.
-
-If you do hack in a new algorithm,
-please be a dear and email it to us.
-We'd love to see it!
 

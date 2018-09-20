@@ -119,12 +119,6 @@ func (ctx *Instance) tidy() {
 	// Do they want to reset everything?
 	ctx.MaybeInitialize()
 
-	// Skip if we've been disabled
-	if _, err := os.Stat(ctx.StatePath("disabled")); err == nil {
-		log.Print("disabled file found, suspending maintenance")
-		return
-	}
-
 	// Skip if we've expired
 	untilspec, err := ioutil.ReadFile(ctx.StatePath("until"))
 	if err == nil {
@@ -225,10 +219,15 @@ func (ctx *Instance) collectPoints() {
 // maintenance is the goroutine that runs a periodic maintenance task
 func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 	for {
-		ctx.tidy()
-		ctx.collectPoints()
-		ctx.generatePuzzleList()
-		ctx.generatePointsLog()
+		// Skip if we've been disabled
+		if _, err := os.Stat(ctx.StatePath("disabled")); err == nil {
+			log.Print("disabled file found, suspending maintenance")
+		} else {
+			ctx.tidy()
+			ctx.collectPoints()
+			ctx.generatePuzzleList()
+			ctx.generatePointsLog()
+		}
 		select {
 		case <-ctx.update:
 			// log.Print("Forced update")
