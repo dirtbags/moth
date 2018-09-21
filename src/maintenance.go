@@ -119,20 +119,6 @@ func (ctx *Instance) tidy() {
 	// Do they want to reset everything?
 	ctx.MaybeInitialize()
 
-	// Skip if we've expired
-	untilspec, err := ioutil.ReadFile(ctx.StatePath("until"))
-	if err == nil {
-		until, err := time.Parse(time.RFC3339, string(untilspec))
-		if err != nil {
-			log.Printf("Unparseable date in until file: %v", until)
-		} else {
-			if until.Before(time.Now()) {
-				log.Print("until file time reached, suspending maintenance")
-				return
-			}
-		}
-	}
-
 	// Refresh all current categories
 	for categoryName, mb := range ctx.Categories {
 		if err := mb.Refresh(); err != nil {
@@ -216,13 +202,34 @@ func (ctx *Instance) collectPoints() {
 	}
 }
 
+func (ctx *Instance) isEnabled() bool {
+	// Skip if we've been disabled
+	if _, err := os.Stat(ctx.StatePath("disabled")); err == nil {
+		log.Print("Suspended: disabled file found")
+		return false
+	}
+	
+	untilspec, err := ioutil.ReadFile(ctx.StatePath("until"))
+	if err == nil {
+		untilspecs := strings.TrimSpace(string(untilspec))
+		until, err := time.Parse(time.RFC3339, untilspecs)
+		if err != nil {
+			log.Printf("Suspended: Unparseable until date: %s", untilspec)
+			return false
+		}
+		if until.Before(time.Now()) {
+			log.Print("Suspended: until time reached, suspending maintenance")
+			return false
+		}
+	}
+
+	return true
+}
+
 // maintenance is the goroutine that runs a periodic maintenance task
 func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 	for {
-		// Skip if we've been disabled
-		if _, err := os.Stat(ctx.StatePath("disabled")); err == nil {
-			log.Print("disabled file found, suspending maintenance")
-		} else {
+		if ctx.isEnabled() {
 			ctx.tidy()
 			ctx.collectPoints()
 			ctx.generatePuzzleList()

@@ -333,61 +333,64 @@ func staticPuzzleList(w http.ResponseWriter) {
 	<div id="puzzles"></div>
 </section>
 <script>
-function render(obj) {
-  puzzlesElement = document.createElement('div');
-  let cats = [];
-  for (let cat in obj) {
-    cats.push(cat);
-    console.log(cat);
-  }
-  cats.sort();
-
-  for (let cat of cats) {
-    let puzzles = obj[cat];
-    
-    let pdiv = document.createElement('div');
-    pdiv.className = 'category';
-    
-    let h = document.createElement('h2');
-    pdiv.appendChild(h);
-    h.textContent = cat;
-    
-    let l = document.createElement('ul');
-    pdiv.appendChild(l);
-    
-    for (var puzzle of puzzles) {
-      var points = puzzle[0];
-      var id = puzzle[1];
-  
-      var i = document.createElement('li');
-      l.appendChild(i);
-  
-      if (points === 0) {
-  	    i.textContent = "✿";
-      } else {
-      	var a = document.createElement('a');
-      	i.appendChild(a);
-      	a.textContent = points;
-        a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id;
-	    }
-  	}
-
-		puzzlesElement.appendChild(pdiv);
-		document.getElementById("puzzles").appendChild(puzzlesElement);
-  }
-}
-
 function init() {
-	fetch("puzzles.json")
+  let params = new URLSearchParams(window.location.search);
+  let categoryName = params.get("cat");
+  let points = params.get("points");
+  let puzzleId = params.get("pid");
+
+  let base = "content/" + categoryName + "/" + puzzleId + "/";
+  let fn =  base + "puzzle.json";
+
+	fetch(fn)
 	.then(function(resp) {
 		return resp.json();
 	}).then(function(obj) {
-		render(obj);
+    document.getElementById("puzzle").innerHTML = obj.body;
+    document.getElementById("authors").textContent = obj.authors.join(", ");
+    for (let fn of obj.files) {
+      let li = document.createElement("li");
+      let a = document.createElement("a");
+      a.href = base + fn;
+      a.innerText = fn;
+      li.appendChild(a);
+      document.getElementById("files").appendChild(li);
+    }
 	}).catch(function(err) {
 		console.log("Error", err);
 	});
-}
+	
+	document.querySelector("body > h1").innerText = categoryName + " " + points
+	document.querySelector("input[name=cat]").value = categoryName;
+	document.querySelector("input[name=points]").value = points;
+	
+  function mutated(mutationsList, observer) {
+    for (let mutation of mutationsList) {
+      if (mutation.type == 'childList') {
+        for (let e of mutation.addedNodes) {
+          console.log(e);
+          for (let se of e.querySelectorAll("[src],[href]")) {
+            se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
+            console.log(se.outerHTML);
+          }
+          console.log(e.querySelectorAll("[src]"));
+        }
+        console.log(mutation.addedNodes);
+      } else {
+        console.log(mutation);
+      }
+    }
+  }
 
+	let puzzle = document.getElementById("puzzle");
+	let observerOptions = {
+	  childList: true,
+	  attributes: true,
+	  subtree: true,
+	};
+	window.observer = new MutationObserver(mutated);
+	observer.observe(puzzle, observerOptions);
+}
 document.addEventListener("DOMContentLoaded", init);
 </script>
 		`,
