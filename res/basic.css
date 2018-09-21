@@ -32,10 +32,6 @@ input {
 	padding: 0.6em;
 	margin: 0.2em;
 }
-#scoreboard .category {
-  border: solid white 1px;
-	display: inline-block;
-}
 nav {
   border: solid black 2px;
 }
@@ -46,3 +42,38 @@ nav li, .category li {
 	display: inline;
 	margin: 1em;
 }
+iframe#body {
+  border: inherit;
+  width: 100%;
+}
+img {
+  max-width: 100%;
+}
+#scoreboard {
+	width: 100%;
+	position: relative;
+}
+
+#scoreboard span {
+	font-size: 75%;
+	display: inline-block;
+	overflow: hidden;
+	height: 1.7em;
+}
+#scoreboard span.teamname {
+	font-size: inherit;
+	color: white;
+	text-shadow: 0 0 3px black;
+	opacity: 0.8;
+	position: absolute;
+	right: 0.2em;
+}
+#scoreboard div * {white-space: nowrap;}
+.cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
+.cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
+.cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
+.cat3, .cat11, .cat19 {background-color: #33a02c; color: white;}
+.cat4, .cat12, .cat20 {background-color: #fb9a99; color: black;}
+.cat5, .cat13, .cat21 {background-color: #e31a1c; color: white;}
+.cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
+.cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}
