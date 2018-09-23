@@ -131,6 +131,11 @@ func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 		Points:   points,
 	}
 
+	teamName, err := ctx.TeamName(teamid)
+	if err != nil {
+		return fmt.Errorf("No registered team with this hash")
+	}
+
 	for _, e := range ctx.PointsLog() {
 		if a.Same(e) {
 			return fmt.Errorf("Points already awarded to this team in this category")
@@ -150,7 +155,7 @@ func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 	}
 
 	ctx.update <- true
-	log.Printf("Award %s %s %d", teamid, category, points)
+	log.Printf("Award %s %s %d", teamName, category, points)
 	return nil
 }
 
