@@ -270,8 +270,8 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	if err := ctx.AwardPoints(teamid, category, points); err != nil {
 		respond(
 			w, req, Error,
-			"Error awarding points",
-			err.Error(),
+			"Cannot award points",
+			"The answer is correct, but there was an error awarding points: %v", err.Error(),
 		)
 		return
 	}
