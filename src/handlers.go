@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +11,78 @@ import (
 	"strconv"
 	"strings"
 )
+
+type JSend struct {
+	Status string `json:"status"`
+	Data JSendData `json:"data"`
+}
+type JSendData struct {
+	Short string `json:"short"`
+	Description string `json:"description"`
+}
+
+// ShowJSend renders a JSend response to w
+func ShowJSend(w http.ResponseWriter, status Status, short string, description string) {
+
+	resp := JSend{
+		Status: "success",
+		Data: JSendData{
+			Short: short,
+			Description: description,
+		},
+	}
+	switch status {
+	case Success:
+		resp.Status = "success"
+	case Fail:
+		resp.Status = "fail"
+	default:
+		resp.Status = "error"
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if (err != nil) {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
+	w.Write(respBytes)
+}
+
+// ShowHtml delevers an HTML response to w
+func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+
+	statusStr := ""
+	switch status {
+	case Success:
+		statusStr = "Success"
+	case Fail:
+		statusStr = "Fail"
+	default:
+		statusStr = "Error"
+	}
+
+	fmt.Fprintf(w, "<!DOCTYPE html>")
+	fmt.Fprintf(w, "<html><head>")
+	fmt.Fprintf(w, "<title>%s</title>", title)
+	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
+	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\">")
+	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.svg\" type=\"image/svg+xml\">")
+	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.png\" type=\"image/png\">")
+	fmt.Fprintf(w, "</head><body><h1 class=\"%s\">%s</h1>", statusStr, title)
+	fmt.Fprintf(w, "<section>%s</section>", body)
+	fmt.Fprintf(w, "<nav>")
+	fmt.Fprintf(w, "<ul>")
+	fmt.Fprintf(w, "<li><a href=\"puzzle-list.html\">Puzzles</a></li>")
+	fmt.Fprintf(w, "<li><a href=\"scoreboard.html\">Scoreboard</a></li>")
+	fmt.Fprintf(w, "</ul>")
+	fmt.Fprintf(w, "</nav>")
+	fmt.Fprintf(w, "</body></html>")
+}
 
 func respond(w http.ResponseWriter, req *http.Request, status Status, short string, format string, a ...interface{}) {
 	long := fmt.Sprintf(format, a...)
