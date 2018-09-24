@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,63 +15,6 @@ const (
 	Fail
 	Error
 )
-
-// ShowJSend renders a JSend response to w
-func ShowJSend(w http.ResponseWriter, status Status, short string, description string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
-
-	statusStr := ""
-	switch status {
-	case Success:
-		statusStr = "success"
-	case Fail:
-		statusStr = "fail"
-	default:
-		statusStr = "error"
-	}
-
-	jshort, _ := json.Marshal(short)
-	jdesc, _ := json.Marshal(description)
-	fmt.Fprintf(
-		w,
-		`{"status":"%s","data":{"short":%s,"description":%s}}"`,
-		statusStr, jshort, jdesc,
-	)
-}
-
-// ShowHtml delevers an HTML response to w
-func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
-	statusStr := ""
-	switch status {
-	case Success:
-		statusStr = "Success"
-	case Fail:
-		statusStr = "Fail"
-	default:
-		statusStr = "Error"
-	}
-
-	fmt.Fprintf(w, "<!DOCTYPE html>")
-	fmt.Fprintf(w, "<html><head>")
-	fmt.Fprintf(w, "<title>%s</title>", title)
-	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
-	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\">")
-	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.svg\" type=\"image/svg+xml\">")
-	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.png\" type=\"image/png\">")
-	fmt.Fprintf(w, "</head><body><h1 class=\"%s\">%s</h1>", statusStr, title)
-	fmt.Fprintf(w, "<section>%s</section>", body)
-	fmt.Fprintf(w, "<nav>")
-	fmt.Fprintf(w, "<ul>")
-	fmt.Fprintf(w, "<li><a href=\"puzzle-list.html\">Puzzles</a></li>")
-	fmt.Fprintf(w, "<li><a href=\"scoreboard.html\">Scoreboard</a></li>")
-	fmt.Fprintf(w, "</ul>")
-	fmt.Fprintf(w, "</nav>")
-	fmt.Fprintf(w, "</body></html>")
-}
 
 // staticStylesheet serves up a basic stylesheet.
 // This is designed to be usable on small touchscreens (like mobile phones)
