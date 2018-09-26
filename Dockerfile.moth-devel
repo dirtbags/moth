@@ -7,4 +7,4 @@ COPY . /moth/
 COPY example-puzzles /puzzles/
 
 WORKDIR /moth/
-ENTRYPOINT ["python3", "/moth/tools/devel-server.py", "--bind", ":8080", "--puzzles", "/puzzles"]
+ENTRYPOINT ["python3", "/moth/devel/devel-server.py", "--bind", ":8080", "--puzzles", "/puzzles"]
