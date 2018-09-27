@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Puzzle</title>
+    <link rel="stylesheet" href="basic.css">
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" href="res/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="res/icon.png" type="image/png">
+    <script>
+function init() {
+  let params = new URLSearchParams(window.location.search);
+  let categoryName = params.get("cat");
+  let points = params.get("points");
+  let puzzleId = params.get("pid");
+
+  let base = "content/" + categoryName + "/" + puzzleId + "/";
+  let fn =  base + "puzzle.json";
+
+	fetch(fn)
+	.then(function(resp) {
+		return resp.json();
+	}).then(function(obj) {
+    document.getElementById("puzzle").innerHTML = obj.body;
+    document.getElementById("authors").textContent = obj.authors.join(", ");
+    for (let fn of obj.files) {
+      let li = document.createElement("li");
+      let a = document.createElement("a");
+      a.href = base + fn;
+      a.innerText = fn;
+      li.appendChild(a);
+      document.getElementById("files").appendChild(li);
+    }
+	}).catch(function(err) {
+		console.log("Error", err);
+	});
+	
+	document.querySelector("body > h1").innerText = categoryName + " " + points
+	document.querySelector("input[name=cat]").value = categoryName;
+	document.querySelector("input[name=points]").value = points;
+	
+  function mutated(mutationsList, observer) {
+    for (let mutation of mutationsList) {
+      if (mutation.type == 'childList') {
+        for (let e of mutation.addedNodes) {
+          console.log(e);
+          for (let se of e.querySelectorAll("[src],[href]")) {
+            se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
+            console.log(se.outerHTML);
+          }
+          console.log(e.querySelectorAll("[src]"));
+        }
+        console.log(mutation.addedNodes);
+      } else {
+        console.log(mutation);
+      }
+    }
+  }
+
+	let puzzle = document.getElementById("puzzle");
+	let observerOptions = {
+	  childList: true,
+	  attributes: true,
+	  subtree: true,
+	};
+	window.observer = new MutationObserver(mutated);
+	observer.observe(puzzle, observerOptions);
+}
+document.addEventListener("DOMContentLoaded", init);
+    </script>
+  </head>
+  <body>
+    <h1>Puzzle</h1>
+    <section>
+      <div id="puzzle">Loading...</div>
+      <ul id="files"></ul>
+      <p>Puzzle by <span id="authors"></span></p>
+    </section>
+		<form action="answer" method="post">
+		  <input type="hidden" name="cat">
+		  <input type="hidden" name="points">
+		  Team ID: <input type="text" name="id"> <br>
+		  Answer: <input type="text" name="answer"> <br>
+		  <input type="submit" value="Submit">
+		</form>
+    <nav>
+      <ul>
+        <li><a href="puzzle-list.html">Puzzles</a></li>
+        <li><a href="scoreboard.html">Scoreboard</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>

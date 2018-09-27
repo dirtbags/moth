@@ -8,7 +8,9 @@ which in the past has been called
 "HACK",
 "Queen Of The Hill",
 "Cyber Spark",
-and "Cyber Fire".
+"Cyber Fire",
+"Cyber Fire Puzzles",
+and "Cyber Fire Foundry".
 
 Information about these events is at
 http://dirtbags.net/contest/
@@ -18,96 +20,125 @@ It also tracks scores,
 and comes with a JavaScript-based scoreboard to display team rankings.
 
 
+Running a Development Server
+============================
+
+    docker run --rm -it -p 8080:8080 dirtbags/moth-devel
+
+And point a browser to http://localhost:8080/ (or whatever host is running the server).
+
+When you're ready to create your own puzzles,
+read [the devel server documentation](docs/devel-server.md).
+
+Click the `[mb]` link by a puzzle category to compile and download a mothball that the production server can read.
+
+
+Running a Production Server
+===========================
+
+    docker run --rm -it -p 8080:8080 -v /path/to/moth:/moth dirtbags/moth
+
+You can be more fine-grained about directories, if you like.
+Inside the container, you need the following paths:
+
+* `/moth/state` (rw) Where state is stored. Read [the overview](docs/overview.md) to learn what's what in here.
+* `/moth/mothballs` (ro) Mothballs (puzzle bundles) as provided by the development server.
+* `/moth/resources` (ro) Overrides for built-in HTML/CSS resources.
+
+
+
+
+
 Getting Started Developing
 -------------------------------
 
-You'll want to start out with the Development Server.
+If you don't have a `puzzles` directory,
+you can copy the example puzzles as a starting point:
+
+    $ cp -r example-puzzles puzzles
+
+Then launch the development server:
+
+    $ python3 tools/devel-server.py
+
+Point a web browser at http://localhost:8080/
+and start hacking on things in your `puzzles` directory.
 
 More on how the devel sever works in
 [the devel server documentation](docs/devel-server.md)
 
 
-How everything works
----------------------------
-
-This section wound up being pretty long.
-Please check out [the overview](docs/overview.md)
-for details.
-
-
 Running A Production Server
 ====================
 
-Please submit a merge request to improve this section ;)
+Run `dirtbags/moth` (Docker) or `mothd` (native).
+
+`mothd` assumes you're running a contest out of `/moth`.
+For Docker, you'll need to bind-mount your actual directories
+(`state`, `mothballs`, and optionally `resources`) into
+`/moth/`.
+
+You can override any path with an option,
+run `mothd -help` for usage.
 
 
-How to install it
---------------------
-
-It's made to be virtualized,
-so you can run multiple contests at once if you want.
-If you were to want to run it out of `/srv/moth`,
-do the following:
-
-    $ mothinst=/srv/moth/mycontest
-	$ mkdir -p $mothinst
-	$ install.sh $mothinst
-	
-    Yay, you've got it installed.
-
-How to run a contest
-------------------------
-
-`mothd` runs through every contest on your server every few seconds,
-and does housekeeping tasks that make the contest "run".
-If you stop `mothd`, people can still play the contest,
-but their points won't show up on the scoreboard.
-
-A handy side-effect here is that if you need to meddle with the points log,
-you can just kill `mothd`,
-do you work,
-then bring `mothd` back up.
-
-    $ cp src/mothd /srv/moth
-    $ /srv/moth/mothd
-
-You're also going to need a web server if you want people to be able to play.
+State Directory
+===============
 
 
-How to run a web server
------------------------------
+Pausing scoring
+-------------------
 
-Your web server needs to serve up files for you contest out of
-`$mothinst/www`.
+Create the file `state/disabled`
+to pause scoring,
+and remove it to resume.
+You can use the Unix `touch` command to create the file:
 
-If you don't want to fuss around with setting up a full-featured web server,
-you can use `tcpserver` and `eris`,
-which is what we use to run our contests.
+    touch state/disabled
 
-`tcpserver` is part of the `uscpi-tcp` package in Ubuntu.
-You can also use busybox's `tcpsvd` (my preference, but a PITA on Ubuntu).
-
-`eris` can be obtained at https://github.com/nealey/eris
-
-    $ mothinst=/srv/moth/mycontest
-    $ $mothinst/bin/httpd
+When scoring is paused,
+participants can still submit answers,
+and the system will tell them whether the answer is correct.
+As soon as you unpause,
+all correctly-submitted answers will be scored.
 
 
-Installing Puzzle Categories
-------------------------------------
+Resetting an instance
+-------------------
 
-Puzzle categories are distributed in a different way than the server.
-After setting up (see above), just run
+Remove the file `state/initialized`,
+and the server will zap everything.
 
-	$ /srv/koth/mycontest/bin/install-category /path/to/my/category
-	
 
-Permissions
-----------------
+Setting up custom team IDs
+-------------------
 
-It's up to you not to be a bonehead about permissions.
+The file `state/teamids.txt` has all the team IDs,
+one per line.
+This defaults to all 4-digit natural numbers.
+You can edit it to be whatever strings you like.
 
-Install sets it so the web user on your system can write to the files it needs to,
-but if you're using Apache,
-it plays games with user IDs when running CGI.
-You're going to have to figure out how to configure your preferred web server.
+We sometimes to set `teamids.txt` to a bunch of random 8-digit hex values:
+
+    for i in $(seq 50); do od -x /dev/urandom | awk '{print $2 $3; exit;}'; done
+
+Remember that team IDs are essentially passwords.
+
+
+Mothball Directory
+==================
+
+Installing puzzle categories
+-------------------
+
+The development server will provide you with a `.mb` (mothball) file,
+when you click the `[mb]` link next to a category.
+
+Just drop that file into the `mothballs` directory,
+and the server will pick it up.
+
+If you remove a mothball,
+the category will vanish,
+but points scored in that category won't!
+
+
