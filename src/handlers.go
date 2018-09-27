@@ -13,11 +13,11 @@ import (
 )
 
 type JSend struct {
-	Status string `json:"status"`
-	Data JSendData `json:"data"`
+	Status string    `json:"status"`
+	Data   JSendData `json:"data"`
 }
 type JSendData struct {
-	Short string `json:"short"`
+	Short       string `json:"short"`
 	Description string `json:"description"`
 }
 
@@ -27,7 +27,7 @@ func ShowJSend(w http.ResponseWriter, status Status, short string, description s
 	resp := JSend{
 		Status: "success",
 		Data: JSendData{
-			Short: short,
+			Short:       short,
 			Description: description,
 		},
 	}
@@ -41,15 +41,23 @@ func ShowJSend(w http.ResponseWriter, status Status, short string, description s
 	}
 
 	respBytes, err := json.Marshal(resp)
-	if (err != nil) {
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
 	w.Write(respBytes)
 }
+
+type Status int
+
+const (
+	Success = iota
+	Fail
+	Error
+)
 
 // ShowHtml delevers an HTML response to w
 func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
@@ -331,7 +339,29 @@ func (ctx *Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
-	ServeStatic(w, req, ctx.ResourcesDir)
+	path := req.URL.Path
+	if strings.Contains(path, "..") {
+		http.Error(w, "Invalid URL path", http.StatusBadRequest)
+		return
+	}
+	if path == "/" {
+		path = "/index.html"
+	}
+
+	f, err := os.Open(ctx.ResourcePath(path))
+	if err != nil {
+		http.NotFound(w, req)
+		return
+	}
+	defer f.Close()
+
+	d, err := f.Stat()
+	if err != nil {
+		http.NotFound(w, req)
+		return
+	}
+
+	http.ServeContent(w, req, path, d.ModTime(), f)
 }
 
 func (ctx *Instance) BindHandlers(mux *http.ServeMux) {

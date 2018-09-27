@@ -93,6 +93,11 @@ func (ctx *Instance) StatePath(parts ...string) string {
 	return path.Join(ctx.StateDir, tail)
 }
 
+func (ctx *Instance) ResourcePath(parts ...string) string {
+	tail := path.Join(parts...)
+	return path.Join(ctx.ResourcesDir, tail)
+}
+
 func (ctx *Instance) PointsLog() []*Award {
 	var ret []*Award
 

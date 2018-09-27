@@ -208,7 +208,7 @@ func (ctx *Instance) isEnabled() bool {
 		log.Print("Suspended: disabled file found")
 		return false
 	}
-	
+
 	untilspec, err := ioutil.ReadFile(ctx.StatePath("until"))
 	if err == nil {
 		untilspecs := strings.TrimSpace(string(untilspec))

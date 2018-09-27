@@ -27,18 +27,18 @@ func main() {
 	)
 	mothballDir := flag.String(
 		"mothballs",
-		"/moth/mothballs",
+		"/mothballs",
 		"Path to read mothballs",
 	)
 	stateDir := flag.String(
 		"state",
-		"/moth/state",
+		"/state",
 		"Path to write state",
 	)
-	resourcesDir := flag.String(
-		"resources",
-		"/moth/resources",
-		"Path to static resources (HTML, images, css, ...)",
+	themeDir := flag.String(
+		"theme",
+		"/theme",
+		"Path to static theme resources (HTML, images, css, ...)",
 	)
 	maintenanceInterval := flag.Duration(
 		"maint",
@@ -56,7 +56,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *resourcesDir)
+	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *themeDir)
 	if err != nil {
 		log.Fatal(err)
 	}
