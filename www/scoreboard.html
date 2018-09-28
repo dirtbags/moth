@@ -5,9 +5,12 @@
 		<link rel="stylesheet" href="style.css" type="text/css">
 		<script src="scoreboard.js" async></script>
 		<script>
+var type = "original";
+var interval = 60000;
+
 function init() {
 	var sb = document.getElementById("scoreboard");
-	scoreboard(sb, true);
+	scoreboard(sb, true, type, interval);
 }
 
 window.addEventListener("load", init);
