@@ -98,7 +98,7 @@ def build_category(categorydir, outdir):
 
     categoryname = os.path.basename(categorydir.strip(os.sep))
     seedfn = os.path.join("category_seed.txt")
-    zipfilename = os.path.join(outdir, "%s.zip" % categoryname)
+    zipfilename = os.path.join(outdir, "%s.mb" % categoryname)
     logging.info("Building {} from {}".format(zipfilename, categorydir))
 
     if os.path.exists(zipfilename):
