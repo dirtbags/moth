@@ -23,7 +23,7 @@ function scoreboard(element, continuous, mode, interval) {
 		clearInterval(updateInterval);
 	}
 	function update(state) {
-		//console.log("Updating");
+		console.log("Updating scoreboard");
 		var teamnames = state["teams"];
 		var pointslog = state["points"];
 		var highscore = {};
@@ -168,8 +168,6 @@ function scoreboard(element, continuous, mode, interval) {
 			var height = graph.offsetHeight;
 			height = height - titleHeight - margins;
 
-			//var xScale = d3.scaleLinear().range([minTime, maxTime]);
-			//var yScale = d3.scaleLinear().range([0, topActualScore]);
 			var originTime = (maxTime - minTime) / 60;
 			var xScale = d3.scaleLinear().range([marginsX, width - margins]);
 			xScale.domain([0, originTime]);
@@ -181,16 +179,9 @@ function scoreboard(element, continuous, mode, interval) {
 			graph = d3.select("#holding").append("svg")
 				.attr("width", width)
 				.attr("height", height);
-				//.attr("style", "background: white");
 			
-			
-			//graph.append("g")
-			//	.attr("transform", "translate(" + margins + ", 0)")
-			//	.call(d3.axisLeft(yScale))
-			//	.style("stroke", "white");;
 				
 			var maxNumEntry = 10;
-			//var curEntry = 0;
 			var winningTeams = [];
 			for(entry in winners) {
 				var curEntry = entry;
@@ -199,28 +190,9 @@ function scoreboard(element, continuous, mode, interval) {
 				}
 				entry = teamnames[winners[entry].__hash__];
 				winningTeams.push(entry);
-				//console.log(curEntry);
-				//console.log(entry);
 				
-				//var isTop = false;
-				//for(var x=0; x < maxNumEntry; x++)
-				//{
-				//	var teamhash = reverseTeam[entry];
-				//	if(winners[x].__hash__ == teamhash)
-				//	{
-				//		curEntry = x;
-				//		isTop = true;
-				//		break;
-				//	}
-				//}
-				//if(!isTop)
-				//{
-				//	continue;
-				//}
-
 				var curTeam = teamLines[entry];
 				var lastEntry = curTeam[curTeam.length - 1];
-				//curTeam.append()
 				curTeam.push([maxTime, lastEntry[1], lastEntry[2], lastEntry[3], lastEntry]);
 				var curLayer = graph.append("g");
 				curLayer.selectAll("line")
@@ -276,7 +248,6 @@ function scoreboard(element, continuous, mode, interval) {
 			axisG
 				.attr("transform", "translate(0," + (height - margins) + ")")
 				.call(d3.axisBottom(xScale));
-				//.style("stroke", "white");
 			axisG.selectAll("path").style("stroke", "white");
 			axisG.selectAll("line").style("stroke", "white");
 			axisG.selectAll("text").style("fill", "white");
@@ -307,7 +278,6 @@ function scoreboard(element, continuous, mode, interval) {
 				.data(winningTeams)
 				.enter()
 				.append("text")
-				//.attr("class", function(d){ return "team_" + d; })
 				.attr("fill", "black")
 				.style("z-index", function(d, i){ return i; })
 				.attr("dx", 0)
@@ -316,19 +286,6 @@ function scoreboard(element, continuous, mode, interval) {
 				.attr("dominant-baseline", "central")
 				.style("pointer-events", "none");
 
-			//legend.append("g").selectAll("text")
-			//	.data(winningTeams)
-			//	.enter()
-			//	.append("text")
-			//	.attr("class", function(d){ return "team_" + d; })
-			//	.attr("fill", function(d, i){ return colorScale[i]; })
-			//	.style("z-index", function(d, i){ return i; })
-			//	.attr("dx", margins)
-			//	.attr("dy", function(d, i){ return margins + legendRowHeight * (i); })
-			//	.text(function(d){ return d; });
-				//.attr("dominant-baseline", "central");
-				//.style("pointer-events", "none");
-				
 
 			function handleMouseover(d, i) {
 					d3.select("body").selectAll(".tooltip").remove();
@@ -463,7 +420,6 @@ function scoreboard(element, continuous, mode, interval) {
 				numCats++;
 			}
 			var maxWidth = Math.floor(100 / (0.0 + numCats));
-			//console.log(maxWidth);
 
 			for (var i in winners) {
 				var team = winners[i];
@@ -483,7 +439,6 @@ function scoreboard(element, continuous, mode, interval) {
 					
 					var numLeft = catHigh - catTeam;
 					
-					//bar.classList.add("cat" + ncat);
 					bar.style.backgroundColor = colorScale[ncat % 20];
 					bar.style.color = "white";
 					bar.style.width = width + "%";
@@ -497,7 +452,6 @@ function scoreboard(element, continuous, mode, interval) {
 					width = maxWidth * (1 - catPct);
 					if(width > 0) {
 						var noBar = document.createElement("span");
-						//noBar.classList.add("cat" + ncat);
 						noBar.style.backgroundColor = colorScale[ncat % 20];
 						noBar.style.width = width + "%";
 						noBar.textContent = numLeft;
