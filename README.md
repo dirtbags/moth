@@ -36,14 +36,14 @@ Click the `[mb]` link by a puzzle category to compile and download a mothball th
 Running a Production Server
 ===========================
 
-    docker run --rm -it -p 8080:8080 -v /path/to/moth:/moth dirtbags/moth
+    docker run --rm -it -p 8080:8080 -v /path/to/moth/state:/state -v /path/to/moth/balls:/mothballs:ro dirtbags/moth
 
 You can be more fine-grained about directories, if you like.
 Inside the container, you need the following paths:
 
-* `/moth/state` (rw) Where state is stored. Read [the overview](docs/overview.md) to learn what's what in here.
-* `/moth/mothballs` (ro) Mothballs (puzzle bundles) as provided by the development server.
-* `/moth/resources` (ro) Overrides for built-in HTML/CSS resources.
+* `/state` (rw) Where state is stored. Read [the overview](docs/overview.md) to learn what's what in here.
+* `/mothballs` (ro) Mothballs (puzzle bundles) as provided by the development server.
+* `/resources` (ro) Overrides for built-in HTML/CSS resources.
 
 
 
