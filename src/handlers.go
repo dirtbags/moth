@@ -75,6 +75,7 @@ func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
 	}
 
 	fmt.Fprintf(w, "<!DOCTYPE html>")
+	fmt.Fprintf(w, "<!-- If you put `application/json` in the `Accept` header of this request, you would have gotten a JSON object instead of HTML. -->\n")
 	fmt.Fprintf(w, "<html><head>")
 	fmt.Fprintf(w, "<title>%s</title>", title)
 	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
