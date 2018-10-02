@@ -5,4 +5,5 @@ RUN go build -o /mothd /src/*.go
 
 FROM alpine
 COPY --from=builder /mothd /mothd
+COPY theme /theme
 ENTRYPOINT [ "/mothd" ]

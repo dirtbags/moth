@@ -4,6 +4,7 @@ import argparse
 import contextlib
 import glob
 import hashlib
+import html
 import io
 import importlib.machinery
 import mistune
@@ -244,7 +245,7 @@ class Puzzle:
             self.body.write('  ')
             self.body.write(' '.join(hexes[8:]))
             self.body.write('  |')
-            self.body.write(''.join(chars))
+            self.body.write(html.escape(''.join(chars)))
             self.body.write('|\n')
             offset += len(chars)
         self.body.write('{:08x}\n'.format(offset))

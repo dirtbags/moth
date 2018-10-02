@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import asyncio
+import cgitb
 import glob
 import html
 from aiohttp import web
@@ -15,11 +16,12 @@ import shutil
 import socketserver
 import sys
 import traceback
+import mothballer
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
 def mkseed():
-    return bytes(random.choice(b'abcdef0123456789') for i in range(40))
+    return bytes(random.choice(b'abcdef0123456789') for i in range(40)).decode('ascii')
 
 class Page:
     def __init__(self, title, depth=0):
@@ -72,11 +74,17 @@ async def handle_front(request):
     return p.response(request)
 
 async def handle_puzzlelist(request):
+    seed = request.query.get("seed", mkseed())
     p = Page("Puzzle Categories", 1)
+    p.write("<p>seed = {}</p>".format(seed))
     p.write("<ul>")
     for i in sorted(glob.glob(os.path.join(request.app["puzzles_dir"], "*", ""))):
         bn = os.path.basename(i.strip('/\\'))
-        p.write('<li><a href="{}/">puzzles/{}/</a></li>'.format(bn, bn))
+        p.write("<li>")
+        p.write("<a href=\"../mothballer/{cat}?seed={seed}\" class=\"download\" title=\"download mothball\">[mb]</a>".format(cat=bn, seed=seed))
+        p.write(" ")
+        p.write("<a href=\"{cat}/?seed={seed}\">{cat}</a>".format(cat=bn, seed=seed))
+        p.write("</li>")
     p.write("</ul>")
     return p.response(request)
 
@@ -137,7 +145,7 @@ async def handle_puzzle(request):
     return p.response(request)
 
 async def handle_puzzlefile(request):
-    seed = request.query.get("seed", mkseed())
+    seed = request.query.get("seed", mkseed()).encode('ascii')
     category = request.match_info.get("category")
     points = int(request.match_info.get("points"))
     filename = request.match_info.get("filename")
@@ -158,6 +166,25 @@ async def handle_puzzlefile(request):
     resp.body = file.stream.read()
     return resp
 
+async def handle_mothballer(request):
+    seed = request.query.get("seed", mkseed())
+    category = request.match_info.get("category")
+    
+    try:
+        catdir = os.path.join(request.app["puzzles_dir"], category)
+        mb = mothballer.package(category, catdir, seed)
+    except:
+        body = cgitb.html(sys.exc_info())
+        resp = web.Response(text=body, content_type="text/html")
+        return resp
+        
+    mb_buf = mb.read()
+    resp = web.Response(
+        body=mb_buf,
+        headers={"Content-Disposition": "attachment; filename={}.mb".format(category)},
+        content_type="application/octet_stream",
+    )
+    return resp
 
 if __name__ == '__main__':
     import argparse
@@ -192,5 +219,6 @@ if __name__ == '__main__':
     app.router.add_route("GET", "/puzzles/{category}/", handle_category)
     app.router.add_route("GET", "/puzzles/{category}/{points}/", handle_puzzle)
     app.router.add_route("GET", "/puzzles/{category}/{points}/{filename}", handle_puzzlefile)
+    app.router.add_route("GET", "/mothballer/{category}", handle_mothballer)
     app.router.add_static("/files/", mydir, show_index=True)
     web.run_app(app, host=addr, port=port)

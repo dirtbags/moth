@@ -14,7 +14,7 @@
 }
 		</style>
 		<script src="d3.js" async></script>
-		<script src="scoreboard-llnl.js" async></script>
+		<script src="scoreboard.js" async></script>
 		<script>
 
 var type = "original";
@@ -22,7 +22,7 @@ var interval = 60000;
 
 function preinit()
 {
-	type = "total";
+	type = "time";
 	interval = 60000;
 }
 
@@ -35,6 +35,26 @@ function updateType(newType)
 function init() {
 	var sb = document.getElementById("scoreboard");
 	scoreboard(sb, true, type, interval);
+	window.addEventListener("resize", reScoreboardCaller);
+}
+
+var resizeCallback;
+
+function reScoreboardCaller()
+{
+	if(resizeCallback)
+	{
+		clearInterval(resizeCallback);
+	}
+	resizeCallback = setInterval(reScoreboard, 400);
+}
+
+function reScoreboard()
+{
+	clearInterval(resizeCallback);
+	console.log("resizing");
+	var sb = document.getElementById("scoreboard");
+	scoreboard(sb, true, type, interval);
 }
 
 window.addEventListener("load", preinit);
@@ -43,8 +63,7 @@ window.addEventListener("load", init);
 		</script>
 	</head>
 	<body>
-		<h1>Scoreboard</h1>
+		<h1 id="title">Scoreboard</h1>
 		<div id="scoreboard"></div>
 	</body>
 </html>
-

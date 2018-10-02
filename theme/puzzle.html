@@ -17,10 +17,10 @@ function init() {
   let base = "content/" + categoryName + "/" + puzzleId + "/";
   let fn =  base + "puzzle.json";
 
-	fetch(fn)
-	.then(function(resp) {
-		return resp.json();
-	}).then(function(obj) {
+  fetch(fn)
+  .then(function(resp) {
+    return resp.json();
+  }).then(function(obj) {
     document.getElementById("authors").textContent = obj.authors.join(", ");
     for (let fn of obj.files) {
       let li = document.createElement("li");
@@ -31,14 +31,14 @@ function init() {
       document.getElementById("files").appendChild(li);
     }
     document.getElementById("puzzle").innerHTML = obj.body;
-	}).catch(function(err) {
-		console.log("Error", err);
-	});
-	
-	document.querySelector("body > h1").innerText = categoryName + " " + points
-	document.querySelector("input[name=cat]").value = categoryName;
-	document.querySelector("input[name=points]").value = points;
-	
+  }).catch(function(err) {
+    console.log("Error", err);
+  });
+  
+  document.querySelector("body > h1").innerText = categoryName + " " + points
+  document.querySelector("input[name=cat]").value = categoryName;
+  document.querySelector("input[name=points]").value = points;
+  
   function mutated(mutationsList, observer) {
     for (let mutation of mutationsList) {
       if (mutation.type == 'childList') {
@@ -58,14 +58,14 @@ function init() {
     }
   }
 
-	let puzzle = document.getElementById("puzzle");
-	let observerOptions = {
-	  childList: true,
-	  attributes: true,
-	  subtree: true,
-	};
-	window.observer = new MutationObserver(mutated);
-	observer.observe(puzzle, observerOptions);
+  let puzzle = document.getElementById("puzzle");
+  let observerOptions = {
+    childList: true,
+    attributes: true,
+    subtree: true,
+  };
+  window.observer = new MutationObserver(mutated);
+  observer.observe(puzzle, observerOptions);
 }
 document.addEventListener("DOMContentLoaded", init);
     </script>
@@ -77,13 +77,13 @@ document.addEventListener("DOMContentLoaded", init);
       <ul id="files"></ul>
       <p>Puzzle by <span id="authors"></span></p>
     </section>
-		<form action="answer" method="post">
-		  <input type="hidden" name="cat">
-		  <input type="hidden" name="points">
-		  Team ID: <input type="text" name="id"> <br>
-		  Answer: <input type="text" name="answer"> <br>
-		  <input type="submit" value="Submit">
-		</form>
+    <form action="answer" method="post">
+      <input type="hidden" name="cat">
+      <input type="hidden" name="points">
+      Team ID: <input type="text" name="id"> <br>
+      Answer: <input type="text" name="answer"> <br>
+      <input type="submit" value="Submit">
+    </form>
     <nav>
       <ul>
         <li><a href="puzzle-list.html">Puzzles</a></li>
