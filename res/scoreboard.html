@@ -1,29 +1,26 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Welcome</title>
+    <title>Scoreboard</title>
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
     <link rel="icon" href="images/luna-moth.svg" type="image/svg+xml">
     <link rel="icon" href="images/luna-moth.png" type="image/png">
+    <script src="scoreboard.js" async></script>
+    <script>
+function init() {
+	var sb = document.getElementById("scoreboard");
+	scoreboard(sb, true, "original", 60000);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+    </script>
   </head>
   <body>
-    <h1>Welcome</h1>
+    <h1 class="Success">Scoreboard</h1>
     <section>
-      <h2>Register your team</h2>
-      
-      <form action="register" method="post">
-        Team ID: <input name="id"> <br>
-        Team name: <input name="name">
-        <input type="submit" value="Register">
-      </form>
-      
-      <p>
-        If someone on your team has already registered,
-        proceed to the
-        <a href="puzzle-list.html">puzzles overview</a>.
-      </p>
-		</section>
+      <div id="scoreboard"></div>
+    </section>
     <nav>
       <ul>
         <li><a href="puzzle-list.html">Puzzles</a></li>
