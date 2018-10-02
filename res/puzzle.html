@@ -20,7 +20,6 @@ function init() {
 	.then(function(resp) {
 		return resp.json();
 	}).then(function(obj) {
-    document.getElementById("puzzle").innerHTML = obj.body;
     document.getElementById("authors").textContent = obj.authors.join(", ");
     for (let fn of obj.files) {
       let li = document.createElement("li");
@@ -30,6 +29,7 @@ function init() {
       li.appendChild(a);
       document.getElementById("files").appendChild(li);
     }
+    document.getElementById("puzzle").innerHTML = obj.body;
 	}).catch(function(err) {
 		console.log("Error", err);
 	});
@@ -42,14 +42,15 @@ function init() {
     for (let mutation of mutationsList) {
       if (mutation.type == 'childList') {
         for (let e of mutation.addedNodes) {
-          console.log(e);
+          //console.log(e);
+          if (! e.querySelectorAll) { continue; }
           for (let se of e.querySelectorAll("[src],[href]")) {
             se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
-            console.log(se.outerHTML);
+               //console.log(se.outerHTML);
           }
-          console.log(e.querySelectorAll("[src]"));
+          //console.log(e.querySelectorAll("[src]"));
         }
-        console.log(mutation.addedNodes);
+        //console.log(mutation.addedNodes);
       } else {
         console.log(mutation);
       }
