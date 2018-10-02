@@ -35,32 +35,33 @@ function render(obj) {
       var id = puzzle[1];
   
       var i = document.createElement('li');
+      i.textContent = " ";
       l.appendChild(i);
   
       if (points === 0) {
-  	    i.textContent = "✿";
+        i.textContent = "✿";
       } else {
-      	var a = document.createElement('a');
-      	i.appendChild(a);
-      	a.textContent = points;
+        var a = document.createElement('a');
+        i.appendChild(a);
+        a.textContent = points;
         a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id;
-	    }
-  	}
+      }
+    }
 
-		puzzlesElement.appendChild(pdiv);
-		document.getElementById("puzzles").appendChild(puzzlesElement);
+    puzzlesElement.appendChild(pdiv);
+    document.getElementById("puzzles").appendChild(puzzlesElement);
   }
 }
 
 function init() {
-	fetch("puzzles.json")
-	.then(function(resp) {
-		return resp.json();
-	}).then(function(obj) {
-		render(obj);
-	}).catch(function(err) {
-		console.log("Error", err);
-	});
+  fetch("puzzles.json")
+  .then(function(resp) {
+    return resp.json();
+  }).then(function(obj) {
+    render(obj);
+  }).catch(function(err) {
+    console.log("Error", err);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", init);
