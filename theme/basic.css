@@ -28,7 +28,7 @@ p {
 form, pre {
 	margin: 1em;
 }
-input {
+input, select {
 	padding: 0.6em;
 	margin: 0.2em;
 }
