@@ -4,6 +4,7 @@
     <title>Puzzle</title>
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
+    <meta charset="utf-8">
     <script>
 function init() {
   let params = new URLSearchParams(window.location.search);
@@ -19,6 +20,25 @@ function init() {
     return resp.json();
   }).then(function(obj) {
     document.getElementById("authors").textContent = obj.authors.join(", ");
+    if (obj.answers) {
+      let oldans = document.querySelector("[name=answer]");
+      let ans = document.createElement("select");
+      oldans.parentNode.replaceChild(ans, oldans);
+      for (let a of obj.answers) {
+        let opt = document.createElement("option");
+        ans.appendChild(opt);
+        opt.innerText = a;
+      }
+      
+      document.getElementById("idtxt").innerText = "Summary/Hint:"
+      
+      let id = document.querySelector("[name=id]");
+      id.disabled = true;
+      id.value = "❖ " + (obj.summary || obj.hint);
+      id.title = "This will be hidden to participants";
+      
+      document.querySelector("[type=Submit]").disabled = true;
+    }
     for (let fn of obj.files) {
       let li = document.createElement("li");
       let a = document.createElement("a");
@@ -77,7 +97,7 @@ document.addEventListener("DOMContentLoaded", init);
     <form action="answer" method="post">
       <input type="hidden" name="cat">
       <input type="hidden" name="points">
-      Team ID: <input type="text" name="id"> <br>
+      <span id="idtxt">Team ID:</span> <input type="text" name="id"> <br>
       Answer: <input type="text" name="answer"> <br>
       <input type="submit" value="Submit">
     </form>

@@ -38,7 +38,7 @@ def escape(s):
 
 
 def build_category(categorydir, outdir):
-    category_seed = binascii.b2a_hex(os.urandom(20))
+    category_seed = random.getrandbits(32)
 
     categoryname = os.path.basename(categorydir.strip(os.sep))
     zipfilename = os.path.join(outdir, "%s.mb" % categoryname)
@@ -48,7 +48,7 @@ def build_category(categorydir, outdir):
         # open and gather some state
         existing = zipfile.ZipFile(zipfilename, 'r')
         try:
-            category_seed = existing.open(SEEDFN).read().strip()
+            category_seed = int(existing.open(SEEDFN).read().strip())
         except Exception:
             pass
         existing.close()
@@ -65,7 +65,7 @@ def build_category(categorydir, outdir):
 def package(categoryname, categorydir, seed):
     zfraw = io.BytesIO()
     zf = zipfile.ZipFile(zfraw, 'x')
-    zf.writestr("category_seed.txt", seed)
+    zf.writestr("category_seed.txt", str(seed))
 
     cat = moth.Category(categorydir, seed)
     mapping = {}
@@ -74,7 +74,7 @@ def package(categoryname, categorydir, seed):
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
 
-        hashmap = hashlib.sha1(seed.encode('utf-8'))
+        hashmap = hashlib.sha1(str(seed).encode('utf-8'))
         hashmap.update(str(puzzle.points).encode('utf-8'))
         puzzlehash = hashmap.hexdigest()
 
@@ -82,23 +82,13 @@ def package(categoryname, categorydir, seed):
         answers[puzzle.points] = puzzle.answers
         summary[puzzle.points] = puzzle.summary
 
-        puzzledir = os.path.join('content', puzzlehash)
-        files = []
+        puzzledir = os.path.join("content", puzzlehash)
         for fn, f in puzzle.files.items():
-            if f.visible:
-                files.append(fn)
             payload = f.stream.read()
             zf.writestr(os.path.join(puzzledir, fn), payload)
 
-        puzzledict = {
-            'authors': puzzle.authors,
-            'hashes': puzzle.hashes(),
-            'files': files,
-            'scripts': puzzle.scripts,
-            'body': puzzle.html_body(),
-        }
-        puzzlejson = json.dumps(puzzledict)
-        zf.writestr(os.path.join(puzzledir, 'puzzle.json'), puzzlejson)
+        obj = puzzle.package()
+        zf.writestr(os.path.join(puzzledir, 'puzzle.json'), json.dumps(obj))
 
     write_kv_pairs(zf, 'map.txt', mapping)
     write_kv_pairs(zf, 'answers.txt', answers)
