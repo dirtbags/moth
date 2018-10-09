@@ -31,6 +31,7 @@ form, pre {
 input, select {
 	padding: 0.6em;
 	margin: 0.2em;
+	max-width: 30em;
 }
 nav {
   border: solid black 2px;

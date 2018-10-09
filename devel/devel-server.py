@@ -24,9 +24,7 @@ sys.dont_write_bytecode = True  # Don't write .pyc files
 async def handle_puzzlelist(request):
     seed = int(request.match_info.get("seed"))
     puzzles = {
-        "__devel__": {
-            "seed": seed,
-        },
+        "__devel__": [[0, ""]],
     }
     for p in request.app["puzzles_dir"].glob("*"):
         if not p.is_dir() or p.match(".*"):
@@ -121,11 +119,16 @@ async def handle_index(request):
 
 
 async def handle_static(request):
+    themes = request.app["theme_dir"]
     fn = request.match_info.get("filename")
     if not fn:
-        fn = "puzzles-list.html"
-    fn = os.path.join(request.app["theme_dir"], fn)
-    return web.FileResponse(fn)
+        for fn in ("puzzle-list.html", "index.html"):
+            path = themes.joinpath(fn)
+            if path.exists():
+                break
+    else:
+        path = themes.joinpath(fn)
+    return web.FileResponse(path)
 
 
 if __name__ == '__main__':

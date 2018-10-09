@@ -24,6 +24,7 @@ function init() {
       let oldans = document.querySelector("[name=answer]");
       let ans = document.createElement("select");
       oldans.parentNode.replaceChild(ans, oldans);
+      ans.multiple = true;
       for (let a of obj.answers) {
         let opt = document.createElement("option");
         ans.appendChild(opt);
