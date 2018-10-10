@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
     <meta charset="utf-8">
+    <script src="devel.js"></script>
     <script>
 function init() {
   let params = new URLSearchParams(window.location.search);
@@ -19,26 +20,16 @@ function init() {
   .then(function(resp) {
     return resp.json();
   }).then(function(obj) {
+    document.getElementById("puzzle").innerHTML = obj.body;
     document.getElementById("authors").textContent = obj.authors.join(", ");
     if (obj.answers) {
-      let oldans = document.querySelector("[name=answer]");
-      let ans = document.createElement("select");
-      oldans.parentNode.replaceChild(ans, oldans);
-      ans.multiple = true;
-      for (let a of obj.answers) {
-        let opt = document.createElement("option");
-        ans.appendChild(opt);
-        opt.innerText = a;
-      }
+      devel_addin(obj, document.getElementById("devel"));
+    }
+    for (let script of obj.scripts) {
+      let st = document.createElement("script");
+      document.head.appendChild(st);
+      st.src = base + script;
       
-      document.getElementById("idtxt").innerText = "Summary/Hint:"
-      
-      let id = document.querySelector("[name=id]");
-      id.disabled = true;
-      id.value = "❖ " + (obj.summary || obj.hint);
-      id.title = "This will be hidden to participants";
-      
-      document.querySelector("[type=Submit]").disabled = true;
     }
     for (let fn of obj.files) {
       let li = document.createElement("li");
@@ -48,7 +39,6 @@ function init() {
       li.appendChild(a);
       document.getElementById("files").appendChild(li);
     }
-    document.getElementById("puzzle").innerHTML = obj.body;
   }).catch(function(err) {
     console.log("Error", err);
   });
@@ -98,10 +88,11 @@ document.addEventListener("DOMContentLoaded", init);
     <form action="answer" method="post">
       <input type="hidden" name="cat">
       <input type="hidden" name="points">
-      <span id="idtxt">Team ID:</span> <input type="text" name="id"> <br>
-      Answer: <input type="text" name="answer"> <br>
+      Team ID: <input type="text" name="id"> <br>
+      Answer: <input type="text" name="answer" id="answer"> <br>
       <input type="submit" value="Submit">
     </form>
+    <div id="devel"></div>
     <nav>
       <ul>
         <li><a href="puzzle-list.html">Puzzles</a></li>
