@@ -20,7 +20,6 @@ function init() {
   .then(function(resp) {
     return resp.json();
   }).then(function(obj) {
-    document.getElementById("puzzle").innerHTML = obj.body;
     document.getElementById("authors").textContent = obj.authors.join(", ");
     if (obj.answers) {
       devel_addin(obj, document.getElementById("devel"));
@@ -39,6 +38,16 @@ function init() {
       li.appendChild(a);
       document.getElementById("files").appendChild(li);
     }
+
+    // Prefix `base` to relative URLs in the puzzle body
+    let doc = new DOMParser().parseFromString(obj.body, "text/html");
+    for (let se of doc.querySelectorAll("[src,href]")) {
+      se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"");
+    }
+
+    let puzzle = document.getElementById("puzzle");
+    while (puzzle.firstChild) puzzle.firstChild.remove();
+    for (let e of doc.body.childNodes) puzzle.appendChild(e);
   }).catch(function(err) {
     console.log("Error", err);
   });
@@ -47,33 +56,6 @@ function init() {
   document.querySelector("input[name=cat]").value = categoryName;
   document.querySelector("input[name=points]").value = points;
   
-  function mutated(mutationsList, observer) {
-    for (let mutation of mutationsList) {
-      if (mutation.type == 'childList') {
-        for (let e of mutation.addedNodes) {
-          //console.log(e);
-          if (! e.querySelectorAll) { continue; }
-          for (let se of e.querySelectorAll("[src],[href]")) {
-            se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
-               //console.log(se.outerHTML);
-          }
-          //console.log(e.querySelectorAll("[src]"));
-        }
-        //console.log(mutation.addedNodes);
-      } else {
-        console.log(mutation);
-      }
-    }
-  }
-
-  let puzzle = document.getElementById("puzzle");
-  let observerOptions = {
-    childList: true,
-    attributes: true,
-    subtree: true,
-  };
-  window.observer = new MutationObserver(mutated);
-  observer.observe(puzzle, observerOptions);
 }
 document.addEventListener("DOMContentLoaded", init);
     </script>
