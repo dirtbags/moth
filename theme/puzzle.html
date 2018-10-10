@@ -13,23 +13,31 @@ function init() {
   let points = params.get("points");
   let puzzleId = params.get("pid");
 
+  let puzzle = document.getElementById("puzzle");
   let base = "content/" + categoryName + "/" + puzzleId + "/";
-  let fn =  base + "puzzle.json";
 
-  fetch(fn)
-  .then(function(resp) {
+  fetch(base + "puzzle.json")
+  .then(resp => {
     return resp.json();
-  }).then(function(obj) {
+  })
+  .then(obj => {
+    // Populate authors
     document.getElementById("authors").textContent = obj.authors.join(", ");
+    
+    // If answers are provided, this is the devel server
     if (obj.answers) {
       devel_addin(obj, document.getElementById("devel"));
     }
+    
+    // Load scripts
     for (let script of obj.scripts) {
       let st = document.createElement("script");
       document.head.appendChild(st);
       st.src = base + script;
       
     }
+    
+    // List associated files
     for (let fn of obj.files) {
       let li = document.createElement("li");
       let a = document.createElement("a");
@@ -45,19 +53,29 @@ function init() {
       se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"");
     }
 
-    let puzzle = document.getElementById("puzzle");
-    while (puzzle.firstChild) puzzle.firstChild.remove();
-    for (let e of doc.body.childNodes) puzzle.appendChild(e);
-  }).catch(function(err) {
-    console.log("Error", err);
+    // Replace puzzle children with what's in `doc`
+    Array.from(puzzle.childNodes).map(e => e.remove());
+    Array.from(doc.body.childNodes).map(e => puzzle.appendChild(e));
+  })
+  .catch(err => {
+    // Show error to the user
+    Array.from(puzzle.childNodes).map(e => e.remove());
+    let p = document.createElement("p");
+    puzzle.appendChild(p);
+    p.classList.add("Error");
+    p.textContent = err;
   });
   
-  document.querySelector("body > h1").innerText = categoryName + " " + points
+  document.title = categoryName + " " + points;
+  document.querySelector("body > h1").innerText = document.title;
   document.querySelector("input[name=cat]").value = categoryName;
   document.querySelector("input[name=points]").value = points;
-  
 }
-document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
     </script>
   </head>
   <body>
