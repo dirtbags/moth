@@ -19,10 +19,18 @@ import traceback
 import mothballer
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
-    
+
+
+def get_seed(request):
+    seedstr = request.match_info.get("seed")
+    if seedstr == "random":
+        return random.getrandbits(32)
+    else:
+        return int(seedstr)
+
 
 async def handle_puzzlelist(request):
-    seed = int(request.match_info.get("seed"))
+    seed = get_seed(request)
     puzzles = {
         "__devel__": [[0, ""]],
     }
@@ -40,7 +48,7 @@ async def handle_puzzlelist(request):
 
 
 async def handle_puzzle(request):
-    seed = int(request.match_info.get("seed"))
+    seed = get_seed(request)
     category = request.match_info.get("category")
     points = int(request.match_info.get("points"))
     cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
@@ -58,7 +66,7 @@ async def handle_puzzle(request):
     
 
 async def handle_puzzlefile(request):
-    seed = int(request.match_info.get("seed"))
+    seed = get_seed(request)
     category = request.match_info.get("category")
     points = int(request.match_info.get("points"))
     filename = request.match_info.get("filename")
@@ -78,7 +86,7 @@ async def handle_puzzlefile(request):
 
 
 async def handle_mothballer(request):
-    seed = int(request.match_info.get("seed"))
+    seed = get_seed(request)
     category = request.match_info.get("category")
     
     try:
@@ -106,9 +114,16 @@ async def handle_index(request):
   <body>
     <h1>Dev Server</h1>
     <p>
-    You need to provide the contest seed in the URL.
-    If you don't have a contest seed in mind,
-    why not try <a href="{seed}/">{seed}</a>?
+      You need to provide the contest seed in the URL.
+      If you don't have a contest seed in mind,
+      why not try <a href="{seed}/">{seed}</a>?
+    </p>
+    <p>
+      If you are chaotic,
+      you could even take your chances with a
+      <a href="random/">random seed</a> for every HTTP request.
+      This means generated files will get a different seed than the puzzle itself!
+    </p>
   </body>
 </html>
 """.format(seed=seed)
