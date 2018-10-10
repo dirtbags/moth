@@ -41,7 +41,7 @@ function init() {
 
     // Prefix `base` to relative URLs in the puzzle body
     let doc = new DOMParser().parseFromString(obj.body, "text/html");
-    for (let se of doc.querySelectorAll("[src,href]")) {
+    for (let se of doc.querySelectorAll("[src],[href]")) {
       se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"");
     }
 
