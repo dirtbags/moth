@@ -9,10 +9,9 @@
 
 function render(obj) {
   puzzlesElement = document.createElement('div');
-  let cats = [];
-  for (let cat in obj) {
-    cats.push(cat);
-  }
+
+  // Create a sorted list of category names
+  let cats = Object.keys(obj);
   cats.sort();
 
   for (let cat of cats) {
@@ -29,6 +28,7 @@ function render(obj) {
     pdiv.appendChild(h);
     h.textContent = cat;
     
+    // Extras if we're running a devel server
     if (obj.__devel__) {
       var a = document.createElement('a');
       h.insertBefore(a, h.firstChild);
@@ -50,6 +50,7 @@ function render(obj) {
       i.textContent = " ";
   
       if (points === 0) {
+        // Sentry: there are no more puzzles in this category
         i.textContent = "✿";
       } else {
         var a = document.createElement('a');
@@ -66,16 +67,22 @@ function render(obj) {
 
 function init() {
   fetch("puzzles.json")
-  .then(function(resp) {
+  .then(resp => {
     return resp.json();
-  }).then(function(obj) {
+  })
+  .then(obj => {
     render(obj);
-  }).catch(function(err) {
+  })
+  .catch(err => {
     console.log("Error", err);
   });
 }
 
-document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
     </script>
   </head>
   <body>
