@@ -41,6 +41,8 @@ async def handle_puzzlelist(request):
         cat = moth.Category(p, seed)
         puzzles[catName] = [[i, str(i)] for i in cat.pointvals()]
         puzzles[catName].append([0, ""])
+    if len(puzzles) <= 1:
+        logging.warning("No directories found matching {}/*".format(request.app["puzzles_dir"]))
     return web.Response(
         content_type="application/json",
         body=json.dumps(puzzles),
