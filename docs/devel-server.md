@@ -30,7 +30,7 @@ try this:
 	apt install python3
 	git clone https://github.com/dirtbags/moth/
 	cd moth
-	./devel-server.py --puzzles example-puzzles
+	python3 devel/devel-server.py --puzzles example-puzzles
 
 
 Installing New Puzzles
