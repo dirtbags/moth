@@ -60,6 +60,7 @@ async def handle_puzzle(request):
     obj["answers"] = puzzle.answers
     obj["hint"] = puzzle.hint
     obj["summary"] = puzzle.summary
+    obj["logs"] = puzzle.logs
     
     return web.Response(
         content_type="application/json",
