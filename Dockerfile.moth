@@ -1,4 +1,4 @@
-FROM alpine AS builder
+FROM alpine:3.8 AS builder
 RUN apk --no-cache add go libc-dev
 COPY src /src
 RUN go build -o /mothd /src/*.go

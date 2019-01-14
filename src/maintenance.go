@@ -31,7 +31,7 @@ func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 	return []byte(ret), nil
 }
 
-func (ctx *Instance) generatePuzzleList() error {
+func (ctx *Instance) generatePuzzleList() {
 	maxByCategory := map[string]int{}
 	for _, a := range ctx.PointsLog() {
 		if a.Points > maxByCategory[a.Category] {
@@ -43,7 +43,8 @@ func (ctx *Instance) generatePuzzleList() error {
 	for catName, mb := range ctx.Categories {
 		mf, err := mb.Open("map.txt")
 		if err != nil {
-			return err
+			// File isn't in there
+			continue
 		}
 		defer mf.Close()
 
@@ -58,9 +59,11 @@ func (ctx *Instance) generatePuzzleList() error {
 
 			n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
 			if err != nil {
-				return err
+				log.Printf("Parsing map for %s: %v", catName, err)
+				continue
 			} else if n != 2 {
-				return fmt.Errorf("Parsing map for %s: short read", catName)
+				log.Printf("Parsing map for %s: short read", catName)
+				continue
 			}
 
 			pm = append(pm, PuzzleMap{pointval, dir})
@@ -78,13 +81,14 @@ func (ctx *Instance) generatePuzzleList() error {
 	}
 
 	jpl, err := json.Marshal(ret)
-	if err == nil {
-		ctx.jPuzzleList = jpl
+	if err != nil {
+		log.Printf("Marshalling puzzles.js: %v", err)
+		return
 	}
-	return err
+	ctx.jPuzzleList = jpl
 }
 
-func (ctx *Instance) generatePointsLog() error {
+func (ctx *Instance) generatePointsLog() {
 	var ret struct {
 		Teams  map[string]string `json:"teams"`
 		Points []*Award          `json:"points"`
@@ -98,7 +102,7 @@ func (ctx *Instance) generatePointsLog() error {
 		if !ok {
 			teamName, err := ctx.TeamName(a.TeamId)
 			if err != nil {
-				teamName = "[unregistered]"
+				teamName = "Rodney" // https://en.wikipedia.org/wiki/Rogue_(video_game)#Gameplay
 			}
 			teamNumber = nr
 			teamNumbersById[a.TeamId] = teamNumber
@@ -108,10 +112,11 @@ func (ctx *Instance) generatePointsLog() error {
 	}
 
 	jpl, err := json.Marshal(ret)
-	if err == nil {
-		ctx.jPointsLog = jpl
+	if err != nil {
+		log.Printf("Marshalling points.js: %v", err)
+		return
 	}
-	return err
+	ctx.jPointsLog = jpl
 }
 
 // maintenance runs

@@ -75,6 +75,7 @@ func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
 	}
 
 	fmt.Fprintf(w, "<!DOCTYPE html>")
+	fmt.Fprintf(w, "<!-- If you put `application/json` in the `Accept` header of this request, you would have gotten a JSON object instead of HTML. -->\n")
 	fmt.Fprintf(w, "<html><head>")
 	fmt.Fprintf(w, "<title>%s</title>", title)
 	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
@@ -170,70 +171,6 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 		w, req, Success,
 		"Team registered",
 		"Okay, your team has been named and you may begin using your team ID!",
-	)
-}
-
-func (ctx *Instance) tokenHandler(w http.ResponseWriter, req *http.Request) {
-	teamid := req.FormValue("id")
-	token := req.FormValue("token")
-
-	var category string
-	var points int
-	var fluff string
-
-	stoken := strings.Replace(token, ":", " ", 2)
-	n, err := fmt.Sscanf(stoken, "%s %d %s", &category, &points, &fluff)
-	if err != nil || n != 3 {
-		respond(
-			w, req, Fail,
-			"Malformed token",
-			"That doesn't look like a token: %v.", err,
-		)
-		return
-	}
-
-	if (category == "") || (points <= 0) {
-		respond(
-			w, req, Fail,
-			"Weird token",
-			"That token doesn't make any sense.",
-		)
-		return
-	}
-
-	f, err := ctx.OpenCategoryFile(category, "tokens.txt")
-	if err != nil {
-		respond(
-			w, req, Fail,
-			"Cannot list valid tokens",
-			err.Error(),
-		)
-		return
-	}
-	defer f.Close()
-
-	// Make sure the token is in the list
-	if !hasLine(f, token) {
-		respond(
-			w, req, Fail,
-			"Unrecognized token",
-			"I don't recognize that token. Did you type in the whole thing?",
-		)
-		return
-	}
-
-	if err := ctx.AwardPoints(teamid, category, points); err != nil {
-		respond(
-			w, req, Fail,
-			"Error awarding points",
-			err.Error(),
-		)
-		return
-	}
-	respond(
-		w, req, Success,
-		"Points awarded",
-		"%d points for %s!", points, teamid,
 	)
 }
 
@@ -367,7 +304,6 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 func (ctx *Instance) BindHandlers(mux *http.ServeMux) {
 	mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
 	mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
-	mux.HandleFunc(ctx.Base+"/token", ctx.tokenHandler)
 	mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
 	mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
 	mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)

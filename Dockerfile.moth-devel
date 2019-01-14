@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 
 RUN apk --no-cache add \
     gcc \
@@ -6,11 +6,12 @@ RUN apk --no-cache add \
     python3 \
     python3-dev \
     py3-pillow \
-  && \
-    pip3 install aiohttp
+  && pip3 install aiohttp
 
-COPY . /moth/
+COPY devel /app/
 COPY example-puzzles /puzzles/
+COPY theme /theme/
 
 WORKDIR /moth/
-ENTRYPOINT ["python3", "/moth/devel/devel-server.py", "--bind", ":8080", "--puzzles", "/puzzles"]
+ENTRYPOINT [ "python3", "/app/devel-server.py" ]
+CMD [ "--bind", "0.0.0.0:8080", "--puzzles", "/puzzles", "--theme", "/theme" ]
