@@ -1,9 +1,10 @@
 Being in this list is voluntary. Add your name when you contribute code.
 
-Neale Pickett
-Patrick Avery
-Paul Ferrell
-Shannon Steinfadt
+* Neale Pickett
+* Patrick Avery
+* Paul Ferrell
+* Shannon Steinfadt
+* John Donaldson
 
 Word List
 ---------
