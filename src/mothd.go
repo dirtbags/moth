@@ -1,23 +1,18 @@
 package main
 
 import (
-	"flag"
+	"github.com/namsral/flag"
 	"log"
 	"mime"
 	"net/http"
 	"time"
 )
 
-func logRequest(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("HTTP %s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
 
 func setup() error {
 	return nil
 }
+
 
 func main() {
 	base := flag.String(
@@ -40,6 +35,11 @@ func main() {
 		"/theme",
 		"Path to static theme resources (HTML, images, css, ...)",
 	)
+	password := flag.String(
+		"password",
+		"sesame",
+		"Pass Word (in the 1920s sense) to view the site. Not a secure passphrase.",
+	)
 	maintenanceInterval := flag.Duration(
 		"maint",
 		20*time.Second,
@@ -56,11 +56,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *themeDir)
+	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *themeDir, *password)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx.BindHandlers(http.DefaultServeMux)
 
 	// Add some MIME extensions
 	// Doing this avoids decompressing a mothball entry twice per request
@@ -70,5 +69,5 @@ func main() {
 	go ctx.Maintenance(*maintenanceInterval)
 
 	log.Printf("Listening on %s", *listen)
-	log.Fatal(http.ListenAndServe(*listen, logRequest(http.DefaultServeMux)))
+	log.Fatal(http.ListenAndServe(*listen, ctx))
 }
