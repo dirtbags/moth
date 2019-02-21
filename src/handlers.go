@@ -21,14 +21,20 @@ type JSendData struct {
 	Description string `json:"description"`
 }
 
-// ShowJSend renders a JSend response to w
-func ShowJSend(w http.ResponseWriter, status Status, short string, description string) {
+type Status int
 
+const (
+	Success = iota
+	Fail
+	Error
+)
+
+func respond(w http.ResponseWriter, req *http.Request, status Status, short string, format string, a ...interface{}) {
 	resp := JSend{
 		Status: "success",
 		Data: JSendData{
 			Short:       short,
-			Description: description,
+			Description: fmt.Sprintf(format, a...),
 		},
 	}
 	switch status {
@@ -49,59 +55,6 @@ func ShowJSend(w http.ResponseWriter, status Status, short string, description s
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
 	w.Write(respBytes)
-}
-
-type Status int
-
-const (
-	Success = iota
-	Fail
-	Error
-)
-
-// ShowHtml delevers an HTML response to w
-func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
-	statusStr := ""
-	switch status {
-	case Success:
-		statusStr = "Success"
-	case Fail:
-		statusStr = "Fail"
-	default:
-		statusStr = "Error"
-	}
-
-	fmt.Fprintf(w, "<!DOCTYPE html>")
-	fmt.Fprintf(w, "<!-- If you put `application/json` in the `Accept` header of this request, you would have gotten a JSON object instead of HTML. -->\n")
-	fmt.Fprintf(w, "<html><head>")
-	fmt.Fprintf(w, "<title>%s</title>", title)
-	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
-	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\">")
-	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.svg\" type=\"image/svg+xml\">")
-	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.png\" type=\"image/png\">")
-	fmt.Fprintf(w, "</head><body><h1 class=\"%s\">%s</h1>", statusStr, title)
-	fmt.Fprintf(w, "<section>%s</section>", body)
-	fmt.Fprintf(w, "<nav>")
-	fmt.Fprintf(w, "<ul>")
-	fmt.Fprintf(w, "<li><a href=\"puzzle-list.html\">Puzzles</a></li>")
-	fmt.Fprintf(w, "<li><a href=\"scoreboard.html\">Scoreboard</a></li>")
-	fmt.Fprintf(w, "</ul>")
-	fmt.Fprintf(w, "</nav>")
-	fmt.Fprintf(w, "</body></html>")
-}
-
-func respond(w http.ResponseWriter, req *http.Request, status Status, short string, format string, a ...interface{}) {
-	long := fmt.Sprintf(format, a...)
-	// This is a kludge. Do proper parsing when this causes problems.
-	accept := req.Header.Get("Accept")
-	if strings.Contains(accept, "application/json") {
-		ShowJSend(w, status, short, long)
-	} else {
-		ShowHtml(w, status, short, long)
-	}
 }
 
 // hasLine returns true if line appears in r.
@@ -301,11 +254,53 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, path, d.ModTime(), f)
 }
 
-func (ctx *Instance) BindHandlers(mux *http.ServeMux) {
-	mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
-	mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
-	mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
-	mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
-	mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
-	mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
+type FurtiveResponseWriter struct {
+	w http.ResponseWriter
+	statusCode *int
 }
+
+func (w FurtiveResponseWriter) WriteHeader(statusCode int) {
+	*w.statusCode = statusCode
+	w.w.WriteHeader(statusCode)
+}
+
+func (w FurtiveResponseWriter) Write(buf []byte) (n int, err error) {
+	n, err = w.w.Write(buf)
+	return
+}
+
+func (w FurtiveResponseWriter) Header() http.Header {
+	return w.w.Header()
+}
+
+// This gives Instances the signature of http.Handler
+func (ctx *Instance) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
+	w := FurtiveResponseWriter{
+		w: wOrig,
+		statusCode: new(int),
+	}
+	w.Header().Set("WWW-Authenticate", "Basic")
+	_, password, _ := r.BasicAuth()
+	if password != ctx.Password {
+		http.Error(w, "Authentication Required", 401)
+	} else {
+		ctx.mux.ServeHTTP(w, r)
+	}
+	log.Printf(
+		"%s %s %s %d\n",
+		r.RemoteAddr,
+		r.Method,
+		r.URL,
+		*w.statusCode,
+	)
+}
+
+func (ctx *Instance) BindHandlers() {
+	ctx.mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
+}
+

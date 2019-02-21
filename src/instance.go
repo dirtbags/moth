@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -17,20 +18,24 @@ type Instance struct {
 	MothballDir  string
 	StateDir     string
 	ResourcesDir string
+	Password     string
 	Categories   map[string]*Mothball
 	update       chan bool
 	jPuzzleList  []byte
 	jPointsLog   []byte
+	mux         *http.ServeMux
 }
 
-func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
+func NewInstance(base, mothballDir, stateDir, resourcesDir, password string) (*Instance, error) {
 	ctx := &Instance{
 		Base:         strings.TrimRight(base, "/"),
 		MothballDir:  mothballDir,
 		StateDir:     stateDir,
 		ResourcesDir: resourcesDir,
+		Password:     password,
 		Categories:   map[string]*Mothball{},
 		update:       make(chan bool, 10),
+		mux:          http.NewServeMux(),
 	}
 
 	// Roll over and die if directories aren't even set up
@@ -40,7 +45,8 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, e
 	if _, err := os.Stat(stateDir); err != nil {
 		return nil, err
 	}
-
+	
+	ctx.BindHandlers()
 	ctx.MaybeInitialize()
 
 	return ctx, nil
