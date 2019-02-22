@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"math/rand"
 )
 
 type Instance struct {
@@ -52,6 +53,18 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir, password string) (*I
 	return ctx, nil
 }
 
+// Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
+const distinguishableChars = "234678abcdefhijkmnpqrtuvwxyz="
+
+func mktoken() string {
+	a := make([]byte, 8)
+	for i := range(a) {
+		char := rand.Intn(len(distinguishableChars))
+		a[i] = distinguishableChars[char]
+	}
+	return string(a)
+}
+
 func (ctx *Instance) MaybeInitialize() {
 	// Only do this if it hasn't already been done
 	if _, err := os.Stat(ctx.StatePath("initialized")); err == nil {
@@ -75,8 +88,8 @@ func (ctx *Instance) MaybeInitialize() {
 	// Preseed available team ids if file doesn't exist
 	if f, err := os.OpenFile(ctx.StatePath("teamids.txt"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		defer f.Close()
-		for i := 0; i <= 9999; i += 1 {
-			fmt.Fprintf(f, "%04d\n", i)
+		for i := 0; i <= 100; i += 1 {
+			fmt.Fprintln(f, mktoken())
 		}
 	}
 
