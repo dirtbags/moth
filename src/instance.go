@@ -54,7 +54,7 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir, password string) (*I
 }
 
 // Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
-const distinguishableChars = "234678abcdefhijkmnpqrtuvwxyz="
+const distinguishableChars = "234678abcdefhijkmnpqrtwxyz="
 
 func mktoken() string {
 	a := make([]byte, 8)
