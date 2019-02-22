@@ -6,10 +6,12 @@ import (
 	"mime"
 	"net/http"
 	"time"
+	"math/rand"
 )
 
 
 func setup() error {
+	rand.Seed(time.Now().UnixNano())
 	return nil
 }
 
