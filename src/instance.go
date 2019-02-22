@@ -102,18 +102,31 @@ func (ctx *Instance) MaybeInitialize() {
 	fmt.Fprintln(f, "Remove this file to reinitialize the contest")
 }
 
+func pathCleanse(parts []string) string {
+	clean := make([]string, len(parts))
+	for i := range parts {
+		part := parts[i]
+		part = strings.TrimLeft(part, ".")
+		if p := strings.LastIndex(part, "/"); p >= 0 {
+			part = part[p+1:]
+		}
+		clean[i] = part
+	}
+	return path.Join(clean...)
+}
+
 func (ctx Instance) MothballPath(parts ...string) string {
-	tail := path.Join(parts...)
+	tail := pathCleanse(parts)
 	return path.Join(ctx.MothballDir, tail)
 }
 
 func (ctx *Instance) StatePath(parts ...string) string {
-	tail := path.Join(parts...)
+	tail := pathCleanse(parts)
 	return path.Join(ctx.StateDir, tail)
 }
 
 func (ctx *Instance) ResourcePath(parts ...string) string {
-	tail := path.Join(parts...)
+	tail := pathCleanse(parts)
 	return path.Join(ctx.ResourcesDir, tail)
 }
 
