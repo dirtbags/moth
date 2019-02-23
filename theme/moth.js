@@ -3,6 +3,17 @@
 var teamId
 var heartbeatInterval = 40000
 
+function toast(message, timeout=5000) {
+  let p = document.createElement("p")
+  
+  p.innerText = message
+  document.getElementById("messages").appendChild(p)
+  setTimeout(
+    e => { p.remove() },
+    timeout
+  )
+}
+
 function rpc(url, params={}) {
   let formData = new FormData()
   for (let k in params) {
@@ -110,10 +121,9 @@ function showPuzzles(teamId) {
 }
 
 function login(e) {
+  e.preventDefault()
   let name = document.querySelector("[name=name]").value
   let id = document.querySelector("[name=id]").value
-  
-  e.preventDefault()
   
   rpc("register", {
     name: name,
@@ -146,17 +156,6 @@ function login(e) {
     toast("Oops, something went wrong. Try again in a few seconds.")
     console.log(err)
   })
-}
-
-function toast(message, timeout=5000) {
-  let p = document.createElement("p")
-  
-  p.innerText = message
-  document.getElementById("messages").appendChild(p)
-  setTimeout(
-    e => { p.remove() },
-    timeout
-  )
 }
 
 function init() {
