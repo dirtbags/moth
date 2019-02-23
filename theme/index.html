@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>MOTH</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="basic.css">
     <script src="moth.js"></script>
@@ -11,11 +12,11 @@
     <section>
       <div id="messages"></div>
 
-      <div id="login">
+      <form id="login">
         Team name: <input name="name">
         Team ID: <input name="id"> <br>
-        <button id="submit">Sign In</button>
-      </div>
+        <input type="submit" value="Sign In">
+      </form>
 
       <div id="puzzles"></div>
 
@@ -23,6 +24,7 @@
     <nav>
       <ul>
         <li><a href="scoreboard.html">Scoreboard</a></li>
+        <li><a href="logout.html">Sign Out</a></li>
       </ul>
     </nav>
   </body>

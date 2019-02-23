@@ -19,7 +19,6 @@ type Instance struct {
 	MothballDir  string
 	StateDir     string
 	ResourcesDir string
-	Password     string
 	Categories   map[string]*Mothball
 	update       chan bool
 	jPuzzleList  []byte
@@ -27,13 +26,12 @@ type Instance struct {
 	mux         *http.ServeMux
 }
 
-func NewInstance(base, mothballDir, stateDir, resourcesDir, password string) (*Instance, error) {
+func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
 	ctx := &Instance{
 		Base:         strings.TrimRight(base, "/"),
 		MothballDir:  mothballDir,
 		StateDir:     stateDir,
 		ResourcesDir: resourcesDir,
-		Password:     password,
 		Categories:   map[string]*Mothball{},
 		update:       make(chan bool, 10),
 		mux:          http.NewServeMux(),

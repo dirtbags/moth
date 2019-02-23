@@ -37,11 +37,6 @@ func main() {
 		"/theme",
 		"Path to static theme resources (HTML, images, css, ...)",
 	)
-	password := flag.String(
-		"password",
-		"sesame",
-		"Pass Word (in the 1920s sense) to view the site. Not a secure passphrase.",
-	)
 	maintenanceInterval := flag.Duration(
 		"maint",
 		20*time.Second,
@@ -58,7 +53,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *themeDir, *password)
+	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *themeDir)
 	if err != nil {
 		log.Fatal(err)
 	}

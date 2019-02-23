@@ -64,6 +64,7 @@ function renderPuzzles(obj) {
         i.appendChild(a)
         a.textContent = points
         a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id
+        a.target = "_blank"
       }
     }
     
@@ -76,13 +77,10 @@ function renderPuzzles(obj) {
     container.firstChild.remove()
   }
   container.appendChild(puzzlesElement)
-  container.style.display = "none"
-  
-  document.getElementById("login").style.display = "block"
 }
 
 function heartbeat(teamId) {
-  rpc("puzzles.json", {teamid: teamId})
+  rpc("puzzles.json", {id: teamId})
   .then(resp => {
     if (resp.ok) {
       resp.json()
@@ -103,15 +101,19 @@ function showPuzzles(teamId) {
   let spinner = document.createElement("span")
   spinner.classList.add("spinner")
 
+  sessionStorage.setItem("id", teamId)
+
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
   heartbeat(teamId)
   setInterval(e => { heartbeat(teamId) }, 40000)
 }
 
-function login() {
+function login(e) {
   let name = document.querySelector("[name=name]").value
   let id = document.querySelector("[name=id]").value
+  
+  e.preventDefault()
   
   rpc("register", {
     name: name,
@@ -158,7 +160,13 @@ function toast(message, timeout=5000) {
 }
 
 function init() {
-  document.getElementById("submit").addEventListener("click", login)
+  // Already signed in?
+  let id = sessionStorage.getItem("id")
+  if (id) {
+    showPuzzles(id)
+  }
+  
+  document.getElementById("login").addEventListener("submit", login)
 }
 
 if (document.readyState === "loading") {
