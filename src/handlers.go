@@ -12,39 +12,26 @@ import (
 	"strings"
 )
 
+// https://github.com/omniti-labs/jsend
 type JSend struct {
 	Status string    `json:"status"`
-	Data   JSendData `json:"data"`
+	Data   struct {
+		Short       string `json:"short"`
+		Description string `json:"description"`
+	}  `json:"data"`
 }
-type JSendData struct {
-	Short       string `json:"short"`
-	Description string `json:"description"`
-}
-
-type Status int
 
 const (
-	Success = iota
-	Fail
-	Error
+	JSendSuccess = "success"
+	JSendFail = "fail"
+	JSendError = "error"
 )
 
-func respond(w http.ResponseWriter, req *http.Request, status Status, short string, format string, a ...interface{}) {
-	resp := JSend{
-		Status: "success",
-		Data: JSendData{
-			Short:       short,
-			Description: fmt.Sprintf(format, a...),
-		},
-	}
-	switch status {
-	case Success:
-		resp.Status = "success"
-	case Fail:
-		resp.Status = "fail"
-	default:
-		resp.Status = "error"
-	}
+func respond(w http.ResponseWriter, req *http.Request, status string, short string, format string, a ...interface{}) {
+	resp := JSend{}
+	resp.Status = status
+	resp.Data.Short = short
+	resp.Data.Description = fmt.Sprintf(format, a...)
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
@@ -82,7 +69,7 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 
 	if (teamid == "") || (teamname == "") {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Invalid Entry",
 			"Either `id` or `name` was missing from this request.",
 		)
@@ -92,7 +79,7 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	teamids, err := os.Open(ctx.StatePath("teamids.txt"))
 	if err != nil {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Cannot read valid team IDs",
 			"An error was encountered trying to read valid teams IDs: %v", err,
 		)
@@ -101,7 +88,7 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	defer teamids.Close()
 	if !hasLine(teamids, teamid) {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Invalid Team ID",
 			"I don't have a record of that team ID. Maybe you used capital letters accidentally?",
 		)
@@ -109,10 +96,17 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	f, err := os.OpenFile(ctx.StatePath("teams", teamid), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	if err != nil {
+	if os.IsExist(err) {
+		respond(
+			w, req, JSendFail,
+			"Already registered",
+			"This team ID has already been registered.",
+		)
+		return
+	} else if err != nil {
 		log.Print(err)
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Registration failed",
 			"Unable to register. Perhaps a teammate has already registered?",
 		)
@@ -121,7 +115,7 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	defer f.Close()
 	fmt.Fprintln(f, teamname)
 	respond(
-		w, req, Success,
+		w, req, JSendSuccess,
 		"Team registered",
 		"Okay, your team has been named and you may begin using your team ID!",
 	)
@@ -136,7 +130,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	points, err := strconv.Atoi(pointstr)
 	if err != nil {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Cannot parse point value",
 			"This doesn't look like an integer: %s", pointstr,
 		)
@@ -146,7 +140,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	haystack, err := ctx.OpenCategoryFile(category, "answers.txt")
 	if err != nil {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Cannot list answers",
 			"Unable to read the list of answers for this category.",
 		)
@@ -158,7 +152,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	needle := fmt.Sprintf("%d %s", points, answer)
 	if !hasLine(haystack, needle) {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Wrong answer",
 			"That is not the correct answer for %s %d.", category, points,
 		)
@@ -167,14 +161,14 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 
 	if err := ctx.AwardPoints(teamid, category, points); err != nil {
 		respond(
-			w, req, Error,
+			w, req, JSendError,
 			"Cannot award points",
 			"The answer is correct, but there was an error awarding points: %v", err.Error(),
 		)
 		return
 	}
 	respond(
-		w, req, Success,
+		w, req, JSendSuccess,
 		"Points awarded",
 		fmt.Sprintf("%d points for %s!", points, teamid),
 	)
