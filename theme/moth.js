@@ -14,19 +14,7 @@ function toast(message, timeout=5000) {
   )
 }
 
-function rpc(url, params={}) {
-  let formData = new FormData()
-  for (let k in params) {
-    formData.append(k, params[k])
-  }
-  return fetch(url, {
-    method: "POST",
-    body: formData,
-  })
-}
-
 function renderPuzzles(obj) {
-  console.log(obj)
   let puzzlesElement = document.createElement('div')
   
   // Create a sorted list of category names
@@ -75,7 +63,6 @@ function renderPuzzles(obj) {
         i.appendChild(a)
         a.textContent = points
         a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id
-        a.target = "_blank"
       }
     }
     
@@ -91,7 +78,12 @@ function renderPuzzles(obj) {
 }
 
 function heartbeat(teamId) {
-  rpc("puzzles.json", {id: teamId})
+  let fd = new FormData()
+  fd.append("id", teamId)
+  fetch("puzzles.json", {
+    method: "POST",
+    body: fd,
+  })
   .then(resp => {
     if (resp.ok) {
       resp.json()
@@ -125,9 +117,9 @@ function login(e) {
   let name = document.querySelector("[name=name]").value
   let id = document.querySelector("[name=id]").value
   
-  rpc("register", {
-    name: name,
-    id: id,
+  fetch("register", {
+    method: "POST",
+    body: new FormData(e.target),
   })
   .then(resp => {
     if (resp.ok) {
