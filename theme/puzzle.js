@@ -45,18 +45,6 @@ function devel_addin(obj, e) {
 }
 
 
-function rpc(url, params={}) {
-  let formData = new FormData()
-  for (let k in params) {
-    formData.append(k, params[k])
-  }
-  return fetch(url, {
-    method: "POST",
-    body: formData,
-  })
-}
-
-
 function toast(message, timeout=5000) {
   let p = document.createElement("p")
   
@@ -71,16 +59,9 @@ function toast(message, timeout=5000) {
 
 function submit(e) {
   e.preventDefault()
-  let cat = document.querySelector("input[name=cat]").value
-  let points = document.querySelector("input[name=points]").value
-  let id = document.querySelector("input[name=id]").value
-  let answer = document.querySelector("input[name=answer]").value
-  
-  rpc("answer", {
-    cat: cat,
-    points: points,
-    id: id,
-    answer: answer,
+  fetch("answer", {
+    method: "POST",
+    body: new FormData(e.target),
   })
   .then(resp => {
     if (resp.ok) {

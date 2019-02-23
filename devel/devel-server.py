@@ -29,15 +29,37 @@ def get_seed(request):
         return int(seedstr)
 
         
-def get_puzzle(request):
+def get_puzzle(request, data=None):
     seed = get_seed(request)
-    category = request.match_info.get("category")
-    points = int(request.match_info.get("points"))
-    filename = request.match_info.get("filename")
+    if not data:
+        data = request.match_info
+    category = data.get("cat")
+    points = int(data.get("points"))
+    filename = data.get("filename")
     cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
     puzzle = cat.puzzle(points)
     return puzzle
 
+# OMG what is this I hate Python now
+@asyncio.coroutine
+async def handle_answer(request):
+    data = await request.post()
+    puzzle = get_puzzle(request, data)
+    ret = {
+        "status": "success",
+        "data": {
+           "short": "",
+           "description": "Provided answer was not in list of answers"
+        },
+    }
+    
+    if data.get("answer") in puzzle.answers:
+        ret["data"]["description"] = "Answer is correct"
+    return web.Response(
+        content_type="application/json",
+        body=json.dumps(ret),
+    )
+    
 
 async def handle_puzzlelist(request):
     seed = get_seed(request)
@@ -61,7 +83,7 @@ async def handle_puzzlelist(request):
 
 async def handle_puzzle(request):
     seed = get_seed(request)
-    category = request.match_info.get("category")
+    category = request.match_info.get("cat")
     points = int(request.match_info.get("points"))
     cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
     puzzle = cat.puzzle(points)
@@ -80,7 +102,7 @@ async def handle_puzzle(request):
 
 async def handle_puzzlefile(request):
     seed = get_seed(request)
-    category = request.match_info.get("category")
+    category = request.match_info.get("cat")
     points = int(request.match_info.get("points"))
     filename = request.match_info.get("filename")
     cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
@@ -97,20 +119,9 @@ async def handle_puzzlefile(request):
         content_type=content_type,
     )
 
-    
-async def handle_answer(request):
-    seed = get_seed(request)
-    category = request.match_info.get("category")
-    points = int(request.match_info.get("points"))
-    filename = request.match_info.get("filename")
-    cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
-    puzzle = cat.puzzle(points)
-    
-
-
 async def handle_mothballer(request):
     seed = get_seed(request)
-    category = request.match_info.get("category")
+    category = request.match_info.get("cat")
     
     try:
         catdir = request.app["puzzles_dir"].joinpath(category)
@@ -137,7 +148,7 @@ async def handle_index(request):
     <title>Dev Server</title>
     <script>
 // Skip trying to log in
-sessionStorage.setItem("id", "Hello from the development server")
+sessionStorage.setItem("id", "devel-server")
     </script>
   </head>
   <body>
@@ -216,9 +227,10 @@ if __name__ == '__main__':
     app["puzzles_dir"] = pathlib.Path(args.puzzles)
     app["theme_dir"] = pathlib.Path(args.theme)
     app.router.add_route("GET", "/", handle_index)
+    app.router.add_route("*", "/{seed}/answer", handle_answer)
     app.router.add_route("*", "/{seed}/puzzles.json", handle_puzzlelist)
-    app.router.add_route("GET", "/{seed}/content/{category}/{points}/puzzle.json", handle_puzzle)
-    app.router.add_route("GET", "/{seed}/content/{category}/{points}/{filename}", handle_puzzlefile)
-    app.router.add_route("GET", "/{seed}/mothballer/{category}", handle_mothballer)
+    app.router.add_route("GET", "/{seed}/content/{cat}/{points}/puzzle.json", handle_puzzle)
+    app.router.add_route("GET", "/{seed}/content/{cat}/{points}/{filename}", handle_puzzlefile)
+    app.router.add_route("GET", "/{seed}/mothballer/{cat}", handle_mothballer)
     app.router.add_route("GET", "/{seed}/{filename:.*}", handle_static)
     web.run_app(app, host=addr, port=port)
