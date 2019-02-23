@@ -28,6 +28,16 @@ def get_seed(request):
     else:
         return int(seedstr)
 
+        
+def get_puzzle(request):
+    seed = get_seed(request)
+    category = request.match_info.get("category")
+    points = int(request.match_info.get("points"))
+    filename = request.match_info.get("filename")
+    cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
+    puzzle = cat.puzzle(points)
+    return puzzle
+
 
 async def handle_puzzlelist(request):
     seed = get_seed(request)
@@ -87,6 +97,16 @@ async def handle_puzzlefile(request):
         content_type=content_type,
     )
 
+    
+async def handle_answer(request):
+    seed = get_seed(request)
+    category = request.match_info.get("category")
+    points = int(request.match_info.get("points"))
+    filename = request.match_info.get("filename")
+    cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
+    puzzle = cat.puzzle(points)
+    
+
 
 async def handle_mothballer(request):
     seed = get_seed(request)
@@ -113,19 +133,37 @@ async def handle_index(request):
     seed = random.getrandbits(32)
     body = """<!DOCTYPE html>
 <html>
-  <head><title>Dev Server</title></head>
+  <head>
+    <title>Dev Server</title>
+    <script>
+// Skip trying to log in
+sessionStorage.setItem("id", "Hello from the development server")
+    </script>
+  </head>
   <body>
     <h1>Dev Server</h1>
+
     <p>
-      You need to provide the contest seed in the URL.
-      If you don't have a contest seed in mind,
-      why not try <a href="{seed}/">{seed}</a>?
+      Pick a seed:
     </p>
+    <ul>
+      <li><a href="{seed}/">{seed}</a>: a special seed I made just for you!</li>
+      <li><a href="random/">random</a>: will use a different seed every time you load a page (could be useful for debugging)</li>
+      <li>You can also hack your own seed into the URL, if you want to.</li>
+    </ul>
+
     <p>
-      If you are chaotic,
-      you could even take your chances with a
-      <a href="random/">random seed</a> for every HTTP request.
-      This means generated files will get a different seed than the puzzle itself!
+      Puzzles can be generated from Python code: these puzzles can use a random number generator if they want.
+      The seed is used to create these random numbers.
+    </p>
+    
+    <p>
+      We like to make a new seed for every contest,
+      and re-use that seed whenever we regenerate a category during an event
+      (say to fix a bug).
+      By using the same seed,
+      we make sure that all the dynamically-generated puzzles have the same values
+      in any new packages we build.
     </p>
   </body>
 </html>
@@ -140,12 +178,8 @@ async def handle_static(request):
     themes = request.app["theme_dir"]
     fn = request.match_info.get("filename")
     if not fn:
-        for fn in ("puzzle-list.html", "index.html"):
-            path = themes.joinpath(fn)
-            if path.exists():
-                break
-    else:
-        path = themes.joinpath(fn)
+        fn = "index.html"
+    path = themes.joinpath(fn)
     return web.FileResponse(path)
 
 
@@ -182,7 +216,7 @@ if __name__ == '__main__':
     app["puzzles_dir"] = pathlib.Path(args.puzzles)
     app["theme_dir"] = pathlib.Path(args.theme)
     app.router.add_route("GET", "/", handle_index)
-    app.router.add_route("GET", "/{seed}/puzzles.json", handle_puzzlelist)
+    app.router.add_route("*", "/{seed}/puzzles.json", handle_puzzlelist)
     app.router.add_route("GET", "/{seed}/content/{category}/{points}/puzzle.json", handle_puzzle)
     app.router.add_route("GET", "/{seed}/content/{category}/{points}/{filename}", handle_puzzlefile)
     app.router.add_route("GET", "/{seed}/mothballer/{category}", handle_mothballer)

@@ -175,6 +175,12 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
+	teamid := req.FormValue("id")
+	if _, err := ctx.TeamName(teamid); err != nil {
+		http.Error(w, "Unauthorized: must provide team ID", http.StatusUnauthorized)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(ctx.jPuzzleList)
@@ -273,13 +279,7 @@ func (ctx *Instance) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 		w: wOrig,
 		statusCode: new(int),
 	}
-	w.Header().Set("WWW-Authenticate", "Basic")
-	_, password, _ := r.BasicAuth()
-	if password != ctx.Password {
-		http.Error(w, "Authentication Required", 401)
-	} else {
-		ctx.mux.ServeHTTP(w, r)
-	}
+	ctx.mux.ServeHTTP(w, r)
 	log.Printf(
 		"%s %s %s %d\n",
 		r.RemoteAddr,
