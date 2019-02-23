@@ -12,7 +12,7 @@ h1 {
 	background: #5e576b;
 	color: #9e98a8;
 }
-.Fail, .Error {
+.Fail, .Error, #messages {
 	background: #3a3119;
 	color: #ffcc98;
 }
@@ -50,6 +50,10 @@ iframe#body {
 img {
   max-width: 100%;
 }
+#messages {
+  min-height: 3em;
+  border: solid black 2px;
+}
 #scoreboard {
 	width: 100%;
 	position: relative;
@@ -86,4 +90,26 @@ img {
 }
 .kvpair {
   border: solid black 2px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: rotate 1.2s linear infinite;
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
