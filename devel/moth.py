@@ -15,9 +15,9 @@ import tempfile
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
-def djb2hash(buf):
+def djb2hash(str):
     h = 5381
-    for c in buf:
+    for c in str.encode("utf-8"):
         h = ((h * 33) + c) & 0xffffffff
     return h
 
@@ -277,7 +277,7 @@ class Puzzle:
     def hashes(self):
         "Return a list of answer hashes"
 
-        return [djb2hash(a.encode('utf-8')) for a in self.answers]
+        return [djb2hash(a) for a in self.answers]
 
 
 class Category:

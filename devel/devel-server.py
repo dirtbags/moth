@@ -40,8 +40,6 @@ def get_puzzle(request, data=None):
     puzzle = cat.puzzle(points)
     return puzzle
 
-# OMG what is this I hate Python now
-@asyncio.coroutine
 async def handle_answer(request):
     data = await request.post()
     puzzle = get_puzzle(request, data)

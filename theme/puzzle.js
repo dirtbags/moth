@@ -44,7 +44,17 @@ function devel_addin(obj, e) {
   }
 }
 
+// The routine used to hash answers in compiled puzzle packages
+function djb2hash(buf) {
+  let h = 5381
+  for (let c of (new TextEncoder).encode(buf)) { // JavaScript is weird.
+    h = ((h * 33) + c) & 0xffffffff
+  }
+  return h
+}
 
+
+// Pop up a message
 function toast(message, timeout=5000) {
   let p = document.createElement("p")
   
@@ -56,7 +66,7 @@ function toast(message, timeout=5000) {
   )
 }
 
-
+// When the user submits an answer
 function submit(e) {
   e.preventDefault()
   fetch("answer", {
@@ -91,6 +101,9 @@ function loadPuzzle(categoryName, points, puzzleId) {
   .then(obj => {
     // Populate authors
     document.getElementById("authors").textContent = obj.authors.join(", ")
+    
+    // Make the whole puzzle available
+    window.puzzle = obj
     
     // If answers are provided, this is the devel server
     if (obj.answers) {
@@ -139,6 +152,32 @@ function loadPuzzle(categoryName, points, puzzleId) {
   document.querySelector("input[name=points]").value = points
 }
 
+function answerCheck(e) {
+  let answer = e.target.value
+  let ok = document.querySelector("#answer_ok")
+  
+  // You have to provide someplace to put the check
+  if (! ok) {
+    return
+  }
+  
+  let possiblyCorrect = false
+  let answerHash = djb2hash(answer)
+  for (let correctHash of window.puzzle.hashes) {
+    if (correctHash == answerHash) {
+      possiblyCorrect = true
+    }
+  }
+  
+  if (possiblyCorrect) {
+    ok.textContent = "🙆"
+    ok.title = "Possibly correct"
+  } else {
+    ok.textContent = "🙅"
+    ok.title = "Definitely not correct"
+  }
+}
+
 function init() {
   let params = new URLSearchParams(window.location.search)
   let categoryName = params.get("cat")
@@ -154,6 +193,9 @@ function init() {
     document.querySelector("input[name=id]").value = teamId
   }
   
+  if (document.querySelector("#answer")) {
+    document.querySelector("#answer").addEventListener("input", answerCheck)
+  }
   document.querySelector("form").addEventListener("submit", submit)
 }
 
