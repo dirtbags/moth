@@ -161,6 +161,9 @@ function loadPuzzle(categoryName, points, puzzleId) {
   document.querySelector("input[name=points]").value = points
 }
 
+// Check to see if the answer might be correct
+// This might be better done with the "constraint validation API"
+// https://developer.mozilla.org/en-US/docs/Learn/HTML/Forms/Form_validation#Validating_forms_using_JavaScript
 function answerCheck(e) {
   let answer = e.target.value
   let ok = document.querySelector("#answer_ok")
