@@ -75,6 +75,7 @@ class Puzzle:
         self.authors = []
         self.answers = []
         self.scripts = []
+        self.pattern = None
         self.hint = None
         self.files = {}
         self.body = io.StringIO()
@@ -104,6 +105,8 @@ class Puzzle:
                     self.summary = val
                 elif key == 'answer':
                     self.answers.append(val)
+                elif key == 'pattern':
+                    self.pattern = val
                 elif key == 'hint':
                     self.hint = val
                 elif key == 'name':
@@ -271,6 +274,7 @@ class Puzzle:
             'hashes': self.hashes(),
             'files': files,
             'scripts': self.scripts,
+            'pattern': self.pattern,
             'body': self.html_body(),
         }
 

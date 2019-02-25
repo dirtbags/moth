@@ -50,6 +50,9 @@ iframe#body {
 img {
   max-width: 100%;
 }
+input:invalid {
+  border-color: red;
+}
 #messages {
   min-height: 3em;
   border: solid black 2px;

@@ -11,7 +11,7 @@ This page has an associated `helpers.js` script
 you can include to assist with input formatting,
 so people aren't confused about how to enter an answer.
 
-You could also write your own JavaScript to validate things
+You could also write your own JavaScript to validate things.
 
 This is just a demonstration page.
 You will probably only want one of these in a page,
