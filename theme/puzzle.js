@@ -44,11 +44,15 @@ function devel_addin(obj, e) {
   }
 }
 
+
+
 // The routine used to hash answers in compiled puzzle packages
 function djb2hash(buf) {
   let h = 5381
-  for (let c of (new TextEncoder).encode(buf)) { // JavaScript is weird.
-    h = ((h * 33) + c) & 0xffffffff
+  for (let c of (new TextEncoder).encode(buf)) { // Encode as UTF-8 and read in each byte
+    // JavaScript converts everything to a signed 32-bit integer when you do bitwise operations.
+    // So we have to do "unsigned right shift" by zero to get it back to unsigned.
+    h = (((h * 33) + c) & 0xffffffff) >>> 0
   }
   return h
 }
@@ -131,6 +135,11 @@ function loadPuzzle(categoryName, points, puzzleId) {
     let doc = new DOMParser().parseFromString(obj.body, "text/html")
     for (let se of doc.querySelectorAll("[src],[href]")) {
       se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
+    }
+    
+    // If a validation pattern was provided, set that
+    if (obj.pattern) {
+      document.querySelector("#answer").pattern = obj.pattern
     }
 
     // Replace puzzle children with what's in `doc`
