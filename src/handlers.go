@@ -14,17 +14,17 @@ import (
 
 // https://github.com/omniti-labs/jsend
 type JSend struct {
-	Status string    `json:"status"`
+	Status string `json:"status"`
 	Data   struct {
 		Short       string `json:"short"`
 		Description string `json:"description"`
-	}  `json:"data"`
+	} `json:"data"`
 }
 
 const (
 	JSendSuccess = "success"
-	JSendFail = "fail"
-	JSendError = "error"
+	JSendFail    = "fail"
+	JSendError   = "error"
 )
 
 func respond(w http.ResponseWriter, req *http.Request, status string, short string, format string, a ...interface{}) {
@@ -255,7 +255,7 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 type FurtiveResponseWriter struct {
-	w http.ResponseWriter
+	w          http.ResponseWriter
 	statusCode *int
 }
 
@@ -276,7 +276,7 @@ func (w FurtiveResponseWriter) Header() http.Header {
 // This gives Instances the signature of http.Handler
 func (ctx *Instance) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 	w := FurtiveResponseWriter{
-		w: wOrig,
+		w:          wOrig,
 		statusCode: new(int),
 	}
 	ctx.mux.ServeHTTP(w, r)
@@ -297,4 +297,3 @@ func (ctx *Instance) BindHandlers() {
 	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
 }
-

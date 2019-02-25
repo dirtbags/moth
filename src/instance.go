@@ -6,12 +6,12 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 	"time"
-	"math/rand"
 )
 
 type Instance struct {
@@ -23,7 +23,7 @@ type Instance struct {
 	update       chan bool
 	jPuzzleList  []byte
 	jPointsLog   []byte
-	mux         *http.ServeMux
+	mux          *http.ServeMux
 }
 
 func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
@@ -44,7 +44,7 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, e
 	if _, err := os.Stat(stateDir); err != nil {
 		return nil, err
 	}
-	
+
 	ctx.BindHandlers()
 	ctx.MaybeInitialize()
 
@@ -56,7 +56,7 @@ const distinguishableChars = "234678abcdefhijkmnpqrtwxyz="
 
 func mktoken() string {
 	a := make([]byte, 8)
-	for i := range(a) {
+	for i := range a {
 		char := rand.Intn(len(distinguishableChars))
 		a[i] = distinguishableChars[char]
 	}

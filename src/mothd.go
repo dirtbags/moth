@@ -3,18 +3,16 @@ package main
 import (
 	"github.com/namsral/flag"
 	"log"
+	"math/rand"
 	"mime"
 	"net/http"
 	"time"
-	"math/rand"
 )
-
 
 func setup() error {
 	rand.Seed(time.Now().UnixNano())
 	return nil
 }
-
 
 func main() {
 	base := flag.String(
