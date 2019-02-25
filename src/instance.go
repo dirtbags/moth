@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -21,6 +23,7 @@ type Instance struct {
 	update       chan bool
 	jPuzzleList  []byte
 	jPointsLog   []byte
+	mux          *http.ServeMux
 }
 
 func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
@@ -31,6 +34,7 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, e
 		ResourcesDir: resourcesDir,
 		Categories:   map[string]*Mothball{},
 		update:       make(chan bool, 10),
+		mux:          http.NewServeMux(),
 	}
 
 	// Roll over and die if directories aren't even set up
@@ -41,9 +45,22 @@ func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, e
 		return nil, err
 	}
 
+	ctx.BindHandlers()
 	ctx.MaybeInitialize()
 
 	return ctx, nil
+}
+
+// Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
+const distinguishableChars = "234678abcdefhijkmnpqrtwxyz="
+
+func mktoken() string {
+	a := make([]byte, 8)
+	for i := range a {
+		char := rand.Intn(len(distinguishableChars))
+		a[i] = distinguishableChars[char]
+	}
+	return string(a)
 }
 
 func (ctx *Instance) MaybeInitialize() {
@@ -69,8 +86,8 @@ func (ctx *Instance) MaybeInitialize() {
 	// Preseed available team ids if file doesn't exist
 	if f, err := os.OpenFile(ctx.StatePath("teamids.txt"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		defer f.Close()
-		for i := 0; i <= 9999; i += 1 {
-			fmt.Fprintf(f, "%04d\n", i)
+		for i := 0; i <= 100; i += 1 {
+			fmt.Fprintln(f, mktoken())
 		}
 	}
 
@@ -83,18 +100,31 @@ func (ctx *Instance) MaybeInitialize() {
 	fmt.Fprintln(f, "Remove this file to reinitialize the contest")
 }
 
+func pathCleanse(parts []string) string {
+	clean := make([]string, len(parts))
+	for i := range parts {
+		part := parts[i]
+		part = strings.TrimLeft(part, ".")
+		if p := strings.LastIndex(part, "/"); p >= 0 {
+			part = part[p+1:]
+		}
+		clean[i] = part
+	}
+	return path.Join(clean...)
+}
+
 func (ctx Instance) MothballPath(parts ...string) string {
-	tail := path.Join(parts...)
+	tail := pathCleanse(parts)
 	return path.Join(ctx.MothballDir, tail)
 }
 
 func (ctx *Instance) StatePath(parts ...string) string {
-	tail := path.Join(parts...)
+	tail := pathCleanse(parts)
 	return path.Join(ctx.StateDir, tail)
 }
 
 func (ctx *Instance) ResourcePath(parts ...string) string {
-	tail := path.Join(parts...)
+	tail := pathCleanse(parts)
 	return path.Join(ctx.ResourcesDir, tail)
 }
 

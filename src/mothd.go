@@ -1,21 +1,16 @@
 package main
 
 import (
-	"flag"
+	"github.com/namsral/flag"
 	"log"
+	"math/rand"
 	"mime"
 	"net/http"
 	"time"
 )
 
-func logRequest(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("HTTP %s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
-
 func setup() error {
+	rand.Seed(time.Now().UnixNano())
 	return nil
 }
 
@@ -60,7 +55,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx.BindHandlers(http.DefaultServeMux)
 
 	// Add some MIME extensions
 	// Doing this avoids decompressing a mothball entry twice per request
@@ -70,5 +64,5 @@ func main() {
 	go ctx.Maintenance(*maintenanceInterval)
 
 	log.Printf("Listening on %s", *listen)
-	log.Fatal(http.ListenAndServe(*listen, logRequest(http.DefaultServeMux)))
+	log.Fatal(http.ListenAndServe(*listen, ctx))
 }
