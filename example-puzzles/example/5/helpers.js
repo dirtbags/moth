@@ -1,3 +1,5 @@
+// jshint asi:true
+
 function helperUpdateAnswer(event) {
   let e = event.currentTarget
   let value = e.value
@@ -26,7 +28,9 @@ function helperUpdateAnswer(event) {
     value = value.toUpperCase()
   }
 
-  document.querySelector("#answer").value = value
+  let answer = document.querySelector("#answer")
+  answer.value = value
+  answer.dispatchEvent(new InputEvent("input"))
 }
 
 function helperActivate(e) {

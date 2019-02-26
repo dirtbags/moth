@@ -38,10 +38,6 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(request, client_address, server, directory=server.args["theme_dir"])
 
 
-    def get_seed(self):
-        return seed
-
-
     def get_puzzle(self):
         category = self.req.get("cat")
         points = int(self.req.get("points"))
@@ -144,7 +140,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 
     def handle_index(self):
-        seed = self.get_seed()
+        seed = random.getrandbits(32)
         body = """<!DOCTYPE html>
 <html>
   <head>
