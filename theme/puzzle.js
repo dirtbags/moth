@@ -1,3 +1,5 @@
+// jshint asi:true
+
 // devel_addin drops a bunch of development extensions into element e.
 // It will only modify stuff inside e.
 function devel_addin(obj, e) {
@@ -16,6 +18,12 @@ function devel_addin(obj, e) {
       case "body":
         continue
     }
+    let val = obj[key]
+
+    if ((! val) || (val.length === 0)) {
+      // Empty, skip it
+      continue
+    }
 
     let d = document.createElement("div")
     e.appendChild(d)
@@ -25,7 +33,6 @@ function devel_addin(obj, e) {
     d.appendChild(ktxt)
     ktxt.textContent = key
     
-    let val = obj[key]
     if (Array.isArray(val)) {
       let vi = document.createElement("select")
       d.appendChild(vi)
@@ -182,7 +189,7 @@ function answerCheck(e) {
   }
   
   if (possiblyCorrect) {
-    ok.textContent = "🙆"
+    ok.textContent = ""
     ok.title = "Possibly correct"
   } else {
     ok.textContent = "🙅"
