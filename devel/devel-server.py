@@ -3,7 +3,8 @@
 import asyncio
 import cgitb
 import html
-from aiohttp import web
+import cgi
+import http.server
 import io
 import json
 import mimetypes
@@ -17,130 +18,134 @@ import socketserver
 import sys
 import traceback
 import mothballer
+import parse
+from http import HTTPStatus
+
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
 
-def get_seed(request):
-    seedstr = request.match_info.get("seed")
-    if seedstr == "random":
-        return random.getrandbits(32)
-    else:
-        return int(seedstr)
+class MothServer(http.server.ThreadingHTTPServer):
+    def __init__(self, server_address, RequestHandlerClass):
+        super().__init__(server_address, RequestHandlerClass)
+        self.args = {}
 
-        
-def get_puzzle(request, data=None):
-    seed = get_seed(request)
-    if not data:
-        data = request.match_info
-    category = data.get("cat")
-    points = int(data.get("points"))
-    filename = data.get("filename")
-    cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
-    puzzle = cat.puzzle(points)
-    return puzzle
 
-async def handle_answer(request):
-    data = await request.post()
-    puzzle = get_puzzle(request, data)
-    ret = {
-        "status": "success",
-        "data": {
-           "short": "",
-           "description": "Provided answer was not in list of answers"
-        },
-    }
+class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
+    endpoints = []
     
-    if data.get("answer") in puzzle.answers:
-        ret["data"]["description"] = "Answer is correct"
-    return web.Response(
-        content_type="application/json",
-        body=json.dumps(ret),
-    )
+    def __init__(self, request, client_address, server):
+        super().__init__(request, client_address, server, directory=server.args["theme_dir"])
+
+
+    def get_seed(self):
+        return seed
+
+
+    def get_puzzle(self):
+        category = self.req.get("cat")
+        points = int(self.req.get("points"))
+        cat = moth.Category(self.server.args["puzzles_dir"].joinpath(category), self.seed)
+        puzzle = cat.puzzle(points)
+        return puzzle
+
+
+    def handle_answer(self):
+        for f in ("cat", "points", "answer"):
+            self.req[f] = self.fields.getfirst(f)
+        puzzle = self.get_puzzle()
+        ret = {
+            "status": "success",
+            "data": {
+               "short": "",
+               "description": "Provided answer was not in list of answers"
+            },
+        }
+
+        if self.req.get("answer") in puzzle.answers:
+            ret["data"]["description"] = "Answer is correct"
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(ret).encode("utf-8"))
+    endpoints.append(('/{seed}/answer', handle_answer))
+
+    
+    def handle_puzzlelist(self):
+        puzzles = {
+            "__devel__": [[0, ""]],
+        }
+        for p in self.server.args["puzzles_dir"].glob("*"):
+            if not p.is_dir() or p.match(".*"):
+                continue
+            catName = p.parts[-1]
+            cat = moth.Category(p, self.seed)
+            puzzles[catName] = [[i, str(i)] for i in cat.pointvals()]
+            puzzles[catName].append([0, ""])
+        if len(puzzles) <= 1:
+            logging.warning("No directories found matching {}/*".format(self.server.args["puzzles_dir"]))
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(puzzles).encode("utf-8"))
+    endpoints.append(('/{seed}/puzzles.json', handle_puzzlelist))
+    
+    
+    def handle_puzzle(self):
+        puzzle = self.get_puzzle()
+
+        obj = puzzle.package()
+        obj["answers"] = puzzle.answers
+        obj["hint"] = puzzle.hint
+        obj["summary"] = puzzle.summary
+        obj["logs"] = puzzle.logs
+
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(obj).encode("utf-8"))
+    endpoints.append(('/{seed}/content/{cat}/{points}/puzzle.json', handle_puzzle))
+
+
+    def handle_puzzlefile(self):
+        puzzle = self.get_puzzle()
+
+        try:
+            file = puzzle.files[self.req["filename"]]
+        except KeyError:
+            return web.Response(status=404)
+
+        self.send_response(200)
+        self.send_header("Content-Type", mimetypes.guess_type(file.name))
+        self.end_headers()
+        shutil.copyfileobj(file.stream, self.wfile)
+    endpoints.append(("/{seed}/content/{cat}/{points}/{filename}", handle_puzzlefile))
     
 
-async def handle_puzzlelist(request):
-    seed = get_seed(request)
-    puzzles = {
-        "__devel__": [[0, ""]],
-    }
-    for p in request.app["puzzles_dir"].glob("*"):
-        if not p.is_dir() or p.match(".*"):
-            continue
-        catName = p.parts[-1]
-        cat = moth.Category(p, seed)
-        puzzles[catName] = [[i, str(i)] for i in cat.pointvals()]
-        puzzles[catName].append([0, ""])
-    if len(puzzles) <= 1:
-        logging.warning("No directories found matching {}/*".format(request.app["puzzles_dir"]))
-    return web.Response(
-        content_type="application/json",
-        body=json.dumps(puzzles),
-    )
+    def handle_mothballer(self):
+        category = self.req.get("cat")
 
+        try:
+            catdir = self.server.args["puzzles_dir"].joinpath(category)
+            mb = mothballer.package(category, catdir, self.seed)
+        except:
+            body = cgitb.html(sys.exc_info())
+            resp = web.Response(text=body, content_type="text/html")
+            return resp
 
-async def handle_puzzle(request):
-    seed = get_seed(request)
-    category = request.match_info.get("cat")
-    points = int(request.match_info.get("points"))
-    cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
-    puzzle = cat.puzzle(points)
-    
-    obj = puzzle.package()
-    obj["answers"] = puzzle.answers
-    obj["hint"] = puzzle.hint
-    obj["summary"] = puzzle.summary
-    obj["logs"] = puzzle.logs
-    
-    return web.Response(
-        content_type="application/json",
-        body=json.dumps(obj),
-    )
-    
-
-async def handle_puzzlefile(request):
-    seed = get_seed(request)
-    category = request.match_info.get("cat")
-    points = int(request.match_info.get("points"))
-    filename = request.match_info.get("filename")
-    cat = moth.Category(request.app["puzzles_dir"].joinpath(category), seed)
-    puzzle = cat.puzzle(points)
-
-    try:
-        file = puzzle.files[filename]
-    except KeyError:
-        return web.Response(status=404)
-
-    content_type, _ = mimetypes.guess_type(file.name)
-    return web.Response(
-        body=file.stream.read(), # Is there no way to pipe this, must we slurp the whole thing into memory?
-        content_type=content_type,
-    )
-
-async def handle_mothballer(request):
-    seed = get_seed(request)
-    category = request.match_info.get("cat")
-    
-    try:
-        catdir = request.app["puzzles_dir"].joinpath(category)
-        mb = mothballer.package(category, catdir, seed)
-    except:
-        body = cgitb.html(sys.exc_info())
-        resp = web.Response(text=body, content_type="text/html")
+        mb_buf = mb.read()
+        resp = web.Response(
+            body=mb_buf,
+            headers={"Content-Disposition": "attachment; filename={}.mb".format(category)},
+            content_type="application/octet_stream",
+        )
         return resp
-        
-    mb_buf = mb.read()
-    resp = web.Response(
-        body=mb_buf,
-        headers={"Content-Disposition": "attachment; filename={}.mb".format(category)},
-        content_type="application/octet_stream",
-    )
-    return resp
+    endpoints.append(("/{seed}/mothballer/{cat}", handle_mothballer))
 
 
-async def handle_index(request):
-    seed = random.getrandbits(32)
-    body = """<!DOCTYPE html>
+    def handle_index(self):
+        seed = self.get_seed()
+        body = """<!DOCTYPE html>
 <html>
   <head>
     <title>Dev Server</title>
@@ -177,19 +182,51 @@ sessionStorage.setItem("id", "devel-server")
   </body>
 </html>
 """.format(seed=seed)
-    return web.Response(
-        content_type="text/html",
-        body=body,
-    )
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(body.encode('utf-8'))
+    endpoints.append((r"/", handle_index))
 
 
-async def handle_static(request):
-    themes = request.app["theme_dir"]
-    fn = request.match_info.get("filename")
-    if not fn:
-        fn = "index.html"
-    path = themes.joinpath(fn)
-    return web.FileResponse(path)
+    def handle_theme_file(self):
+        self.path = "/" + self.req.get("path", "")
+        super().do_GET()
+    endpoints.append(("/{seed}/", handle_theme_file))
+    endpoints.append(("/{seed}/{path}", handle_theme_file))
+
+
+    def do_GET(self):
+        self.fields = cgi.FieldStorage(
+            fp=self.rfile,
+            headers=self.headers,
+            environ={
+                "REQUEST_METHOD": self.command,
+                "CONTENT_TYPE": self.headers["Content-Type"],
+            },
+        )
+
+        for pattern, function in self.endpoints:
+            result = parse.parse(pattern, self.path)
+            if result:
+                self.req = result.named
+                seed = self.req.get("seed", "random")
+                if seed == "random":
+                    self.seed = random.getrandbits(32)
+                else:
+                    self.seed = int(seed)
+                return function(self)
+        super().do_GET()
+
+    def do_POST(self):
+        self.do_GET()
+
+    def do_HEAD(self):
+        self.send_error(
+            HTTPStatus.NOT_IMPLEMENTED,
+            "Unsupported method (%r)" % self.command,
+        )
 
 
 if __name__ == '__main__':
@@ -220,15 +257,10 @@ if __name__ == '__main__':
     
     mydir = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
     
-    app = web.Application()
-    app["base_url"] = args.base
-    app["puzzles_dir"] = pathlib.Path(args.puzzles)
-    app["theme_dir"] = pathlib.Path(args.theme)
-    app.router.add_route("GET", "/", handle_index)
-    app.router.add_route("*", "/{seed}/answer", handle_answer)
-    app.router.add_route("*", "/{seed}/puzzles.json", handle_puzzlelist)
-    app.router.add_route("GET", "/{seed}/content/{cat}/{points}/puzzle.json", handle_puzzle)
-    app.router.add_route("GET", "/{seed}/content/{cat}/{points}/{filename}", handle_puzzlefile)
-    app.router.add_route("GET", "/{seed}/mothballer/{cat}", handle_mothballer)
-    app.router.add_route("GET", "/{seed}/{filename:.*}", handle_static)
-    web.run_app(app, host=addr, port=port)
+    server = MothServer((addr, port), MothRequestHandler)
+    server.args["base_url"] = args.base
+    server.args["puzzles_dir"] = pathlib.Path(args.puzzles)
+    server.args["theme_dir"] = args.theme
+
+    logging.info("Listening on %s:%d", addr, port)
+    server.serve_forever()

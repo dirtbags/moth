@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/namsral/flag"
+	"flag"
 	"log"
 	"math/rand"
 	"mime"
