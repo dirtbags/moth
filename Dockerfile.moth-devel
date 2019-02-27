@@ -1,12 +1,12 @@
-FROM alpine:3.8
+FROM python:3.7.2-alpine3.9
 
 RUN apk --no-cache add \
-    gcc \
-    musl-dev \
-    python3 \
-    python3-dev \
-    py3-pillow \
-  && pip3 install aiohttp
+      gcc \
+      musl-dev \
+      jpeg-dev \
+      zlib-dev \
+    && \
+    pip3 install pillow
 
 COPY devel /app/
 COPY example-puzzles /puzzles/
