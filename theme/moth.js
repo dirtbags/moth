@@ -39,7 +39,7 @@ function renderPuzzles(obj) {
       let a = document.createElement('a')
       h.insertBefore(a, h.firstChild)
       a.textContent = "⬇️"
-      a.href = "mothballer/" + cat
+      a.href = "mothballer/" + cat + ".mb"
       a.classList.add("mothball")
       a.title = "Download a compiled puzzle for this category"
     }

@@ -109,7 +109,11 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         try:
             file = puzzle.files[self.req["filename"]]
         except KeyError:
-            return web.Response(status=404)
+            self.send_error(
+                HTTPStatus.NOT_FOUND,
+                "File Not Found",
+            )
+            return
 
         self.send_response(200)
         self.send_header("Content-Type", mimetypes.guess_type(file.name))
@@ -120,23 +124,22 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_mothballer(self):
         category = self.req.get("cat")
-
+        
         try:
             catdir = self.server.args["puzzles_dir"].joinpath(category)
             mb = mothballer.package(category, catdir, self.seed)
         except:
-            body = cgitb.html(sys.exc_info())
-            resp = web.Response(text=body, content_type="text/html")
-            return resp
-
-        mb_buf = mb.read()
-        resp = web.Response(
-            body=mb_buf,
-            headers={"Content-Disposition": "attachment; filename={}.mb".format(category)},
-            content_type="application/octet_stream",
-        )
-        return resp
-    endpoints.append(("/{seed}/mothballer/{cat}", handle_mothballer))
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=\"utf-8\"")
+            self.end_headers()
+            self.wfile.write(cgitb.html(sys.exc_info()))
+            return
+        
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet_stream")
+        self.end_headers()
+        shutil.copyfileobj(mb, self.wfile)
+    endpoints.append(("/{seed}/mothballer/{cat}.mb", handle_mothballer))
 
 
     def handle_index(self):
