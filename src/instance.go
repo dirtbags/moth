@@ -15,40 +15,39 @@ import (
 )
 
 type Instance struct {
-	Base         string
-	MothballDir  string
-	StateDir     string
-	ResourcesDir string
-	Categories   map[string]*Mothball
-	update       chan bool
-	jPuzzleList  []byte
-	jPointsLog   []byte
-	mux          *http.ServeMux
+	Base            string
+	MothballDir     string
+	StateDir        string
+	ThemeDir        string
+	AttemptInterval time.Duration
+
+	categories  map[string]*Mothball
+	update      chan bool
+	jPuzzleList []byte
+	jPointsLog  []byte
+	nextAttempt map[string]time.Time
+	mux         *http.ServeMux
 }
 
-func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
-	ctx := &Instance{
-		Base:         strings.TrimRight(base, "/"),
-		MothballDir:  mothballDir,
-		StateDir:     stateDir,
-		ResourcesDir: resourcesDir,
-		Categories:   map[string]*Mothball{},
-		update:       make(chan bool, 10),
-		mux:          http.NewServeMux(),
+func (ctx *Instance) Initialize() error {
+	// Roll over and die if directories aren't even set up
+	if _, err := os.Stat(ctx.MothballDir); err != nil {
+		return err
+	}
+	if _, err := os.Stat(ctx.StateDir); err != nil {
+		return err
 	}
 
-	// Roll over and die if directories aren't even set up
-	if _, err := os.Stat(mothballDir); err != nil {
-		return nil, err
-	}
-	if _, err := os.Stat(stateDir); err != nil {
-		return nil, err
-	}
+	ctx.Base = strings.TrimRight(ctx.Base, "/")
+	ctx.categories = map[string]*Mothball{}
+	ctx.update = make(chan bool, 10)
+	ctx.nextAttempt = map[string]time.Time{}
+	ctx.mux = http.NewServeMux()
 
 	ctx.BindHandlers()
 	ctx.MaybeInitialize()
 
-	return ctx, nil
+	return nil
 }
 
 // Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
@@ -123,9 +122,16 @@ func (ctx *Instance) StatePath(parts ...string) string {
 	return path.Join(ctx.StateDir, tail)
 }
 
-func (ctx *Instance) ResourcePath(parts ...string) string {
+func (ctx *Instance) ThemePath(parts ...string) string {
 	tail := pathCleanse(parts)
-	return path.Join(ctx.ResourcesDir, tail)
+	return path.Join(ctx.ThemeDir, tail)
+}
+
+func (ctx *Instance) TooFast(teamId string) bool {
+	now := time.Now()
+	next, _ := ctx.nextAttempt[teamId]
+	ctx.nextAttempt[teamId] = now.Add(ctx.AttemptInterval)
+	return now.Before(next)
 }
 
 func (ctx *Instance) PointsLog() []*Award {
@@ -153,20 +159,20 @@ func (ctx *Instance) PointsLog() []*Award {
 	return ret
 }
 
-// awardPoints gives points to teamid in category.
+// AwardPoints gives points to teamId in category.
 // It first checks to make sure these are not duplicate points.
 // This is not a perfect check, you can trigger a race condition here.
 // It's just a courtesy to the user.
 // The maintenance task makes sure we never have duplicate points in the log.
-func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
+func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
 	a := Award{
 		When:     time.Now(),
-		TeamId:   teamid,
+		TeamId:   teamId,
 		Category: category,
 		Points:   points,
 	}
 
-	teamName, err := ctx.TeamName(teamid)
+	_, err := ctx.TeamName(teamId)
 	if err != nil {
 		return fmt.Errorf("No registered team with this hash")
 	}
@@ -177,7 +183,7 @@ func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 		}
 	}
 
-	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
+	fn := fmt.Sprintf("%s-%s-%d", teamId, category, points)
 	tmpfn := ctx.StatePath("points.tmp", fn)
 	newfn := ctx.StatePath("points.new", fn)
 
@@ -190,12 +196,12 @@ func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 	}
 
 	ctx.update <- true
-	log.Printf("Award %s %s %d", teamName, category, points)
+	log.Printf("Award %s %s %d", teamId, category, points)
 	return nil
 }
 
 func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.ReadCloser, error) {
-	mb, ok := ctx.Categories[category]
+	mb, ok := ctx.categories[category]
 	if !ok {
 		return nil, fmt.Errorf("No such category: %s", category)
 	}
@@ -203,6 +209,11 @@ func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.Read
 	filename := path.Join(parts...)
 	f, err := mb.Open(filename)
 	return f, err
+}
+
+func (ctx *Instance) ValidTeamId(teamId string) bool {
+	_, ok := ctx.nextAttempt[teamId]
+	return ok
 }
 
 func (ctx *Instance) TeamName(teamId string) (string, error) {

@@ -57,36 +57,10 @@ func hasLine(r io.Reader, line string) bool {
 }
 
 func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
-	teamname := req.FormValue("name")
-	teamid := req.FormValue("id")
+	teamName := req.FormValue("name")
+	teamId := req.FormValue("id")
 
-	// Keep foolish operators from shooting themselves in the foot
-	// You would have to add a pathname to your list of Team IDs to open this vulnerability,
-	// but I have learned not to overestimate people.
-	if strings.Contains(teamid, "../") {
-		teamid = "rodney"
-	}
-
-	if (teamid == "") || (teamname == "") {
-		respond(
-			w, req, JSendFail,
-			"Invalid Entry",
-			"Either `id` or `name` was missing from this request.",
-		)
-		return
-	}
-
-	teamids, err := os.Open(ctx.StatePath("teamids.txt"))
-	if err != nil {
-		respond(
-			w, req, JSendFail,
-			"Cannot read valid team IDs",
-			"An error was encountered trying to read valid teams IDs: %v", err,
-		)
-		return
-	}
-	defer teamids.Close()
-	if !hasLine(teamids, teamid) {
+	if !ctx.ValidTeamId(teamId) {
 		respond(
 			w, req, JSendFail,
 			"Invalid Team ID",
@@ -95,37 +69,56 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	f, err := os.OpenFile(ctx.StatePath("teams", teamid), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	if os.IsExist(err) {
-		respond(
-			w, req, JSendFail,
-			"Already registered",
-			"This team ID has already been registered.",
-		)
-		return
-	} else if err != nil {
-		log.Print(err)
-		respond(
-			w, req, JSendFail,
-			"Registration failed",
-			"Unable to register. Perhaps a teammate has already registered?",
-		)
+	f, err := os.OpenFile(ctx.StatePath("teams", teamId), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	if err != nil {
+		if os.IsExist(err) {
+			respond(
+				w, req, JSendFail,
+				"Already registered",
+				"This team ID has already been registered.",
+			)
+		} else {
+			log.Print(err)
+			respond(
+				w, req, JSendFail,
+				"Registration failed",
+				"Unable to register. Perhaps a teammate has already registered?",
+			)
+		}
 		return
 	}
 	defer f.Close()
-	fmt.Fprintln(f, teamname)
+
+	fmt.Fprintln(f, teamName)
 	respond(
 		w, req, JSendSuccess,
 		"Team registered",
-		"Okay, your team has been named and you may begin using your team ID!",
+		"Your team has been named and you may begin using your team ID!",
 	)
 }
 
 func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
-	teamid := req.FormValue("id")
+	teamId := req.FormValue("id")
 	category := req.FormValue("cat")
 	pointstr := req.FormValue("points")
 	answer := req.FormValue("answer")
+
+	if ! ctx.ValidTeamId(teamId) {
+		respond(
+			w, req, JSendFail,
+			"Invalid team ID",
+			"That team ID is not valid for this event.",
+		)
+		return
+	}
+	if ctx.TooFast(teamId) {
+		respond(
+			w, req, JSendFail,
+			"Submitting too quickly",
+			"Your team can only submit one answer every %v", ctx.AttemptInterval,
+		)
+		return
+	}
 
 	points, err := strconv.Atoi(pointstr)
 	if err != nil {
@@ -159,7 +152,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := ctx.AwardPoints(teamid, category, points); err != nil {
+	if err := ctx.AwardPoints(teamId, category, points); err != nil {
 		respond(
 			w, req, JSendError,
 			"Cannot award points",
@@ -170,14 +163,14 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	respond(
 		w, req, JSendSuccess,
 		"Points awarded",
-		fmt.Sprintf("%d points for %s!", points, teamid),
+		fmt.Sprintf("%d points for %s!", points, teamId),
 	)
 }
 
 func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
-	teamid := req.FormValue("id")
-	if _, err := ctx.TeamName(teamid); err != nil {
-		http.Error(w, "Unauthorized: must provide team ID", http.StatusUnauthorized)
+	teamId := req.FormValue("id")
+	if _, err := ctx.TeamName(teamId); err != nil {
+		http.Error(w, "Must provide team ID", http.StatusUnauthorized)
 		return
 	}
 
@@ -210,7 +203,7 @@ func (ctx *Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
 	puzzleId := parts[len(parts)-2]
 	categoryName := parts[len(parts)-3]
 
-	mb, ok := ctx.Categories[categoryName]
+	mb, ok := ctx.categories[categoryName]
 	if !ok {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
@@ -238,7 +231,7 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 		path = "/index.html"
 	}
 
-	f, err := os.Open(ctx.ResourcePath(path))
+	f, err := os.Open(ctx.ThemePath(path))
 	if err != nil {
 		http.NotFound(w, req)
 		return
