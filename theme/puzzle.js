@@ -189,10 +189,10 @@ function answerCheck(e) {
   }
   
   if (possiblyCorrect) {
-    ok.textContent = ""
+    ok.textContent = "❓"
     ok.title = "Possibly correct"
   } else {
-    ok.textContent = "🙅"
+    ok.textContent = "⛔"
     ok.title = "Definitely not correct"
   }
 }
