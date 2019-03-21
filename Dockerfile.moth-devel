@@ -6,7 +6,10 @@ RUN apk --no-cache add \
       jpeg-dev \
       zlib-dev \
     && \
-    pip3 install pillow
+    pip3 install \
+      scapy==2.4.2 \
+      pillow==5.4.1
+
 
 COPY devel /app/
 COPY example-puzzles /puzzles/
