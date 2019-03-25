@@ -59,6 +59,9 @@ def build_category(categorydir, outdir):
     mothball = package(categoryname, categorydir, category_seed)
     shutil.copyfileobj(mothball, zipfileraw)
     zipfileraw.close()
+    zipfiledir = os.path.dirname(zipfilename)
+    if not os.path.exists(zipfiledir):
+        os.makedirs(zipfiledir)
     shutil.move(zipfileraw.name, zipfilename)
 
 
