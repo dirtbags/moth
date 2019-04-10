@@ -50,6 +50,7 @@ function helperExpandInputs(e) {
   // Add remove button
   let remove = document.createElement("button")
   remove.innerText = "➖"
+  remove.title = "Remove this input"
   remove.addEventListener("click", helperRemoveInput)
   newElement.appendChild(remove)
 
