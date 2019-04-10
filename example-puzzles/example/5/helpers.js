@@ -38,7 +38,11 @@ function helperUpdateAnswer(event) {
 
 function helperRemoveInput(e) {
   let item = e.target.parentElement
+  let container = item.parentElement
   item.remove()
+  
+  var event = new Event("input")
+  container.dispatchEvent(event)
 }
 
 function helperExpandInputs(e) {
@@ -58,6 +62,9 @@ function helperExpandInputs(e) {
   newElement.querySelector("input").value = ""
 
   container.insertBefore(newElement, item)
+  
+  var event = new Event("input")
+  container.dispatchEvent(event)
 }
 
 function helperActivate(e) {
