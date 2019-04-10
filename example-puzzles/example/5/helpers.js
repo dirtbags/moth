@@ -17,6 +17,9 @@ function helperUpdateAnswer(event) {
         values.push(c.value)
       }
     }
+    if (e.classList.contains("sort")) {
+      values.sort()
+    }
     value = values.join(",")
   }
 
@@ -33,8 +36,34 @@ function helperUpdateAnswer(event) {
   answer.dispatchEvent(new InputEvent("input"))
 }
 
+function helperRemoveInput(e) {
+  let item = e.target.parentElement
+  item.remove()
+}
+
+function helperExpandInputs(e) {
+  let item = e.target.parentElement
+  let container = item.parentElement
+  let template = container.firstElementChild
+  let newElement = template.cloneNode(true)
+
+  // Add remove button
+  let remove = document.createElement("button")
+  remove.innerText = "➖"
+  remove.addEventListener("click", helperRemoveInput)
+  newElement.appendChild(remove)
+
+  // Zero it out, otherwise whatever's in first element is copied too
+  newElement.querySelector("input").value = ""
+
+  container.insertBefore(newElement, item)
+}
+
 function helperActivate(e) {
   e.addEventListener("input", helperUpdateAnswer)
+  if (e.classList.contains("expand")) {
+    e.addEventListener("click", helperExpandInputs)
+  }
 }
 
 function helperInit(event) {
