@@ -34,7 +34,7 @@ Multiple concatenated values
 Free input, sorted, concatenated values
 <ul class="answer lower sort">
   <li><input></li>
-  <li><button class="answer expand" data-tag="input">➕</button><li>
+  <li><button class="answer expand">➕</button><li>
 </ul>
 
 Select from an ordered list of options
