@@ -31,6 +31,12 @@ Multiple concatenated values
   <input>
 </div>
 
+Free input, sorted, concatenated values
+<ul class="answer lower sort">
+  <li><input></li>
+  <li><button class="answer expand" data-tag="input">➕</button><li>
+</ul>
+
 Select from an ordered list of options
 <ul class="answer">
   <li><input type="checkbox" value="horn">Horns</li>
