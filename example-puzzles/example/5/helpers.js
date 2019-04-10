@@ -61,8 +61,8 @@ function helperExpandInputs(e) {
 
 function helperActivate(e) {
   e.addEventListener("input", helperUpdateAnswer)
-  if (e.classList.contains("expand")) {
-    e.addEventListener("click", helperExpandInputs)
+  for (let exp of e.querySelectorAll(".expand")) {
+    exp.addEventListener("click", helperExpandInputs)
   }
 }
 
