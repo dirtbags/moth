@@ -14,18 +14,25 @@ import os
 import pathlib
 import random
 import shutil
-import socketserver
 import sys
 import traceback
 import mothballer
 import parse
+import urllib.parse
+import posixpath
 from http import HTTPStatus
 
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
+try:
+    ThreadingHTTPServer = http.server.ThreadingHTTPServer
+except AttributeError:
+    import socketserver
+    class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+        daemon_threads = True
 
-class MothServer(http.server.ThreadingHTTPServer):
+class MothServer(ThreadingHTTPServer):
     def __init__(self, server_address, RequestHandlerClass):
         super().__init__(server_address, RequestHandlerClass)
         self.args = {}
@@ -35,13 +42,44 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
     endpoints = []
     
     def __init__(self, request, client_address, server):
-        super().__init__(request, client_address, server, directory=server.args["theme_dir"])
+        self.directory = str(server.args["theme_dir"])
+        super().__init__(request, client_address, server)
+
+    # Backport from Python 3.7
+    def translate_path(self, path):
+        """Translate a /-separated PATH to the local filename syntax.
+        Components that mean special things to the local file system
+        (e.g. drive or directory names) are ignored.  (XXX They should
+        probably be diagnosed.)
+        """
+        # abandon query parameters
+        path = path.split('?',1)[0]
+        path = path.split('#',1)[0]
+        # Don't forget explicit trailing slash when normalizing. Issue17324
+        trailing_slash = path.rstrip().endswith('/')
+        try:
+            path = urllib.parse.unquote(path, errors='surrogatepass')
+        except UnicodeDecodeError:
+            path = urllib.parse.unquote(path)
+        path = posixpath.normpath(path)
+        words = path.split('/')
+        words = filter(None, words)
+        path = self.directory
+        for word in words:
+            if os.path.dirname(word) or word in (os.curdir, os.pardir):
+                # Ignore components that are not a simple file/directory name
+                continue
+            path = os.path.join(path, word)
+        if trailing_slash:
+            path += '/'
+        return path
 
 
     def get_puzzle(self):
         category = self.req.get("cat")
         points = int(self.req.get("points"))
-        cat = moth.Category(self.server.args["puzzles_dir"].joinpath(category), self.seed)
+        catpath = str(self.server.args["puzzles_dir"].joinpath(category))
+        cat = moth.Category(catpath, self.seed)
         puzzle = cat.puzzle(points)
         return puzzle
 
@@ -75,7 +113,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not p.is_dir() or p.match(".*"):
                 continue
             catName = p.parts[-1]
-            cat = moth.Category(p, self.seed)
+            cat = moth.Category(str(p), self.seed)
             puzzles[catName] = [[i, str(i)] for i in cat.pointvals()]
             puzzles[catName].append([0, ""])
         if len(puzzles) <= 1:
@@ -253,8 +291,6 @@ if __name__ == '__main__':
     port = int(parts[1])
     
     logging.basicConfig(level=logging.INFO)
-    
-    mydir = os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0])))
     
     server = MothServer((addr, port), MothRequestHandler)
     server.args["base_url"] = args.base
