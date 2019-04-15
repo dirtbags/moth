@@ -40,7 +40,7 @@ func (ctx *Instance) generatePuzzleList() {
 	}
 
 	ret := map[string][]PuzzleMap{}
-	for catName, mb := range ctx.categories {
+	for catName, mb := range ctx.Categories {
 		mf, err := mb.Open("map.txt")
 		if err != nil {
 			// File isn't in there
@@ -125,12 +125,12 @@ func (ctx *Instance) tidy() {
 	ctx.MaybeInitialize()
 
 	// Refresh all current categories
-	for categoryName, mb := range ctx.categories {
+	for categoryName, mb := range ctx.Categories {
 		if err := mb.Refresh(); err != nil {
 			// Backing file vanished: remove this category
 			log.Printf("Removing category: %s: %s", categoryName, err)
 			mb.Close()
-			delete(ctx.categories, categoryName)
+			delete(ctx.Categories, categoryName)
 		}
 	}
 
@@ -147,61 +147,15 @@ func (ctx *Instance) tidy() {
 		}
 		categoryName := strings.TrimSuffix(filename, ".mb")
 
-		if _, ok := ctx.categories[categoryName]; !ok {
+		if _, ok := ctx.Categories[categoryName]; !ok {
 			mb, err := OpenMothball(filepath)
 			if err != nil {
 				log.Printf("Error opening %s: %s", filepath, err)
 				continue
 			}
 			log.Printf("New category: %s", filename)
-			ctx.categories[categoryName] = mb
+			ctx.Categories[categoryName] = mb
 		}
-	}
-}
-
-// readTeams reads in the list of team IDs,
-// so we can quickly validate them.
-func (ctx *Instance) readTeams() {
-	filepath := ctx.StatePath("teamids.txt")
-	teamids, err := os.Open(filepath)
-	if err != nil {
-		log.Printf("Error openining %s: %s", filepath, err)
-		return
-	}
-	defer teamids.Close()
-
-	// List out team IDs
-	newList := map[string]bool{}
-	scanner := bufio.NewScanner(teamids)
-	for scanner.Scan() {
-		teamId := scanner.Text()
-		if (teamId == "..") || strings.ContainsAny(teamId, "/") {
-			log.Printf("Dangerous team ID dropped: %s", teamId)
-			continue
-		}
-		newList[scanner.Text()] = true
-	}
-
-	// For any new team IDs, set their next attempt time to right now
-	now := time.Now()
-	added := 0
-	for k, _ := range newList {
-		if _, ok := ctx.nextAttempt[k]; !ok {
-			ctx.nextAttempt[k] = now
-			added += 1
-		}
-	}
-
-	// For any removed team IDs, remove them
-	removed := 0
-	for k, _ := range ctx.nextAttempt {
-		if _, ok := newList[k]; !ok {
-			delete(ctx.nextAttempt, k)
-		}
-	}
-
-	if (added > 0) || (removed > 0) {
-		log.Printf("Team IDs updated: %d added, %d removed", added, removed)
 	}
 }
 
@@ -282,7 +236,6 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 	for {
 		if ctx.isEnabled() {
 			ctx.tidy()
-			ctx.readTeams()
 			ctx.collectPoints()
 			ctx.generatePuzzleList()
 			ctx.generatePointsLog()

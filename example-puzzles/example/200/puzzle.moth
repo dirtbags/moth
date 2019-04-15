@@ -1,0 +1,15 @@
+Author: claire
+Summary: dynamically graded puzzles
+AnswerDyn: /bin/sh ./answer.sh
+AnswerDynGrader: answer.sh
+
+This example makes use of the dynamic grading feature.  With this feature, you can supply a command which the operating system evaluates in real time upon submission of an answer; if that command returns "true" to standard out, the answer is evaluated as true.  Answers are appended as single-space separated argument(s).
+
+Additionally, a dynamic grading file such as a .sh script can be supplied to aid in grading.  This file is placed in the directory where the answer grading is run.  Note that you may need to customize your environment to support languages such as python or java if those types of grading programs are required.  MOTH containers by default run minimally and can handle .sh scripts.
+
+The format of these fields is as follows:
+
+    AnswerDyn: [the command the OS runs to evaluate the submission]
+    AnswerDynGrader: [a helper file such as a .sh script]
+
+The dynamic answer script that runs here prepends the character "t" to the answer on standard out.  Given that MOTH expects "true" from standard out, what is the answer?

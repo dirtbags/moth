@@ -88,11 +88,17 @@ def package(categoryname, categorydir, seed):
             payload = f.stream.read()
             zf.writestr(os.path.join(puzzledir, fn), payload)
 
+        puzzleanswerdyndir = os.path.join("answerdyn", puzzlehash)
+        for fn, f in puzzle.answerdyngrader.items():
+            payload = f.stream.read()
+            zf.writestr(os.path.join(puzzleanswerdyndir, fn), payload)
+
         obj = puzzle.package()
         zf.writestr(os.path.join(puzzledir, 'puzzle.json'), json.dumps(obj))
 
     write_kv_pairs(zf, 'map.txt', mapping)
     write_kv_pairs(zf, 'answers.txt', answers)
+    write_kv_pairs(zf, 'answersdyn.txt', answersdyn)
     write_kv_pairs(zf, 'summaries.txt', summary)
 
     # clean up

@@ -14,13 +14,16 @@ Puzzle categories are laid out on the filesystem:
     │  └─puzzle.py
     ├─10
     │  └─puzzle.moth
-    └─100
-       └─puzzle.py
+    ├─100
+    │  └─puzzle.py
+    └─200
+       ├─puzzle.py
+       └─answer.sh
 
 In this example,
-there are puzzles with point values 1, 2, 3, 10, and 100.
+there are puzzles with point values 1, 2, 3, 10, 100, and 200.
 
-Puzzles 1, 2, and 10 are "static" puzzles:
+Puzzles 1, 2, 10, and 200 are "static" puzzles:
 their content was written by hand.
 
 Puzzles 3 and 100 are "dynamic" puzzles:

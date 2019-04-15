@@ -6,8 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math/rand"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -15,51 +13,37 @@ import (
 )
 
 type Instance struct {
-	Base            string
-	MothballDir     string
-	StateDir        string
-	ThemeDir        string
-	AttemptInterval time.Duration
-
-	categories  map[string]*Mothball
-	update      chan bool
-	jPuzzleList []byte
-	jPointsLog  []byte
-	nextAttempt map[string]time.Time
-	mux         *http.ServeMux
+	Base         string
+	MothballDir  string
+	StateDir     string
+	ResourcesDir string
+	Categories   map[string]*Mothball
+	update       chan bool
+	jPuzzleList  []byte
+	jPointsLog   []byte
 }
 
-func (ctx *Instance) Initialize() error {
+func NewInstance(base, mothballDir, stateDir, resourcesDir string) (*Instance, error) {
+	ctx := &Instance{
+		Base:         strings.TrimRight(base, "/"),
+		MothballDir:  mothballDir,
+		StateDir:     stateDir,
+		ResourcesDir: resourcesDir,
+		Categories:   map[string]*Mothball{},
+		update:       make(chan bool, 10),
+	}
+
 	// Roll over and die if directories aren't even set up
-	if _, err := os.Stat(ctx.MothballDir); err != nil {
-		return err
+	if _, err := os.Stat(mothballDir); err != nil {
+		return nil, err
 	}
-	if _, err := os.Stat(ctx.StateDir); err != nil {
-		return err
+	if _, err := os.Stat(stateDir); err != nil {
+		return nil, err
 	}
 
-	ctx.Base = strings.TrimRight(ctx.Base, "/")
-	ctx.categories = map[string]*Mothball{}
-	ctx.update = make(chan bool, 10)
-	ctx.nextAttempt = map[string]time.Time{}
-	ctx.mux = http.NewServeMux()
-
-	ctx.BindHandlers()
 	ctx.MaybeInitialize()
 
-	return nil
-}
-
-// Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
-const distinguishableChars = "234678abcdefhijkmnpqrtwxyz="
-
-func mktoken() string {
-	a := make([]byte, 8)
-	for i := range a {
-		char := rand.Intn(len(distinguishableChars))
-		a[i] = distinguishableChars[char]
-	}
-	return string(a)
+	return ctx, nil
 }
 
 func (ctx *Instance) MaybeInitialize() {
@@ -78,6 +62,7 @@ func (ctx *Instance) MaybeInitialize() {
 	os.RemoveAll(ctx.StatePath("teams"))
 
 	// Make sure various subdirectories exist
+	log.Print("Making stuff " + ctx.StatePath("points.tmp"))
 	os.Mkdir(ctx.StatePath("points.tmp"), 0755)
 	os.Mkdir(ctx.StatePath("points.new"), 0755)
 	os.Mkdir(ctx.StatePath("teams"), 0755)
@@ -85,8 +70,8 @@ func (ctx *Instance) MaybeInitialize() {
 	// Preseed available team ids if file doesn't exist
 	if f, err := os.OpenFile(ctx.StatePath("teamids.txt"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		defer f.Close()
-		for i := 0; i <= 100; i += 1 {
-			fmt.Fprintln(f, mktoken())
+		for i := 0; i <= 9999; i += 1 {
+			fmt.Fprintf(f, "%04d\n", i)
 		}
 	}
 
@@ -99,39 +84,19 @@ func (ctx *Instance) MaybeInitialize() {
 	fmt.Fprintln(f, "Remove this file to reinitialize the contest")
 }
 
-func pathCleanse(parts []string) string {
-	clean := make([]string, len(parts))
-	for i := range parts {
-		part := parts[i]
-		part = strings.TrimLeft(part, ".")
-		if p := strings.LastIndex(part, "/"); p >= 0 {
-			part = part[p+1:]
-		}
-		clean[i] = part
-	}
-	return path.Join(clean...)
-}
-
 func (ctx Instance) MothballPath(parts ...string) string {
-	tail := pathCleanse(parts)
+	tail := path.Join(parts...)
 	return path.Join(ctx.MothballDir, tail)
 }
 
 func (ctx *Instance) StatePath(parts ...string) string {
-	tail := pathCleanse(parts)
+	tail := path.Join(parts...)
 	return path.Join(ctx.StateDir, tail)
 }
 
-func (ctx *Instance) ThemePath(parts ...string) string {
-	tail := pathCleanse(parts)
-	return path.Join(ctx.ThemeDir, tail)
-}
-
-func (ctx *Instance) TooFast(teamId string) bool {
-	now := time.Now()
-	next, _ := ctx.nextAttempt[teamId]
-	ctx.nextAttempt[teamId] = now.Add(ctx.AttemptInterval)
-	return now.Before(next)
+func (ctx *Instance) ResourcePath(parts ...string) string {
+	tail := path.Join(parts...)
+	return path.Join(ctx.ResourcesDir, tail)
 }
 
 func (ctx *Instance) PointsLog() []*Award {
@@ -159,20 +124,20 @@ func (ctx *Instance) PointsLog() []*Award {
 	return ret
 }
 
-// AwardPoints gives points to teamId in category.
+// awardPoints gives points to teamid in category.
 // It first checks to make sure these are not duplicate points.
 // This is not a perfect check, you can trigger a race condition here.
 // It's just a courtesy to the user.
 // The maintenance task makes sure we never have duplicate points in the log.
-func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
+func (ctx *Instance) AwardPoints(teamid, category string, points int) error {
 	a := Award{
 		When:     time.Now(),
-		TeamId:   teamId,
+		TeamId:   teamid,
 		Category: category,
 		Points:   points,
 	}
 
-	_, err := ctx.TeamName(teamId)
+	teamName, err := ctx.TeamName(teamid)
 	if err != nil {
 		return fmt.Errorf("No registered team with this hash")
 	}
@@ -183,7 +148,7 @@ func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
 		}
 	}
 
-	fn := fmt.Sprintf("%s-%s-%d", teamId, category, points)
+	fn := fmt.Sprintf("%s-%s-%d", teamid, category, points)
 	tmpfn := ctx.StatePath("points.tmp", fn)
 	newfn := ctx.StatePath("points.new", fn)
 
@@ -196,12 +161,12 @@ func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
 	}
 
 	ctx.update <- true
-	log.Printf("Award %s %s %d", teamId, category, points)
+	log.Printf("Award %s %s %d", teamName, category, points)
 	return nil
 }
 
 func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.ReadCloser, error) {
-	mb, ok := ctx.categories[category]
+	mb, ok := ctx.Categories[category]
 	if !ok {
 		return nil, fmt.Errorf("No such category: %s", category)
 	}
@@ -211,9 +176,13 @@ func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.Read
 	return f, err
 }
 
-func (ctx *Instance) ValidTeamId(teamId string) bool {
-	_, ok := ctx.nextAttempt[teamId]
-	return ok
+func (ctx *Instance) GetCategoryDir(category string) (string, error) {
+	_, ok := ctx.Categories[category]
+	if !ok {
+		return "", fmt.Errorf("No such category: %s", category)
+	}
+	
+	return path.Join(ctx.MothballDir, category), nil
 }
 
 func (ctx *Instance) TeamName(teamId string) (string, error) {

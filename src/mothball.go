@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"path"
+	"path/filepath"
 )
 
 type Mothball struct {
@@ -143,12 +145,32 @@ func (m *Mothball) Refresh() error {
 	if err != nil {
 		return err
 	}
-
+	
 	if m.zf != nil {
 		m.zf.Close()
 	}
 	m.zf = zf
 	m.mtime = mtime
+	
+	os.RemoveAll(path.Join(m.filename[:len(m.filename)-3]))
+	os.Mkdir(path.Join(m.filename[:len(m.filename)-3]), 0755)
+	for _, f := range m.zf.File {
+		dirname, _ := filepath.Split(f.Name)
+		os.MkdirAll(path.Join(m.filename[:len(m.filename)-3], dirname), 0755)
+		mf, motherr := NewMothballFile(f)
+		if motherr != nil {
+			return motherr
+		}
+		bytes, readerr := ioutil.ReadAll(mf)
+		if readerr != nil {
+			return readerr
+		}
+		writeerr := ioutil.WriteFile(path.Join(m.filename[:len(m.filename)-3], f.Name), bytes, 0755)
+		if writeerr != nil {
+			return writeerr
+		}
+		mf.Close()
+	}
 
 	return nil
 }
