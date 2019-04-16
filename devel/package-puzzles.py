@@ -116,6 +116,7 @@ def build_category(categorydir, outdir):
     cat = moth.Category(categorydir, category_seed)
     mapping = {}
     answers = {}
+    answerdyn = {}
     summary = {}
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
@@ -126,6 +127,7 @@ def build_category(categorydir, outdir):
         
         mapping[puzzle.points] = puzzlehash
         answers[puzzle.points] = puzzle.answers
+        answerdyn[puzzle.points] = puzzle.answerdyn
         summary[puzzle.points] = puzzle.summary
 
         puzzledir = os.path.join('content', puzzlehash)
@@ -135,6 +137,15 @@ def build_category(categorydir, outdir):
                 files.append(fn)
             payload = f.stream.read()
             zf.writestr(os.path.join(puzzledir, fn), payload)
+
+        puzzleanswerdyndir = os.path.join('answerdyn', puzzlehash)
+        answerdyngrader = []
+        for fn, f in puzzle.answerdyngrader.items():
+            if f.visible:
+                answerdyngrader.append(fn)
+            payload = f.stream.read()
+            zf.writestr(os.path.join(puzzleanswerdyndir, fn), payload)
+
 
         puzzledict = {
             'authors': puzzle.authors,
@@ -148,6 +159,7 @@ def build_category(categorydir, outdir):
 
     write_kv_pairs(zf, 'map.txt', mapping)
     write_kv_pairs(zf, 'answers.txt', answers)
+    write_kv_pairs(zf, 'answerdyn.txt', answerdyn)
     write_kv_pairs(zf, 'summaries.txt', summary)
 
     # clean up

@@ -122,10 +122,13 @@ function loadPuzzle(categoryName, points, puzzleId) {
     }
     
     // Load scripts
-    for (let script of obj.scripts) {
-      let st = document.createElement("script")
-      document.head.appendChild(st)
-      st.src = base + script
+    if(obj.script)
+    {
+        for (let script of obj.scripts) {
+          let st = document.createElement("script")
+          document.head.appendChild(st)
+          st.src = base + script
+        }
     }
     
     // List associated files

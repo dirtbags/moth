@@ -74,10 +74,12 @@ class Puzzle:
         self.summary = None
         self.authors = []
         self.answers = []
+        self.answerdyn = []
         self.scripts = []
         self.pattern = None
         self.hint = None
         self.files = {}
+        self.answerdyngrader = {}
         self.body = io.StringIO()
         self.logs = []
         self.randseed = category_seed * self.points
@@ -122,6 +124,11 @@ class Puzzle:
                     except IndexError:
                         pass
                     self.files[name] = PuzzleFile(stream, name, not hidden)
+                elif key == 'answerdyngrader':
+                    stream = open(val, 'rb')
+                    self.answerdyngrader[val] = PuzzleFile(stream, val)
+                elif key == 'answerdyn':
+                    self.answerdyn.append(val)
                 elif key == 'script':
                     stream = open(val, 'rb')
                     # Make sure this shows up in the header block of the HTML output.
