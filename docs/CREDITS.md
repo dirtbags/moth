@@ -5,6 +5,7 @@ Being in this list is voluntary. Add your name when you contribute code.
 * Paul Ferrell
 * Shannon Steinfadt
 * John Donaldson
+* 3ch01c
 
 Word List
 ---------
