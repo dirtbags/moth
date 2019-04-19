@@ -17,7 +17,11 @@ function helperUpdateAnswer(event) {
         values.push(c.value)
       }
     }
-    value = values.join(",")
+    let join = e.dataset.join
+    if (join === undefined) {
+      join = ","
+    }
+    value = values.join(join)
   }
 
   // First make any adjustments to the value
