@@ -43,7 +43,11 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
     
     def __init__(self, request, client_address, server):
         self.directory = str(server.args["theme_dir"])
-        super().__init__(request, client_address, server)
+        try:
+            super().__init__(request, client_address, server, directory=server.args["theme_dir"])
+        except TypeError:
+            super().__init__(request, client_address, server)
+
 
     # Backport from Python 3.7
     def translate_path(self, path):
