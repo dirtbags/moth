@@ -1,26 +1,16 @@
 #! /bin/sh
 
-BASEURL=http://localhost:8080
+## Run two of these to trigger the race condition from
 
-case "$1" in
-  a)
-    URL=$BASEURL/answer
-    ;;
-  b)
-    URL=$BASEURL/puzzles.json
-    ;;
-  *)
-    echo "Usage: $0 a|b" 1>&2
-    exit 1
-    ;;
-esac
+BASEURL=http://localhost:8080
+URL=$BASEURL/answer
 
 while true; do
   curl \
     -X POST \
-    -F "cat=base" \
-    -F "points=1" \
+    -F "cat=byobf" \
+    -F "points=10" \
     -F "id=test" \
-    -F "answer=moo" \
+    -F "answer=6" \
     $URL
 done
