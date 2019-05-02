@@ -27,6 +27,8 @@ Running a Development Server
 
 And point a browser to http://localhost:8080/ (or whatever host is running the server).
 
+The development server includes a number of Python libraries that we have found useful in writing puzzles.
+
 When you're ready to create your own puzzles,
 read [the devel server documentation](docs/devel-server.md).
 

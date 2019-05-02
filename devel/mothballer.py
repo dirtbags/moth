@@ -109,5 +109,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
+    outdir = os.path.abspath(args.outdir)
     for categorydir in args.categorydirs:
-        build_category(categorydir, args.outdir)
+        categorydir = os.path.abspath(categorydir)
+        build_category(categorydir, outdir)

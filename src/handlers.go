@@ -12,33 +12,26 @@ import (
 	"strings"
 )
 
+// https://github.com/omniti-labs/jsend
 type JSend struct {
-	Status string    `json:"status"`
-	Data   JSendData `json:"data"`
-}
-type JSendData struct {
-	Short       string `json:"short"`
-	Description string `json:"description"`
+	Status string `json:"status"`
+	Data   struct {
+		Short       string `json:"short"`
+		Description string `json:"description"`
+	} `json:"data"`
 }
 
-// ShowJSend renders a JSend response to w
-func ShowJSend(w http.ResponseWriter, status Status, short string, description string) {
+const (
+	JSendSuccess = "success"
+	JSendFail    = "fail"
+	JSendError   = "error"
+)
 
-	resp := JSend{
-		Status: "success",
-		Data: JSendData{
-			Short:       short,
-			Description: description,
-		},
-	}
-	switch status {
-	case Success:
-		resp.Status = "success"
-	case Fail:
-		resp.Status = "fail"
-	default:
-		resp.Status = "error"
-	}
+func respond(w http.ResponseWriter, req *http.Request, status string, short string, format string, a ...interface{}) {
+	resp := JSend{}
+	resp.Status = status
+	resp.Data.Short = short
+	resp.Data.Description = fmt.Sprintf(format, a...)
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
@@ -49,59 +42,6 @@ func ShowJSend(w http.ResponseWriter, status Status, short string, description s
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
 	w.Write(respBytes)
-}
-
-type Status int
-
-const (
-	Success = iota
-	Fail
-	Error
-)
-
-// ShowHtml delevers an HTML response to w
-func ShowHtml(w http.ResponseWriter, status Status, title string, body string) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
-	statusStr := ""
-	switch status {
-	case Success:
-		statusStr = "Success"
-	case Fail:
-		statusStr = "Fail"
-	default:
-		statusStr = "Error"
-	}
-
-	fmt.Fprintf(w, "<!DOCTYPE html>")
-	fmt.Fprintf(w, "<!-- If you put `application/json` in the `Accept` header of this request, you would have gotten a JSON object instead of HTML. -->\n")
-	fmt.Fprintf(w, "<html><head>")
-	fmt.Fprintf(w, "<title>%s</title>", title)
-	fmt.Fprintf(w, "<link rel=\"stylesheet\" href=\"basic.css\">")
-	fmt.Fprintf(w, "<meta name=\"viewport\" content=\"width=device-width\">")
-	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.svg\" type=\"image/svg+xml\">")
-	fmt.Fprintf(w, "<link rel=\"icon\" href=\"res/icon.png\" type=\"image/png\">")
-	fmt.Fprintf(w, "</head><body><h1 class=\"%s\">%s</h1>", statusStr, title)
-	fmt.Fprintf(w, "<section>%s</section>", body)
-	fmt.Fprintf(w, "<nav>")
-	fmt.Fprintf(w, "<ul>")
-	fmt.Fprintf(w, "<li><a href=\"puzzle-list.html\">Puzzles</a></li>")
-	fmt.Fprintf(w, "<li><a href=\"scoreboard.html\">Scoreboard</a></li>")
-	fmt.Fprintf(w, "</ul>")
-	fmt.Fprintf(w, "</nav>")
-	fmt.Fprintf(w, "</body></html>")
-}
-
-func respond(w http.ResponseWriter, req *http.Request, status Status, short string, format string, a ...interface{}) {
-	long := fmt.Sprintf(format, a...)
-	// This is a kludge. Do proper parsing when this causes problems.
-	accept := req.Header.Get("Accept")
-	if strings.Contains(accept, "application/json") {
-		ShowJSend(w, status, short, long)
-	} else {
-		ShowHtml(w, status, short, long)
-	}
 }
 
 // hasLine returns true if line appears in r.
@@ -117,73 +57,73 @@ func hasLine(r io.Reader, line string) bool {
 }
 
 func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
-	teamname := req.FormValue("name")
-	teamid := req.FormValue("id")
+	teamName := req.FormValue("name")
+	teamId := req.FormValue("id")
 
-	// Keep foolish operators from shooting themselves in the foot
-	// You would have to add a pathname to your list of Team IDs to open this vulnerability,
-	// but I have learned not to overestimate people.
-	if strings.Contains(teamid, "../") {
-		teamid = "rodney"
-	}
-
-	if (teamid == "") || (teamname == "") {
+	if !ctx.ValidTeamId(teamId) {
 		respond(
-			w, req, Fail,
-			"Invalid Entry",
-			"Either `id` or `name` was missing from this request.",
-		)
-		return
-	}
-
-	teamids, err := os.Open(ctx.StatePath("teamids.txt"))
-	if err != nil {
-		respond(
-			w, req, Fail,
-			"Cannot read valid team IDs",
-			"An error was encountered trying to read valid teams IDs: %v", err,
-		)
-		return
-	}
-	defer teamids.Close()
-	if !hasLine(teamids, teamid) {
-		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Invalid Team ID",
 			"I don't have a record of that team ID. Maybe you used capital letters accidentally?",
 		)
 		return
 	}
 
-	f, err := os.OpenFile(ctx.StatePath("teams", teamid), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(ctx.StatePath("teams", teamId), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Print(err)
-		respond(
-			w, req, Fail,
-			"Registration failed",
-			"Unable to register. Perhaps a teammate has already registered?",
-		)
+		if os.IsExist(err) {
+			respond(
+				w, req, JSendFail,
+				"Already registered",
+				"This team ID has already been registered.",
+			)
+		} else {
+			log.Print(err)
+			respond(
+				w, req, JSendFail,
+				"Registration failed",
+				"Unable to register. Perhaps a teammate has already registered?",
+			)
+		}
 		return
 	}
 	defer f.Close()
-	fmt.Fprintln(f, teamname)
+
+	fmt.Fprintln(f, teamName)
 	respond(
-		w, req, Success,
+		w, req, JSendSuccess,
 		"Team registered",
-		"Okay, your team has been named and you may begin using your team ID!",
+		"Your team has been named and you may begin using your team ID!",
 	)
 }
 
 func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
-	teamid := req.FormValue("id")
+	teamId := req.FormValue("id")
 	category := req.FormValue("cat")
 	pointstr := req.FormValue("points")
 	answer := req.FormValue("answer")
 
+	if ! ctx.ValidTeamId(teamId) {
+		respond(
+			w, req, JSendFail,
+			"Invalid team ID",
+			"That team ID is not valid for this event.",
+		)
+		return
+	}
+	if ctx.TooFast(teamId) {
+		respond(
+			w, req, JSendFail,
+			"Submitting too quickly",
+			"Your team can only submit one answer every %v", ctx.AttemptInterval,
+		)
+		return
+	}
+
 	points, err := strconv.Atoi(pointstr)
 	if err != nil {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Cannot parse point value",
 			"This doesn't look like an integer: %s", pointstr,
 		)
@@ -193,7 +133,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	haystack, err := ctx.OpenCategoryFile(category, "answers.txt")
 	if err != nil {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Cannot list answers",
 			"Unable to read the list of answers for this category.",
 		)
@@ -205,29 +145,35 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	needle := fmt.Sprintf("%d %s", points, answer)
 	if !hasLine(haystack, needle) {
 		respond(
-			w, req, Fail,
+			w, req, JSendFail,
 			"Wrong answer",
 			"That is not the correct answer for %s %d.", category, points,
 		)
 		return
 	}
 
-	if err := ctx.AwardPoints(teamid, category, points); err != nil {
+	if err := ctx.AwardPoints(teamId, category, points); err != nil {
 		respond(
-			w, req, Error,
+			w, req, JSendError,
 			"Cannot award points",
 			"The answer is correct, but there was an error awarding points: %v", err.Error(),
 		)
 		return
 	}
 	respond(
-		w, req, Success,
+		w, req, JSendSuccess,
 		"Points awarded",
-		fmt.Sprintf("%d points for %s!", points, teamid),
+		fmt.Sprintf("%d points for %s!", points, teamId),
 	)
 }
 
 func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
+	teamId := req.FormValue("id")
+	if _, err := ctx.TeamName(teamId); err != nil {
+		http.Error(w, "Must provide team ID", http.StatusUnauthorized)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(ctx.jPuzzleList)
@@ -257,7 +203,7 @@ func (ctx *Instance) contentHandler(w http.ResponseWriter, req *http.Request) {
 	puzzleId := parts[len(parts)-2]
 	categoryName := parts[len(parts)-3]
 
-	mb, ok := ctx.Categories[categoryName]
+	mb, ok := ctx.categories[categoryName]
 	if !ok {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
@@ -285,7 +231,7 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 		path = "/index.html"
 	}
 
-	f, err := os.Open(ctx.ResourcePath(path))
+	f, err := os.Open(ctx.ThemePath(path))
 	if err != nil {
 		http.NotFound(w, req)
 		return
@@ -301,11 +247,46 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, path, d.ModTime(), f)
 }
 
-func (ctx *Instance) BindHandlers(mux *http.ServeMux) {
-	mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
-	mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
-	mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
-	mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
-	mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
-	mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
+type FurtiveResponseWriter struct {
+	w          http.ResponseWriter
+	statusCode *int
+}
+
+func (w FurtiveResponseWriter) WriteHeader(statusCode int) {
+	*w.statusCode = statusCode
+	w.w.WriteHeader(statusCode)
+}
+
+func (w FurtiveResponseWriter) Write(buf []byte) (n int, err error) {
+	n, err = w.w.Write(buf)
+	return
+}
+
+func (w FurtiveResponseWriter) Header() http.Header {
+	return w.w.Header()
+}
+
+// This gives Instances the signature of http.Handler
+func (ctx *Instance) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
+	w := FurtiveResponseWriter{
+		w:          wOrig,
+		statusCode: new(int),
+	}
+	ctx.mux.ServeHTTP(w, r)
+	log.Printf(
+		"%s %s %s %d\n",
+		r.RemoteAddr,
+		r.Method,
+		r.URL,
+		*w.statusCode,
+	)
+}
+
+func (ctx *Instance) BindHandlers() {
+	ctx.mux.HandleFunc(ctx.Base+"/", ctx.staticHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/register", ctx.registerHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/answer", ctx.answerHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
 }

@@ -111,6 +111,9 @@ function once() {
 }
 
 function init() {
+  let base = window.location.href.replace("scoreboard.html", "")
+  document.querySelector("#location").textContent = base
+
   setInterval(once, 60000);
   once();
 }
@@ -123,12 +126,13 @@ if (document.readyState === "loading") {
   </head>
   <body>
     <h1 class="Success">Scoreboard</h1>
+    <h4 id="location"></h4>
     <section>
       <div id="scoreboard"></div>
     </section>
     <nav>
       <ul>
-        <li><a href="puzzle-list.html">Puzzles</a></li>
+        <li><a href="index.html">Puzzles</a></li>
         <li><a href="scoreboard.html">Scoreboard</a></li>
       </ul>
     </nav>

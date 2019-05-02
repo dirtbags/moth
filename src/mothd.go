@@ -3,47 +3,54 @@ package main
 import (
 	"flag"
 	"log"
+	"math/rand"
 	"mime"
 	"net/http"
 	"time"
 )
 
-func logRequest(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("HTTP %s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
-
 func setup() error {
+	rand.Seed(time.Now().UnixNano())
 	return nil
 }
 
 func main() {
-	base := flag.String(
+	ctx := &Instance{}
+
+	flag.StringVar(
+		&ctx.Base,
 		"base",
 		"/",
 		"Base URL of this instance",
 	)
-	mothballDir := flag.String(
+	flag.StringVar(
+		&ctx.MothballDir,
 		"mothballs",
 		"/mothballs",
 		"Path to read mothballs",
 	)
-	stateDir := flag.String(
+	flag.StringVar(
+		&ctx.StateDir,
 		"state",
 		"/state",
 		"Path to write state",
 	)
-	themeDir := flag.String(
+	flag.StringVar(
+		&ctx.ThemeDir,
 		"theme",
 		"/theme",
 		"Path to static theme resources (HTML, images, css, ...)",
 	)
+	flag.DurationVar(
+		&ctx.AttemptInterval,
+		"attempt",
+		500*time.Millisecond,
+		"Per-team time required between answer attempts",
+	)
 	maintenanceInterval := flag.Duration(
 		"maint",
 		20*time.Second,
-		"Maintenance interval",
+		"Time between maintenance tasks",
 	)
 	listen := flag.String(
 		"listen",
@@ -56,11 +63,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, err := NewInstance(*base, *mothballDir, *stateDir, *themeDir)
+	err := ctx.Initialize()
 	if err != nil {
 		log.Fatal(err)
 	}
-	ctx.BindHandlers(http.DefaultServeMux)
 
 	// Add some MIME extensions
 	// Doing this avoids decompressing a mothball entry twice per request
@@ -70,5 +76,5 @@ func main() {
 	go ctx.Maintenance(*maintenanceInterval)
 
 	log.Printf("Listening on %s", *listen)
-	log.Fatal(http.ListenAndServe(*listen, logRequest(http.DefaultServeMux)))
+	log.Fatal(http.ListenAndServe(*listen, ctx))
 }

@@ -1,9 +1,10 @@
-FROM alpine:3.8 AS builder
-RUN apk --no-cache add go libc-dev
-COPY src /src
-RUN go build -o /mothd /src/*.go
+FROM golang:1.12.0-alpine AS builder
+COPY src /go/src/github.com/dirtbags/moth/src
+WORKDIR /go/src/github.com/dirtbags/moth/src
+RUN go get .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o /mothd *.go
 
-FROM alpine
+FROM scratch
 COPY --from=builder /mothd /mothd
 COPY theme /theme
 ENTRYPOINT [ "/mothd" ]

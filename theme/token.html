@@ -4,28 +4,30 @@
     <title>Redeem Token</title>
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
+    <script src="puzzle.js"></script>
     <script>
-function erpdert() {
-  let vals = document.querySelector("[name=token]").value.split(":");
-  document.querySelector("[name=cat]").value = vals[0];
-  document.querySelector("[name=points]").value = vals[1];
-  document.querySelector("[name=answer]").value = vals[2];
+function tokenInput(e) {
+  let vals = e.target.value.split(":")
+  document.querySelector("input[name=cat]").value = vals[0]
+  document.querySelector("input[name=points]").value = vals[1]
+  document.querySelector("input[name=answer]").value = vals[2]
 }
 
-function init() {
-  document.querySelector("[name=token]").addEventListener("input", erpdert);
+function tokenInit() {
+  document.querySelector("input[name=token]").addEventListener("input", tokenInput)
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", tokenInit)
 } else {
-  init();
+  tokenInit()
 }
     </script>
   </head>
   <body>
     <h1>Redeem Token</h1>
-    <form action="token" method="post">
+    <div id="messages"></div>
+    <form id="tokenForm">
       <input type="hidden" name="cat">
       <input type="hidden" name="points">
       <input type="hidden" name="answer">
