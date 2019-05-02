@@ -4,7 +4,7 @@
 
 set -e
 
-if [ -f tools/devel-server.py ]; then
+if [ -f devel/devel-server.py ]; then
 	cat <<EOM
 This script is intended to be used to bootstrap a moth development server. It
 looks like you're running the script from a moth repository working directory.
@@ -24,4 +24,4 @@ puzzles="$(readlink -e ../puzzles)"
 ln -sf "${puzzles}" puzzles
 
 printf "\n[+] Place puzzles at ${puzzles} ...\n"
-python3 tools/devel-server.py
+python3 devel/devel-server.py
