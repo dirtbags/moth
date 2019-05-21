@@ -8,10 +8,10 @@ import json
 import logging
 import moth
 import os
+import random
 import shutil
 import tempfile
 import zipfile
-import random
 
 SEEDFN = "SEED"
 

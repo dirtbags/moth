@@ -10,9 +10,9 @@ import importlib.machinery
 import mistune
 import os
 import random
+import shlex
 import string
 import tempfile
-import shlex
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 

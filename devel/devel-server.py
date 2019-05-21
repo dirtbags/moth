@@ -1,27 +1,27 @@
 #!/usr/bin/python3
 
 import asyncio
+import cgi
 import cgitb
 import html
-import cgi
+from http import HTTPStatus
 import http.server
 import io
 import json
+import logging
 import mimetypes
 import moth
-import logging
 import os
 import pathlib
 import random
 import shutil
 import sys
 import traceback
-import mothballer
-import parse
 import urllib.parse
+import parse
 import posixpath
-from http import HTTPStatus
 
+import mothballer
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
