@@ -18,4 +18,4 @@ COPY theme /theme/
 
 WORKDIR /moth/
 ENTRYPOINT [ "python3", "/app/devel-server.py" ]
-CMD [ "--bind", "0.0.0.0:8080", "--puzzles", "/puzzles", "--theme", "/theme" ]
+CMD [ "--bind", "0.0.0.0:8080", "--puzzles", "/puzzles", "--theme", "/theme", "--progression", "team" ]

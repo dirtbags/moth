@@ -9,3 +9,4 @@ FROM scratch
 COPY --from=builder /mothd /mothd
 COPY theme /theme
 ENTRYPOINT [ "/mothd" ]
+CMD [ "--progression", "team" ]
