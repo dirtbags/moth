@@ -33,6 +33,8 @@ type Instance struct {
 	nextAttempt map[string]time.Time
 	nextAttemptMutex *sync.RWMutex
 	mux         *http.ServeMux
+
+	options map[string]string
 }
 
 func (ctx *Instance) Initialize() error {
