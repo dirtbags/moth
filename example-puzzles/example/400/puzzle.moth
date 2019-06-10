@@ -1,0 +1,7 @@
+Author: claire
+Summary: puzzle paths
+Answer: DFS
+Answer: dfs
+UnlockedBy: 200
+
+Normally and by default, solving the highest point value unlocks the next higher point value challenge.  However, if specified, the "Unlocked By" tag allows manual specification of paths through the challenges.  For instance, here 200 unlocks both 400 and 401, either of which can unlock 402.  The answer to this question is the acronym for the graph search that does depth first.

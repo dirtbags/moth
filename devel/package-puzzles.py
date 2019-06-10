@@ -118,6 +118,7 @@ def build_category(categorydir, outdir):
     answers = {}
     answerdyn = {}
     summary = {}
+    unlockers = {}
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
 
@@ -129,6 +130,7 @@ def build_category(categorydir, outdir):
         answers[puzzle.points] = puzzle.answers
         answerdyn[puzzle.points] = puzzle.answerdyn
         summary[puzzle.points] = puzzle.summary
+        unlockers[puzzle.points] = puzzle.unlockers
 
         puzzledir = os.path.join('content', puzzlehash)
         files = []
@@ -161,6 +163,7 @@ def build_category(categorydir, outdir):
     write_kv_pairs(zf, 'answers.txt', answers)
     write_kv_pairs(zf, 'answerdyn.txt', answerdyn)
     write_kv_pairs(zf, 'summaries.txt', summary)
+    write_kv_pairs(zf, 'unlockers.txt', unlockers)
 
     # clean up
     zf.close()

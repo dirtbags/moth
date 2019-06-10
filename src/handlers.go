@@ -169,6 +169,18 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		)
 		return
 	}
+	
+	if ctx.options["progression"] == "team" {
+		_, ok := ctx.unlockedPuzzles[teamId][category][points]
+		if !ok {
+			respond(
+				w, req, JSendFail,
+				"Puzzle locked",
+				"Your team has to unlock that puzzle first",
+			)
+			return
+		}
+	}
 
 	haystack, err := ctx.OpenCategoryFile(category, "answers.txt")
 	foundAns := false
@@ -274,7 +286,11 @@ func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(ctx.jPuzzleList)
+	if ctx.options["progression"] == "team" {
+		w.Write(ctx.jPuzzleListTeam[teamId])
+	} else {
+		w.Write(ctx.jPuzzleList)
+	}
 }
 
 func (ctx *Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {

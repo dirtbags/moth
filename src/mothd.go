@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"github.com/namsral/flag"
 	"log"
 	"math/rand"
 	"mime"
@@ -40,6 +40,12 @@ func main() {
 		"theme",
 		"/theme",
 		"Path to static theme resources (HTML, images, css, ...)",
+	)
+	flag.StringVar(
+		&ctx.Progression,
+		"progression",
+		"all",
+		"The type of challenge progression (team | all)",
 	)
 	flag.DurationVar(
 		&ctx.AttemptInterval,

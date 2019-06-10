@@ -72,6 +72,7 @@ def package(categoryname, categorydir, seed):
     mapping = {}
     answers = {}
     summary = {}
+    unlockers = {}
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
 
@@ -82,6 +83,7 @@ def package(categoryname, categorydir, seed):
         mapping[puzzle.points] = puzzlehash
         answers[puzzle.points] = puzzle.answers
         summary[puzzle.points] = puzzle.summary
+        unlockers[puzzle.points] = puzzle.unlockers
 
         puzzledir = os.path.join("content", puzzlehash)
         for fn, f in puzzle.files.items():
@@ -100,6 +102,7 @@ def package(categoryname, categorydir, seed):
     write_kv_pairs(zf, 'answers.txt', answers)
     write_kv_pairs(zf, 'answersdyn.txt', answersdyn)
     write_kv_pairs(zf, 'summaries.txt', summary)
+    write_kv_pairs(zf, 'unlockers.txt', summary)
 
     # clean up
     zf.close()

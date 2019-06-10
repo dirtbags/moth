@@ -16,9 +16,13 @@ Puzzle categories are laid out on the filesystem:
     │  └─puzzle.moth
     ├─100
     │  └─puzzle.py
-    └─200
-       ├─puzzle.py
-       └─answer.sh
+    ├─200
+    │  ├─puzzle.py
+    │  └─answer.sh
+    ├400─────────────┬401
+    │  └─puzzle.moth │  └─puzzle.moth
+    └402─────────────┘
+       └─puzzle.moth
 
 In this example,
 there are puzzles with point values 1, 2, 3, 10, 100, and 200.
@@ -43,6 +47,6 @@ This file is in the following format:
     you can read more about Markdown on the Internet.
 
 To move to the next puzzle in a category,
-someone on some team must provide an answer to the highest-point puzzle in that category.
+someone on some team must provide an answer to the highest-point puzzle in that category or solve the preceeding challenge (see 400, 401), if specified.
 
 The answer to this puzzle is the name of the file required to make a static puzzle.

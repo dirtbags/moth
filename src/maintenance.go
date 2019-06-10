@@ -33,23 +33,31 @@ func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 
 func (ctx *Instance) generatePuzzleList() {
 	maxByCategory := map[string]int{}
+	completeByCategory := map[string]map[int]int{}
 	for _, a := range ctx.PointsLog() {
 		if a.Points > maxByCategory[a.Category] {
 			maxByCategory[a.Category] = a.Points
 		}
+		_, ok := completeByCategory[a.Category]
+		if !ok {
+			completeByCategory[a.Category] = map[int]int{}
+		}
+		completeByCategory[a.Category][a.Points]++
 	}
 
 	ret := map[string][]PuzzleMap{}
+
 	for catName, mb := range ctx.categories {
+		
 		mf, err := mb.Open("map.txt")
 		if err != nil {
 			// File isn't in there
 			continue
 		}
 		defer mf.Close()
-
-		pm := make([]PuzzleMap, 0, 30)
-		completed := true
+		
+		pointsToDir := map[int]string{}
+		
 		scanner := bufio.NewScanner(mf)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -65,12 +73,53 @@ func (ctx *Instance) generatePuzzleList() {
 				log.Printf("Parsing map for %s: short read", catName)
 				continue
 			}
+			
+			pointsToDir[pointval] = dir
+		}
+		
+		mf, err = mb.Open("unlockers.txt")
+		if err != nil {
+			// File isn't in there
+			continue
+		}
+		defer mf.Close()
+		
+		alreadyUnlocked := map[int]bool{}
+		pm := make([]PuzzleMap, 0, 30)
+		completed := true
+		scanner = bufio.NewScanner(mf)
+		for scanner.Scan() {
+			line := scanner.Text()
 
-			pm = append(pm, PuzzleMap{pointval, dir})
+			var pointval int
+			//var dir string
+			var unlockedBy int
 
-			if pointval > maxByCategory[catName] {
+			n, err := fmt.Sscanf(line, "%d %d", &pointval, &unlockedBy)
+			if err != nil {
+				log.Printf("Parsing map for %s: %v", catName, err)
+				continue
+			} else if n != 2 {
+				log.Printf("Parsing map for %s: short read", catName)
+				continue
+			}
+			
+			_, isUnlocked := alreadyUnlocked[pointval]
+			if isUnlocked {
+				continue
+			}
+			_, puzzleDone := completeByCategory[catName][pointval]
+			
+			if puzzleDone {
+				pm = append(pm, PuzzleMap{pointval, pointsToDir[pointval]})
+				alreadyUnlocked[pointval] = true
+			} else {
 				completed = false
-				break
+				_, unlockerDone := completeByCategory[catName][unlockedBy]
+				if(unlockedBy == 0 || unlockerDone) {
+					pm = append(pm, PuzzleMap{pointval, pointsToDir[pointval]})
+					alreadyUnlocked[pointval] = true
+				}
 			}
 		}
 		if completed {
@@ -86,6 +135,137 @@ func (ctx *Instance) generatePuzzleList() {
 		return
 	}
 	ctx.jPuzzleList = jpl
+	if ctx.options["progression"] == "team" {
+		ctx.generatePuzzleListTeams()
+	}
+}
+
+func (ctx *Instance) generatePuzzleListTeams() {
+	
+	maxByCategory := map[string]map[string]int{}
+	completeByCategory := map[string]map[string]map[int]int{}
+	for _, a := range ctx.PointsLog() {
+		_, ok := maxByCategory[a.TeamId][a.Category]
+		if !ok {
+			maxByCategory[a.TeamId]=map[string]int{}
+		}
+		if a.Points > maxByCategory[a.TeamId][a.Category] {
+			maxByCategory[a.TeamId][a.Category] = a.Points
+		}
+		_, ok = completeByCategory[a.TeamId][a.Category]
+		if !ok {
+			completeByCategory[a.TeamId] = map[string]map[int]int{}
+			completeByCategory[a.TeamId][a.Category] = map[int]int{}
+		}
+		completeByCategory[a.TeamId][a.Category][a.Points]++
+	}
+
+	ret := map[string]map[string][]PuzzleMap{}
+	ctx.unlockedPuzzles = map[string]map[string]map[int]bool{}
+
+	for teamName, _ := range ctx.nextAttempt {
+		ctx.unlockedPuzzles[teamName] = map[string]map[int]bool{}
+		for catName, mb := range ctx.categories {
+			ctx.unlockedPuzzles[teamName][catName] = map[int]bool{}
+			mf, err := mb.Open("map.txt")
+			if err != nil {
+				// File isn't in there
+				continue
+			}
+			defer mf.Close()
+		
+			pointsToDir := map[int]string{}
+		
+			scanner := bufio.NewScanner(mf)
+			for scanner.Scan() {
+				line := scanner.Text()
+
+				var pointval int
+				var dir string
+
+				n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
+				if err != nil {
+					log.Printf("Parsing map for %s: %v", catName, err)
+					continue
+				} else if n != 2 {
+					log.Printf("Parsing map for %s: short read", catName)
+					continue
+				}
+			
+				pointsToDir[pointval] = dir
+			}
+		
+			mf, err = mb.Open("unlockers.txt")
+			if err != nil {
+				// File isn't in there
+				continue
+			}
+			defer mf.Close()
+		
+			alreadyUnlocked := map[int]bool{}
+			pm := make([]PuzzleMap, 0, 30)
+			completed := true
+			scanner = bufio.NewScanner(mf)
+			for scanner.Scan() {
+				line := scanner.Text()
+
+				var pointval int
+				//var dir string
+				var unlockedBy int
+
+				n, err := fmt.Sscanf(line, "%d %d", &pointval, &unlockedBy)
+				if err != nil {
+					log.Printf("Parsing map for %s: %v", catName, err)
+					continue
+				} else if n != 2 {
+					log.Printf("Parsing map for %s: short read", catName)
+					continue
+				}
+			
+				_, isUnlocked := alreadyUnlocked[pointval]
+				if isUnlocked {
+					continue
+				}
+				_, puzzleDone := completeByCategory[teamName][catName][pointval]
+			
+				if puzzleDone {
+					pm = append(pm, PuzzleMap{pointval, pointsToDir[pointval]})
+					alreadyUnlocked[pointval] = true
+				} else {
+					completed = false
+					_, unlockerDone := completeByCategory[teamName][catName][unlockedBy]
+					if(unlockedBy == 0 || unlockerDone) {
+						pm = append(pm, PuzzleMap{pointval, pointsToDir[pointval]})
+						alreadyUnlocked[pointval] = true
+					}
+				}
+			}
+			if completed {
+				pm = append(pm, PuzzleMap{0, ""})
+			}
+			
+			_, ok := ret[teamName]
+			if !ok {
+				ret[teamName] = map[string][]PuzzleMap{}
+			}
+			_, ok = ret[teamName][catName]
+			if !ok {
+				ret[teamName][catName] = []PuzzleMap{}
+			}
+			ret[teamName][catName] = pm
+			ctx.unlockedPuzzles[teamName][catName] = alreadyUnlocked
+		}
+	}
+	
+	ctx.jPuzzleListTeam = map[string][]byte{}
+	for teamName, _ := range ctx.nextAttempt {
+		jpl, err := json.Marshal(ret[teamName])
+		if err != nil {
+			log.Printf("Marshalling puzzles.js: %v", err)
+			return
+		}
+		ctx.jPuzzleListTeam[teamName] = jpl
+	}
 }
 
 func (ctx *Instance) generatePointsLog() {

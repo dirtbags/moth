@@ -74,6 +74,7 @@ class Puzzle:
         self.summary = None
         self.authors = []
         self.answers = []
+        self.unlockers = []
         self.answerdyn = []
         self.scripts = []
         self.pattern = None
@@ -107,6 +108,8 @@ class Puzzle:
                     self.summary = val
                 elif key == 'answer':
                     self.answers.append(val)
+                elif key == 'unlockedby':
+                    self.unlockers.append(val)
                 elif key == 'pattern':
                     self.pattern = val
                 elif key == 'hint':
@@ -314,7 +317,7 @@ class Category:
                 pointvals.append(points)
         return sorted(pointvals)
 
-    def puzzle(self, points):
+    def puzzle(self, points, prevPoints):
         puzzle = Puzzle(self.seed, points)
         path = os.path.join(self.path, str(points))
         if self.catmod:
@@ -322,8 +325,12 @@ class Category:
                 self.catmod.make(points, puzzle)
         else:
             puzzle.read_directory(path)
+        if not puzzle.unlockers:
+            puzzle.unlockers.append(prevPoints)
         return puzzle
 
     def __iter__(self):
+        prevPoints = 0
         for points in self.pointvals():
-            yield self.puzzle(points)
+            yield self.puzzle(points, prevPoints)
+            prevPoints = points

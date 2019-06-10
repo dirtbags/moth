@@ -21,12 +21,18 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
-	categories  map[string]*Mothball
-	update      chan bool
-	jPuzzleList []byte
-	jPointsLog  []byte
-	nextAttempt map[string]time.Time
-	mux         *http.ServeMux
+	Progression     string
+
+	categories      map[string]*Mothball
+	update          chan bool
+	jPuzzleList     []byte
+	jPuzzleListTeam map[string][]byte
+	unlockedPuzzles map[string]map[string]map[int]bool
+	jPointsLog      []byte
+	nextAttempt     map[string]time.Time
+	mux             *http.ServeMux
+	options         map[string]string
+	
 }
 
 func (ctx *Instance) Initialize() error {
@@ -37,6 +43,11 @@ func (ctx *Instance) Initialize() error {
 	if _, err := os.Stat(ctx.StateDir); err != nil {
 		return err
 	}
+	
+	//Add default options
+	ctx.options = map[string]string{}
+	ctx.options["progression"] = ctx.Progression
+	
 
 	ctx.Base = strings.TrimRight(ctx.Base, "/")
 	ctx.categories = map[string]*Mothball{}
@@ -232,3 +243,4 @@ func (ctx *Instance) TeamName(teamId string) (string, error) {
 	teamName := strings.TrimSpace(string(teamNameBytes))
 	return teamName, err
 }
+

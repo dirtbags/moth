@@ -1,5 +1,6 @@
 Author: claire
 Summary: dynamically graded puzzles
+Answer: bypass
 AnswerDyn: /bin/sh ./answer.sh
 AnswerDynGrader: answer.sh
 

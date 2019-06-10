@@ -105,7 +105,7 @@ function loadPuzzle(categoryName, points, puzzleId) {
   let puzzle = document.getElementById("puzzle")
   let base = "content/" + categoryName + "/" + puzzleId + "/"
 
-  fetch(base + "puzzle.json")
+  fetch(base + "puzzle.json" + "?" + "teamId=" + sessionStorage.getItem("id"))
   .then(resp => {
     return resp.json()
   })
