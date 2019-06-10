@@ -12,6 +12,7 @@ import os
 import random
 import string
 import tempfile
+import shlex
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -117,7 +118,7 @@ class Puzzle:
                 elif key == 'name':
                     pass
                 elif key == 'file':
-                    parts = val.split()
+                    parts = shlex.split(val)
                     name = parts[0]
                     hidden = False
                     stream = open(name, 'rb')
@@ -274,10 +275,10 @@ class Puzzle:
     def html_body(self):
         """Format and return the markdown for the puzzle body."""
         return mistune.markdown(self.get_body(), escape=False)
-        
+
     def package(self, answers=False):
         """Return a dict packaging of the puzzle."""
-        
+
         files = [fn for fn,f in self.files.items() if f.visible]
         return {
             'authors': self.authors,

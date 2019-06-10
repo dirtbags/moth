@@ -22,17 +22,28 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
+<<<<<<< HEAD
 	Progression     string
 
-	categories  map[string]*Mothball
-	update      chan bool
-	jPuzzleList []byte
+	categories      map[string]*Mothball
+	update          chan bool
+	jPuzzleList     []byte
 	jPuzzleListTeam map[string][]byte
 	unlockedPuzzles map[string]map[string]map[int]bool
-	jPointsLog  []byte
-	nextAttempt map[string]time.Time
+	jPointsLog      []byte
+	nextAttempt     map[string]time.Time
+	mux             *http.ServeMux
+	options         map[string]string
+	
+=======
+	categories       map[string]*Mothball
+	update           chan bool
+	jPuzzleList      []byte
+	jPointsLog       []byte
+	nextAttempt      map[string]time.Time
 	nextAttemptMutex *sync.RWMutex
-	mux         *http.ServeMux
+	mux             *http.ServeMux
+>>>>>>> upstream/master
 }
 
 func (ctx *Instance) Initialize() error {
@@ -90,6 +101,7 @@ func (ctx *Instance) MaybeInitialize() {
 	os.RemoveAll(ctx.StatePath("teams"))
 
 	// Make sure various subdirectories exist
+	log.Print("Making stuff " + ctx.StatePath("points.tmp"))
 	os.Mkdir(ctx.StatePath("points.tmp"), 0755)
 	os.Mkdir(ctx.StatePath("points.new"), 0755)
 	os.Mkdir(ctx.StatePath("teams"), 0755)

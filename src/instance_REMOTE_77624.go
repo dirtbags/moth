@@ -22,17 +22,13 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
-	Progression     string
-
-	categories  map[string]*Mothball
-	update      chan bool
-	jPuzzleList []byte
-	jPuzzleListTeam map[string][]byte
-	unlockedPuzzles map[string]map[string]map[int]bool
-	jPointsLog  []byte
-	nextAttempt map[string]time.Time
+	categories       map[string]*Mothball
+	update           chan bool
+	jPuzzleList      []byte
+	jPointsLog       []byte
+	nextAttempt      map[string]time.Time
 	nextAttemptMutex *sync.RWMutex
-	mux         *http.ServeMux
+	mux             *http.ServeMux
 }
 
 func (ctx *Instance) Initialize() error {
@@ -43,11 +39,6 @@ func (ctx *Instance) Initialize() error {
 	if _, err := os.Stat(ctx.StateDir); err != nil {
 		return err
 	}
-	
-	//Add default options
-	ctx.options = map[string]string{}
-	ctx.options["progression"] = ctx.Progression
-	
 
 	ctx.Base = strings.TrimRight(ctx.Base, "/")
 	ctx.categories = map[string]*Mothball{}
@@ -230,7 +221,6 @@ func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.Read
 	return f, err
 }
 
-
 func (ctx *Instance) ValidTeamId(teamId string) bool {
 	ctx.nextAttemptMutex.RLock()
 	_, ok := ctx.nextAttempt[teamId]
@@ -239,18 +229,8 @@ func (ctx *Instance) ValidTeamId(teamId string) bool {
 	return ok
 }
 
-func (ctx *Instance) GetCategoryDir(category string) (string, error) {
-	_, ok := ctx.categories[category]
-	if !ok {
-		return "", fmt.Errorf("No such category: %s", category)
-	}
-	
-	return path.Join(ctx.MothballDir, category), nil
-}
-
 func (ctx *Instance) TeamName(teamId string) (string, error) {
 	teamNameBytes, err := ioutil.ReadFile(ctx.StatePath("teams", teamId))
 	teamName := strings.TrimSpace(string(teamNameBytes))
 	return teamName, err
 }
-

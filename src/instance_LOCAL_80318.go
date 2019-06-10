@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -24,15 +23,16 @@ type Instance struct {
 
 	Progression     string
 
-	categories  map[string]*Mothball
-	update      chan bool
-	jPuzzleList []byte
+	categories      map[string]*Mothball
+	update          chan bool
+	jPuzzleList     []byte
 	jPuzzleListTeam map[string][]byte
 	unlockedPuzzles map[string]map[string]map[int]bool
-	jPointsLog  []byte
-	nextAttempt map[string]time.Time
-	nextAttemptMutex *sync.RWMutex
-	mux         *http.ServeMux
+	jPointsLog      []byte
+	nextAttempt     map[string]time.Time
+	mux             *http.ServeMux
+	options         map[string]string
+	
 }
 
 func (ctx *Instance) Initialize() error {
@@ -53,7 +53,6 @@ func (ctx *Instance) Initialize() error {
 	ctx.categories = map[string]*Mothball{}
 	ctx.update = make(chan bool, 10)
 	ctx.nextAttempt = map[string]time.Time{}
-	ctx.nextAttemptMutex = new(sync.RWMutex)
 	ctx.mux = http.NewServeMux()
 
 	ctx.BindHandlers()
@@ -90,6 +89,7 @@ func (ctx *Instance) MaybeInitialize() {
 	os.RemoveAll(ctx.StatePath("teams"))
 
 	// Make sure various subdirectories exist
+	log.Print("Making stuff " + ctx.StatePath("points.tmp"))
 	os.Mkdir(ctx.StatePath("points.tmp"), 0755)
 	os.Mkdir(ctx.StatePath("points.new"), 0755)
 	os.Mkdir(ctx.StatePath("teams"), 0755)
@@ -141,15 +141,8 @@ func (ctx *Instance) ThemePath(parts ...string) string {
 
 func (ctx *Instance) TooFast(teamId string) bool {
 	now := time.Now()
-	
-	ctx.nextAttemptMutex.RLock()
 	next, _ := ctx.nextAttempt[teamId]
-	ctx.nextAttemptMutex.RUnlock()
-	
-	ctx.nextAttemptMutex.Lock()
 	ctx.nextAttempt[teamId] = now.Add(ctx.AttemptInterval)
-	ctx.nextAttemptMutex.Unlock()
-	
 	return now.Before(next)
 }
 
@@ -232,10 +225,7 @@ func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.Read
 
 
 func (ctx *Instance) ValidTeamId(teamId string) bool {
-	ctx.nextAttemptMutex.RLock()
 	_, ok := ctx.nextAttempt[teamId]
-	ctx.nextAttemptMutex.RUnlock()
-
 	return ok
 }
 

@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -22,16 +21,11 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
-	Progression     string
-
 	categories  map[string]*Mothball
 	update      chan bool
 	jPuzzleList []byte
-	jPuzzleListTeam map[string][]byte
-	unlockedPuzzles map[string]map[string]map[int]bool
 	jPointsLog  []byte
 	nextAttempt map[string]time.Time
-	nextAttemptMutex *sync.RWMutex
 	mux         *http.ServeMux
 }
 
@@ -43,17 +37,11 @@ func (ctx *Instance) Initialize() error {
 	if _, err := os.Stat(ctx.StateDir); err != nil {
 		return err
 	}
-	
-	//Add default options
-	ctx.options = map[string]string{}
-	ctx.options["progression"] = ctx.Progression
-	
 
 	ctx.Base = strings.TrimRight(ctx.Base, "/")
 	ctx.categories = map[string]*Mothball{}
 	ctx.update = make(chan bool, 10)
 	ctx.nextAttempt = map[string]time.Time{}
-	ctx.nextAttemptMutex = new(sync.RWMutex)
 	ctx.mux = http.NewServeMux()
 
 	ctx.BindHandlers()
@@ -141,15 +129,8 @@ func (ctx *Instance) ThemePath(parts ...string) string {
 
 func (ctx *Instance) TooFast(teamId string) bool {
 	now := time.Now()
-	
-	ctx.nextAttemptMutex.RLock()
 	next, _ := ctx.nextAttempt[teamId]
-	ctx.nextAttemptMutex.RUnlock()
-	
-	ctx.nextAttemptMutex.Lock()
 	ctx.nextAttempt[teamId] = now.Add(ctx.AttemptInterval)
-	ctx.nextAttemptMutex.Unlock()
-	
 	return now.Before(next)
 }
 
@@ -230,22 +211,9 @@ func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.Read
 	return f, err
 }
 
-
 func (ctx *Instance) ValidTeamId(teamId string) bool {
-	ctx.nextAttemptMutex.RLock()
 	_, ok := ctx.nextAttempt[teamId]
-	ctx.nextAttemptMutex.RUnlock()
-
 	return ok
-}
-
-func (ctx *Instance) GetCategoryDir(category string) (string, error) {
-	_, ok := ctx.categories[category]
-	if !ok {
-		return "", fmt.Errorf("No such category: %s", category)
-	}
-	
-	return path.Join(ctx.MothballDir, category), nil
 }
 
 func (ctx *Instance) TeamName(teamId string) (string, error) {
@@ -253,4 +221,3 @@ func (ctx *Instance) TeamName(teamId string) (string, error) {
 	teamName := strings.TrimSpace(string(teamNameBytes))
 	return teamName, err
 }
-
