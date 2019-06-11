@@ -23,6 +23,12 @@ and comes with a JavaScript-based scoreboard to display team rankings.
 Running a Development Server
 ============================
 
+To use example puzzles
+
+    docker run --rm -it -p 8080:8080 dirtbags/moth-devel
+
+or, to use your own puzzles
+
     docker run --rm -it -p 8080:8080 -v /path/to/puzzles:/puzzles:ro dirtbags/moth-devel
 
 And point a browser to http://localhost:8080/ (or whatever host is running the server).
