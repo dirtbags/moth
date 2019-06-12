@@ -45,7 +45,7 @@ func main() {
 		&ctx.Progression,
 		"progression",
 		"all",
-		"The type of challenge progression (team | all)",
+		"The type of challenge progression (team | all | dev)",
 	)
 	flag.DurationVar(
 		&ctx.AttemptInterval,

@@ -110,7 +110,7 @@ func (ctx *Instance) generatePuzzleList() {
 			}
 			_, puzzleDone := completeByCategory[catName][pointval]
 			
-			if puzzleDone {
+			if puzzleDone || ctx.options["progression"] == "dev" {
 				pm = append(pm, PuzzleMap{pointval, pointsToDir[pointval]})
 				alreadyUnlocked[pointval] = true
 			} else {
