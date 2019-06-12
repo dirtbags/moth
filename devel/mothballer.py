@@ -71,6 +71,7 @@ def package(categoryname, categorydir, seed):
     cat = moth.Category(categorydir, seed)
     mapping = {}
     answers = {}
+    answersdyn = {}
     summary = {}
     unlockers = {}
     for puzzle in cat:
@@ -82,6 +83,7 @@ def package(categoryname, categorydir, seed):
 
         mapping[puzzle.points] = puzzlehash
         answers[puzzle.points] = puzzle.answers
+        answersdyn[puzzle.points] = puzzle.answerdyn
         summary[puzzle.points] = puzzle.summary
         unlockers[puzzle.points] = puzzle.unlockers
 
