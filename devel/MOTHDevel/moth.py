@@ -7,7 +7,7 @@ import hashlib
 import html
 import io
 import importlib.machinery
-import mistune
+from . import mistune
 import os
 import random
 import string
@@ -288,6 +288,7 @@ class Puzzle:
 
 class Category:
     def __init__(self, path, seed):
+        path = str(path)
         self.path = path
         self.seed = seed
         self.catmod = None

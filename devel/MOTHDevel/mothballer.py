@@ -6,7 +6,7 @@ import hashlib
 import io
 import json
 import logging
-import moth
+from . import moth
 import os
 import shutil
 import tempfile

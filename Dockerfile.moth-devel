@@ -12,9 +12,14 @@ RUN apk --no-cache add \
       pillow==5.4.1
 
 
-COPY devel /app/
+WORKDIR /moth/devel
 COPY example-puzzles /puzzles/
 COPY theme /theme/
+COPY VERSION /moth/
+COPY devel/setup.py devel/MANIFEST.in /moth/devel/
+COPY devel/MOTHDevel/ /moth/devel/MOTHDevel/
 
-ENTRYPOINT [ "python3", "/app/devel-server.py" ]
+RUN	python3 setup.py install
+
+ENTRYPOINT [ "devel-server" ]
 CMD [ "--bind", "0.0.0.0:8080", "--puzzles", "/puzzles", "--theme", "/theme" ]

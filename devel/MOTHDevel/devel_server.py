@@ -8,20 +8,19 @@ import http.server
 import io
 import json
 import mimetypes
-import moth
 import logging
+from . import moth
 import os
 import pathlib
 import random
 import shutil
 import sys
 import traceback
-import mothballer
-import parse
-import urllib.parse
+from . import parse
 import posixpath
 from http import HTTPStatus
 
+from . import mothballer
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
@@ -251,8 +250,7 @@ sessionStorage.setItem("id", "devel-server")
             "Unsupported method (%r)" % self.command,
         )
 
-
-if __name__ == '__main__':
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="MOTH puzzle development server")
@@ -285,3 +283,6 @@ if __name__ == '__main__':
 
     logging.info("Listening on %s:%d", addr, port)
     server.serve_forever()
+
+if __name__ == "__main__":
+    main()
