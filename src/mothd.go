@@ -42,6 +42,12 @@ func main() {
 		"Path to static theme resources (HTML, images, css, ...)",
 	)
 	flag.StringVar(
+		&ctx.ExtractedMothballDir,
+		"extractedMothballs",
+		"/extractedMothballs",
+		"Path to where mothballs are extracted to at runtime.",
+	)
+	flag.StringVar(
 		&ctx.Progression,
 		"progression",
 		"all",

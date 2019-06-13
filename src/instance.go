@@ -16,25 +16,26 @@ import (
 )
 
 type Instance struct {
-	Base            string
-	MothballDir     string
-	StateDir        string
-	ThemeDir        string
-	AttemptInterval time.Duration
+	Base            	string
+	MothballDir     	string
+	ExtractedMothballDir    string
+	StateDir        	string
+	ThemeDir        	string
+	AttemptInterval 	time.Duration
 
-	Progression     string
+	Progression     	string
 
-	categories  map[string]*Mothball
-	update      chan bool
-	jPuzzleList []byte
-	jPuzzleListTeam map[string][]byte
-	unlockedPuzzles map[string]map[string]map[int]bool
-	jPointsLog  []byte
-	nextAttempt map[string]time.Time
-	nextAttemptMutex *sync.RWMutex
-	mux         *http.ServeMux
+	categories  		map[string]*Mothball
+	update      		chan bool
+	jPuzzleList 		[]byte
+	jPuzzleListTeam 	map[string][]byte
+	unlockedPuzzles 	map[string]map[string]map[int]bool
+	jPointsLog  		[]byte
+	nextAttempt 		map[string]time.Time
+	nextAttemptMutex 	*sync.RWMutex
+	mux			*http.ServeMux
 
-	options map[string]string
+	options 		map[string]string
 }
 
 func (ctx *Instance) Initialize() error {
@@ -129,6 +130,11 @@ func pathCleanse(parts []string) string {
 func (ctx Instance) MothballPath(parts ...string) string {
 	tail := pathCleanse(parts)
 	return path.Join(ctx.MothballDir, tail)
+}
+
+func (ctx Instance) ExtractedMothballPath(parts ...string) string {
+	tail := pathCleanse(parts)
+	return path.Join(ctx.ExtractedMothballDir, tail)
 }
 
 func (ctx *Instance) StatePath(parts ...string) string {
@@ -248,6 +254,15 @@ func (ctx *Instance) GetCategoryDir(category string) (string, error) {
 	}
 	
 	return path.Join(ctx.MothballDir, category), nil
+}
+
+func (ctx *Instance) GetExtractedCategoryDir(category string) (string, error) {
+	_, ok := ctx.categories[category]
+	if !ok {
+		return "", fmt.Errorf("No such category: %s", category)
+	}
+	
+	return path.Join(ctx.ExtractedMothballDir, category), nil
 }
 
 func (ctx *Instance) TeamName(teamId string) (string, error) {

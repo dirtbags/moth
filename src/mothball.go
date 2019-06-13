@@ -10,12 +10,14 @@ import (
 	"time"
 	"path"
 	"path/filepath"
+	//"log"
 )
 
 type Mothball struct {
-	zf       *zip.ReadCloser
-	filename string
-	mtime    time.Time
+	zf       		*zip.ReadCloser
+	filename 		string
+	extractedFilename 	string
+	mtime    		time.Time
 }
 
 type MothballFile struct {
@@ -113,10 +115,11 @@ func (mf *MothballFile) Close() error {
 	return mf.f.Close()
 }
 
-func OpenMothball(filename string) (*Mothball, error) {
+func OpenMothball(filename string, extractedFilename string) (*Mothball, error) {
 	var m Mothball
 
 	m.filename = filename
+	m.extractedFilename = extractedFilename
 
 	err := m.Refresh()
 	if err != nil {
@@ -152,11 +155,13 @@ func (m *Mothball) Refresh() error {
 	m.zf = zf
 	m.mtime = mtime
 	
-	os.RemoveAll(path.Join(m.filename[:len(m.filename)-3]))
-	os.Mkdir(path.Join(m.filename[:len(m.filename)-3]), 0755)
+	//log.Print("Was extracting mothball to ", path.Join(m.filename[:len(m.filename)-3]))
+	//log.Print("Extracting mothball to ", path.Join(m.extractedFilename[:len(m.extractedFilename)-3]))
+	os.RemoveAll(path.Join(m.extractedFilename[:len(m.extractedFilename)-3]))
+	os.MkdirAll(path.Join(m.extractedFilename[:len(m.extractedFilename)-3]), 0755)
 	for _, f := range m.zf.File {
 		dirname, _ := filepath.Split(f.Name)
-		os.MkdirAll(path.Join(m.filename[:len(m.filename)-3], dirname), 0755)
+		os.MkdirAll(path.Join(m.extractedFilename[:len(m.extractedFilename)-3], dirname), 0755)
 		mf, motherr := NewMothballFile(f)
 		if motherr != nil {
 			return motherr
@@ -165,13 +170,13 @@ func (m *Mothball) Refresh() error {
 		if readerr != nil {
 			return readerr
 		}
-		writeerr := ioutil.WriteFile(path.Join(m.filename[:len(m.filename)-3], f.Name), bytes, 0755)
+		writeerr := ioutil.WriteFile(path.Join(m.extractedFilename[:len(m.extractedFilename)-3], f.Name), bytes, 0755)
 		if writeerr != nil {
 			return writeerr
 		}
 		mf.Close()
 	}
-
+	
 	return nil
 }
 

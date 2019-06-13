@@ -322,13 +322,14 @@ func (ctx *Instance) tidy() {
 	for _, f := range files {
 		filename := f.Name()
 		filepath := ctx.MothballPath(filename)
+		extractedFilepath := ctx.ExtractedMothballPath(filename)
 		if !strings.HasSuffix(filename, ".mb") {
 			continue
 		}
 		categoryName := strings.TrimSuffix(filename, ".mb")
 
 		if _, ok := ctx.categories[categoryName]; !ok {
-			mb, err := OpenMothball(filepath)
+			mb, err := OpenMothball(filepath, extractedFilepath)
 			if err != nil {
 				log.Printf("Error opening %s: %s", filepath, err)
 				continue

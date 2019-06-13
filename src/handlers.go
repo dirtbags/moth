@@ -142,6 +142,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	category := req.FormValue("cat")
 	pointstr := req.FormValue("points")
 	answer := req.FormValue("answer")
+	//log.Print("Got ", answer)
 
 	if ! ctx.ValidTeamId(teamId) {
 		respond(
@@ -243,7 +244,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 			defer haystackmap.Close()
 			mappedDir := hasSubstr(haystackmap, needledyn)
 			splitMap := strings.Split(mappedDir, " ")
-			gradeDir, direrr := ctx.GetCategoryDir(category)
+			gradeDir, direrr := ctx.GetExtractedCategoryDir(category)
 			cmd.Dir = path.Join(gradeDir, "answerdyn", splitMap[1])
 			
 			// Now we run the dynamic grader command with the answer as the first argument
