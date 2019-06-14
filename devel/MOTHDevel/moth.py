@@ -1,29 +1,35 @@
 #!/usr/bin/python3
+"""Module containing MOTH puzzle container definitions"""
 
-import argparse
 import contextlib
 import glob
-import hashlib
 import html
 import io
 import importlib.machinery
-from . import mistune
 import os
 import random
 import string
 import tempfile
 import shlex
 
-messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+from . import mistune
 
-def djb2hash(str):
-    h = 5381
-    for c in str.encode("utf-8"):
-        h = ((h * 33) + c) & 0xffffffff
-    return h
+
+def djb2hash(instr):
+    """Calculate the DJB2 hash of the input
+
+    :param instr: data to calculate the DJB2 hash digest of
+    :return: DJB2 hash digest
+    """
+    hash_digest = 5381
+    for char in instr.encode("utf-8"):
+        hash_digest = ((hash_digest * 33) + char) & 0xffffffff
+    return hash_digest
+
 
 @contextlib.contextmanager
 def pushd(newdir):
+    """Context manager for limiting context to individual puzzles/categories"""
     curdir = os.getcwd()
     os.chdir(newdir)
     try:
@@ -33,16 +39,23 @@ def pushd(newdir):
 
 
 def loadmod(name, path):
+    """Load a specified puzzle module
+
+    :param name: Name to load the module as
+    :param path: Path of the module to load
+    """
     abspath = os.path.abspath(path)
     loader = importlib.machinery.SourceFileLoader(name, abspath)
-    return loader.load_module()
+    return loader.load_module()  # pylint: disable=no-value-for-parameter
 
 
 # Get a big list of clean words for our answer file.
 ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
                                                      'answer_words.txt'))]
 
-class PuzzleFile:
+
+class PuzzleFile:  # pylint: disable=too-few-public-methods
+
     """A file associated with a puzzle.
 
     path: The path to the original input file. May be None (when this is created from a file handle
@@ -60,16 +73,14 @@ class PuzzleFile:
         self.visible = visible
 
 
-class Puzzle:
+class Puzzle:  # pylint: disable=too-many-instance-attributes
+    """A MOTH Puzzle.
+
+    :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
+                          It is combined with the puzzle points.
+    :param points: The point value of the puzzle.
+    """
     def __init__(self, category_seed, points):
-        """A MOTH Puzzle.
-
-        :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
-                              It is combined with the puzzle points.
-        :param points: The point value of the puzzle.
-        """
-
-        super().__init__()
 
         self.points = points
         self.summary = None
@@ -89,7 +100,11 @@ class Puzzle:
         msg = ' '.join(str(v) for v in vals)
         self.logs.append(msg)
 
-    def read_stream(self, stream):
+    def read_stream(self, stream):  # pylint: disable=too-many-branches
+        """Read in a MOTH-formatted puzzle definition
+
+        :param stream: file-like object containing line-separated MOTH definitions
+        """
         header = True
         for line in stream:
             if header:
@@ -117,11 +132,13 @@ class Puzzle:
                     name = parts[0]
                     hidden = False
                     stream = open(name, 'rb')
+
                     try:
                         name = parts[1]
                         hidden = (parts[2].lower() == "hidden")
                     except IndexError:
                         pass
+
                     self.files[name] = PuzzleFile(stream, name, not hidden)
                 elif key == 'script':
                     stream = open(val, 'rb')
@@ -134,6 +151,10 @@ class Puzzle:
                 self.body.write(line)
 
     def read_directory(self, path):
+        """Read a puzzle definition out of a directory.
+
+        :param path: Path to the directory containing a puzzle.py or puzzle.moth file
+        """
         try:
             puzzle_mod = loadmod("puzzle", os.path.join(path, "puzzle.py"))
         except FileNotFoundError:
@@ -143,11 +164,14 @@ class Puzzle:
             if puzzle_mod:
                 puzzle_mod.make(self)
             else:
-                with open('puzzle.moth') as f:
-                    self.read_stream(f)
+                with open('puzzle.moth') as puzzle_file:
+                    self.read_stream(puzzle_file)
 
     def random_hash(self):
-        """Create a file basename (no extension) with our number generator."""
+        """Create a file basename (no extension) with our number generator.
+
+        :return: An 8-character random name
+        """
         return ''.join(self.rand.choice(string.ascii_lowercase) for i in range(8))
 
     def make_temp_file(self, name=None, visible=True):
@@ -165,22 +189,38 @@ class Puzzle:
         return stream
 
     def add_stream(self, stream, name=None, visible=True):
+        """Add a file-like object to a puzzle
+
+        :param stream: file-like object to write to a puzzle file
+        :param name: Name to assign the data. If this is None, a name will be generated for you
+        :param visible: Whether or not the file will be visible to the user.
+        """
         if name is None:
             name = self.random_hash()
+
         self.files[name] = PuzzleFile(stream, name, visible)
 
     def add_file(self, filename, visible=True):
-        fd = open(filename, 'rb')
+        """Add a file to a puzzle
+
+        :param filename: Name of the file to add to the puzzle
+        :param visible: Whether or not the file will be visible to the user.
+        """
+        file_handle = open(filename, 'rb')
         name = os.path.basename(filename)
-        self.add_stream(fd, name=name, visible=visible)
+        self.add_stream(file_handle, name=name, visible=visible)
 
     def randword(self):
-        """Return a randomly-chosen word"""
+        """Return a randomly-chosen word
+
+        :return: A randomly-chosen word from our list of words
+        """
 
         return self.rand.choice(ANSWER_WORDS)
 
     def make_answer(self, word_count=4, sep=' '):
         """Generate and return a new answer. It's automatically added to the puzzle answer list.
+
         :param int word_count: The number of words to include in the answer.
         :param str|bytes sep: The word separator.
         :returns: The answer string
@@ -197,7 +237,7 @@ class Puzzle:
         ' !"#$%&\'()*+,-./'
         '0123456789:;<=>?'
         '@ABCDEFGHIJKLMNO'
-        'PQRSTUVWXYZ[\]^_'
+        r'PQRSTUVWXYZ[\]^_'
         '`abcdefghijklmno'
         'pqrstuvwxyz{|}~·'
         '················'
@@ -211,21 +251,27 @@ class Puzzle:
     )
 
     def hexdump(self, buf, charset=hexdump_stdch, gap=('�', '⌷')):
+        """Write a hex dump of data to the puzzle body
+
+        :param buf: Buffer of bytes to dump
+        :param charset: Character set to use while dumping hex-equivalents. Default to ASCII
+        :param gap: Length-2 tuple containing character to use to represent unprintable characters
+        """
         hexes, chars = [], []
         out = []
 
-        for b in buf:
+        for buf_byte in buf:
             if len(chars) == 16:
                 out.append((hexes, chars))
                 hexes, chars = [], []
 
-            if b is None:
-                h, c = gap
+            if buf_byte is None:
+                hex_char, char = gap
             else:
-                h = '{:02x}'.format(b)
-                c = charset[b]
-            chars.append(c)
-            hexes.append(h)
+                hex_char = '{:02x}'.format(buf_byte)
+                char = charset[buf_byte]
+            chars.append(char)
+            hexes.append(hex_char)
 
         out.append((hexes, chars))
 
@@ -233,6 +279,7 @@ class Puzzle:
         elided = False
         lastchars = None
         self.body.write('<pre>')
+
         for hexes, chars in out:
             if chars == lastchars:
                 offset += len(chars)
@@ -254,24 +301,42 @@ class Puzzle:
             self.body.write(html.escape(''.join(chars)))
             self.body.write('|\n')
             offset += len(chars)
+
         self.body.write('{:08x}\n'.format(offset))
         self.body.write('</pre>')
 
     def get_authors(self):
-        return self.authors or [self.author]
+        """Get author names from the puzzle
+
+        :return: List of authors
+        """
+        # Some legacy objects might only have self.author set
+        return self.authors or [self.author] if hasattr(self, "author") else []  # pylint: disable=no-member
 
     def get_body(self):
+        """Get the body of the puzzle
+
+        :return: The body of the puzzle
+        """
         return self.body.getvalue()
 
     def html_body(self):
-        """Format and return the markdown for the puzzle body."""
+        """Format and return the markdown for the puzzle body.
+
+        :return: The rendered body of the puzzle
+        """
         return mistune.markdown(self.get_body(), escape=False)
 
     def package(self, answers=False):
-        """Return a dict packaging of the puzzle."""
+        """Return a dict packaging of the puzzle.
 
-        files = [fn for fn,f in self.files.items() if f.visible]
+        :param answers: Whether or not to include answers in the results, defaults to False
+        :return: Dict representation of the puzzle
+        """
+
+        files = [fn for fn, f in self.files.items() if f.visible]
         return {
+            'answers': self.answers if answers else [],
             'authors': self.authors,
             'hashes': self.hashes(),
             'files': files,
@@ -281,12 +346,20 @@ class Puzzle:
         }
 
     def hashes(self):
-        "Return a list of answer hashes"
+        """Return a list of answer hashes
+
+        :return: List of answer hashes
+        """
 
         return [djb2hash(a) for a in self.answers]
 
 
 class Category:
+    """A category containing 1 or more puzzles
+
+    :param path: The path to the category directory
+    :param seed: The seed used for the PRNG in this category
+    """
     def __init__(self, path, seed):
         path = str(path)
         self.path = path
@@ -299,18 +372,27 @@ class Category:
             self.catmod = None
 
     def pointvals(self):
+        """Return valid point values for a category
+
+        :return: A list of valid point values for this category
+        """
         if self.catmod:
             with pushd(self.path):
                 pointvals = self.catmod.pointvals()
         else:
             pointvals = []
             for fpath in glob.glob(os.path.join(self.path, "[0-9]*")):
-                pn = os.path.basename(fpath)
-                points = int(pn)
+                point_name = os.path.basename(fpath)
+                points = int(point_name)
                 pointvals.append(points)
         return sorted(pointvals)
 
     def puzzle(self, points):
+        """Return a puzzle with the given point value
+
+        :param points: Point value to generate
+        :return: Puzzle object worth `points` points
+        """
         puzzle = Puzzle(self.seed, points)
         path = os.path.join(self.path, str(points))
         if self.catmod:
