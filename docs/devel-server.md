@@ -29,8 +29,8 @@ try this:
 
 	apt install python3
 	git clone https://github.com/dirtbags/moth/
-	cd moth
-	python3 devel/devel-server.py --puzzles example-puzzles
+	cd moth/devel
+	python3 -m MOTHDevel.devel_server --puzzles example-puzzles
 
 
 Installing New Puzzles
@@ -58,5 +58,5 @@ like this:
 
 ### Without Docker
 
-You can use the `--puzzles` argument to `devel-server.py`
+You can use the `--puzzles` argument to `MOTHDevel.devel_server`
 to specify a path to your puzzles directory.
