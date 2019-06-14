@@ -100,12 +100,15 @@ def package(categoryname, categorydir, seed):
     zfraw.seek(0)
     return zfraw
 
+def main(args=None):
+    if args is None:
+        import sys  # pragma: nocover
+        args = sys.argv  # pragma: nocover
 
-if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Build a category package')
     parser.add_argument('outdir', help='Output directory')
     parser.add_argument('categorydirs', nargs='+', help='Directory of category source')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     logging.basicConfig(level=logging.DEBUG)
 
@@ -113,3 +116,6 @@ if __name__ == '__main__':
     for categorydir in args.categorydirs:
         categorydir = os.path.abspath(categorydir)
         build_category(categorydir, outdir)
+
+if __name__ == '__main__':
+    main()  # pragma: nocover
