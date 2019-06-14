@@ -18,6 +18,7 @@ setup(
     entry_points = {
         "console_scripts": [
             "devel-server = MOTHDevel.devel_server:main",
+            "mothballer = MOTHDevel.mothballer:main",
         ],
     },
 )
