@@ -13,6 +13,7 @@ import random
 import shlex
 import string
 import tempfile
+import yaml
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -91,47 +92,87 @@ class Puzzle:
 
     def read_stream(self, stream):
         header = True
+        line = ""
+        if stream.read(3) == "---":
+            header = "yaml"
+        else:
+            header = "moth"
+
+        stream.seek(0)
+
+        if header == "yaml":
+            self.read_yaml_header(stream)
+        elif header == "moth":
+            self.read_moth_header(stream)
+                
         for line in stream:
-            if header:
-                line = line.strip()
-                if not line:
-                    header = False
-                    continue
-                key, val = line.split(':', 1)
-                key = key.lower()
-                val = val.strip()
-                if key == 'author':
-                    self.authors.append(val)
-                elif key == 'summary':
-                    self.summary = val
-                elif key == 'answer':
-                    self.answers.append(val)
-                elif key == 'pattern':
-                    self.pattern = val
-                elif key == 'hint':
-                    self.hint = val
-                elif key == 'name':
-                    pass
-                elif key == 'file':
-                    parts = shlex.split(val)
-                    name = parts[0]
-                    hidden = False
-                    stream = open(name, 'rb')
-                    try:
-                        name = parts[1]
-                        hidden = (parts[2].lower() == "hidden")
-                    except IndexError:
-                        pass
-                    self.files[name] = PuzzleFile(stream, name, not hidden)
-                elif key == 'script':
-                    stream = open(val, 'rb')
-                    # Make sure this shows up in the header block of the HTML output.
-                    self.files[val] = PuzzleFile(stream, val, visible=False)
-                    self.scripts.append(val)
-                else:
-                    raise ValueError("Unrecognized header field: {}".format(key))
+            self.body.write(line)
+
+    def read_yaml_header(self, stream):
+        contents = ""
+        header = False
+        for line in stream:
+            if line.strip() == "---" and header:  # Handle last line
+                break
+            elif line.strip() == "---":  # Handle first line
+                header = True
+                continue
             else:
-                self.body.write(line)
+                contents += line
+
+        config = yaml.safe_load(contents)
+        for key, value in config.items():
+            key = key.lower()
+            self.handle_header_key(key, value)
+
+
+    def read_moth_header(self, stream):
+        for line in stream:
+            line = line.strip()
+            if not line:
+                break
+
+            key, val = line.split(':', 1)
+            key = key.lower()
+            val = val.strip()
+            self.handle_header_key(key, val)
+
+    def handle_header_key(self, key, val):
+        if key == 'author':
+            self.authors.append(val)
+        elif key == 'summary':
+            self.summary = val
+        elif key == 'answer':
+            self.answers.append(val)
+        elif key == "answers":
+            for answer in val:
+                answer = str(answer)
+                self.answers.append(answer)
+        elif key == 'pattern':
+            self.pattern = val
+        elif key == 'hint':
+            self.hint = val
+        elif key == 'name':
+            pass
+        elif key == 'file':
+            parts = shlex.split(val)
+            name = parts[0]
+            hidden = False
+            stream = open(name, 'rb')
+            try:
+                name = parts[1]
+                hidden = (parts[2].lower() == "hidden")
+            except IndexError:
+                pass
+            self.files[name] = PuzzleFile(stream, name, not hidden)
+        elif key == 'script':
+            stream = open(val, 'rb')
+            # Make sure this shows up in the header block of the HTML output.
+            self.files[val] = PuzzleFile(stream, val, visible=False)
+            self.scripts.append(val)
+        else:
+            raise ValueError("Unrecognized header field: {}".format(key))
+
 
     def read_directory(self, path):
         try:
