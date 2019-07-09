@@ -80,6 +80,10 @@ class Puzzle:
         self.hint = None
         self.files = {}
         self.body = io.StringIO()
+        self.objective = None  # Text describing the expected learning outcome from solving this puzzle
+        self.success = None  # TODO
+        self.solution = None  # Text describing how to solve the puzzle
+        self.ksa = []  # A list of references to related NICE KSAs (e.g. K0058, . . .)
         self.logs = []
         self.randseed = category_seed * self.points
         self.rand = random.Random(self.randseed)
@@ -128,6 +132,14 @@ class Puzzle:
                     # Make sure this shows up in the header block of the HTML output.
                     self.files[val] = PuzzleFile(stream, val, visible=False)
                     self.scripts.append(val)
+                elif key == "objective":
+                    self.objective = val
+                elif key == "success":
+                    self.success = val
+                elif key == "solution":
+                    self.solution = val
+                elif key == "ksa":
+                    self.solution = val
                 else:
                     raise ValueError("Unrecognized header field: {}".format(key))
             else:
@@ -278,6 +290,10 @@ class Puzzle:
             'scripts': self.scripts,
             'pattern': self.pattern,
             'body': self.html_body(),
+            'objective': self.objective,
+            'success': self.success,
+            'solution': self.solution,
+            'ksa': self.ksa,
         }
 
     def hashes(self):
