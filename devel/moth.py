@@ -143,10 +143,13 @@ class Puzzle:
         elif key == 'summary':
             self.summary = val
         elif key == 'answer':
+            if not isinstance(val, str):
+                raise ValueError("Answers must be strings, got %s, instead" % (type(val),))
             self.answers.append(val)
         elif key == "answers":
             for answer in val:
-                answer = str(answer)
+                if not isinstance(answer, str):
+                    raise ValueError("Answers must be strings, got %s, instead" % (type(answer),))
                 self.answers.append(answer)
         elif key == 'pattern':
             self.pattern = val
