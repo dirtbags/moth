@@ -80,10 +80,13 @@ class Puzzle:
         self.hint = None
         self.files = {}
         self.body = io.StringIO()
-        self.objective = None  # Text describing the expected learning outcome from solving this puzzle
-        self.success = None  # TODO
+
+        # NIST NICE objective content
+        self.objective = None  # Text describing the expected learning outcome from solving this puzzle, *why* are you solving this puzzle
+        self.success = None  # Text describing criteria for different levels of success, e.g. {"Acceptable": "Did OK", "Mastery": "Did even better"}
         self.solution = None  # Text describing how to solve the puzzle
         self.ksa = []  # A list of references to related NICE KSAs (e.g. K0058, . . .)
+
         self.logs = []
         self.randseed = category_seed * self.points
         self.rand = random.Random(self.randseed)
