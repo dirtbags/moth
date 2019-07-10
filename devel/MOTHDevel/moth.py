@@ -260,6 +260,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         hexes, chars = [], []
         out = []
 
+        # Generate hex and character sequences from input buffer
         for buf_byte in buf:
             if len(chars) == 16:
                 out.append((hexes, chars))
@@ -280,6 +281,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         lastchars = None
         self.body.write('<pre>')
 
+        # Print out hex and character equivalents side-by-side
         for hexes, chars in out:
             if chars == lastchars:
                 offset += len(chars)

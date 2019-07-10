@@ -84,3 +84,53 @@ class TestMoth(unittest.TestCase):
             self.assertEqual(puzzle.files[os.path.basename(tf.name)].stream.read(), data)
             self.assertEqual(puzzle.files[os.path.basename(tf.name)].visible, True)
 
+    def test_invalid_header(self):
+        puzzle = moth.Puzzle(12345, 1)
+        stream = """author: foo
+                 answer: 10
+                 baz: stuff
+
+
+                 Some body
+                 """
+
+        with io.StringIO(stream) as buff:
+            with self.assertRaisesRegex(ValueError, "Unrecognized header field: baz"):
+                puzzle.read_stream(buff)
+
+    def test_known_headers_moth(self):
+        puzzle = moth.Puzzle(12345, 1)
+        stream = """author: foo
+                 answer: the answer is answer
+                 summary: read the puzzle
+                 pattern: a matching pattern
+                 hint: This is a helpful hint
+                 name: No idea what this is for
+
+                 Some body
+                 """
+
+        with io.StringIO(stream) as buff:
+            puzzle.read_stream(buff)
+            pkg = puzzle.package()
+
+    def test_hexdump(self):
+        puzzle = moth.Puzzle(12345, 1)
+        test_data = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+        puzzle.hexdump(test_data)
+
+    def test_hexump_none(self):
+        puzzle = moth.Puzzle(12345, 1)
+        test_data = [0, 1, 2, 3, None, 5, 6, 7, 8]
+        puzzle.hexdump(test_data)
+
+    def test_hexdump_elided_dupe_row(self):
+        puzzle = moth.Puzzle(12345, 1)
+        test_data = [1 for x in range(4*16)]
+        puzzle.hexdump(test_data)
+
+    def test_category(self):
+        category = moth.Category("./test/category_test", 1)
+        self.assertIsNotNone(category.catmod)
+
+        puzzles = list(category)
