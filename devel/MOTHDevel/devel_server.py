@@ -157,7 +157,13 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         self.send_response(200)
-        self.send_header("Content-Type", mimetypes.guess_type(file.name))
+        content_type, content_encoding = mimetypes.guess_type(file.name)
+        if content_type is not None:
+            if content_encoding is not None:
+                content_type += ";encoding=" + content_encoding
+
+            self.send_header("Content-Type", content_type)
+
         self.end_headers()
         shutil.copyfileobj(file.stream, self.wfile)
 
