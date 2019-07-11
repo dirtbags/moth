@@ -16,6 +16,7 @@ setup(
         "frosted==1.4.1",
         "nose>=1.3.7", 
         "pylint==2.3.1", 
+        "requests>=2.22.0"
     ],
     extras_require={
         "scapy": ["scapy>=2.4.2"],
