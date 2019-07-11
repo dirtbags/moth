@@ -285,7 +285,7 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         for hexes, chars in out:
             if chars == lastchars:
                 offset += len(chars)
-                if not elided:
+                if not elided:  # pragma: no cover
                     self.body.write('*\n')
                     elided = True
                 continue

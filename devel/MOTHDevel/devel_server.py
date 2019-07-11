@@ -257,7 +257,7 @@ sessionStorage.setItem("id", "devel-server")
             },
         )
 
-        for pattern, function in self.endpoints:
+        for pattern, function in self.endpoints:  # pragma: no cover
             result = parse.parse(pattern, self.path)
             if result:
                 self.req = result.named
@@ -282,7 +282,7 @@ sessionStorage.setItem("id", "devel-server")
         )
 
 
-def main():
+def main():  # pragma: no cover
     """Main function handler"""
     import argparse
 
@@ -318,5 +318,5 @@ def main():
     server.serve_forever()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
