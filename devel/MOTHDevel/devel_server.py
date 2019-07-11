@@ -179,7 +179,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as ex:
             logging.exception(ex)
             self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=\"utf-8\"")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(cgitb.html(sys.exc_info()))
         else:
