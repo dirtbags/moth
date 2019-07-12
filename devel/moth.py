@@ -142,7 +142,7 @@ class Puzzle:
                 elif key == "solution":
                     self.solution = val
                 elif key == "ksa":
-                    self.solution = val
+                    self.ksa.append(val)
                 else:
                     raise ValueError("Unrecognized header field: {}".format(key))
             else:
