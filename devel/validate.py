@@ -31,7 +31,11 @@ class MothValidator:
     def validate(self, categorydir, only_errors=False):
         """Run validation checks against a category"""
         LOGGER.debug("Loading category from %s", categorydir)
-        category = moth.Category(categorydir, 0)
+        try:
+            category = moth.Category(categorydir, 0)
+        except NotADirectoryError:
+            return
+
         LOGGER.debug("Found %d puzzles in %s", len(category.pointvals()), categorydir)
 
         self.results["category"][categorydir] = {
