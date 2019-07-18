@@ -94,12 +94,26 @@ class MothValidator:
         if len(duplicate_answers) > 0:
             raise MothValidationError("Duplicate answer(s) %s" % ", ".join(duplicate_answers))
 
-
     @staticmethod
     def check_has_authors(puzzle):
         """Check if the puzzle has authors defined"""
         if len(puzzle.authors) == 0:
             raise MothValidationError("No authors provided")
+
+    @staticmethod
+    def check_unique_authors(puzzle):
+        """Check if puzzle authors are unique"""
+        known_authors = []
+        duplicate_authors = []
+
+        for author in puzzle.authors:
+            if author not in known_authors:
+                known_authors.append(author)
+            else:
+                duplicate_authors.append(author)
+
+        if len(duplicate_authors) > 0:
+            raise MothValidationError("Duplicate author(s) %s" % ", ".join(duplicate_authors))
 
     @staticmethod
     def check_has_summary(puzzle):
