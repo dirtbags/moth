@@ -17,7 +17,14 @@ function helperUpdateAnswer(event) {
         values.push(c.value)
       }
     }
-    value = values.join(",")
+    if (e.classList.contains("sort")) {
+      values.sort()
+    }
+    let join = e.dataset.join
+    if (join === undefined) {
+      join = ","
+    }
+    value = values.join(join)
   }
 
   // First make any adjustments to the value
@@ -33,8 +40,42 @@ function helperUpdateAnswer(event) {
   answer.dispatchEvent(new InputEvent("input"))
 }
 
+function helperRemoveInput(e) {
+  let item = e.target.parentElement
+  let container = item.parentElement
+  item.remove()
+  
+  var event = new Event("input")
+  container.dispatchEvent(event)
+}
+
+function helperExpandInputs(e) {
+  let item = e.target.parentElement
+  let container = item.parentElement
+  let template = container.firstElementChild
+  let newElement = template.cloneNode(true)
+
+  // Add remove button
+  let remove = document.createElement("button")
+  remove.innerText = "➖"
+  remove.title = "Remove this input"
+  remove.addEventListener("click", helperRemoveInput)
+  newElement.appendChild(remove)
+
+  // Zero it out, otherwise whatever's in first element is copied too
+  newElement.querySelector("input").value = ""
+
+  container.insertBefore(newElement, item)
+  
+  var event = new Event("input")
+  container.dispatchEvent(event)
+}
+
 function helperActivate(e) {
   e.addEventListener("input", helperUpdateAnswer)
+  for (let exp of e.querySelectorAll(".expand")) {
+    exp.addEventListener("click", helperExpandInputs)
+  }
 }
 
 function helperInit(event) {

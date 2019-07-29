@@ -17,8 +17,13 @@ This is just a demonstration page.
 You will probably only want one of these in a page,
 to avoid confusing people.
 
-Timestamp
-<input type="datetime-local" class="answer">
+RFC3339 Timestamp
+<div class="answer" data-join="">
+  <input type="date">
+  <input type="hidden" value="T">
+  <input type="time" step="1">
+  <input type="hidden" value="Z">
+</div>
 
 All lower-case letters
 <input class="answer lower">
@@ -30,6 +35,12 @@ Multiple concatenated values
   <input type="range" min="0" max="127">
   <input>
 </div>
+
+Free input, sorted, concatenated values
+<ul class="answer lower sort">
+  <li><input></li>
+  <li><button class="expand" title="Add another input">➕</button><l/i>
+</ul>
 
 Select from an ordered list of options
 <ul class="answer">

@@ -186,19 +186,28 @@ func (ctx *Instance) readTeams() {
 	now := time.Now()
 	added := 0
 	for k, _ := range newList {
-		if _, ok := ctx.nextAttempt[k]; !ok {
+		ctx.nextAttemptMutex.RLock()
+		_, ok := ctx.nextAttempt[k]
+		ctx.nextAttemptMutex.RUnlock()
+
+		if !ok {
+			ctx.nextAttemptMutex.Lock()
 			ctx.nextAttempt[k] = now
+			ctx.nextAttemptMutex.Unlock()
+
 			added += 1
 		}
 	}
 
 	// For any removed team IDs, remove them
 	removed := 0
+	ctx.nextAttemptMutex.Lock() // XXX: This could be less of a cludgel
 	for k, _ := range ctx.nextAttempt {
 		if _, ok := newList[k]; !ok {
 			delete(ctx.nextAttempt, k)
 		}
 	}
+	ctx.nextAttemptMutex.Unlock()
 
 	if (added > 0) || (removed > 0) {
 		log.Printf("Team IDs updated: %d added, %d removed", added, removed)
