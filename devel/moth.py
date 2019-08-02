@@ -85,7 +85,7 @@ class PuzzleSuccess(dict):
         if attr in self.valid_fields:
             self[attr] = value
         else:
-            raise AttributeError() 
+            raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, attr))
 
 
 class Puzzle:
