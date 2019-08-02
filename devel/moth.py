@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import argparse
+from collections import UserDict
 import contextlib
 import glob
 import hashlib
@@ -59,6 +60,34 @@ class PuzzleFile:
         self.name = name
         self.visible = visible
 
+class PuzzleSuccess(dict):
+    """Puzzle success objectives
+
+    :param acceptable: Learning outcome from acceptable knowledge of the subject matter
+    :param mastery: Learning outcome from mastery of the subject matter
+    """
+
+    valid_fields = ["acceptable", "mastery"]
+
+    def __init__(self, **kwargs):
+        super(PuzzleSuccess, self).__init__()
+        for key in self.valid_fields:
+            self[key] = None
+        for key, value in kwargs.items():
+            if key in self.valid_fields:
+                self[key] = value
+
+    def __getattr__(self, attr):
+        if attr in self.valid_fields:
+            return self[attr]
+        raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+
+    def __setattr__(self, attr, value):
+        if attr in self.valid_fields:
+            self[attr] = value
+        else:
+            raise AttributeError() 
+
 
 class Puzzle:
     def __init__(self, category_seed, points):
@@ -83,7 +112,7 @@ class Puzzle:
 
         # NIST NICE objective content
         self.objective = None  # Text describing the expected learning outcome from solving this puzzle, *why* are you solving this puzzle
-        self.success = None  # Text describing criteria for different levels of success, e.g. {"Acceptable": "Did OK", "Mastery": "Did even better"}
+        self.success = PuzzleSuccess()  # Text describing criteria for different levels of success, e.g. {"Acceptable": "Did OK", "Mastery": "Did even better"}
         self.solution = None  # Text describing how to solve the puzzle
         self.ksas = []  # A list of references to related NICE KSAs (e.g. K0058, . . .)
 
