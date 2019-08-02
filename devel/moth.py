@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import argparse
-from collections import UserDict
 import contextlib
 import glob
 import hashlib
