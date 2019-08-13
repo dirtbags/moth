@@ -150,7 +150,8 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         try:
             catdir = self.server.args["puzzles_dir"].joinpath(category)
             mb = mothballer.package(category, catdir, self.seed)
-        except:
+        except Exception as ex:
+            logging.exception(ex)
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=\"utf-8\"")
             self.end_headers()
