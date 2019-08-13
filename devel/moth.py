@@ -167,6 +167,10 @@ class Puzzle:
                     self.objective = val
                 elif key == "success":
                     self.success = val
+                elif key == "success.acceptable":
+                    self.success.acceptable = val
+                elif key == "success.mastery":
+                    self.success.mastery = val
                 elif key == "solution":
                     self.solution = val
                 elif key == "ksa":
