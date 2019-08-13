@@ -235,6 +235,7 @@ class Puzzle:
         self.body.write('<pre>')
         for hexes, chars in out:
             if chars == lastchars:
+                offset += len(chars)
                 if not elided:
                     self.body.write('*\n')
                     elided = True
