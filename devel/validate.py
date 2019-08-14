@@ -5,6 +5,7 @@
 import logging
 import os
 import os.path
+import re
 
 import moth
 
@@ -132,14 +133,16 @@ class MothValidator:
 
         puzzle.body.seek(old_pos)
 
-    # Leaving this as a placeholder until KSAs are formally supported
     @staticmethod
     def check_ksa_format(puzzle):
         """Check if KSAs are properly formatted"""
+
+        ksa_re = re.compile("^[KSA]\d{4}$")
+        
         if hasattr(puzzle, "ksa"):
             for ksa in puzzle.ksa:
-                if not ksa.startswith("K"):
-                    raise MothValidationError("Unrecognized KSA format")
+                if ksa_re.match(ksa) is None:
+                    raise MothValidationError("Unrecognized KSA format (%s)" % (ksa,))
 
 
 def output_json(data):
