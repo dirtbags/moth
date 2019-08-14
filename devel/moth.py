@@ -15,7 +15,7 @@ import tempfile
 import shlex
 import yaml
 
-messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+messageChars = string.ascii_letters.encode("utf-8")
 
 def djb2hash(str):
     h = 5381
@@ -52,7 +52,7 @@ class PuzzleFile:
             from it without having to seek to the beginning of the file.
     name: The name of the output file.
     visible: A boolean indicating whether this file should visible to the user. If False,
-             the file is still expected to be accessible, but it's path must be known
+             the file is still expected to be accessible, but its path must be known
              (or figured out) to retrieve it."""
 
     def __init__(self, stream, name, visible=True):
@@ -91,52 +91,53 @@ class Puzzle:
         self.logs.append(msg)
 
     def read_stream(self, stream):
-        header = True
-        line = ""
-        if stream.read(3) == "---":
-            header = "yaml"
-        else:
-            header = "moth"
-
-        stream.seek(0)
-
-        if header == "yaml":
-            self.read_yaml_header(stream)
-        elif header == "moth":
-            self.read_moth_header(stream)
-                
-        for line in stream:
-            self.body.write(line)
-
-    def read_yaml_header(self, stream):
-        contents = ""
-        header = False
-        for line in stream:
-            if line.strip() == "---" and header:  # Handle last line
-                break
-            elif line.strip() == "---":  # Handle first line
-                header = True
+        header = io.StringIO()
+        body = io.StringIO()
+        eoh = None
+        parser = None
+        doing = header
+        for lineno, line in enumerate(stream):
+            sline = line.strip()
+            if lineno == 0:
+                if sline == "---":
+                    eoh = "---"
+                    parser = self.parse_yaml_header
+                    continue
+                else:
+                    eoh = ""
+                    parser = self.parse_moth_header
+            if (doing is header) and (sline == eoh):
+                doing = body
                 continue
-            else:
-                contents += line
+            doing.write(line)
+        header.seek(0)
+        body.seek(0)
 
-        config = yaml.safe_load(contents)
+        if not header:
+            raise RuntimeError("Empty header block")
+        parser(header)
+
+        self.body = body
+
+    def parse_yaml_header(self, stream):
+        config = yaml.safe_load(stream)
+        print(config)
         for key, value in config.items():
             key = key.lower()
             self.handle_header_key(key, value)
 
 
-    def read_moth_header(self, stream):
+    def parse_moth_header(self, stream):
         for line in stream:
-            line = line.strip()
-            if not line:
+            sline = line.strip()
+            if not sline:
                 break
 
-            key, val = line.split(':', 1)
+            key, val = sline.split(':', 1)
             key = key.lower()
             val = val.strip()
             self.handle_header_key(key, val)
-
+            
     def handle_header_key(self, key, val):
         if key == 'author':
             self.authors.append(val)

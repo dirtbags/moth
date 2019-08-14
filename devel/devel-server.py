@@ -210,8 +210,7 @@ sessionStorage.setItem("id", "devel-server")
         self.end_headers()
         self.wfile.write(body.encode('utf-8'))
     endpoints.append((r"/", handle_index))
-    endpoints.append((r"/{ignored}", handle_index))
-
+    
 
     def handle_theme_file(self):
         self.path = "/" + self.req.get("path", "")
