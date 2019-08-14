@@ -71,7 +71,9 @@ class MothValidator:
     def check_fields(self, puzzle):
         """Check if the puzzle has the requested fields"""
         for field in self.required_fields:
-            if not hasattr(puzzle, field):
+            if not hasattr(puzzle, field) or \
+                    getattr(puzzle,field) is None or \
+                    getattr(puzzle,field) == "":
                 raise MothValidationError("Missing field %s" % (field,))
 
     @staticmethod
