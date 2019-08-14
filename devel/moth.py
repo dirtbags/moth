@@ -210,7 +210,8 @@ class Puzzle:
         elif key == "objective":
             self.objective = val
         elif key == "success":
-            self.success = val
+            # Force success dictionary keys to be lower-case
+            self.success = dict((x.lower(), y) for x,y in val.items())
         elif key == "success.acceptable":
             self.success.acceptable = val
         elif key == "success.mastery":
