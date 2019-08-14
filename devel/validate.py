@@ -144,6 +144,24 @@ class MothValidator:
                 if ksa_re.match(ksa) is None:
                     raise MothValidationError("Unrecognized KSA format (%s)" % (ksa,))
 
+    @staticmethod
+    def check_success(puzzle):
+        """Check if success criteria are defined"""
+
+        if not hasattr(puzzle, "success"):
+            raise MothValidationError("Success not defined")
+
+        criteria = ["acceptable", "mastery"]
+        missing_criteria = []
+        for criterion in criteria:
+            if criterion not in puzzle.success.keys() or \
+                    puzzle.success[criterion] is None or \
+                    len(puzzle.success[criterion]) == 0:
+                missing_criteria.append(criterion)
+
+        if len(missing_criteria) > 0:
+            raise MothValidationError("Missing success criteria (%s)" % (", ".join(missing_criteria)))
+
 
 def output_json(data):
     """Output results in JSON format"""
