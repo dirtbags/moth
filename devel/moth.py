@@ -289,7 +289,7 @@ class Puzzle:
 
         files = [fn for fn,f in self.files.items() if f.visible]
         return {
-            'authors': self.authors,
+            'authors': self.get_authors(),
             'hashes': self.hashes(),
             'files': files,
             'scripts': self.scripts,
