@@ -134,3 +134,14 @@ class TestMoth(unittest.TestCase):
         self.assertIsNotNone(category.catmod)
 
         puzzles = list(category)
+
+    def test_authors_legacy(self):
+        puzzle = moth.Puzzle(12345, 1)
+        puzzle.author = "foo"
+
+        self.assertEqual(puzzle.get_authors(), ["foo"])
+
+    def test_authors(self):
+        puzzle = moth.Puzzle(12345, 1)
+
+        self.assertEqual(puzzle.get_authors(), [])

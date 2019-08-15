@@ -126,6 +126,12 @@ class TestDevelServer(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.headers["Content-Type"], "text/html")
 
+    def test_unknown_resource(self):
+        url = "http://localhost:%d/foo" % (self.mock_server_port,)
+        res = requests.get(url)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.headers["Content-Type"], "text/html")
+
 
 class TestDevelServerMisconfigured(unittest.TestCase):
 
