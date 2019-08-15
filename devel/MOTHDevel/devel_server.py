@@ -13,7 +13,6 @@ import pathlib
 import random
 import shutil
 import sys
-import posixpath
 
 from . import moth
 from . import mothballer
@@ -176,7 +175,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         try:
             catdir = self.server.args["puzzles_dir"].joinpath(category)
             mothball = mothballer.package(catdir, self.seed)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             logging.exception(ex)
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
