@@ -6,7 +6,7 @@ import logging
 import os
 import os.path
 
-import moth
+from . import moth
 
 # pylint: disable=len-as-condition, line-too-long
 

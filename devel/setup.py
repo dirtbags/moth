@@ -26,6 +26,7 @@ setup(
         "console_scripts": [
             "devel-server = MOTHDevel.devel_server:main",
             "mothballer = MOTHDevel.mothballer:main",
+            "moth-validate = MOTHDevel.validate:main",
         ],
     },
 )
