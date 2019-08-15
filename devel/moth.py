@@ -2,6 +2,7 @@
 
 import argparse
 import contextlib
+import copy
 import glob
 import hashlib
 import html
@@ -11,6 +12,7 @@ import mistune
 import os
 import random
 import string
+import sys
 import tempfile
 import shlex
 
@@ -26,9 +28,24 @@ def djb2hash(str):
 def pushd(newdir):
     curdir = os.getcwd()
     os.chdir(newdir)
+    # Force a copy of the old path, instead of just a reference
+    old_path = list(sys.path)
+    old_modules = copy.copy(sys.modules)
+    sys.path.append(newdir)
+    print("New path: %s" % (sys.path,))
     try:
         yield
     finally:
+        # Restore the old path
+        to_remove = []
+        for module in sys.modules:
+            if module not in old_modules:
+                to_remove.append(module)
+
+        for module in to_remove:
+            del(sys.modules[module])
+
+        sys.path = old_path
         os.chdir(curdir)
 
 
@@ -316,7 +333,8 @@ class Category:
             with pushd(self.path):
                 self.catmod.make(points, puzzle)
         else:
-            puzzle.read_directory(path)
+            with pushd(self.path):
+                puzzle.read_directory(path)
         return puzzle
 
     def __iter__(self):
