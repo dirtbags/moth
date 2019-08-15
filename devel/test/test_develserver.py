@@ -19,7 +19,7 @@ def get_free_port():
 class TestDevelServer(unittest.TestCase):
 
     @classmethod
-    def setup_class(cls):
+    def setUpClass(cls):
         cls.mock_server_port = get_free_port()
         cls.mock_server = MothServer(("0.0.0.0", cls.mock_server_port), MothRequestHandler)
         cls.mock_server_thread = Thread(target=cls.mock_server.serve_forever)
@@ -130,7 +130,7 @@ class TestDevelServer(unittest.TestCase):
 class TestDevelServerMisconfigured(unittest.TestCase):
 
     @classmethod
-    def setup_class(cls):
+    def setUpClass(cls):
         cls.mock_server_port = get_free_port()
         cls.mock_server = MothServer(("0.0.0.0", cls.mock_server_port), MothRequestHandler)
         cls.mock_server_thread = Thread(target=cls.mock_server.serve_forever)
