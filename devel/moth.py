@@ -28,11 +28,12 @@ def djb2hash(str):
 def pushd(newdir):
     curdir = os.getcwd()
     os.chdir(newdir)
+
     # Force a copy of the old path, instead of just a reference
     old_path = list(sys.path)
     old_modules = copy.copy(sys.modules)
     sys.path.append(newdir)
-    print("New path: %s" % (sys.path,))
+
     try:
         yield
     finally:
