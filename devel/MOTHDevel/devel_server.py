@@ -175,7 +175,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         try:
             catdir = self.server.args["puzzles_dir"].joinpath(category)
-            mb = mothballer.package(category, catdir, self.seed)
+            mothball = mothballer.package(catdir, self.seed)
         except Exception as ex:
             logging.exception(ex)
             self.send_response(200)
