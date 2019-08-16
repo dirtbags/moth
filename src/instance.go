@@ -22,7 +22,7 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
-	categories       map[string]*Mothball
+	categories       map[string]*Zipfs
 	update           chan bool
 	jPuzzleList      []byte
 	jPointsLog       []byte
@@ -41,7 +41,7 @@ func (ctx *Instance) Initialize() error {
 	}
 
 	ctx.Base = strings.TrimRight(ctx.Base, "/")
-	ctx.categories = map[string]*Mothball{}
+	ctx.categories = map[string]*Zipfs{}
 	ctx.update = make(chan bool, 10)
 	ctx.nextAttempt = map[string]time.Time{}
 	ctx.nextAttemptMutex = new(sync.RWMutex)

@@ -148,7 +148,7 @@ func (ctx *Instance) tidy() {
 		categoryName := strings.TrimSuffix(filename, ".mb")
 
 		if _, ok := ctx.categories[categoryName]; !ok {
-			mb, err := OpenMothball(filepath)
+			mb, err := OpenZipfs(filepath)
 			if err != nil {
 				log.Printf("Error opening %s: %s", filepath, err)
 				continue

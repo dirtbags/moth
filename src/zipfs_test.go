@@ -9,8 +9,8 @@ import (
 	"testing"
 )
 
-func TestMothball(t *testing.T) {
-	tf, err := ioutil.TempFile("", "mothball")
+func TestZipfs(t *testing.T) {
+	tf, err := ioutil.TempFile("", "zipfs")
 	if err != nil {
 		t.Error(err)
 		return
@@ -35,7 +35,7 @@ func TestMothball(t *testing.T) {
 	tf.Close()
 
 	// Now read it in
-	mb, err := OpenMothball(tf.Name())
+	mb, err := OpenZipfs(tf.Name())
 	if err != nil {
 		t.Error(err)
 		return
