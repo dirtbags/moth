@@ -3,15 +3,12 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
-	"flag"
 	"fmt"
 	"gopkg.in/russross/blackfriday.v2"
 	"gopkg.in/yaml.v2"
 	"io"
 	"log"
 	"net/mail"
-	"os"
 	"strings"
 )
 
@@ -25,6 +22,7 @@ type Puzzle struct {
 	Pre struct {
 		Authors       []string
 		Attachments   []Attachment
+		Scripts       []Attachment
 		AnswerPattern string
 		Body          string
 	}
@@ -57,6 +55,27 @@ func YamlParser(input []byte) (*Puzzle, error) {
 	return puzzle, nil
 }
 
+func AttachmentParser(val []string) ([]Attachment) {
+	ret := make([]Attachment, len(val))
+	for idx, txt := range val {
+		parts := strings.SplitN(txt, " ", 3)
+		cur := Attachment{}
+		cur.FilesystemPath = parts[0]
+		if len(parts) > 1 {
+			cur.Filename = parts[1]
+		} else {
+			cur.Filename = cur.FilesystemPath
+		}
+		if (len(parts) > 2) && (parts[2] == "hidden") {
+			cur.Listed = false
+		} else {
+			cur.Listed = true
+		}
+		ret[idx] = cur
+	}
+	return ret
+}
+
 func Rfc822Parser(input []byte) (*Puzzle, error) {
 	msgBytes := append(input, '\n')
 	r := bytes.NewReader(msgBytes)
@@ -73,6 +92,10 @@ func Rfc822Parser(input []byte) (*Puzzle, error) {
 			puzzle.Pre.Authors = val
 		case "pattern":
 			puzzle.Pre.AnswerPattern = val[0]
+		case "script":
+			puzzle.Pre.Scripts = AttachmentParser(val)
+		case "file":
+			puzzle.Pre.Attachments = AttachmentParser(val)
 		case "answer":
 			puzzle.Answers = val
 		case "summary":
@@ -81,24 +104,6 @@ func Rfc822Parser(input []byte) (*Puzzle, error) {
 			puzzle.Debug.Hints = val
 		case "ksa":
 			puzzle.Post.KSAs = val
-		case "file":
-			for _, txt := range val {
-				parts := strings.SplitN(txt, " ", 3)
-				attachment := Attachment{}
-				attachment.FilesystemPath = parts[0]
-				if len(parts) > 1 {
-					attachment.Filename = parts[1]
-				} else {
-					attachment.Filename = attachment.FilesystemPath
-				}
-				if (len(parts) > 2) && (parts[2] == "hidden") {
-					attachment.Listed = false
-				} else {
-					attachment.Listed = true
-				}
-
-				puzzle.Pre.Attachments = append(puzzle.Pre.Attachments, attachment)
-			}
 		default:
 			return nil, fmt.Errorf("Unknown header field: %s", key)
 		}
@@ -107,7 +112,7 @@ func Rfc822Parser(input []byte) (*Puzzle, error) {
 	return puzzle, nil
 }
 
-func parse(r io.Reader) error {
+func ParseMoth(r io.Reader) (*Puzzle, error) {
 	headerEnd := ""
 	headerBuf := new(bytes.Buffer)
 	headerParser := Rfc822Parser
@@ -143,41 +148,15 @@ func parse(r io.Reader) error {
 
 	puzzle, err := headerParser(headerBuf.Bytes())
 	if err != nil {
-		return err
+		return nil, err
 	}
-
+	
+	// Markdownify the body
 	bodyB := blackfriday.Run(bodyBuf.Bytes())
-
 	if (puzzle.Pre.Body != "") && (len(bodyB) > 0) {
 		log.Print("Body specified in header; overwriting...")
 	}
 	puzzle.Pre.Body = string(bodyB)
 
-	puzzleB, _ := json.MarshalIndent(puzzle, "", "  ")
-
-	fmt.Println(string(puzzleB))
-
-	return nil
-}
-
-func main() {
-	flag.Parse()
-
-	if flag.NArg() < 1 {
-		fmt.Fprintf(flag.CommandLine.Output(), "Error: no files to parse\n\n")
-		flag.PrintDefaults()
-		os.Exit(1)
-	}
-
-	for _, filename := range flag.Args() {
-		f, err := os.Open(filename)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer f.Close()
-
-		if err := parse(f); err != nil {
-			log.Fatal(err)
-		}
-	}
+	return puzzle, nil
 }
