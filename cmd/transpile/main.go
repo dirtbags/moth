@@ -1,71 +1,113 @@
 package main
 
 import (
-	"gopkg.in/russross/blackfriday.v2"
-	"gopkg.in/yaml.v2"
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
+	"gopkg.in/russross/blackfriday.v2"
+	"gopkg.in/yaml.v2"
 	"io"
-	"os"
+	"log"
 	"net/mail"
+	"os"
 	"strings"
 )
 
-type Header struct {
-	Pre struct {
-		Authors []string
-	}
-	Answers []string
-	Post struct {
-		Objective string
-	}
-	Debug struct {
-		Log []string
-		Error string
-	}
+type Attachment struct {
+	Filename       string // Filename presented as part of puzzle
+	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
+	Listed         bool   // Whether this file is listed as an attachment
 }
 
-type HeaderParser func([]byte) (*Header, error)
+type Puzzle struct {
+	Pre struct {
+		Authors       []string
+		Attachments   []Attachment
+		AnswerPattern string
+		Body          string
+	}
+	Post struct {
+		Objective string
+		Success   struct {
+			Acceptable string
+			Mastery    string
+		}
+		KSAs []string
+	}
+	Debug struct {
+		Log     []string
+		Errors  []string
+		Hints   []string
+		Summary string
+	}
+	Answers []string
+}
 
-func YamlParser(input []byte) (*Header, error) {
-	header := new(Header)
-	
-	err := yaml.Unmarshal(input, header)
+type HeaderParser func([]byte) (*Puzzle, error)
+
+func YamlParser(input []byte) (*Puzzle, error) {
+	puzzle := new(Puzzle)
+
+	err := yaml.Unmarshal(input, puzzle)
 	if err != nil {
 		return nil, err
 	}
-	return header, nil
+	return puzzle, nil
 }
 
-func Rfc822Parser(input []byte) (*Header, error) {
+func Rfc822Parser(input []byte) (*Puzzle, error) {
 	msgBytes := append(input, '\n')
 	r := bytes.NewReader(msgBytes)
 	m, err := mail.ReadMessage(r)
 	if err != nil {
 		return nil, err
 	}
-	
-	header := new(Header)
+
+	puzzle := new(Puzzle)
 	for key, val := range m.Header {
 		key = strings.ToLower(key)
 		switch key {
-			case "author":
-				header.Pre.Authors = val
-			case "answer":
-				header.Answers = val
-			default:
-				return nil, fmt.Errorf("Unknown header field: %s", key)
+		case "author":
+			puzzle.Pre.Authors = val
+		case "pattern":
+			puzzle.Pre.AnswerPattern = val[0]
+		case "answer":
+			puzzle.Answers = val
+		case "summary":
+			puzzle.Debug.Summary = val[0]
+		case "hint":
+			puzzle.Debug.Hints = val
+		case "ksa":
+			puzzle.Post.KSAs = val
+		case "file":
+			for _, txt := range val {
+				parts := strings.SplitN(txt, " ", 3)
+				attachment := Attachment{}
+				attachment.FilesystemPath = parts[0]
+				if len(parts) > 1 {
+					attachment.Filename = parts[1]
+				} else {
+					attachment.Filename = attachment.FilesystemPath
+				}
+				if (len(parts) > 2) && (parts[2] == "hidden") {
+					attachment.Listed = false
+				} else {
+					attachment.Listed = true
+				}
+
+				puzzle.Pre.Attachments = append(puzzle.Pre.Attachments, attachment)
+			}
+		default:
+			return nil, fmt.Errorf("Unknown header field: %s", key)
 		}
 	}
 
-	return header, nil
+	return puzzle, nil
 }
 
-
-func parse(r io.Reader) (error) {
+func parse(r io.Reader) error {
 	headerEnd := ""
 	headerBuf := new(bytes.Buffer)
 	headerParser := Rfc822Parser
@@ -90,7 +132,7 @@ func parse(r io.Reader) (error) {
 		headerBuf.WriteString(line)
 		headerBuf.WriteRune('\n')
 	}
-	
+
 	bodyBuf := new(bytes.Buffer)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -98,37 +140,42 @@ func parse(r io.Reader) (error) {
 		bodyBuf.WriteString(line)
 		bodyBuf.WriteRune('\n')
 	}
-	
-	header, err := headerParser(headerBuf.Bytes())
+
+	puzzle, err := headerParser(headerBuf.Bytes())
 	if err != nil {
 		return err
 	}
-	
-	headerB, _ := yaml.Marshal(header)
+
 	bodyB := blackfriday.Run(bodyBuf.Bytes())
-	fmt.Println(string(headerB))
-	fmt.Println("")
-	fmt.Println(string(bodyB))
+
+	if (puzzle.Pre.Body != "") && (len(bodyB) > 0) {
+		log.Print("Body specified in header; overwriting...")
+	}
+	puzzle.Pre.Body = string(bodyB)
+
+	puzzleB, _ := json.MarshalIndent(puzzle, "", "  ")
+
+	fmt.Println(string(puzzleB))
 
 	return nil
 }
 
 func main() {
 	flag.Parse()
-	
+
 	if flag.NArg() < 1 {
 		fmt.Fprintf(flag.CommandLine.Output(), "Error: no files to parse\n\n")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	
-	for _,filename := range flag.Args() {
+
+	for _, filename := range flag.Args() {
 		f, err := os.Open(filename)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer f.Close()
-		
+
 		if err := parse(f); err != nil {
 			log.Fatal(err)
 		}
