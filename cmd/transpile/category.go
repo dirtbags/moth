@@ -21,16 +21,6 @@ type PuzzleEntry struct {
 	Puzzle Puzzle
 }
 
-
-func HashHex(input ...string) (string) {
-	hasher := fnv.New64()
-	for _, s := range input {
-		fmt.Fprintln(hasher, s)
-	}
-	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-
 func PrngOfStrings(input ...string) (*rand.Rand) {
 	hasher := fnv.New64()
 	for _, s := range input {
