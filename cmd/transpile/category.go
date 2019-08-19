@@ -105,7 +105,7 @@ func ParseCategory(categoryPath string, seed string) ([]PuzzleEntry, error) {
 
 func main() {
 	// XXX: We need a way to pass in "only run this one point value puzzle"
-	
+	// XXX: Convert puzzle.py to standalone thingies
 	flag.Parse()
 	baseSeedString := os.Getenv("SEED")
 	
