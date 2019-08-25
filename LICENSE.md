@@ -11,11 +11,6 @@ Copyright © 2015-2016 Neale Pickett <neale@woozle.org>
 > The above copyright notice and this permission notice shall be
 > included in all copies or substantial portions of the Software.
 >
-> Except as contained in this notice, the name(s) of the above 
-> copyright holders shall not be used in advertising or otherwise
-> to promote the sale, use or other dealings in this Software
-> without prior written authorization.
->
 > The software is provided "as is", without warranty of any kind,
 > express or implied, including but not limited to the warranties of
 > merchantability, fitness for a particular purpose and
