@@ -30,6 +30,12 @@ func main() {
 		"Path to read mothballs",
 	)
 	flag.StringVar(
+		&ctx.PuzzlesDir,
+		"puzzles",
+		"",
+		"Path to read puzzle source trees",
+	)
+	flag.StringVar(
 		&ctx.StateDir,
 		"state",
 		"/state",

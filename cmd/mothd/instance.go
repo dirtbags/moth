@@ -18,9 +18,11 @@ import (
 type Instance struct {
 	Base            string
 	MothballDir     string
+	PuzzlesDir      string
 	StateDir        string
 	ThemeDir        string
 	AttemptInterval time.Duration
+	Debug           bool
 
 	categories       map[string]*Zipfs
 	update           chan bool
