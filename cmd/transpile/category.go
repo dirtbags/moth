@@ -12,6 +12,10 @@ import (
 	"encoding/hex"
 	"strconv"
 	"math/rand"
+	"context"
+	"time"
+	"os/exec"
+	"bytes"
 )
 
 
@@ -32,18 +36,28 @@ func PrngOfStrings(input ...string) (*rand.Rand) {
 }
 
 
-func ParsePuzzle(puzzlePath string, seed string) (*Puzzle, error) {
-	puzzleFd, err := os.Open(puzzlePath)
-	if err != nil {
-		return nil, err
-	}
-	defer puzzleFd.Close()
+func runPuzzleGen(puzzlePath string, seed string) (*Puzzle, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
 	
-	puzzle, err := ParseMoth(puzzleFd)
+	cmd := exec.CommandContext(ctx, puzzlePath)
+	cmd.Env = append(
+		os.Environ(),
+		fmt.Sprintf("MOTH_PUZZLE_SEED=%s", seed),
+	)
+	stdout, err := cmd.Output()
 	if err != nil {
 		return nil, err
 	}
-
+	
+	jsdec := json.NewDecoder(bytes.NewReader(stdout))
+	jsdec.DisallowUnknownFields()
+	puzzle := new(Puzzle)
+	err = jsdec.Decode(puzzle)
+	if err != nil {
+		return nil, err
+	}
+	
 	return puzzle, nil
 }
 
@@ -62,22 +76,43 @@ func ParseCategory(categoryPath string, seed string) ([]PuzzleEntry, error) {
 	
 	puzzleEntries := make([]PuzzleEntry, 0, len(puzzleDirs))
 	for _, puzzleDir := range puzzleDirs {
-		puzzlePath := filepath.Join(categoryPath, puzzleDir, "puzzle.moth")
-		puzzleSeed := fmt.Sprintf("%s/%s", seed, puzzleDir)
+		var puzzle *Puzzle
 		
+		puzzlePath := filepath.Join(categoryPath, puzzleDir)
+		
+		// Determine point value from directory name
 		points, err := strconv.Atoi(puzzleDir)
 		if err != nil {
 			log.Printf("Skipping %s: %v", puzzlePath, err)
 			continue
 		}
-	
-		puzzle, err := ParsePuzzle(puzzlePath, puzzleSeed)
-		if err != nil {
-			log.Printf("Skipping %s: %v", puzzlePath, err)
+
+		// Try the .moth file first
+		puzzleMothPath := filepath.Join(puzzlePath, "puzzle.moth")
+		puzzleFd, err := os.Open(puzzleMothPath)
+		if err == nil {
+			defer puzzleFd.Close()
+			puzzle, err = ParseMoth(puzzleFd)
+			if err != nil {
+				log.Printf("Skipping %s: %v", puzzleMothPath, err)
+				continue
+			}
+		} else if os.IsNotExist(err) {
+			var genErr error
+			puzzleGenPath := filepath.Join(puzzlePath, "mkpuzzle")
+			puzzle, genErr = runPuzzleGen(puzzleGenPath, puzzlePath)
+			if genErr != nil {
+				log.Printf("Skipping %20s: %v", puzzleMothPath, err)
+				log.Printf("Skipping %20s: %v", puzzleGenPath, genErr)
+				continue
+			}
+		} else {
+			log.Printf("Skipping %s: %v", puzzleMothPath, err)
 			continue
 		}
 		
-		prng := PrngOfStrings(puzzleSeed)
+		// Create a category entry for this
+		prng := PrngOfStrings(puzzlePath)
 		idBytes := make([]byte, 16)
 		prng.Read(idBytes)
 		id := hex.EncodeToString(idBytes)
@@ -99,6 +134,10 @@ func main() {
 	flag.Parse()
 	baseSeedString := os.Getenv("SEED")
 	
+	jsenc := json.NewEncoder(os.Stdout)
+	jsenc.SetEscapeHTML(false)
+	jsenc.SetIndent("", "  ")
+
 	for _, dirname := range flag.Args() {
 		categoryName := filepath.Base(dirname)
 		categorySeed := fmt.Sprintf("%s/%s", baseSeedString, categoryName)
@@ -108,12 +147,9 @@ func main() {
 			continue
 		}
 		
-		jpuzzles, err := json.MarshalIndent(puzzles, "", "  ")
-		if err != nil {
+		if err := jsenc.Encode(puzzles); err != nil {
 			log.Print(err)
 			continue
 		}
-		
-		fmt.Println(string(jpuzzles))
 	}
 }

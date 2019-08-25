@@ -1,0 +1,24 @@
+#! /bin/sh
+
+cat <<EOD
+{
+  "pre": {
+    "authors": ["neale"],
+    "body": "\
+      <h1>Writing Your Own Generator<h1>\
+      <p>\
+        You can output the JSON puzzle format if you want.\
+        See the source of this puzzle for an example!\
+      </p>\
+    "
+  },
+  "debug": {
+    "log": [
+      "There are many fields you can specify, aside from those in this file.",
+      "See puzzle.moth for the full spec.",
+      "MOTH_PUZZLE_SEED=$MOTH_PUZZLE_SEED"
+    ]
+  },
+  "answers": ["JSON"]
+}
+EOD

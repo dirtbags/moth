@@ -1,0 +1,17 @@
+---
+Summary: YAML Metadata
+Author: neale
+Answer: YAML
+Answer: yaml
+Objective: |
+  Understand how YAML metadata can be used in a `.moth` file
+Success:
+  Acceptable: |
+    Enter the answer and move on
+  Mastery: |
+    Create a `.moth` file using YAML metadata and serve it
+    through the devel server.
+---
+
+You can also provide metadata in YAML format.
+This puzzle's `.moth` file serves as an example.
