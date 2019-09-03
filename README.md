@@ -36,7 +36,7 @@ And point a browser to http://localhost:8080/ (or whatever host is running the s
 The development server includes a number of Python libraries that we have found useful in writing puzzles.
 
 When you're ready to create your own puzzles,
-read [the devel server documentation](docs/devel-server.md).
+read [the devel server documentation](doc/devel-server.md).
 
 Click the `[mb]` link by a puzzle category to compile and download a mothball that the production server can read.
 
@@ -49,7 +49,7 @@ Running a Production Server
 You can be more fine-grained about directories, if you like.
 Inside the container, you need the following paths:
 
-* `/state` (rw) Where state is stored. Read [the overview](docs/overview.md) to learn what's what in here.
+* `/state` (rw) Where state is stored. Read [the overview](doc/overview.md) to learn what's what in here.
 * `/mothballs` (ro) Mothballs (puzzle bundles) as provided by the development server.
 * `/resources` (ro) Overrides for built-in HTML/CSS resources.
 
@@ -73,7 +73,7 @@ Point a web browser at http://localhost:8080/
 and start hacking on things in your `puzzles` directory.
 
 More on how the devel sever works in
-[the devel server documentation](docs/devel-server.md)
+[the devel server documentation](doc/devel-server.md)
 
 
 Running A Production Server

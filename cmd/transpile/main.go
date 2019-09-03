@@ -18,18 +18,23 @@ func seedJoin(parts ...string) string {
 func usage() {
 	out := flag.CommandLine.Output()
 	name := flag.CommandLine.Name()
-	fmt.Fprintf(out, "Usage: %s [OPTIONS] CATEGORY [CATEGORY ...]\n", name)
+	fmt.Fprintf(out, "Usage: %s [OPTION]... CATEGORY [PUZZLE [FILENAME]]\n", name)
+	fmt.Fprintf(out, "\n")
+	fmt.Fprintf(out, "Transpile CATEGORY, or provide individual category components.\n")
+	fmt.Fprintf(out, "If PUZZLE is provided, only transpile the given puzzle.\n")
+	fmt.Fprintf(out, "If FILENAME is provided, output provided file.\n")
 	flag.PrintDefaults()
 }
 
 func main() {
-	// XXX: We need a way to pass in "only run this one point value puzzle"
 	// XXX: Convert puzzle.py to standalone thingies
 	
 	flag.Usage = usage
-	points := flag.Int("points", 0, "Transpile only this point value puzzle")
-	flag.Parse()
 	
+	points := flag.Int("points", 0, "Transpile only this point value puzzle")
+	mothball := flag.Bool("mothball", false, "Generate a mothball")
+	flag.Parse()
+
 	baseSeedString := os.Getenv("MOTH_SEED")
 	
 	jsenc := json.NewEncoder(os.Stdout)

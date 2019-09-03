@@ -1,16 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"strconv"
-	"log"
-	"path/filepath"
-	"strings"
-	"os"
-	"io/ioutil"
 	"bufio"
-	"time"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"math/rand"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
@@ -34,27 +33,17 @@ type StateExport struct {
 // We use the filesystem for synchronization between threads.
 // The only thing State methods need to know is the path to the state directory.
 type State struct {
-	StateDir string
-	update   chan bool
+	Component
+	update  chan bool
 }
 
-func NewState(stateDir string) (*State) {
+func NewState(baseDir string) *State {
 	return &State{
-		StateDir: stateDir,
-		update:   make(chan bool, 10),
+		Component: Component{
+			baseDir: baseDir,
+		},
+		update:  make(chan bool, 10),
 	}
-}
-
-// Returns a cleaned up join of path parts relative to
-func (s *State) path(parts ...string) string {
-	rel := filepath.Clean(filepath.Join(parts...))
-	parts = filepath.SplitList(rel)
-	for i, part := range parts {
-		part = strings.TrimLeft(part, "./\\:")
-		parts[i] = part
-	}
-	rel = filepath.Join(parts...)
-	return filepath.Join(s.StateDir, rel)
 }
 
 // Check a few things to see if this state directory is "enabled".
@@ -92,19 +81,19 @@ func (s *State) TeamName(teamId string) (string, error) {
 	} else if err != nil {
 		return "", fmt.Errorf("Unregistered team ID: %s (%s)", teamId, err)
 	}
-	
+
 	return teamName, nil
 }
 
 // Write out team name. This can only be done once.
 func (s *State) SetTeamName(teamId string, teamName string) error {
 	teamFile := s.path("teams", teamId)
-	err := ioutil.WriteFile(teamFile, []byte(teamName), os.ModeExclusive | 0644)
+	err := ioutil.WriteFile(teamFile, []byte(teamName), os.ModeExclusive|0644)
 	return err
 }
 
 // Retrieve the current points log
-func (s *State) PointsLog() ([]*Award) {
+func (s *State) PointsLog() []*Award {
 	pointsFile := s.path("points.log")
 	f, err := os.Open(pointsFile)
 	if err != nil {
@@ -112,7 +101,7 @@ func (s *State) PointsLog() ([]*Award) {
 		return nil
 	}
 	defer f.Close()
-	
+
 	pointsLog := make([]*Award, 0, 200)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -130,17 +119,17 @@ func (s *State) PointsLog() ([]*Award) {
 // Return an exportable points log,
 // This anonymizes teamId with either an integer, or the string "self"
 // for the requesting teamId.
-func (s *State) Export(teamId string) (*StateExport) {
+func (s *State) Export(teamId string) *StateExport {
 	teamName, _ := s.TeamName(teamId)
 
 	pointsLog := s.PointsLog()
 
 	export := StateExport{
 		PointsLog: make([]Award, len(pointsLog)),
-		Messages: make([]string, 0, 10),
+		Messages:  make([]string, 0, 10),
 		TeamNames: map[string]string{"self": teamName},
 	}
-	
+
 	// Read in messages
 	messagesFile := s.path("messages.txt")
 	if f, err := os.Open(messagesFile); err != nil {
@@ -156,7 +145,7 @@ func (s *State) Export(teamId string) (*StateExport) {
 			export.Messages = append(export.Messages, message)
 		}
 	}
-	
+
 	// Read in points
 	exportIds := map[string]string{teamId: "self"}
 	for logno, award := range pointsLog {
@@ -167,7 +156,7 @@ func (s *State) Export(teamId string) (*StateExport) {
 			exportId := strconv.Itoa(logno)
 			exportAward.TeamId = exportId
 			exportIds[award.TeamId] = exportAward.TeamId
-			
+
 			name, err := s.TeamName(award.TeamId)
 			if err != nil {
 				name = "Rodney" // https://en.wikipedia.org/wiki/Rogue_(video_game)#Gameplay
@@ -176,7 +165,7 @@ func (s *State) Export(teamId string) (*StateExport) {
 		}
 		export.PointsLog[logno] = *exportAward
 	}
-	
+
 	return &export
 }
 
@@ -269,10 +258,9 @@ func (s *State) collectPoints() {
 	}
 }
 
-
 func (s *State) maybeInitialize() {
 	// Are we supposed to re-initialize?
-	if _, err := os.Stat(s.path("initialized")); ! os.IsNotExist(err) {
+	if _, err := os.Stat(s.path("initialized")); !os.IsNotExist(err) {
 		return
 	}
 
@@ -318,7 +306,7 @@ func (s *State) maybeInitialize() {
 	)
 	ioutil.WriteFile(
 		s.path("messages.txt"),
-		[]byte(fmt.Sprintf("[%s] Initialized.\n", time.Now())),
+		[]byte(fmt.Sprintf("[%s] Initialized.\n", time.Now().UTC().Format(time.RFC3339))),
 		0644,
 	)
 	ioutil.WriteFile(
@@ -334,23 +322,10 @@ func (s *State) Run(updateInterval time.Duration) {
 		if s.Enabled() {
 			s.collectPoints()
 		}
-		
-		select {
-			case <-s.update:
-			case <-time.After(updateInterval):
-		}
-	}
-}
 
-
-func main() {
-	s := NewState("./state")
-	go s.Run(2 * time.Second)
-	for {
 		select {
-			case <-time.After(5 * time.Second):
+		case <-s.update:
+		case <-time.After(updateInterval):
 		}
-		
-		fmt.Println(s.Export(""))
 	}
 }

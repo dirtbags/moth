@@ -7,23 +7,21 @@ import (
 )
 
 type Theme struct {
-	ThemeDir string
+	Component
 }
 
-func NewTheme(themeDir string) *Theme {
+func NewTheme(baseDir string) *Theme {
 	return &Theme{
-		ThemeDir: themeDir,
+		Component: Component{
+			baseDir: baseDir,
+		},
 	}
-}
-
-func (t *Theme) path(parts ...string) string {
-	return MothPath(t.ThemeDir, parts...)
 }
 
 func (t *Theme) staticHandler(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 	if strings.Contains(path, "/.") {
-		http.Error(w, "Invalid URL path", http.StatusBadRequest)
+		http.Error(w, "Invalid path", http.StatusBadRequest)
 		return
 	}
 	if path == "/" {
