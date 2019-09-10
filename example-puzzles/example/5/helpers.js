@@ -78,6 +78,7 @@ function helperActivate(e) {
   }
 }
 
+
 function helperInit(event) {
   for (let e of document.querySelectorAll(".answer")) {
     helperActivate(e)

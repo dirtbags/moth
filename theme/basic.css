@@ -116,3 +116,20 @@ input:invalid {
     transform: rotate(360deg);
   }
 }
+
+li[draggable]::before {
+  content: "↕";
+  padding: 0.5em;
+  cursor: move;
+}
+li[draggable] {
+  list-style: none;
+}
+
+[draggable].moving {
+  opacity: 0.4;
+}
+
+[draggable].over {
+  border: 1px white dashed;
+}
