@@ -24,7 +24,6 @@ type Instance struct {
 
 	categories       map[string]*Mothball
 	update           chan bool
-	puzzleList       map[string]int{}
 	jPuzzleList      []byte
 	jPointsLog       []byte
 	nextAttempt      map[string]time.Time
