@@ -5,6 +5,7 @@
 import logging
 import os
 import os.path
+import re
 
 import moth
 
@@ -70,7 +71,9 @@ class MothValidator:
     def check_fields(self, puzzle):
         """Check if the puzzle has the requested fields"""
         for field in self.required_fields:
-            if not hasattr(puzzle, field):
+            if not hasattr(puzzle, field) or \
+                    getattr(puzzle,field) is None or \
+                    getattr(puzzle,field) == "":
                 raise MothValidationError("Missing field %s" % (field,))
 
     @staticmethod
@@ -132,14 +135,34 @@ class MothValidator:
 
         puzzle.body.seek(old_pos)
 
-    # Leaving this as a placeholder until KSAs are formally supported
     @staticmethod
     def check_ksa_format(puzzle):
         """Check if KSAs are properly formatted"""
+
+        ksa_re = re.compile("^[KSA]\d{4}$")
+        
         if hasattr(puzzle, "ksa"):
             for ksa in puzzle.ksa:
-                if not ksa.startswith("K"):
-                    raise MothValidationError("Unrecognized KSA format")
+                if ksa_re.match(ksa) is None:
+                    raise MothValidationError("Unrecognized KSA format (%s)" % (ksa,))
+
+    @staticmethod
+    def check_success(puzzle):
+        """Check if success criteria are defined"""
+
+        if not hasattr(puzzle, "success"):
+            raise MothValidationError("Success not defined")
+
+        criteria = ["acceptable", "mastery"]
+        missing_criteria = []
+        for criterion in criteria:
+            if criterion not in puzzle.success.keys() or \
+                    puzzle.success[criterion] is None or \
+                    len(puzzle.success[criterion]) == 0:
+                missing_criteria.append(criterion)
+
+        if len(missing_criteria) > 0:
+            raise MothValidationError("Missing success criteria (%s)" % (", ".join(missing_criteria)))
 
 
 def output_json(data):

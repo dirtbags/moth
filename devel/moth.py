@@ -13,6 +13,7 @@ import random
 import string
 import tempfile
 import shlex
+import yaml
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -59,6 +60,34 @@ class PuzzleFile:
         self.name = name
         self.visible = visible
 
+class PuzzleSuccess(dict):
+    """Puzzle success objectives
+
+    :param acceptable: Learning outcome from acceptable knowledge of the subject matter
+    :param mastery: Learning outcome from mastery of the subject matter
+    """
+
+    valid_fields = ["acceptable", "mastery"]
+
+    def __init__(self, **kwargs):
+        super(PuzzleSuccess, self).__init__()
+        for key in self.valid_fields:
+            self[key] = None
+        for key, value in kwargs.items():
+            if key in self.valid_fields:
+                self[key] = value
+
+    def __getattr__(self, attr):
+        if attr in self.valid_fields:
+            return self[attr]
+        raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+
+    def __setattr__(self, attr, value):
+        if attr in self.valid_fields:
+            self[attr] = value
+        else:
+            raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+
 
 class Puzzle:
     def __init__(self, category_seed, points):
@@ -80,6 +109,13 @@ class Puzzle:
         self.hint = None
         self.files = {}
         self.body = io.StringIO()
+
+        # NIST NICE objective content
+        self.objective = None  # Text describing the expected learning outcome from solving this puzzle, *why* are you solving this puzzle
+        self.success = PuzzleSuccess()  # Text describing criteria for different levels of success, e.g. {"Acceptable": "Did OK", "Mastery": "Did even better"}
+        self.solution = None  # Text describing how to solve the puzzle
+        self.ksas = []  # A list of references to related NICE KSAs (e.g. K0058, . . .)
+
         self.logs = []
         self.randseed = category_seed * self.points
         self.rand = random.Random(self.randseed)
@@ -91,47 +127,102 @@ class Puzzle:
 
     def read_stream(self, stream):
         header = True
+        line = ""
+        if stream.read(3) == "---":
+            header = "yaml"
+        else:
+            header = "moth"
+
+        stream.seek(0)
+
+        if header == "yaml":
+            self.read_yaml_header(stream)
+        elif header == "moth":
+            self.read_moth_header(stream)
+                
         for line in stream:
-            if header:
-                line = line.strip()
-                if not line:
-                    header = False
-                    continue
-                key, val = line.split(':', 1)
-                key = key.lower()
-                val = val.strip()
-                if key == 'author':
-                    self.authors.append(val)
-                elif key == 'summary':
-                    self.summary = val
-                elif key == 'answer':
-                    self.answers.append(val)
-                elif key == 'pattern':
-                    self.pattern = val
-                elif key == 'hint':
-                    self.hint = val
-                elif key == 'name':
-                    pass
-                elif key == 'file':
-                    parts = shlex.split(val)
-                    name = parts[0]
-                    hidden = False
-                    stream = open(name, 'rb')
-                    try:
-                        name = parts[1]
-                        hidden = (parts[2].lower() == "hidden")
-                    except IndexError:
-                        pass
-                    self.files[name] = PuzzleFile(stream, name, not hidden)
-                elif key == 'script':
-                    stream = open(val, 'rb')
-                    # Make sure this shows up in the header block of the HTML output.
-                    self.files[val] = PuzzleFile(stream, val, visible=False)
-                    self.scripts.append(val)
-                else:
-                    raise ValueError("Unrecognized header field: {}".format(key))
+            self.body.write(line)
+
+    def read_yaml_header(self, stream):
+        contents = ""
+        header = False
+        for line in stream:
+            if line.strip() == "---" and header:  # Handle last line
+                break
+            elif line.strip() == "---":  # Handle first line
+                header = True
+                continue
             else:
-                self.body.write(line)
+                contents += line
+
+        config = yaml.safe_load(contents)
+        for key, value in config.items():
+            key = key.lower()
+            self.handle_header_key(key, value)
+
+    def read_moth_header(self, stream):
+        for line in stream:
+            line = line.strip()
+            if not line:
+                break
+
+            key, val = line.split(':', 1)
+            key = key.lower()
+            val = val.strip()
+            self.handle_header_key(key, val)
+
+    def handle_header_key(self, key, val):
+        if key == 'author':
+            self.authors.append(val)
+        elif key == 'summary':
+            self.summary = val
+        elif key == 'answer':
+            if not isinstance(val, str):
+                raise ValueError("Answers must be strings, got %s, instead" % (type(val),))
+            self.answers.append(val)
+        elif key == "answers":
+            for answer in val:
+                if not isinstance(answer, str):
+                    raise ValueError("Answers must be strings, got %s, instead" % (type(answer),))
+                self.answers.append(answer)
+        elif key == 'pattern':
+            self.pattern = val
+        elif key == 'hint':
+            self.hint = val
+        elif key == 'name':
+            pass
+        elif key == 'file':
+            parts = shlex.split(val)
+            name = parts[0]
+            hidden = False
+            stream = open(name, 'rb')
+            try:
+                name = parts[1]
+                hidden = (parts[2].lower() == "hidden")
+            except IndexError:
+                pass
+            self.files[name] = PuzzleFile(stream, name, not hidden)
+        elif key == 'script':
+            stream = open(val, 'rb')
+            # Make sure this shows up in the header block of the HTML output.
+            self.files[val] = PuzzleFile(stream, val, visible=False)
+            self.scripts.append(val)
+        elif key == "objective":
+            self.objective = val
+        elif key == "success":
+            # Force success dictionary keys to be lower-case
+            self.success = dict((x.lower(), y) for x,y in val.items())
+        elif key == "success.acceptable":
+            self.success.acceptable = val
+        elif key == "success.mastery":
+            self.success.mastery = val
+        elif key == "solution":
+            self.solution = val
+        elif key == "ksa":
+            self.ksas.append(val)
+        else:
+            raise ValueError("Unrecognized header field: {}".format(key))
+
 
     def read_directory(self, path):
         try:
@@ -278,6 +369,10 @@ class Puzzle:
             'scripts': self.scripts,
             'pattern': self.pattern,
             'body': self.html_body(),
+            'objective': self.objective,
+            'success': self.success,
+            'solution': self.solution,
+            'ksas': self.ksas,
         }
 
     def hashes(self):
