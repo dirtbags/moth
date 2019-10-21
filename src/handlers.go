@@ -1,13 +1,16 @@
 package main
 
 import (
+	"archive/zip"
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -247,6 +250,71 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, path, d.ModTime(), f)
 }
 
+func (ctx *Instance) dehydrateHandler(w http.ResponseWriter, req *http.Request) {
+	/*
+	teamId := req.FormValue("id")
+	if _, err := ctx.TeamName(teamId); err != nil {
+		http.Error(w, "Must provide team ID", http.StatusUnauthorized)
+		return
+	}
+	*/
+
+	zipBaseDir := "moth"
+
+	buf := new(bytes.Buffer)
+
+	zipWriter := zip.NewWriter( buf )
+
+	writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, "puzzles.json"), ctx.jPuzzleList)
+	writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, "points.json"), ctx.jPointsLog)
+
+	for category_name, category := range ctx.categories {
+		for _, file := range category.zf.File {
+			parts := strings.Split(file.Name, "/")
+
+			if (parts[0] == "content") {
+				fmt.Printf("Inspecting %s/%s\n", category_name, file.Name)
+				local_buf := new(bytes.Buffer)
+				fh, _ := file.Open()
+				defer fh.Close()
+				local_buf.ReadFrom(fh)
+				writeZipContents(zipWriter, fmt.Sprintf("%s/%s/%s", zipBaseDir, category_name, file.Name), local_buf.Bytes())
+			}
+		}
+	}
+
+	filepath.Walk(ctx.ThemeDir, func (path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if ! info.IsDir() {
+			fmt.Printf("Walking %s\n", path)
+			local_buf := new(bytes.Buffer)
+			fh, _ := os.Open(path)
+			defer fh.Close()
+			local_buf.ReadFrom(fh)
+			writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, path), local_buf.Bytes())
+		}
+		return nil
+	})
+
+	zipWriter.Close()
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf.Bytes())
+}
+
+func writeZipContents(z *zip.Writer, path string, contents []byte) error {
+	f, err := z.Create(path)
+	if err != nil {
+		return err
+	}
+	f.Write(contents)
+
+	return nil
+}
+
 type FurtiveResponseWriter struct {
 	w          http.ResponseWriter
 	statusCode *int
@@ -289,4 +357,5 @@ func (ctx *Instance) BindHandlers() {
 	ctx.mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/dehydrate", ctx.dehydrateHandler)
 }
