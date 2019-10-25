@@ -78,12 +78,7 @@ function renderPuzzles(obj) {
 }
 
 function heartbeat(teamId) {
-  let fd = new FormData()
-  fd.append("id", teamId)
-  fetch("puzzles.json", {
-    method: "POST",
-    body: fd,
-  })
+  fetch("puzzles.json?id=" + teamId)
   .then(resp => {
     if (resp.ok) {
       resp.json()
@@ -110,6 +105,68 @@ function showPuzzles(teamId) {
   document.getElementById("puzzles").appendChild(spinner)
   heartbeat(teamId)
   setInterval(e => { heartbeat(teamId) }, 40000)
+
+  let cacher = document.createElement("li");
+  let cache_button = document.createElement("a");
+  cache_button.innerText = "Cache";
+  cache_button.title = "Cache an offine copy of current content";
+  cache_button.href = "#";
+  cache_button.addEventListener("click", async function() {
+    toast("Caching all currently-open content");
+    await fetchAll(teamId);
+    toast("Done caching content");
+  });
+  cacher.appendChild(cache_button);
+  document.getElementsByTagName("nav")[0].getElementsByTagName("ul")[0].appendChild(cacher);
+}
+
+async function fetchAll(teamId) {
+  let headers = new Headers();
+  headers.append("pragma", "no-cache");
+  headers.append("cache-control", "no-cache");
+  requests = [];
+
+  requests.push( fetch("state_manifest.json?id=" + teamId, {headers: headers})
+   .then( resp => {
+    if (resp.ok) {
+      resp.json()
+       .then( contents => {
+        console.log("Processing manifest");
+        for (let resource of contents) {
+          if (resource == "puzzles.json") {
+            continue;
+          }
+          fetch(resource, {headers: headers})
+           .then( e => {
+            console.log("Fetched " + resource);
+          })
+        }
+      })
+   }
+  }));
+
+  let resp = await fetch("puzzles.json?id=" + teamId, {headers: headers});
+	
+  if (resp.ok) {
+    let categories = await resp.json();
+    let cat_names = Object.keys(categories)
+    cat_names.sort()
+    for (let cat_name of cat_names) {
+      if (cat_name.startsWith("__")) {
+        // Skip metadata
+        continue
+      }
+      let puzzles = categories[cat_name];
+      for (let puzzle of puzzles) {
+        let url = "puzzle.html?cat=" + cat_name + "&points=" + puzzle[0] + "&pid=" + puzzle[1];
+        requests.push( fetch(url, {headers: headers})
+         .then( e => {
+          console.log("Fetched " + url);
+        }));
+      }
+    }
+  }
+  return Promise.all(requests);
 }
 
 function login(e) {
@@ -156,7 +213,7 @@ function init() {
   if (id) {
     showPuzzles(id)
   }
-  
+
   document.getElementById("login").addEventListener("submit", login)
 }
 
@@ -165,3 +222,4 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+

@@ -10,7 +10,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -265,15 +267,16 @@ func (ctx *Instance) dehydrateHandler(w http.ResponseWriter, req *http.Request) 
 
 	zipWriter := zip.NewWriter( buf )
 
+	// Package up important JSON endpoints
 	writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, "puzzles.json"), ctx.jPuzzleList)
 	writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, "points.json"), ctx.jPointsLog)
 
+	// Package up files for currently-unlocked puzzles in categories
 	for category_name, category := range ctx.categories {
 		for _, file := range category.zf.File {
 			parts := strings.Split(file.Name, "/")
 
 			if (parts[0] == "content") {
-				fmt.Printf("Inspecting %s/%s\n", category_name, file.Name)
 				local_buf := new(bytes.Buffer)
 				fh, _ := file.Open()
 				defer fh.Close()
@@ -283,17 +286,21 @@ func (ctx *Instance) dehydrateHandler(w http.ResponseWriter, req *http.Request) 
 		}
 	}
 
+	// Pack up the theme files
+	theme_root_re := regexp.MustCompile(fmt.Sprintf("^%s", ctx.ThemeDir))
 	filepath.Walk(ctx.ThemeDir, func (path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if ! info.IsDir() {
-			fmt.Printf("Walking %s\n", path)
+
+		if ! info.IsDir() { // Only package up files
 			local_buf := new(bytes.Buffer)
 			fh, _ := os.Open(path)
 			defer fh.Close()
 			local_buf.ReadFrom(fh)
-			writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, path), local_buf.Bytes())
+			localized_path := theme_root_re.ReplaceAllLiteralString( path, "")
+			fmt.Printf("Localized path is %s\n", localized_path)
+			writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, localized_path), local_buf.Bytes())
 		}
 		return nil
 	})
@@ -305,7 +312,44 @@ func (ctx *Instance) dehydrateHandler(w http.ResponseWriter, req *http.Request) 
 	w.Write(buf.Bytes())
 }
 
+func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
+	manifest := make([]string, 0)
+	manifest = append(manifest, "puzzles.json")
+	manifest = append(manifest, "points.json")
+
+	// Pack up the theme files
+	theme_root_re := regexp.MustCompile(fmt.Sprintf("^%s/", ctx.ThemeDir))
+	filepath.Walk(ctx.ThemeDir, func (path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if ! info.IsDir() { // Only package up files
+			localized_path := theme_root_re.ReplaceAllLiteralString( path, "")
+			manifest = append(manifest, localized_path)
+		}
+		return nil
+	})
+
+	// Package up files for currently-unlocked puzzles in categories
+	for category_name, category := range ctx.categories {
+		for _, file := range category.zf.File {
+			parts := strings.Split(file.Name, "/")
+
+			if (parts[0] == "content") {
+				manifest = append(manifest, path.Join("content", category_name, path.Join(parts[1:]...)))
+			}
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	manifest_json, _ := json.Marshal(manifest)
+	w.Write(manifest_json)
+}
+
 func writeZipContents(z *zip.Writer, path string, contents []byte) error {
+	path = filepath.Clean(path)
+	fmt.Printf("Writing contents to %s\n", path)
 	f, err := z.Create(path)
 	if err != nil {
 		return err
@@ -357,5 +401,6 @@ func (ctx *Instance) BindHandlers() {
 	ctx.mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/state_manifest.json", ctx.manifestHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/dehydrate", ctx.dehydrateHandler)
 }
