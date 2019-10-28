@@ -133,7 +133,9 @@ function drawCacheButton(teamId) {
         } else {
           cacher.style.display = "none";
         }
-      });
+      }).catch( ex => {
+          cacher.style.display = "none";
+      })
   }
 
   setInterval ( updateCacheButton , 30000);
@@ -156,7 +158,7 @@ async function fetchAll(teamId) {
           if (resource == "puzzles.json") {
             continue;
           }
-          fetch(resource, {headers: headers})
+          fetch(resource)
            .then( e => {
             console.log("Fetched " + resource);
           })
@@ -179,7 +181,7 @@ async function fetchAll(teamId) {
       let puzzles = categories[cat_name];
       for (let puzzle of puzzles) {
         let url = "puzzle.html?cat=" + cat_name + "&points=" + puzzle[0] + "&pid=" + puzzle[1];
-        requests.push( fetch(url, {headers: headers})
+        requests.push( fetch(url)
          .then( e => {
           console.log("Fetched " + url);
         }));
