@@ -15,12 +15,18 @@ import (
 	"time"
 )
 
+type RuntimeConfig struct {
+	export_manifest bool
+}
+
 type Instance struct {
 	Base            string
 	MothballDir     string
 	StateDir        string
 	ThemeDir        string
 	AttemptInterval time.Duration
+
+	Runtime		RuntimeConfig
 
 	categories       map[string]*Mothball
 	update           chan bool

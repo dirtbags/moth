@@ -313,6 +313,10 @@ func (ctx *Instance) dehydrateHandler(w http.ResponseWriter, req *http.Request) 
 }
 
 func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
+	if (! ctx.Runtime.export_manifest) {
+		http.Error(w, "Endpoint disabled", http.StatusForbidden)
+		return
+	}
 	manifest := make([]string, 0)
 	manifest = append(manifest, "puzzles.json")
 	manifest = append(manifest, "points.json")

@@ -124,6 +124,9 @@ func (ctx *Instance) tidy() {
 	// Do they want to reset everything?
 	ctx.MaybeInitialize()
 
+	// Check set config
+	ctx.UpdateConfig()
+
 	// Refresh all current categories
 	for categoryName, mb := range ctx.categories {
 		if err := mb.Refresh(); err != nil {
@@ -284,6 +287,18 @@ func (ctx *Instance) isEnabled() bool {
 	}
 
 	return true
+}
+
+func (ctx *Instance) UpdateConfig() {
+	// Handle export manifest
+	if _, err := os.Stat(ctx.StatePath("export_manifest")); err == nil {
+		log.Print("Enabling manifest export")
+		ctx.Runtime.export_manifest = true
+	} else {
+		log.Print("Disabling manifest export")
+		ctx.Runtime.export_manifest = false
+	}
+
 }
 
 // maintenance is the goroutine that runs a periodic maintenance task
