@@ -292,9 +292,11 @@ func (ctx *Instance) isEnabled() bool {
 func (ctx *Instance) UpdateConfig() {
 	// Handle export manifest
 	if _, err := os.Stat(ctx.StatePath("export_manifest")); err == nil {
-		log.Print("Enabling manifest export")
-		ctx.Runtime.export_manifest = true
-	} else {
+		if (! ctx.Runtime.export_manifest) {
+			log.Print("Enabling manifest export")
+			ctx.Runtime.export_manifest = true
+		}
+	} else if (ctx.Runtime.export_manifest) {
 		log.Print("Disabling manifest export")
 		ctx.Runtime.export_manifest = false
 	}

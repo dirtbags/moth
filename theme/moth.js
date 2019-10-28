@@ -105,7 +105,10 @@ function showPuzzles(teamId) {
   document.getElementById("puzzles").appendChild(spinner)
   heartbeat(teamId)
   setInterval(e => { heartbeat(teamId) }, 40000)
+  drawCacheButton(teamId)
+}
 
+function drawCacheButton(teamId) {
   let cacher = document.createElement("li");
   let cache_button = document.createElement("a");
   cache_button.innerText = "Cache";
@@ -118,6 +121,23 @@ function showPuzzles(teamId) {
   });
   cacher.appendChild(cache_button);
   document.getElementsByTagName("nav")[0].getElementsByTagName("ul")[0].appendChild(cacher);
+
+  function updateCacheButton() {
+    let headers = new Headers();
+    headers.append("pragma", "no-cache");
+    headers.append("cache-control", "no-cache");
+    fetch("current_manifest.json?id=" + teamId, {method: "HEAD", headers: headers})
+      .then( resp => {
+        if (resp.ok) {
+          cacher.style.disply = "initial";
+        } else {
+          cacher.style.display = "none";
+        }
+      });
+  }
+
+  setInterval ( updateCacheButton , 30000);
+  updateCacheButton();
 }
 
 async function fetchAll(teamId) {
@@ -126,7 +146,7 @@ async function fetchAll(teamId) {
   headers.append("cache-control", "no-cache");
   requests = [];
 
-  requests.push( fetch("state_manifest.json?id=" + teamId, {headers: headers})
+  requests.push( fetch("current_manifest.json?id=" + teamId, {headers: headers})
    .then( resp => {
     if (resp.ok) {
       resp.json()

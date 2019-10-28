@@ -1,9 +1,7 @@
 package main
 
 import (
-	"archive/zip"
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -252,71 +250,23 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, path, d.ModTime(), f)
 }
 
-func (ctx *Instance) dehydrateHandler(w http.ResponseWriter, req *http.Request) {
-	/*
-	teamId := req.FormValue("id")
-	if _, err := ctx.TeamName(teamId); err != nil {
-		http.Error(w, "Must provide team ID", http.StatusUnauthorized)
-		return
-	}
-	*/
-
-	zipBaseDir := "moth"
-
-	buf := new(bytes.Buffer)
-
-	zipWriter := zip.NewWriter( buf )
-
-	// Package up important JSON endpoints
-	writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, "puzzles.json"), ctx.jPuzzleList)
-	writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, "points.json"), ctx.jPointsLog)
-
-	// Package up files for currently-unlocked puzzles in categories
-	for category_name, category := range ctx.categories {
-		for _, file := range category.zf.File {
-			parts := strings.Split(file.Name, "/")
-
-			if (parts[0] == "content") {
-				local_buf := new(bytes.Buffer)
-				fh, _ := file.Open()
-				defer fh.Close()
-				local_buf.ReadFrom(fh)
-				writeZipContents(zipWriter, fmt.Sprintf("%s/%s/%s", zipBaseDir, category_name, file.Name), local_buf.Bytes())
-			}
-		}
-	}
-
-	// Pack up the theme files
-	theme_root_re := regexp.MustCompile(fmt.Sprintf("^%s", ctx.ThemeDir))
-	filepath.Walk(ctx.ThemeDir, func (path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if ! info.IsDir() { // Only package up files
-			local_buf := new(bytes.Buffer)
-			fh, _ := os.Open(path)
-			defer fh.Close()
-			local_buf.ReadFrom(fh)
-			localized_path := theme_root_re.ReplaceAllLiteralString( path, "")
-			fmt.Printf("Localized path is %s\n", localized_path)
-			writeZipContents(zipWriter, fmt.Sprintf("%s/%s", zipBaseDir, localized_path), local_buf.Bytes())
-		}
-		return nil
-	})
-
-	zipWriter.Close()
-
-	w.Header().Set("Content-Type", "application/zip")
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf.Bytes())
-}
-
 func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 	if (! ctx.Runtime.export_manifest) {
 		http.Error(w, "Endpoint disabled", http.StatusForbidden)
 		return
 	}
+
+	teamId := req.FormValue("id")
+	if _, err := ctx.TeamName(teamId); err != nil {
+		http.Error(w, "Must provide a valid team ID", http.StatusUnauthorized)
+		return
+	}
+
+	if (req.Method == http.MethodHead) {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	manifest := make([]string, 0)
 	manifest = append(manifest, "puzzles.json")
 	manifest = append(manifest, "points.json")
@@ -349,18 +299,6 @@ func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	manifest_json, _ := json.Marshal(manifest)
 	w.Write(manifest_json)
-}
-
-func writeZipContents(z *zip.Writer, path string, contents []byte) error {
-	path = filepath.Clean(path)
-	fmt.Printf("Writing contents to %s\n", path)
-	f, err := z.Create(path)
-	if err != nil {
-		return err
-	}
-	f.Write(contents)
-
-	return nil
 }
 
 type FurtiveResponseWriter struct {
@@ -405,6 +343,5 @@ func (ctx *Instance) BindHandlers() {
 	ctx.mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
-	ctx.mux.HandleFunc(ctx.Base+"/state_manifest.json", ctx.manifestHandler)
-	ctx.mux.HandleFunc(ctx.Base+"/dehydrate", ctx.dehydrateHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/current_manifest.json", ctx.manifestHandler)
 }
