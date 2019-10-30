@@ -14,6 +14,7 @@ import os
 import pathlib
 import random
 import shutil
+import socketserver
 import sys
 import traceback
 import mothballer
@@ -25,14 +26,8 @@ from http import HTTPStatus
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
-try:
-    ThreadingHTTPServer = http.server.ThreadingHTTPServer
-except AttributeError:
-    import socketserver
-    class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-        daemon_threads = True
 
-class MothServer(ThreadingHTTPServer):
+class MothServer(socketserver.ForkingMixIn, http.server.HTTPServer):
     def __init__(self, server_address, RequestHandlerClass):
         super().__init__(server_address, RequestHandlerClass)
         self.args = {}
