@@ -29,6 +29,7 @@ type Instance struct {
 	Runtime		RuntimeConfig
 
 	categories       map[string]*Mothball
+	MaxPointsUnlocked	map[string]int
 	update           chan bool
 	jPuzzleList      []byte
 	jPointsLog       []byte

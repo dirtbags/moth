@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-type PuzzleMap struct {
-	Points int
-	Path   string
-}
 
 func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 	if pm == nil {
@@ -39,46 +35,31 @@ func (ctx *Instance) generatePuzzleList() {
 		}
 	}
 
+
 	ret := map[string][]PuzzleMap{}
 	for catName, mb := range ctx.categories {
-		mf, err := mb.Open("map.txt")
-		if err != nil {
-			// File isn't in there
-			continue
-		}
-		defer mf.Close()
-
-		pm := make([]PuzzleMap, 0, 30)
+		filtered_puzzlemap := make([]PuzzleMap, 0, 30)
 		completed := true
-		scanner := bufio.NewScanner(mf)
-		for scanner.Scan() {
-			line := scanner.Text()
 
-			var pointval int
-			var dir string
+		for _, pm := range mb.puzzlemap {
+			filtered_puzzlemap = append(filtered_puzzlemap, pm)
 
-			n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
-			if err != nil {
-				log.Printf("Parsing map for %s: %v", catName, err)
-				continue
-			} else if n != 2 {
-				log.Printf("Parsing map for %s: short read", catName)
-				continue
-			}
-
-			pm = append(pm, PuzzleMap{pointval, dir})
-
-			if pointval > maxByCategory[catName] {
+			if pm.Points > maxByCategory[catName] {
 				completed = false
+				maxByCategory[catName] = pm.Points
 				break
 			}
 		}
+
 		if completed {
-			pm = append(pm, PuzzleMap{0, ""})
+			filtered_puzzlemap = append(filtered_puzzlemap, PuzzleMap{0, ""})
 		}
 
-		ret[catName] = pm
+		ret[catName] = filtered_puzzlemap
 	}
+
+	// Cache the unlocked points for use in other functions
+	ctx.MaxPointsUnlocked = maxByCategory
 
 	jpl, err := json.Marshal(ret)
 	if err != nil {

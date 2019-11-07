@@ -287,11 +287,19 @@ func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Package up files for currently-unlocked puzzles in categories
 	for category_name, category := range ctx.categories {
-		for _, file := range category.zf.File {
-			parts := strings.Split(file.Name, "/")
+		if _, ok := ctx.MaxPointsUnlocked[category_name]; ok {  // Check that the category is actually unlocked. This should never fail, probably
+			for _, file := range category.zf.File {
+				parts := strings.Split(file.Name, "/")
 
-			if (parts[0] == "content") {
-				manifest = append(manifest, path.Join("content", category_name, path.Join(parts[1:]...)))
+				if (parts[0] == "content") {  // Only pick up content files, not thing like map.txt
+					for _, puzzlemap := range category.puzzlemap {  // Figure out which puzzles are currently unlocked
+						if (puzzlemap.Path == parts[1] && puzzlemap.Points <= ctx.MaxPointsUnlocked[category_name]) {
+
+							manifest = append(manifest, path.Join("content", category_name, path.Join(parts[1:]...)))
+							break
+						}
+					}
+				}
 			}
 		}
 	}
