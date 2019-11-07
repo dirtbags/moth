@@ -143,7 +143,7 @@ function drawCacheButton(teamId) {
       })
   }
 
-  setInterval ( updateCacheButton , 30000)
+  setInterval (updateCacheButton , 30000)
   updateCacheButton()
 }
 
@@ -167,7 +167,7 @@ async function fetchAll(teamId) {
           }
           fetch(resource)
            .then(e => {
-            console.log("Fetched " + resource)
+             console.log("Fetched " + resource)
           })
         }
       })
