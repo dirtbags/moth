@@ -127,13 +127,14 @@ function drawCacheButton(teamId) {
     headers.append("pragma", "no-cache")
     headers.append("cache-control", "no-cache")
     fetch("current_manifest.json?id=" + teamId, {method: "HEAD", headers: headers})
-      .then( resp => {
+      .then(resp => {
         if (resp.ok) {
           cacher.style.disply = "initial"
         } else {
           cacher.style.display = "none"
         }
-      }).catch( ex => {
+      })
+      .catch(ex => {
           cacher.style.display = "none"
       })
   }
@@ -149,17 +150,17 @@ async function fetchAll(teamId) {
   requests = []
 
   requests.push( fetch("current_manifest.json?id=" + teamId, {headers: headers})
-   .then( resp => {
+   .then(resp => {
     if (resp.ok) {
       resp.json()
-       .then( contents => {
+       .then(contents => {
         console.log("Processing manifest")
         for (let resource of contents) {
           if (resource == "puzzles.json") {
             continue
           }
           fetch(resource)
-           .then( e => {
+           .then(e => {
             console.log("Fetched " + resource)
           })
         }
@@ -182,7 +183,7 @@ async function fetchAll(teamId) {
       for (let puzzle of puzzles) {
         let url = "puzzle.html?cat=" + cat_name + "&points=" + puzzle[0] + "&pid=" + puzzle[1]
         requests.push( fetch(url)
-         .then( e => {
+         .then(e => {
           console.log("Fetched " + url)
         }))
       }
