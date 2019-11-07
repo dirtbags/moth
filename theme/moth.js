@@ -137,7 +137,8 @@ function drawCacheButton(teamId) {
         } else {
           cacher.style.display = "none"
         }
-      }).catch( ex => {
+      })
+      .catch(ex => {
           cacher.style.display = "none"
       })
   }
@@ -158,14 +159,14 @@ async function fetchAll(teamId) {
    .then( resp => {
     if (resp.ok) {
       resp.json()
-       .then( contents => {
+       .then(contents => {
         console.log("Processing manifest")
         for (let resource of contents) {
           if (resource == "puzzles.json") {
             continue
           }
           fetch(resource)
-           .then( e => {
+           .then(e => {
             console.log("Fetched " + resource)
           })
         }
@@ -191,7 +192,7 @@ async function fetchAll(teamId) {
 	url.searchParams.set("points", puzzle[0])
 	url.searchParams.set("pid", puzzle[1])
         requests.push( fetch(url)
-         .then( e => {
+         .then(e => {
           console.log("Fetched " + url)
         }))
       }

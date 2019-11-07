@@ -1,7 +1,8 @@
 function pwa_init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register("./sw.js").then(function(reg) {
-    }).catch(function(err) {
+    })
+    .catch(err => {
       console.warn("Error while registering service worker", err)
     })
   } else {
