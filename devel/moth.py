@@ -174,6 +174,10 @@ class Puzzle:
     def handle_header_key(self, key, val):
         if key == 'author':
             self.authors.append(val)
+        elif key == 'authors':
+            if not isinstance(val, list):
+                raise ValueError("Authors must be a list, got %s, instead" & (type(val),))
+            self.authors = list(val)
         elif key == 'summary':
             self.summary = val
         elif key == 'answer':
