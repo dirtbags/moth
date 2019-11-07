@@ -78,7 +78,9 @@ function renderPuzzles(obj) {
 }
 
 function heartbeat(teamId) {
-  fetch("puzzles.json?id=" + teamId)
+  let url = new URL("puzzles.json", window.location)
+  url.searchParams.set("id", teamId)
+  fetch(url)
   .then(resp => {
     if (resp.ok) {
       resp.json()
@@ -126,7 +128,9 @@ function drawCacheButton(teamId) {
     let headers = new Headers()
     headers.append("pragma", "no-cache")
     headers.append("cache-control", "no-cache")
-    fetch("current_manifest.json?id=" + teamId, {method: "HEAD", headers: headers})
+    let url = new URL("current_manifest.json", window.location)
+    url.searchParams.set("id", teamId)
+    fetch(url, {method: "HEAD", headers: headers})
       .then( resp => {
         if (resp.ok) {
           cacher.style.disply = "initial"
@@ -147,8 +151,10 @@ async function fetchAll(teamId) {
   headers.append("pragma", "no-cache")
   headers.append("cache-control", "no-cache")
   requests = []
+  let url = new URL("current_manifest.json", window.location)
+  url.searchParams.set("id", teamId)
 
-  requests.push( fetch("current_manifest.json?id=" + teamId, {headers: headers})
+  requests.push( fetch(url, {headers: headers})
    .then( resp => {
     if (resp.ok) {
       resp.json()
@@ -180,7 +186,10 @@ async function fetchAll(teamId) {
       }
       let puzzles = categories[cat_name]
       for (let puzzle of puzzles) {
-        let url = "puzzle.html?cat=" + cat_name + "&points=" + puzzle[0] + "&pid=" + puzzle[1]
+	let url = new URL("puzzle.html", window.location)
+	url.searchParams.set("cat", cat_name)
+	url.searchParams.set("points", puzzle[0])
+	url.searchParams.set("pid", puzzle[1])
         requests.push( fetch(url)
          .then( e => {
           console.log("Fetched " + url)
