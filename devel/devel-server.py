@@ -14,6 +14,7 @@ import os
 import pathlib
 import random
 import shutil
+import socketserver
 import sys
 import traceback
 import mothballer
@@ -25,14 +26,8 @@ from http import HTTPStatus
 
 sys.dont_write_bytecode = True  # Don't write .pyc files
 
-try:
-    ThreadingHTTPServer = http.server.ThreadingHTTPServer
-except AttributeError:
-    import socketserver
-    class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-        daemon_threads = True
 
-class MothServer(ThreadingHTTPServer):
+class MothServer(socketserver.ForkingMixIn, http.server.HTTPServer):
     def __init__(self, server_address, RequestHandlerClass):
         super().__init__(server_address, RequestHandlerClass)
         self.args = {}
@@ -270,12 +265,24 @@ if __name__ == '__main__':
         '--base', default="",
         help="Base URL to this server, for reverse proxy setup"
     )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="count",
+        default=1,  # Leave at 1, for now, to maintain current default behavior
+        help="Include more verbose logging. Use multiple flags to increase level",
+    )
     args = parser.parse_args()
     parts = args.bind.split(":")
     addr = parts[0] or "0.0.0.0"
     port = int(parts[1])
+    if args.verbose >= 2:
+        log_level = logging.DEBUG
+    elif args.verbose == 1:
+        log_level = logging.INFO
+    else:
+        log_level = logging.WARNING
     
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=log_level)
     
     server = MothServer((addr, port), MothRequestHandler)
     server.args["base_url"] = args.base
