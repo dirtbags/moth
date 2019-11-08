@@ -7,4 +7,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - A changelog
+- Support for embedding Python libraries at the category or puzzle level
 - Minimal PWA support to permit caching of currently-unlocked content
