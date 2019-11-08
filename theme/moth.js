@@ -62,7 +62,11 @@ function renderPuzzles(obj) {
         let a = document.createElement('a')
         i.appendChild(a)
         a.textContent = points
-        a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id
+        let url = new URL("puzzle.html", window.location)
+        url.searchParams.set("cat", cat)
+        url.searchParams.set("points", points)
+        url.searchParams.set("pid", id)
+        a.href = url.toString()
       }
     }
     
