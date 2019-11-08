@@ -133,3 +133,7 @@ li[draggable] {
 [draggable].over {
   border: 1px white dashed;
 }
+
+#cacheButton.disabled {
+  display: none;
+}
