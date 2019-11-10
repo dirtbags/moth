@@ -14,6 +14,13 @@ function toast(message, timeout=5000) {
   )
 }
 
+function renderNotices(obj) {
+  let ne = document.getElementById("notices")
+  if (ne) {
+    ne.innerHTML = obj
+  }
+}
+
 function renderPuzzles(obj) {
   let puzzlesElement = document.createElement('div')
   
@@ -78,6 +85,17 @@ function renderPuzzles(obj) {
 }
 
 function heartbeat(teamId, participantId) {
+  let noticesUrl = new URL("notices.html", window.location)
+  fetch(noticesUrl)
+  .then(resp => {
+    if (resp.ok) {
+      resp.text()
+      .then(renderNotices)
+      .catch(err => console.log)
+    }
+  })
+  .catch(err => console.log)
+  
   let url = new URL("puzzles.json", window.location)
   url.searchParams.set("id", teamId)
   if (participantId) {
