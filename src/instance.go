@@ -15,6 +15,10 @@ import (
 	"time"
 )
 
+type RuntimeConfig struct {
+	export_manifest bool
+}
+
 type Instance struct {
 	Base            string
 	MothballDir     string
@@ -22,13 +26,16 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
-	categories       map[string]*Mothball
-	update           chan bool
-	jPuzzleList      []byte
-	jPointsLog       []byte
-	nextAttempt      map[string]time.Time
-	nextAttemptMutex *sync.RWMutex
-	mux              *http.ServeMux
+	Runtime RuntimeConfig
+
+	categories        map[string]*Mothball
+	MaxPointsUnlocked map[string]int
+	update            chan bool
+	jPuzzleList       []byte
+	jPointsLog        []byte
+	nextAttempt       map[string]time.Time
+	nextAttemptMutex  *sync.RWMutex
+	mux               *http.ServeMux
 }
 
 func (ctx *Instance) Initialize() error {

@@ -2,18 +2,26 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"time"
 )
 
+type PuzzleMap struct {
+	Points int
+	Path   string
+}
+
 type Mothball struct {
-	zf       *zip.ReadCloser
-	filename string
-	mtime    time.Time
+	zf        *zip.ReadCloser
+	filename  string
+	puzzlemap []PuzzleMap
+	mtime     time.Time
 }
 
 type MothballFile struct {
@@ -149,6 +157,35 @@ func (m *Mothball) Refresh() error {
 	}
 	m.zf = zf
 	m.mtime = mtime
+
+	mf, err := m.Open("map.txt")
+	if err != nil {
+		// File isn't in there
+	} else {
+		defer mf.Close()
+
+		pm := make([]PuzzleMap, 0, 30)
+		scanner := bufio.NewScanner(mf)
+
+		for scanner.Scan() {
+			line := scanner.Text()
+
+			var pointval int
+			var dir string
+
+			n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
+			if err != nil {
+				log.Printf("Parsing map for %v", err)
+			} else if n != 2 {
+				log.Printf("Parsing map: short read")
+			}
+
+			pm = append(pm, PuzzleMap{pointval, dir})
+
+		}
+
+		m.puzzlemap = pm
+	}
 
 	return nil
 }
