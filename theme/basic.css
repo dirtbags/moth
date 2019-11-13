@@ -5,6 +5,9 @@ body {
 	background: #282a33;
 	color: #f6efdc;
 }
+body.wide {
+  max-width: 100%;
+}
 a:any-link {
 	color: #8b969a;
 }

@@ -14,6 +14,13 @@ function toast(message, timeout=5000) {
   )
 }
 
+function renderNotices(obj) {
+  let ne = document.getElementById("notices")
+  if (ne) {
+    ne.innerHTML = obj
+  }
+}
+
 function renderPuzzles(obj) {
   let puzzlesElement = document.createElement('div')
   
@@ -62,7 +69,11 @@ function renderPuzzles(obj) {
         let a = document.createElement('a')
         i.appendChild(a)
         a.textContent = points
-        a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id
+        let url = new URL("puzzle.html", window.location)
+        url.searchParams.set("cat", cat)
+        url.searchParams.set("points", points)
+        url.searchParams.set("pid", id)
+        a.href = url.toString()
       }
     }
     
@@ -77,9 +88,26 @@ function renderPuzzles(obj) {
   container.appendChild(puzzlesElement)
 }
 
-function heartbeat(teamId) {
+
+function heartbeat(teamId, participantId) {
+  let noticesUrl = new URL("notices.html", window.location)
+  fetch(noticesUrl)
+  .then(resp => {
+    if (resp.ok) {
+      resp.text()
+      .then(renderNotices)
+      .catch(err => console.log)
+    }
+  })
+  .catch(err => console.log)
+  
   let url = new URL("puzzles.json", window.location)
   url.searchParams.set("id", teamId)
+  if (participantId) {
+    url.searchParams.set("pid", participantId)
+  }
+  let fd = new FormData()
+  fd.append("id", teamId)
   fetch(url)
   .then(resp => {
     if (resp.ok) {
@@ -97,15 +125,18 @@ function heartbeat(teamId) {
   })
 }
 
-function showPuzzles(teamId) {
+function showPuzzles(teamId, participantId) {
   let spinner = document.createElement("span")
   spinner.classList.add("spinner")
 
   sessionStorage.setItem("id", teamId)
+  if (participantId) {
+    sessionStorage.setItem("pid", participantId)
+  }
 
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
-  heartbeat(teamId)
+  heartbeat(teamId, participantId)
   setInterval(e => { heartbeat(teamId) }, 40000)
   drawCacheButton(teamId)
 }
@@ -196,7 +227,9 @@ async function fetchAll() {
 function login(e) {
   e.preventDefault()
   let name = document.querySelector("[name=name]").value
-  let id = document.querySelector("[name=id]").value
+  let teamId = document.querySelector("[name=id]").value
+  let pide = document.querySelector("[name=pid]")
+  let participantId = pide?pide.value:""
   
   fetch("register", {
     method: "POST",
@@ -208,10 +241,10 @@ function login(e) {
       .then(obj => {
         if (obj.status == "success") {
           toast("Team registered")
-          showPuzzles(id)
+          showPuzzles(teamId, participantId)
         } else if (obj.data.short == "Already registered") {
           toast("Logged in with previously-registered team name")
-          showPuzzles(id)
+          showPuzzles(teamId, participantId)
         } else {
           toast(obj.data.description)
         }
@@ -233,9 +266,10 @@ function login(e) {
 
 function init() {
   // Already signed in?
-  let id = sessionStorage.getItem("id")
-  if (id) {
-    showPuzzles(id)
+  let teamId = sessionStorage.getItem("id")
+  let participantId = sessionStorage.getItem("pid")
+  if (teamId) {
+    showPuzzles(teamId, participantId)
   }
 
   document.getElementById("login").addEventListener("submit", login)

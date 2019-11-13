@@ -224,8 +224,9 @@ sessionStorage.setItem("id", "devel-server")
             },
         )
 
+        url = urllib.parse.urlparse(self.path)
         for pattern, function in self.endpoints:
-            result = parse.parse(pattern, self.path)
+            result = parse.parse(pattern, url.path)
             if result:
                 self.req = result.named
                 seed = self.req.get("seed", "random")
