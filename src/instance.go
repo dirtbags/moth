@@ -26,16 +26,16 @@ type Instance struct {
 	ThemeDir        string
 	AttemptInterval time.Duration
 
-	Runtime		RuntimeConfig
+	Runtime RuntimeConfig
 
-	categories       map[string]*Mothball
-	MaxPointsUnlocked	map[string]int
-	update           chan bool
-	jPuzzleList      []byte
-	jPointsLog       []byte
-	nextAttempt      map[string]time.Time
-	nextAttemptMutex *sync.RWMutex
-	mux             *http.ServeMux
+	categories        map[string]*Mothball
+	MaxPointsUnlocked map[string]int
+	update            chan bool
+	jPuzzleList       []byte
+	jPointsLog        []byte
+	nextAttempt       map[string]time.Time
+	nextAttemptMutex  *sync.RWMutex
+	mux               *http.ServeMux
 }
 
 func (ctx *Instance) Initialize() error {
@@ -139,15 +139,15 @@ func (ctx *Instance) ThemePath(parts ...string) string {
 
 func (ctx *Instance) TooFast(teamId string) bool {
 	now := time.Now()
-	
+
 	ctx.nextAttemptMutex.RLock()
 	next, _ := ctx.nextAttempt[teamId]
 	ctx.nextAttemptMutex.RUnlock()
-	
+
 	ctx.nextAttemptMutex.Lock()
 	ctx.nextAttempt[teamId] = now.Add(ctx.AttemptInterval)
 	ctx.nextAttemptMutex.Unlock()
-	
+
 	return now.Before(next)
 }
 

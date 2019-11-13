@@ -13,16 +13,15 @@ import (
 )
 
 type PuzzleMap struct {
-        Points int
-        Path   string
+	Points int
+	Path   string
 }
 
-
 type Mothball struct {
-	zf       *zip.ReadCloser
-	filename string
-	puzzlemap	[]PuzzleMap
-	mtime    time.Time
+	zf        *zip.ReadCloser
+	filename  string
+	puzzlemap []PuzzleMap
+	mtime     time.Time
 }
 
 type MothballFile struct {
@@ -161,7 +160,7 @@ func (m *Mothball) Refresh() error {
 
 	mf, err := m.Open("map.txt")
 	if err != nil {
-	        // File isn't in there
+		// File isn't in there
 	} else {
 		defer mf.Close()
 
@@ -183,11 +182,10 @@ func (m *Mothball) Refresh() error {
 
 			pm = append(pm, PuzzleMap{pointval, dir})
 
-		 }
+		}
 
-		 m.puzzlemap = pm
-	 }
-
+		m.puzzlemap = pm
+	}
 
 	return nil
 }

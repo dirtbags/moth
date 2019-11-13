@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-
 func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 	if pm == nil {
 		return []byte("null"), nil
@@ -34,7 +33,6 @@ func (ctx *Instance) generatePuzzleList() {
 			maxByCategory[a.Category] = a.Points
 		}
 	}
-
 
 	ret := map[string][]PuzzleMap{}
 	for catName, mb := range ctx.categories {
@@ -273,11 +271,11 @@ func (ctx *Instance) isEnabled() bool {
 func (ctx *Instance) UpdateConfig() {
 	// Handle export manifest
 	if _, err := os.Stat(ctx.StatePath("export_manifest")); err == nil {
-		if (! ctx.Runtime.export_manifest) {
+		if !ctx.Runtime.export_manifest {
 			log.Print("Enabling manifest export")
 			ctx.Runtime.export_manifest = true
 		}
-	} else if (ctx.Runtime.export_manifest) {
+	} else if ctx.Runtime.export_manifest {
 		log.Print("Disabling manifest export")
 		ctx.Runtime.export_manifest = false
 	}

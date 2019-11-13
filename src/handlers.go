@@ -106,7 +106,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	pointstr := req.FormValue("points")
 	answer := req.FormValue("answer")
 
-	if ! ctx.ValidTeamId(teamId) {
+	if !ctx.ValidTeamId(teamId) {
 		respond(
 			w, req, JSendFail,
 			"Invalid team ID",
@@ -251,7 +251,7 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
-	if (! ctx.Runtime.export_manifest) {
+	if !ctx.Runtime.export_manifest {
 		http.Error(w, "Endpoint disabled", http.StatusForbidden)
 		return
 	}
@@ -262,7 +262,7 @@ func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if (req.Method == http.MethodHead) {
+	if req.Method == http.MethodHead {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -273,13 +273,13 @@ func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Pack up the theme files
 	theme_root_re := regexp.MustCompile(fmt.Sprintf("^%s/", ctx.ThemeDir))
-	filepath.Walk(ctx.ThemeDir, func (path string, info os.FileInfo, err error) error {
+	filepath.Walk(ctx.ThemeDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if ! info.IsDir() { // Only package up files
-			localized_path := theme_root_re.ReplaceAllLiteralString( path, "")
+		if !info.IsDir() { // Only package up files
+			localized_path := theme_root_re.ReplaceAllLiteralString(path, "")
 			manifest = append(manifest, localized_path)
 		}
 		return nil
@@ -287,13 +287,13 @@ func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Package up files for currently-unlocked puzzles in categories
 	for category_name, category := range ctx.categories {
-		if _, ok := ctx.MaxPointsUnlocked[category_name]; ok {  // Check that the category is actually unlocked. This should never fail, probably
+		if _, ok := ctx.MaxPointsUnlocked[category_name]; ok { // Check that the category is actually unlocked. This should never fail, probably
 			for _, file := range category.zf.File {
 				parts := strings.Split(file.Name, "/")
 
-				if (parts[0] == "content") {  // Only pick up content files, not thing like map.txt
-					for _, puzzlemap := range category.puzzlemap {  // Figure out which puzzles are currently unlocked
-						if (puzzlemap.Path == parts[1] && puzzlemap.Points <= ctx.MaxPointsUnlocked[category_name]) {
+				if parts[0] == "content" { // Only pick up content files, not thing like map.txt
+					for _, puzzlemap := range category.puzzlemap { // Figure out which puzzles are currently unlocked
+						if puzzlemap.Path == parts[1] && puzzlemap.Points <= ctx.MaxPointsUnlocked[category_name] {
 
 							manifest = append(manifest, path.Join("content", category_name, path.Join(parts[1:]...)))
 							break
