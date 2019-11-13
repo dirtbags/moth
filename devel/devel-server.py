@@ -224,8 +224,9 @@ sessionStorage.setItem("id", "devel-server")
             },
         )
 
+        url = urllib.parse.urlparse(self.path)
         for pattern, function in self.endpoints:
-            result = parse.parse(pattern, self.path)
+            result = parse.parse(pattern, url.path)
             if result:
                 self.req = result.named
                 seed = self.req.get("seed", "random")
@@ -265,12 +266,24 @@ if __name__ == '__main__':
         '--base', default="",
         help="Base URL to this server, for reverse proxy setup"
     )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="count",
+        default=1,  # Leave at 1, for now, to maintain current default behavior
+        help="Include more verbose logging. Use multiple flags to increase level",
+    )
     args = parser.parse_args()
     parts = args.bind.split(":")
     addr = parts[0] or "0.0.0.0"
     port = int(parts[1])
+    if args.verbose >= 2:
+        log_level = logging.DEBUG
+    elif args.verbose == 1:
+        log_level = logging.INFO
+    else:
+        log_level = logging.WARNING
     
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=log_level)
     
     server = MothServer((addr, port), MothRequestHandler)
     server.args["base_url"] = args.base

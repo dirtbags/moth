@@ -14,6 +14,13 @@ function toast(message, timeout=5000) {
   )
 }
 
+function renderNotices(obj) {
+  let ne = document.getElementById("notices")
+  if (ne) {
+    ne.innerHTML = obj
+  }
+}
+
 function renderPuzzles(obj) {
   let puzzlesElement = document.createElement('div')
   
@@ -62,7 +69,11 @@ function renderPuzzles(obj) {
         let a = document.createElement('a')
         i.appendChild(a)
         a.textContent = points
-        a.href = "puzzle.html?cat=" + cat + "&points=" + points + "&pid=" + id
+        let url = new URL("puzzle.html", window.location)
+        url.searchParams.set("cat", cat)
+        url.searchParams.set("points", points)
+        url.searchParams.set("pid", id)
+        a.href = url.toString()
       }
     }
     
@@ -77,13 +88,27 @@ function renderPuzzles(obj) {
   container.appendChild(puzzlesElement)
 }
 
-function heartbeat(teamId) {
+
+function heartbeat(teamId, participantId) {
+  let noticesUrl = new URL("notices.html", window.location)
+  fetch(noticesUrl)
+  .then(resp => {
+    if (resp.ok) {
+      resp.text()
+      .then(renderNotices)
+      .catch(err => console.log)
+    }
+  })
+  .catch(err => console.log)
+  
+  let url = new URL("puzzles.json", window.location)
+  url.searchParams.set("id", teamId)
+  if (participantId) {
+    url.searchParams.set("pid", participantId)
+  }
   let fd = new FormData()
   fd.append("id", teamId)
-  fetch("puzzles.json", {
-    method: "POST",
-    body: fd,
-  })
+  fetch(url)
   .then(resp => {
     if (resp.ok) {
       resp.json()
@@ -100,22 +125,111 @@ function heartbeat(teamId) {
   })
 }
 
-function showPuzzles(teamId) {
+function showPuzzles(teamId, participantId) {
   let spinner = document.createElement("span")
   spinner.classList.add("spinner")
 
   sessionStorage.setItem("id", teamId)
+  if (participantId) {
+    sessionStorage.setItem("pid", participantId)
+  }
 
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
-  heartbeat(teamId)
+  heartbeat(teamId, participantId)
   setInterval(e => { heartbeat(teamId) }, 40000)
+  drawCacheButton(teamId)
+}
+
+function drawCacheButton(teamId) {
+  let cacher = document.querySelector("#cacheButton")
+
+  function updateCacheButton() {
+    let headers = new Headers()
+    headers.append("pragma", "no-cache")
+    headers.append("cache-control", "no-cache")
+    let url = new URL("current_manifest.json", window.location)
+    url.searchParams.set("id", teamId)
+    fetch(url, {method: "HEAD", headers: headers})
+      .then( resp => {
+        if (resp.ok) {
+	  cacher.classList.remove("disabled")
+        } else {
+	  cacher.classList.add("disabled")
+        }
+      })
+      .catch(ex => {
+	  cacher.classList.add("disabled")
+      })
+  }
+
+  setInterval (updateCacheButton , 30000)
+  updateCacheButton()
+}
+
+async function fetchAll() {
+  let teamId = sessionStorage.getItem("id")
+  let headers = new Headers()
+  headers.append("pragma", "no-cache")
+  headers.append("cache-control", "no-cache")
+  requests = []
+  let url = new URL("current_manifest.json", window.location)
+  url.searchParams.set("id", teamId)
+
+  toast("Caching all currently-open content")
+  requests.push( fetch(url, {headers: headers})
+   .then( resp => {
+    if (resp.ok) {
+      resp.json()
+       .then(contents => {
+        console.log("Processing manifest")
+        for (let resource of contents) {
+          if (resource == "puzzles.json") {
+            continue
+          }
+          fetch(resource)
+           .then(e => {
+             console.log("Fetched " + resource)
+          })
+        }
+      })
+   }
+  }))
+
+  let resp = await fetch("puzzles.json?id=" + teamId, {headers: headers})
+	
+  if (resp.ok) {
+    let categories = await resp.json()
+    let cat_names = Object.keys(categories)
+    cat_names.sort()
+    for (let cat_name of cat_names) {
+      if (cat_name.startsWith("__")) {
+        // Skip metadata
+        continue
+      }
+      let puzzles = categories[cat_name]
+      for (let puzzle of puzzles) {
+	let url = new URL("puzzle.html", window.location)
+	url.searchParams.set("cat", cat_name)
+	url.searchParams.set("points", puzzle[0])
+	url.searchParams.set("pid", puzzle[1])
+        requests.push( fetch(url)
+         .then(e => {
+          console.log("Fetched " + url)
+        }))
+      }
+    }
+  }
+  await Promise.all(requests)
+  toast("Done caching content")
 }
 
 function login(e) {
   e.preventDefault()
   let name = document.querySelector("[name=name]").value
-  let id = document.querySelector("[name=id]").value
+  let teamId = document.querySelector("[name=id]").value
+  let pide = document.querySelector("[name=pid]")
+  let participantId = pide?pide.value:""
   
   fetch("register", {
     method: "POST",
@@ -127,10 +241,10 @@ function login(e) {
       .then(obj => {
         if (obj.status == "success") {
           toast("Team registered")
-          showPuzzles(id)
+          showPuzzles(teamId, participantId)
         } else if (obj.data.short == "Already registered") {
           toast("Logged in with previously-registered team name")
-          showPuzzles(id)
+          showPuzzles(teamId, participantId)
         } else {
           toast(obj.data.description)
         }
@@ -152,16 +266,18 @@ function login(e) {
 
 function init() {
   // Already signed in?
-  let id = sessionStorage.getItem("id")
-  if (id) {
-    showPuzzles(id)
+  let teamId = sessionStorage.getItem("id")
+  let participantId = sessionStorage.getItem("pid")
+  if (teamId) {
+    showPuzzles(teamId, participantId)
   }
-  
+
   document.getElementById("login").addEventListener("submit", login)
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", init)
 } else {
-  init();
+  init()
 }
+

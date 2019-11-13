@@ -2,20 +2,25 @@
 
 import argparse
 import contextlib
+import copy
 import glob
 import hashlib
 import html
 import io
 import importlib.machinery
+import logging
 import mistune
 import os
 import random
 import string
+import sys
 import tempfile
 import shlex
 import yaml
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+LOGGER = logging.getLogger(__name__)
 
 def djb2hash(str):
     h = 5381
@@ -26,10 +31,28 @@ def djb2hash(str):
 @contextlib.contextmanager
 def pushd(newdir):
     curdir = os.getcwd()
+    LOGGER.debug("Attempting to chdir from %s to %s" % (curdir, newdir))
     os.chdir(newdir)
+
+    # Force a copy of the old path, instead of just a reference
+    old_path = list(sys.path)
+    old_modules = copy.copy(sys.modules)
+    sys.path.append(newdir)
+
     try:
         yield
     finally:
+        # Restore the old path
+        to_remove = []
+        for module in sys.modules:
+            if module not in old_modules:
+                to_remove.append(module)
+
+        for module in to_remove:
+            del(sys.modules[module])
+
+        sys.path = old_path
+        LOGGER.debug("Changing directory back from %s to %s" % (newdir, curdir))
         os.chdir(curdir)
 
 
@@ -136,8 +159,10 @@ class Puzzle:
         stream.seek(0)
 
         if header == "yaml":
+            LOGGER.info("Puzzle is YAML-formatted")
             self.read_yaml_header(stream)
         elif header == "moth":
+            LOGGER.info("Puzzle is MOTH-formatted")
             self.read_moth_header(stream)
                 
         for line in stream:
@@ -172,6 +197,7 @@ class Puzzle:
             self.handle_header_key(key, val)
 
     def handle_header_key(self, key, val):
+        LOGGER.debug("Handling key: %s, value: %s", key, val)
         if key == 'author':
             self.authors.append(val)
         elif key == 'authors':
@@ -199,6 +225,7 @@ class Puzzle:
             parts = shlex.split(val)
             name = parts[0]
             hidden = False
+            LOGGER.debug("Attempting to open %s", os.path.abspath(name))
             stream = open(name, 'rb')
             try:
                 name = parts[1]
@@ -367,7 +394,7 @@ class Puzzle:
 
         files = [fn for fn,f in self.files.items() if f.visible]
         return {
-            'authors': self.authors,
+            'authors': self.get_authors(),
             'hashes': self.hashes(),
             'files': files,
             'scripts': self.scripts,
@@ -415,7 +442,8 @@ class Category:
             with pushd(self.path):
                 self.catmod.make(points, puzzle)
         else:
-            puzzle.read_directory(path)
+            with pushd(self.path):
+                puzzle.read_directory(path)
         return puzzle
 
     def __iter__(self):

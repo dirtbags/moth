@@ -5,26 +5,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="basic.css">
+    <script src="moth-pwa.js" type="text/javascript"></script>
     <script src="moth.js"></script>
+    <link rel="manifest" href="manifest.json">
   </head>
   <body>
     <h1 id="title">MOTH</h1>
     <section>
-      <div id="messages"></div>
+      <div id="messages">
+        <div id="notices"></div>
+      </div>
 
       <form id="login">
-        Team name: <input name="name">
+        <!--
+        <span id="pid">
+          Participant ID: <input name="pid"> (optional) <br>
+        </span>
+        -->
         Team ID: <input name="id"> <br>
+        Team name: <input name="name"> <br>
         <input type="submit" value="Sign In">
       </form>
 
       <div id="puzzles"></div>
 
-		</section>
+    </section>
     <nav>
       <ul>
         <li><a href="scoreboard.html">Scoreboard</a></li>
         <li><a href="logout.html">Sign Out</a></li>
+	<li id="cacheButton" class="disabled"><a href="#" onclick='fetchAll()' title="Cache am offline copy of current content">Cache</a></li>
       </ul>
     </nav>
   </body>
