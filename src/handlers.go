@@ -103,7 +103,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	pointstr := req.FormValue("points")
 	answer := req.FormValue("answer")
 
-	if ! ctx.ValidTeamId(teamId) {
+	if !ctx.ValidTeamId(teamId) {
 		respond(
 			w, req, JSendFail,
 			"Invalid team ID",
