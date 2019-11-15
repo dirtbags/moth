@@ -60,18 +60,18 @@ input:invalid {
   min-height: 3em;
   border: solid black 2px;
 }
-#scoreboard {
+#rankings {
 	width: 100%;
 	position: relative;
 }
 
-#scoreboard span {
+#rankings span {
 	font-size: 75%;
 	display: inline-block;
 	overflow: hidden;
 	height: 1.7em;
 }
-#scoreboard span.teamname {
+#rankings span.teamname {
 	font-size: inherit;
 	color: white;
 	text-shadow: 0 0 3px black;
@@ -79,7 +79,7 @@ input:invalid {
 	position: absolute;
 	right: 0.2em;
 }
-#scoreboard div * {white-space: nowrap;}
+#rankings div * {white-space: nowrap;}
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
 .cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
 .cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
