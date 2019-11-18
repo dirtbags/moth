@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.1] - 2019-11-17
+### Fixed
+- Scoreboard was double-counting points
+
 ## [3.4] - 2019-11-13
 ### Added
 - A changelog
