@@ -249,6 +249,10 @@ class Puzzle:
             self.success.mastery = val
         elif key == "solution":
             self.solution = val
+        elif key == "ksas":
+            if not isinstance(val, list):
+                raise ValueError("KSAs must be a list, got %s, instead" & (type(val),))
+            self.ksas = val
         elif key == "ksa":
             self.ksas.append(val)
         else:
