@@ -8,6 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -103,7 +106,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 	pointstr := req.FormValue("points")
 	answer := req.FormValue("answer")
 
-	if ! ctx.ValidTeamId(teamId) {
+	if !ctx.ValidTeamId(teamId) {
 		respond(
 			w, req, JSendFail,
 			"Invalid team ID",
@@ -247,6 +250,65 @@ func (ctx *Instance) staticHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeContent(w, req, path, d.ModTime(), f)
 }
 
+func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
+	if !ctx.Runtime.export_manifest {
+		http.Error(w, "Endpoint disabled", http.StatusForbidden)
+		return
+	}
+
+	teamId := req.FormValue("id")
+	if _, err := ctx.TeamName(teamId); err != nil {
+		http.Error(w, "Must provide a valid team ID", http.StatusUnauthorized)
+		return
+	}
+
+	if req.Method == http.MethodHead {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	manifest := make([]string, 0)
+	manifest = append(manifest, "puzzles.json")
+	manifest = append(manifest, "points.json")
+
+	// Pack up the theme files
+	theme_root_re := regexp.MustCompile(fmt.Sprintf("^%s/", ctx.ThemeDir))
+	filepath.Walk(ctx.ThemeDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() { // Only package up files
+			localized_path := theme_root_re.ReplaceAllLiteralString(path, "")
+			manifest = append(manifest, localized_path)
+		}
+		return nil
+	})
+
+	// Package up files for currently-unlocked puzzles in categories
+	for category_name, category := range ctx.categories {
+		if _, ok := ctx.MaxPointsUnlocked[category_name]; ok { // Check that the category is actually unlocked. This should never fail, probably
+			for _, file := range category.zf.File {
+				parts := strings.Split(file.Name, "/")
+
+				if parts[0] == "content" { // Only pick up content files, not thing like map.txt
+					for _, puzzlemap := range category.puzzlemap { // Figure out which puzzles are currently unlocked
+						if puzzlemap.Path == parts[1] && puzzlemap.Points <= ctx.MaxPointsUnlocked[category_name] {
+
+							manifest = append(manifest, path.Join("content", category_name, path.Join(parts[1:]...)))
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	manifest_json, _ := json.Marshal(manifest)
+	w.Write(manifest_json)
+}
+
 type FurtiveResponseWriter struct {
 	w          http.ResponseWriter
 	statusCode *int
@@ -289,4 +351,5 @@ func (ctx *Instance) BindHandlers() {
 	ctx.mux.HandleFunc(ctx.Base+"/content/", ctx.contentHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/puzzles.json", ctx.puzzlesHandler)
 	ctx.mux.HandleFunc(ctx.Base+"/points.json", ctx.pointsHandler)
+	ctx.mux.HandleFunc(ctx.Base+"/current_manifest.json", ctx.manifestHandler)
 }

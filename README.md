@@ -133,6 +133,18 @@ We sometimes to set `teamids.txt` to a bunch of random 8-digit hex values:
 Remember that team IDs are essentially passwords.
 
 
+Enabling offline/PWA mode
+-------------------
+
+If the file `state/export_manifest` is found, the server will expose the 
+endpoint `/current_manifest.json?id=<teamId>`. This endpoint will return 
+a list of all files, including static theme content and JSON and content 
+for currently-unlocked puzzles. This is used by the native PWA 
+implementation and `Cache` button on the index page to cache all of the 
+content necessary to display currently-open puzzles while offline. 
+Grading will be unavailable while offline. Some puzzles may not function 
+as expected while offline. A valid team ID must be provided.
+
 Mothball Directory
 ==================
 
