@@ -183,9 +183,14 @@ func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx *Instance) pointsHandler(w http.ResponseWriter, req *http.Request) {
+	teamId, ok := req.URL.Query()["id"]
+	pointsLog := ctx.jPointsLog
+	if ok && len(teamId[0]) > 0 {
+		pointsLog = ctx.generatePointsLog(teamId[0])
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(ctx.jPointsLog)
+	w.Write(pointsLog)
 }
 
 func (ctx *Instance) contentHandler(w http.ResponseWriter, req *http.Request) {

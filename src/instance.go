@@ -151,7 +151,7 @@ func (ctx *Instance) TooFast(teamId string) bool {
 	return now.Before(next)
 }
 
-func (ctx *Instance) PointsLog() []*Award {
+func (ctx *Instance) PointsLog(teamId string) []*Award {
 	var ret []*Award
 
 	fn := ctx.StatePath("points.log")
@@ -168,6 +168,9 @@ func (ctx *Instance) PointsLog() []*Award {
 		cur, err := ParseAward(line)
 		if err != nil {
 			log.Printf("Skipping malformed award line %s: %s", line, err)
+			continue
+		}
+		if len(teamId) > 0 && cur.TeamId != teamId {
 			continue
 		}
 		ret = append(ret, cur)
@@ -194,7 +197,7 @@ func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
 		return fmt.Errorf("No registered team with this hash")
 	}
 
-	for _, e := range ctx.PointsLog() {
+	for _, e := range ctx.PointsLog("") {
 		if a.Same(e) {
 			return fmt.Errorf("Points already awarded to this team in this category")
 		}
