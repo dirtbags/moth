@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.3] - 2019-11-20
+### Fixed
+- Made top-scoring teams full-width
+
 ## [3.4.2] - 2019-11-18
 ### Fixed
 - Issue with multiple answers in devel server and YAML-format .moth

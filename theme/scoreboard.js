@@ -111,11 +111,15 @@ function scoreboardInit() {
     }
     winners.sort(teamCompare)
     winners.reverse()
+    
+    // Let's make some better names for things we've computed
+    let winningScore = winners[0].overallScore
+    let numCategories = Object.keys(highestCategoryScore).length
   
     // Clear out the element we're about to populate
     Array.from(element.childNodes).map(e => e.remove())
   
-    let maxWidth = 100 / Object.keys(highestCategoryScore).length
+    let maxWidth = 100 / winningScore
     for (let team of winners) {
       let row = document.createElement("div")
       let ncat = 0
@@ -125,8 +129,6 @@ function scoreboardInit() {
         let catPct = catTeam / catHigh
         let width = maxWidth * catPct
         
-        console.log(catHigh, catTeam, catPct)
-  
         let bar = document.createElement("span")
         bar.classList.add("category")
         bar.classList.add("cat" + ncat)
