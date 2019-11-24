@@ -34,6 +34,7 @@ type StateExport struct {
 // The only thing State methods need to know is the path to the state directory.
 type State struct {
 	Component
+	Enabled bool
 	update  chan bool
 }
 
@@ -42,32 +43,60 @@ func NewState(baseDir string) *State {
 		Component: Component{
 			baseDir: baseDir,
 		},
+		Enabled: true,
 		update:  make(chan bool, 10),
 	}
 }
 
 // Check a few things to see if this state directory is "enabled".
-func (s *State) Enabled() bool {
+func (s *State) UpdateEnabled() {
 	if _, err := os.Stat(s.path("enabled")); os.IsNotExist(err) {
+		s.Enabled = false
 		log.Print("Suspended: enabled file missing")
-		return false
+		return
 	}
 
-	untilspec, err := ioutil.ReadFile(s.path("until"))
-	if err == nil {
-		untilspecs := strings.TrimSpace(string(untilspec))
-		until, err := time.Parse(time.RFC3339, untilspecs)
+	nextEnabled := true
+	untilFile, err := os.Open(s.path("hours"))
+	if err != nil {
+		return
+	}
+	defer untilFile.Close()
+
+	scanner := bufio.NewScanner(untilFile)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) < 1 {
+			continue
+		}
+
+		thisEnabled := true
+		switch line[0] {
+		case '+':
+			thisEnabled = true
+			line = line[1:]
+		case '-':
+			thisEnabled = false
+			line = line[1:]
+		case '#':
+			continue
+		default:
+			log.Printf("Misformatted line in hours file")
+		}
+		line = strings.TrimSpace(line)
+		until, err := time.Parse(time.RFC3339, line)
 		if err != nil {
-			log.Printf("Suspended: Unparseable until date: %s", untilspec)
-			return false
+			log.Printf("Suspended: Unparseable until date: %s", line)
+			continue
 		}
 		if until.Before(time.Now()) {
-			log.Print("Suspended: until time reached, suspending maintenance")
-			return false
+			nextEnabled = thisEnabled
 		}
 	}
-
-	return true
+	if nextEnabled != s.Enabled {
+		s.Enabled = nextEnabled
+		log.Println("Setting enabled to", s.Enabled, "based on hours file")
+	}
 }
 
 // Returns team name given a team ID.
@@ -291,17 +320,23 @@ func (s *State) maybeInitialize() {
 	// Create some files
 	ioutil.WriteFile(
 		s.path("initialized"),
-		[]byte("Remove this file to re-initialized the contest\n"),
+		[]byte("state/initialized: remove to re-initialize the contest\n"),
 		0644,
 	)
 	ioutil.WriteFile(
 		s.path("enabled"),
-		[]byte("Remove this file to suspend the contest\n"),
+		[]byte("state/enabled: remove to suspend the contest\n"),
 		0644,
 	)
 	ioutil.WriteFile(
-		s.path("until"),
-		[]byte("3009-10-31T00:00:00Z\n"),
+		s.path("hours"),
+		[]byte(
+			"# state/hours: when the contest is enabled\n"+
+				"# Lines starting with + enable, with - disable.\n"+
+				"\n"+
+				"+ 1970-01-01T00:00:00Z\n"+
+				"- 3019-10-31T00:00:00Z\n",
+		),
 		0644,
 	)
 	ioutil.WriteFile(
@@ -319,10 +354,12 @@ func (s *State) maybeInitialize() {
 func (s *State) Run(updateInterval time.Duration) {
 	for {
 		s.maybeInitialize()
-		if s.Enabled() {
+		s.UpdateEnabled()
+		if s.Enabled {
 			s.collectPoints()
 		}
 
+		// Wait for something to happen
 		select {
 		case <-s.update:
 		case <-time.After(updateInterval):

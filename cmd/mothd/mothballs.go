@@ -1,10 +1,10 @@
 package main
 
 import (
-	"time"
 	"io/ioutil"
-	"strings"
 	"log"
+	"strings"
+	"time"
 )
 
 type Mothballs struct {
