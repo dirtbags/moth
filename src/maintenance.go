@@ -28,7 +28,7 @@ func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 
 func (ctx *Instance) generatePuzzleList() {
 	maxByCategory := map[string]int{}
-	for _, a := range ctx.PointsLog() {
+	for _, a := range ctx.PointsLog("") {
 		if a.Points > maxByCategory[a.Category] {
 			maxByCategory[a.Category] = a.Points
 		}
@@ -67,13 +67,13 @@ func (ctx *Instance) generatePuzzleList() {
 	ctx.jPuzzleList = jpl
 }
 
-func (ctx *Instance) generatePointsLog() {
+func (ctx *Instance) generatePointsLog(teamId string) []byte {
 	var ret struct {
 		Teams  map[string]string `json:"teams"`
 		Points []*Award          `json:"points"`
 	}
 	ret.Teams = map[string]string{}
-	ret.Points = ctx.PointsLog()
+	ret.Points = ctx.PointsLog(teamId)
 
 	teamNumbersById := map[string]int{}
 	for nr, a := range ret.Points {
@@ -93,9 +93,13 @@ func (ctx *Instance) generatePointsLog() {
 	jpl, err := json.Marshal(ret)
 	if err != nil {
 		log.Printf("Marshalling points.js: %v", err)
-		return
+		return nil
 	}
-	ctx.jPointsLog = jpl
+	
+	if len(teamId) == 0 {
+		ctx.jPointsLog = jpl
+	}
+	return jpl
 }
 
 // maintenance runs
@@ -224,7 +228,7 @@ func (ctx *Instance) collectPoints() {
 		}
 
 		duplicate := false
-		for _, e := range ctx.PointsLog() {
+		for _, e := range ctx.PointsLog("") {
 			if award.Same(e) {
 				duplicate = true
 				break
@@ -290,7 +294,7 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 			ctx.readTeams()
 			ctx.collectPoints()
 			ctx.generatePuzzleList()
-			ctx.generatePointsLog()
+			ctx.generatePointsLog("")
 		}
 		select {
 		case <-ctx.update:
