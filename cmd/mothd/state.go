@@ -115,6 +115,23 @@ func (s *State) TeamName(teamId string) (string, error) {
 
 // Write out team name. This can only be done once.
 func (s *State) SetTeamName(teamId string, teamName string) error {
+	if f, err := s.fs.Open("teamids.txt"); err != nil {
+	  return fmt.Errorf("Team IDs file does not exist")
+	} else {
+	  ok := false
+  	scanner := bufio.NewScanner(f)
+  	for scanner.Scan() {
+  	  if scanner.Text() == teamId {
+  		  ok = true
+  		  break
+  		}
+  	}
+  	f.Close()
+  	if !ok {
+  	  return fmt.Errorf("Team ID not found in list of valid Team IDs")
+  	}
+	}
+
 	teamFile := filepath.Join("teams", teamId)
 	err := afero.WriteFile(s.fs, teamFile, []byte(teamName), os.ModeExclusive|0644)
 	return err
@@ -309,7 +326,7 @@ func (s *State) maybeInitialize() {
 	// Preseed available team ids if file doesn't exist
 	if f, err := s.fs.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		defer f.Close()
-		for i := 0; i <= 100; i += 1 {
+		for i := 0; i < 100; i += 1 {
 			fmt.Fprintln(f, mktoken())
 		}
 	}
