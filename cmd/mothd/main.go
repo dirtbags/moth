@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/namsral/flag"
+	"github.com/spf13/afero"
 	"log"
 	"time"
 )
@@ -35,15 +36,17 @@ func main() {
 		"Bind [host]:port for HTTP service",
 	)
 
+	stateFs := afero.NewBasePathFs(afero.NewOsFs(), *statePath)
+
 	theme := NewTheme(*themePath)
-	state := NewState(*statePath)
+	state := NewState(stateFs)
 	puzzles := NewMothballs(*puzzlePath)
 
 	go theme.Run(*refreshInterval)
 	go state.Run(*refreshInterval)
 	go puzzles.Run(*refreshInterval)
 
-  log.Println("I would be binding to", *bindStr)
+	log.Println("I would be binding to", *bindStr)
 	time.Sleep(1 * time.Second)
 	log.Print(state.Export(""))
 	time.Sleep(19 * time.Second)
