@@ -116,20 +116,20 @@ func (s *State) TeamName(teamId string) (string, error) {
 // Write out team name. This can only be done once.
 func (s *State) SetTeamName(teamId string, teamName string) error {
 	if f, err := s.fs.Open("teamids.txt"); err != nil {
-	  return fmt.Errorf("Team IDs file does not exist")
+		return fmt.Errorf("Team IDs file does not exist")
 	} else {
-	  ok := false
-  	scanner := bufio.NewScanner(f)
-  	for scanner.Scan() {
-  	  if scanner.Text() == teamId {
-  		  ok = true
-  		  break
-  		}
-  	}
-  	f.Close()
-  	if !ok {
-  	  return fmt.Errorf("Team ID not found in list of valid Team IDs")
-  	}
+		found := false
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			if scanner.Text() == teamId {
+				found = true
+				break
+			}
+		}
+		f.Close()
+		if !found {
+			return fmt.Errorf("Team ID not found in list of valid Team IDs")
+		}
 	}
 
 	teamFile := filepath.Join("teams", teamId)
