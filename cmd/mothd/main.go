@@ -4,6 +4,8 @@ import (
 	"github.com/namsral/flag"
 	"github.com/spf13/afero"
 	"log"
+	"mime"
+	"net/http"
 	"time"
 )
 
@@ -37,17 +39,22 @@ func main() {
 	)
 
 	stateFs := afero.NewBasePathFs(afero.NewOsFs(), *statePath)
+	themeFs := afero.NewBasePathFs(afero.NewOsFs(), *themePath)
 
-	theme := NewTheme(*themePath)
+	theme := NewTheme(themeFs)
 	state := NewState(stateFs)
 	puzzles := NewMothballs(*puzzlePath)
 
-	go theme.Run(*refreshInterval)
 	go state.Run(*refreshInterval)
 	go puzzles.Run(*refreshInterval)
 
-	log.Println("I would be binding to", *bindStr)
-	time.Sleep(1 * time.Second)
-	log.Print(state.Export(""))
-	time.Sleep(19 * time.Second)
+  // Add some MIME extensions
+  // Doing this avoids decompressing a mothball entry twice per request
+  mime.AddExtensionType(".json", "application/json")
+  mime.AddExtensionType(".zip", "application/zip")
+  
+  http.HandleFunc("/", theme.staticHandler)
+  
+  log.Printf("Listening on %s", *bindStr)
+  log.Fatal(http.ListenAndServe(*bindStr, nil))
 }

@@ -1,20 +1,18 @@
 package main
 
 import (
+	"github.com/spf13/afero"
 	"net/http"
-	"os"
 	"strings"
 )
 
 type Theme struct {
-	Component
+	fs afero.Fs
 }
 
-func NewTheme(baseDir string) *Theme {
+func NewTheme(fs afero.Fs) *Theme {
 	return &Theme{
-		Component: Component{
-			baseDir: baseDir,
-		},
+		fs: fs,
 	}
 }
 
@@ -28,7 +26,7 @@ func (t *Theme) staticHandler(w http.ResponseWriter, req *http.Request) {
 		path = "/index.html"
 	}
 
-	f, err := os.Open(t.path(path))
+	f, err := t.fs.Open(path)
 	if err != nil {
 		http.NotFound(w, req)
 		return
