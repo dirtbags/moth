@@ -59,4 +59,12 @@ func TestState(t *testing.T) {
 	} else if (pl[0].TeamId != teamId) || (pl[0].Category != category) || (pl[0].Points != points) {
 		t.Errorf("Incorrect logged award %v", pl)
 	}
+	
+	fs.Remove("initialized")
+	s.Cleanup()
+	
+	pl = s.PointsLog()
+	if len(pl) != 0 {
+		t.Errorf("After reinitialization, points log has length %d", len(pl))
+	}
 }
