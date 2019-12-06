@@ -38,13 +38,25 @@ func TestState(t *testing.T) {
 	if (len(teamids) != 101) || (len(teamids[100]) > 0) {
 		t.Errorf("There weren't 100 teamids, there were %d", len(teamids))
 	}
-	myTeam := string(teamids[0])
+	teamId := string(teamids[0])
 
 	if err := s.SetTeamName("bad team ID", "bad team name"); err == nil {
 		t.Errorf("Setting bad team ID didn't raise an error")
 	}
 
-	if err := s.SetTeamName(myTeam, "My Team"); err != nil {
+	if err := s.SetTeamName(teamId, "My Team"); err != nil {
 		t.Errorf("Setting team name: %v", err)
+	}
+	
+	category := "poot"
+	points := 3928
+	s.AwardPoints(teamId, category, points)
+	s.Cleanup()
+	
+	pl = s.PointsLog()
+	if len(pl) != 1 {
+		t.Errorf("After awarding points, points log has length %d", len(pl))
+	} else if (pl[0].TeamId != teamId) || (pl[0].Category != category) || (pl[0].Points != points) {
+		t.Errorf("Incorrect logged award %v", pl)
 	}
 }
