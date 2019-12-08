@@ -48,13 +48,13 @@ func main() {
 	go state.Run(*refreshInterval)
 	go puzzles.Run(*refreshInterval)
 
-  // Add some MIME extensions
-  // Doing this avoids decompressing a mothball entry twice per request
-  mime.AddExtensionType(".json", "application/json")
-  mime.AddExtensionType(".zip", "application/zip")
-  
-  http.HandleFunc("/", theme.staticHandler)
-  
-  log.Printf("Listening on %s", *bindStr)
-  log.Fatal(http.ListenAndServe(*bindStr, nil))
+	// Add some MIME extensions
+	// Doing this avoids decompressing a mothball entry twice per request
+	mime.AddExtensionType(".json", "application/json")
+	mime.AddExtensionType(".zip", "application/zip")
+
+	http.HandleFunc("/", theme.staticHandler)
+
+	log.Printf("Listening on %s", *bindStr)
+	log.Fatal(http.ListenAndServe(*bindStr, nil))
 }
