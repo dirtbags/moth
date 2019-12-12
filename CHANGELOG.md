@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - URL parameter to points.json to allow returning only the JSON for a single
   team by its team id (e.g., points.json?id=abc123).
+### Changed
+- Abstract state mechanisms so that it is easier to move to different backends
 
 ## [3.4.2] - 2019-11-18
 ### Fixed

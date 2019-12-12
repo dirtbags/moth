@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -24,6 +21,9 @@ type Instance struct {
 	MothballDir     string
 	StateDir        string
 	ThemeDir        string
+
+	State		MOTHState
+
 	AttemptInterval time.Duration
 
 	Runtime RuntimeConfig
@@ -43,7 +43,8 @@ func (ctx *Instance) Initialize() error {
 	if _, err := os.Stat(ctx.MothballDir); err != nil {
 		return err
 	}
-	if _, err := os.Stat(ctx.StateDir); err != nil {
+
+	if _, err := ctx.State.Initialize(); err != nil {
 		return err
 	}
 
@@ -55,7 +56,6 @@ func (ctx *Instance) Initialize() error {
 	ctx.mux = http.NewServeMux()
 
 	ctx.BindHandlers()
-	ctx.MaybeInitialize()
 
 	return nil
 }
@@ -70,43 +70,6 @@ func mktoken() string {
 		a[i] = distinguishableChars[char]
 	}
 	return string(a)
-}
-
-func (ctx *Instance) MaybeInitialize() {
-	// Only do this if it hasn't already been done
-	if _, err := os.Stat(ctx.StatePath("initialized")); err == nil {
-		return
-	}
-	log.Print("initialized file missing, re-initializing")
-
-	// Remove any extant control and state files
-	os.Remove(ctx.StatePath("until"))
-	os.Remove(ctx.StatePath("disabled"))
-	os.Remove(ctx.StatePath("points.log"))
-	os.RemoveAll(ctx.StatePath("points.tmp"))
-	os.RemoveAll(ctx.StatePath("points.new"))
-	os.RemoveAll(ctx.StatePath("teams"))
-
-	// Make sure various subdirectories exist
-	os.Mkdir(ctx.StatePath("points.tmp"), 0755)
-	os.Mkdir(ctx.StatePath("points.new"), 0755)
-	os.Mkdir(ctx.StatePath("teams"), 0755)
-
-	// Preseed available team ids if file doesn't exist
-	if f, err := os.OpenFile(ctx.StatePath("teamids.txt"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
-		defer f.Close()
-		for i := 0; i <= 100; i += 1 {
-			fmt.Fprintln(f, mktoken())
-		}
-	}
-
-	// Create initialized file that signals whether we're set up
-	f, err := os.OpenFile(ctx.StatePath("initialized"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
-	if err != nil {
-		log.Print(err)
-	}
-	defer f.Close()
-	fmt.Fprintln(f, "Remove this file to reinitialize the contest")
 }
 
 func pathCleanse(parts []string) string {
@@ -125,11 +88,6 @@ func pathCleanse(parts []string) string {
 func (ctx Instance) MothballPath(parts ...string) string {
 	tail := pathCleanse(parts)
 	return path.Join(ctx.MothballDir, tail)
-}
-
-func (ctx *Instance) StatePath(parts ...string) string {
-	tail := pathCleanse(parts)
-	return path.Join(ctx.StateDir, tail)
 }
 
 func (ctx *Instance) ThemePath(parts ...string) string {
@@ -151,75 +109,6 @@ func (ctx *Instance) TooFast(teamId string) bool {
 	return now.Before(next)
 }
 
-func (ctx *Instance) PointsLog(teamId string) []*Award {
-	var ret []*Award
-
-	fn := ctx.StatePath("points.log")
-	f, err := os.Open(fn)
-	if err != nil {
-		log.Printf("Unable to open %s: %s", fn, err)
-		return ret
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cur, err := ParseAward(line)
-		if err != nil {
-			log.Printf("Skipping malformed award line %s: %s", line, err)
-			continue
-		}
-		if len(teamId) > 0 && cur.TeamId != teamId {
-			continue
-		}
-		ret = append(ret, cur)
-	}
-
-	return ret
-}
-
-// AwardPoints gives points to teamId in category.
-// It first checks to make sure these are not duplicate points.
-// This is not a perfect check, you can trigger a race condition here.
-// It's just a courtesy to the user.
-// The maintenance task makes sure we never have duplicate points in the log.
-func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
-	a := Award{
-		When:     time.Now(),
-		TeamId:   teamId,
-		Category: category,
-		Points:   points,
-	}
-
-	_, err := ctx.TeamName(teamId)
-	if err != nil {
-		return fmt.Errorf("No registered team with this hash")
-	}
-
-	for _, e := range ctx.PointsLog("") {
-		if a.Same(e) {
-			return fmt.Errorf("Points already awarded to this team in this category")
-		}
-	}
-
-	fn := fmt.Sprintf("%s-%s-%d", teamId, category, points)
-	tmpfn := ctx.StatePath("points.tmp", fn)
-	newfn := ctx.StatePath("points.new", fn)
-
-	if err := ioutil.WriteFile(tmpfn, []byte(a.String()), 0644); err != nil {
-		return err
-	}
-
-	if err := os.Rename(tmpfn, newfn); err != nil {
-		return err
-	}
-
-	ctx.update <- true
-	log.Printf("Award %s %s %d", teamId, category, points)
-	return nil
-}
-
 func (ctx *Instance) OpenCategoryFile(category string, parts ...string) (io.ReadCloser, error) {
 	mb, ok := ctx.categories[category]
 	if !ok {
@@ -237,10 +126,4 @@ func (ctx *Instance) ValidTeamId(teamId string) bool {
 	ctx.nextAttemptMutex.RUnlock()
 
 	return ok
-}
-
-func (ctx *Instance) TeamName(teamId string) (string, error) {
-	teamNameBytes, err := ioutil.ReadFile(ctx.StatePath("teams", teamId))
-	teamName := strings.TrimSpace(string(teamNameBytes))
-	return teamName, err
 }

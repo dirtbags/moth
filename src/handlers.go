@@ -63,41 +63,34 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 	teamName := req.FormValue("name")
 	teamId := req.FormValue("id")
 
-	if !ctx.ValidTeamId(teamId) {
+	success, err := ctx.State.login(teamName, teamId)
+
+	if (success && err == nil) {
+		respond(
+			w, req, JSendSuccess,
+			"Team registered",
+			"Your team has been named and you may begin using your team ID!",
+		)
+	} else if (err == ErrInvalidTeamID) {
 		respond(
 			w, req, JSendFail,
 			"Invalid Team ID",
 			"I don't have a record of that team ID. Maybe you used capital letters accidentally?",
 		)
-		return
+	} else if (err == ErrAlreadyRegistered) {
+		respond(
+			w, req, JSendFail,
+			"Already registered",
+			"This team ID has already been registered.",
+		)
+	} else if (err != nil) {
+		log.Print(err)
+		respond(
+			w, req, JSendFail,
+			"Registration failed",
+			"Unable to register. Perhaps a teammate has already registered?",
+		)
 	}
-
-	f, err := os.OpenFile(ctx.StatePath("teams", teamId), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
-	if err != nil {
-		if os.IsExist(err) {
-			respond(
-				w, req, JSendFail,
-				"Already registered",
-				"This team ID has already been registered.",
-			)
-		} else {
-			log.Print(err)
-			respond(
-				w, req, JSendFail,
-				"Registration failed",
-				"Unable to register. Perhaps a teammate has already registered?",
-			)
-		}
-		return
-	}
-	defer f.Close()
-
-	fmt.Fprintln(f, teamName)
-	respond(
-		w, req, JSendSuccess,
-		"Team registered",
-		"Your team has been named and you may begin using your team ID!",
-	)
 }
 
 func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
@@ -155,7 +148,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := ctx.AwardPoints(teamId, category, points); err != nil {
+	if err := ctx.State.AwardPoints(teamId, category, points); err != nil {
 		respond(
 			w, req, JSendError,
 			"Cannot award points",
@@ -172,7 +165,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 
 func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
 	teamId := req.FormValue("id")
-	if _, err := ctx.TeamName(teamId); err != nil {
+	if _, err := ctx.State.TeamName(teamId); err != nil {
 		http.Error(w, "Must provide team ID", http.StatusUnauthorized)
 		return
 	}
@@ -262,7 +255,7 @@ func (ctx *Instance) manifestHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	teamId := req.FormValue("id")
-	if _, err := ctx.TeamName(teamId); err != nil {
+	if _, err := ctx.State.TeamName(teamId); err != nil {
 		http.Error(w, "Must provide a valid team ID", http.StatusUnauthorized)
 		return
 	}

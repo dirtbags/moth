@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -28,7 +26,7 @@ func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 
 func (ctx *Instance) generatePuzzleList() {
 	maxByCategory := map[string]int{}
-	for _, a := range ctx.PointsLog("") {
+	for _, a := range ctx.State.PointsLog("") {
 		if a.Points > maxByCategory[a.Category] {
 			maxByCategory[a.Category] = a.Points
 		}
@@ -73,13 +71,13 @@ func (ctx *Instance) generatePointsLog(teamId string) []byte {
 		Points []*Award          `json:"points"`
 	}
 	ret.Teams = map[string]string{}
-	ret.Points = ctx.PointsLog(teamId)
+	ret.Points = ctx.State.PointsLog(teamId)
 
 	teamNumbersById := map[string]int{}
 	for nr, a := range ret.Points {
 		teamNumber, ok := teamNumbersById[a.TeamId]
 		if !ok {
-			teamName, err := ctx.TeamName(a.TeamId)
+			teamName, err := ctx.State.TeamName(a.TeamId)
 			if err != nil {
 				teamName = "Rodney" // https://en.wikipedia.org/wiki/Rogue_(video_game)#Gameplay
 			}
@@ -95,7 +93,7 @@ func (ctx *Instance) generatePointsLog(teamId string) []byte {
 		log.Printf("Marshalling points.js: %v", err)
 		return nil
 	}
-	
+
 	if len(teamId) == 0 {
 		ctx.jPointsLog = jpl
 	}
@@ -105,7 +103,7 @@ func (ctx *Instance) generatePointsLog(teamId string) []byte {
 // maintenance runs
 func (ctx *Instance) tidy() {
 	// Do they want to reset everything?
-	ctx.MaybeInitialize()
+	ctx.State.Initialize()
 
 	// Check set config
 	ctx.UpdateConfig()
@@ -148,37 +146,19 @@ func (ctx *Instance) tidy() {
 // readTeams reads in the list of team IDs,
 // so we can quickly validate them.
 func (ctx *Instance) readTeams() {
-	filepath := ctx.StatePath("teamids.txt")
-	teamids, err := os.Open(filepath)
-	if err != nil {
-		log.Printf("Error openining %s: %s", filepath, err)
-		return
-	}
-	defer teamids.Close()
-
-	// List out team IDs
-	newList := map[string]bool{}
-	scanner := bufio.NewScanner(teamids)
-	for scanner.Scan() {
-		teamId := scanner.Text()
-		if (teamId == "..") || strings.ContainsAny(teamId, "/") {
-			log.Printf("Dangerous team ID dropped: %s", teamId)
-			continue
-		}
-		newList[scanner.Text()] = true
-	}
+	teamList := ctx.State.getTeams()
 
 	// For any new team IDs, set their next attempt time to right now
 	now := time.Now()
 	added := 0
-	for k, _ := range newList {
+	for teamName, _ := range teamList {
 		ctx.nextAttemptMutex.RLock()
-		_, ok := ctx.nextAttempt[k]
+		_, ok := ctx.nextAttempt[teamName]
 		ctx.nextAttemptMutex.RUnlock()
 
 		if !ok {
 			ctx.nextAttemptMutex.Lock()
-			ctx.nextAttempt[k] = now
+			ctx.nextAttempt[teamName] = now
 			ctx.nextAttemptMutex.Unlock()
 
 			added += 1
@@ -188,9 +168,9 @@ func (ctx *Instance) readTeams() {
 	// For any removed team IDs, remove them
 	removed := 0
 	ctx.nextAttemptMutex.Lock() // XXX: This could be less of a cludgel
-	for k, _ := range ctx.nextAttempt {
-		if _, ok := newList[k]; !ok {
-			delete(ctx.nextAttempt, k)
+	for teamName, _ := range ctx.nextAttempt {
+		if _, ok := teamList[teamName]; !ok {
+			delete(ctx.nextAttempt, teamName)
 		}
 	}
 	ctx.nextAttemptMutex.Unlock()
@@ -200,81 +180,9 @@ func (ctx *Instance) readTeams() {
 	}
 }
 
-// collectPoints gathers up files in points.new/ and appends their contents to points.log,
-// removing each points.new/ file as it goes.
-func (ctx *Instance) collectPoints() {
-	logf, err := os.OpenFile(ctx.StatePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Printf("Can't append to points log: %s", err)
-		return
-	}
-	defer logf.Close()
-
-	files, err := ioutil.ReadDir(ctx.StatePath("points.new"))
-	if err != nil {
-		log.Printf("Error reading packages: %s", err)
-	}
-	for _, f := range files {
-		filename := ctx.StatePath("points.new", f.Name())
-		s, err := ioutil.ReadFile(filename)
-		if err != nil {
-			log.Printf("Can't read points file %s: %s", filename, err)
-			continue
-		}
-		award, err := ParseAward(string(s))
-		if err != nil {
-			log.Printf("Can't parse award file %s: %s", filename, err)
-			continue
-		}
-
-		duplicate := false
-		for _, e := range ctx.PointsLog("") {
-			if award.Same(e) {
-				duplicate = true
-				break
-			}
-		}
-
-		if duplicate {
-			log.Printf("Skipping duplicate points: %s", award.String())
-		} else {
-			fmt.Fprintf(logf, "%s\n", award.String())
-		}
-
-		logf.Sync()
-		if err := os.Remove(filename); err != nil {
-			log.Printf("Unable to remove %s: %s", filename, err)
-		}
-	}
-}
-
-func (ctx *Instance) isEnabled() bool {
-	// Skip if we've been disabled
-	if _, err := os.Stat(ctx.StatePath("disabled")); err == nil {
-		log.Print("Suspended: disabled file found")
-		return false
-	}
-
-	untilspec, err := ioutil.ReadFile(ctx.StatePath("until"))
-	if err == nil {
-		untilspecs := strings.TrimSpace(string(untilspec))
-		until, err := time.Parse(time.RFC3339, untilspecs)
-		if err != nil {
-			log.Printf("Suspended: Unparseable until date: %s", untilspec)
-			return false
-		}
-		if until.Before(time.Now()) {
-			log.Print("Suspended: until time reached, suspending maintenance")
-			return false
-		}
-	}
-
-	return true
-}
-
 func (ctx *Instance) UpdateConfig() {
 	// Handle export manifest
-	if _, err := os.Stat(ctx.StatePath("export_manifest")); err == nil {
+	if _, err := ctx.State.getConfig("export_manifest"); err == nil {
 		if !ctx.Runtime.export_manifest {
 			log.Print("Enabling manifest export")
 			ctx.Runtime.export_manifest = true
@@ -289,10 +197,9 @@ func (ctx *Instance) UpdateConfig() {
 // maintenance is the goroutine that runs a periodic maintenance task
 func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 	for {
-		if ctx.isEnabled() {
+		if ctx.State.isEnabled() {
 			ctx.tidy()
 			ctx.readTeams()
-			ctx.collectPoints()
 			ctx.generatePuzzleList()
 			ctx.generatePointsLog("")
 		}

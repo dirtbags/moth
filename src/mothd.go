@@ -17,6 +17,10 @@ func setup() error {
 func main() {
 	ctx := &Instance{}
 
+	var state_path string
+	var state_engine_choice string
+	var state_engine MOTHState
+
 	flag.StringVar(
 		&ctx.Base,
 		"base",
@@ -30,7 +34,13 @@ func main() {
 		"Path to read mothballs",
 	)
 	flag.StringVar(
-		&ctx.StateDir,
+		&state_engine_choice,
+		"state-engine",
+		"legacy",
+		"State engine to use (default: legacy, alt: sqlite)",
+	)
+	flag.StringVar(
+		&state_path,
 		"state",
 		"/state",
 		"Path to write state",
@@ -59,9 +69,21 @@ func main() {
 	)
 	flag.Parse()
 
+
+	if (state_engine_choice == "legacy") {
+		lm_engine := &LegacyMOTHState{}
+		lm_engine.StateDir = state_path
+		lm_engine.maintenanceInterval = *maintenanceInterval
+		state_engine = lm_engine
+	} else {
+		log.Fatal("Unrecognized state engine '", state_engine_choice, "'")
+	}
+
 	if err := setup(); err != nil {
 		log.Fatal(err)
 	}
+
+	ctx.State = state_engine
 
 	err := ctx.Initialize()
 	if err != nil {
