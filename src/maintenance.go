@@ -146,7 +146,7 @@ func (ctx *Instance) tidy() {
 // readTeams reads in the list of team IDs,
 // so we can quickly validate them.
 func (ctx *Instance) readTeams() {
-	teamList := ctx.State.getTeams()
+	teamList := ctx.State.getTeamIds()
 
 	// For any new team IDs, set their next attempt time to right now
 	now := time.Now()

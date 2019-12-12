@@ -11,7 +11,7 @@ type MOTHState interface {
 	TeamName(teamId string) (string, error)
 	isEnabled() bool
 	getConfig(configName string) (string, error)
-	getTeams() map[string]struct{}
+	getTeamIds() map[string]struct{}
 	login(teamId string, token string) (bool, error)
 	Initialize() (bool, error)
 }

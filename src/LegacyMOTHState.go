@@ -33,7 +33,7 @@ func (state *LegacyMOTHState) Initialize() (bool, error) {
 }
 
 func (state *LegacyMOTHState) login(teamName string, token string) (bool, error) {
-	for a, _ := range state.getTeams() {
+	for a, _ := range state.getTeamIds() {
 		if a == token {
 			f, err := os.OpenFile(state.StatePath("teams", token), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 		        if err != nil {
@@ -181,7 +181,7 @@ func (state *LegacyMOTHState) Maintenance(maintenanceInterval time.Duration) {
 	}
 }
 
-func (state *LegacyMOTHState) getTeams() map[string]struct{} {
+func (state *LegacyMOTHState) getTeamIds() map[string]struct{} {
         filepath := state.StatePath("teamids.txt")
         teamids, err := os.Open(filepath)
 	teams := make(map[string]struct{})
