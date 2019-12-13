@@ -134,6 +134,9 @@ func (s *State) SetTeamName(teamId string, teamName string) error {
 
 	teamFile := filepath.Join("teams", teamId)
 	err := afero.WriteFile(s.fs, teamFile, []byte(teamName), os.ModeExclusive|0644)
+	if os.IsExist(err) {
+		return fmt.Errorf("Team ID is already registered")
+	}
 	return err
 }
 
