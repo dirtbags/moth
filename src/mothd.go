@@ -75,6 +75,10 @@ func main() {
 		lm_engine.StateDir = state_path
 		lm_engine.maintenanceInterval = *maintenanceInterval
 		state_engine = lm_engine
+	} else if (state_engine_choice == "sqlite") {
+		lm_engine := &SQLiteMOTHState{}
+		lm_engine.StateDir = state_path
+		state_engine = lm_engine
 	} else {
 		log.Fatal("Unrecognized state engine '", state_engine_choice, "'")
 	}
