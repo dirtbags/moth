@@ -146,7 +146,7 @@ func (ctx *Instance) tidy() {
 // readTeams reads in the list of team IDs,
 // so we can quickly validate them.
 func (ctx *Instance) readTeams() {
-	teamList := ctx.State.getTeamIds()
+	teamList := ctx.State.getValidTeamIds()
 
 	// For any new team IDs, set their next attempt time to right now
 	now := time.Now()
@@ -207,7 +207,7 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 		case <-ctx.update:
 			// log.Print("Forced update")
 		case <-time.After(maintenanceInterval):
-			// log.Print("Housekeeping...")
+			// log.Print("Housekeeping in main instance...")
 		}
 	}
 }

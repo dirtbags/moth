@@ -161,6 +161,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		"Points awarded",
 		fmt.Sprintf("%d points for %s!", points, teamId),
 	)
+	ctx.update <- true
 }
 
 func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
