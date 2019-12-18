@@ -67,7 +67,7 @@ you can copy the example puzzles as a starting point:
 
 Then launch the development server:
 
-    $ python3 tools/devel-server.py
+    $ python3 devel/devel-server.py
 
 Point a web browser at http://localhost:8080/
 and start hacking on things in your `puzzles` directory.
