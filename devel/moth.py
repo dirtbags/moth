@@ -423,7 +423,7 @@ class Category:
         self.catmod = None
 
         try:
-            self.catmod = loadmod('category', os.path.join(path, 'category.py'))
+            self.catmod = loadmod('category', str(os.path.join(str(path), 'category.py')))
         except FileNotFoundError:
             self.catmod = None
 
@@ -433,7 +433,7 @@ class Category:
                 pointvals = self.catmod.pointvals()
         else:
             pointvals = []
-            for fpath in glob.glob(os.path.join(self.path, "[0-9]*")):
+            for fpath in glob.glob(str(os.path.join(str(self.path), "[0-9]*"))):
                 pn = os.path.basename(fpath)
                 points = int(pn)
                 pointvals.append(points)
@@ -441,12 +441,12 @@ class Category:
 
     def puzzle(self, points):
         puzzle = Puzzle(self.seed, points)
-        path = os.path.join(self.path, str(points))
+        path = str(os.path.join(str(self.path), str(points)))
         if self.catmod:
             with pushd(self.path):
                 self.catmod.make(points, puzzle)
         else:
-            with pushd(self.path):
+            with pushd(str(self.path)):
                 puzzle.read_directory(path)
         return puzzle
 
