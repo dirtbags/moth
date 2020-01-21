@@ -41,7 +41,6 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             super().__init__(request, client_address, server, directory=server.args["theme_dir"])
         except TypeError:
             super().__init__(request, client_address, server)
-        # Why can't they just use mimetypes?!
 
     # Why isn't this the default?!
     def guess_type(self, path):
