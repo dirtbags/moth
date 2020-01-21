@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import asyncio
 import cgitb
 import html
 import cgi
@@ -42,7 +41,15 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             super().__init__(request, client_address, server, directory=server.args["theme_dir"])
         except TypeError:
             super().__init__(request, client_address, server)
+        # Why can't they just use mimetypes?!
 
+    # Why isn't this the default?!
+    def guess_type(self, path):
+        mtype, encoding = mimetypes.guess_type(path)
+        if encoding:
+            return "%s; encoding=%s" % (mtype, encoding)
+        else:
+            return mtype
 
     # Backport from Python 3.7
     def translate_path(self, path):
@@ -285,10 +292,13 @@ if __name__ == '__main__':
     
     logging.basicConfig(level=log_level)
     
+    mimetypes.add_type("application/javascript", ".mjs")
+
     server = MothServer((addr, port), MothRequestHandler)
     server.args["base_url"] = args.base
     server.args["puzzles_dir"] = pathlib.Path(args.puzzles)
     server.args["theme_dir"] = args.theme
+    
 
     logging.info("Listening on %s:%d", addr, port)
     server.serve_forever()
