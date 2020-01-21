@@ -297,7 +297,6 @@ if __name__ == '__main__':
     server.args["base_url"] = args.base
     server.args["puzzles_dir"] = pathlib.Path(args.puzzles)
     server.args["theme_dir"] = args.theme
-    
 
     logging.info("Listening on %s:%d", addr, port)
     server.serve_forever()
