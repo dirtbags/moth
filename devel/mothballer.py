@@ -2,12 +2,14 @@
 
 import argparse
 import binascii
+import datetime
 import hashlib
 import io
 import json
 import logging
 import moth
 import os
+import platform
 import shutil
 import tempfile
 import zipfile
@@ -61,6 +63,24 @@ def build_category(categorydir, outdir):
     zipfileraw.close()
     shutil.move(zipfileraw.name, zipfilename)
 
+def write_metadata(ziphandle, category):
+    metadata = {"platform": {}, "moth": {}, "category": {}}
+    
+    try:
+        with open("../VERSION", "r") as infile:
+            version = infile.read().strip()
+            metadata["moth"]["version"] = version
+    except IOError:
+        pass
+
+    metadata["category"]["build_time"] = datetime.datetime.now().strftime("%c")
+    metadata["category"]["type"] = "catmod" if category.catmod is not None else "traditional"
+    metadata["platform"]["arch"] = platform.machine()
+    metadata["platform"]["os"] = platform.system()
+    metadata["platform"]["version"] = platform.platform()
+    metadata["platform"]["python_version"] = platform.python_version()
+
+    ziphandle.writestr("meta.json", json.dumps(metadata))
 
 # Returns a file-like object containing the contents of the new zip file
 def package(categoryname, categorydir, seed):
@@ -94,6 +114,7 @@ def package(categoryname, categorydir, seed):
     write_kv_pairs(zf, 'map.txt', mapping)
     write_kv_pairs(zf, 'answers.txt', answers)
     write_kv_pairs(zf, 'summaries.txt', summary)
+    write_metadata(zf, cat)
 
     # clean up
     zf.close()

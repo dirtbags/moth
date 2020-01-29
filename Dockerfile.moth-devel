@@ -16,6 +16,7 @@ RUN apk --no-cache add \
 COPY devel /app/
 COPY example-puzzles /puzzles/
 COPY theme /theme/
+COPY VERSION /VERSION
 
 ENTRYPOINT [ "python3", "/app/devel-server.py" ]
 CMD [ "--bind", "0.0.0.0:8080", "--puzzles", "/puzzles", "--theme", "/theme" ]
