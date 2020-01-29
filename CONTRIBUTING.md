@@ -17,7 +17,7 @@ Pull requests are the best way to propose changes to the codebase (we use [Gitfl
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes.
 5. Make sure your code lints.
-6. Update [CHANGELOG.md]
+6. Update [CHANGELOG.md](CHANGELOG.md)
 7. Issue that pull request!
 
 ## We Deploy to a Variety of Architectures
