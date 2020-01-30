@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - URL parameter to points.json to allow returning only the JSON for a single
   team by its team id (e.g., points.json?id=abc123).
 - Include basic metadata in mothballs
+### Fixed
+- Handle cases where non-legacy puzzles don't have an `author` attribute
+- Handle YAML-formatted file and script lists as expected
+- YAML-formatted example puzzle actually works as expected
 
 ## [3.4.3] - 2019-11-20
 ### Fixed
