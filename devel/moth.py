@@ -412,7 +412,12 @@ class Puzzle:
         self.body.write('</pre>')
 
     def get_authors(self):
-        return self.authors or [self.author]
+        if len(self.authors) > 0:
+            return self.authors
+        elif hasattr(self, "author"):
+            return [self.author]
+        else:
+            return []
 
     def get_body(self):
         return self.body.getvalue()
