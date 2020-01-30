@@ -233,11 +233,39 @@ class Puzzle:
             except IndexError:
                 pass
             self.files[name] = PuzzleFile(stream, name, not hidden)
+
+        elif key == 'files' and isinstance(val, dict):
+            for filename, options in val.items():
+                if "source" in options:
+                    source = options["source"]
+                else:
+                    source = filename
+                
+                if "hidden" in options and options["hidden"]:
+                    hidden = True
+                else:
+                    hidden = False
+
+                stream = open(source, "rb")
+                self.files[filename] = PuzzleFile(stream, filename, not hidden)
+
+        elif key == 'files' and isinstance(val, list):
+            for filename in val:
+                stream = open(filename, "rb")
+                self.files[filename] = PuzzleFile(stream, filename)
+
         elif key == 'script':
             stream = open(val, 'rb')
             # Make sure this shows up in the header block of the HTML output.
             self.files[val] = PuzzleFile(stream, val, visible=False)
             self.scripts.append(val)
+
+        elif key == "scripts" and isinstance(val, list):
+            for script in val:
+                stream = open(script, "rb")
+                self.files[script] = PuzzleFile(stream, script, visible=False)
+                self.scripts.append(script)
+
         elif key == "objective":
             self.objective = val
         elif key == "success":
@@ -384,7 +412,12 @@ class Puzzle:
         self.body.write('</pre>')
 
     def get_authors(self):
-        return self.authors or [self.author]
+        if len(self.authors) > 0:
+            return self.authors
+        elif hasattr(self, "author"):
+            return [self.author]
+        else:
+            return []
 
     def get_body(self):
         return self.body.getvalue()

@@ -28,6 +28,7 @@ If you can't use docker,
 try this:
 
 	apt install python3
+	pip3 install scapy pillow PyYAML
 	git clone https://github.com/dirtbags/moth/
 	cd moth
 	python3 devel/devel-server.py --puzzles example-puzzles
