@@ -123,6 +123,8 @@ class Puzzle:
 
         super().__init__()
 
+        self._source_format = "py"
+
         self.points = points
         self.summary = None
         self.authors = []
@@ -153,8 +155,10 @@ class Puzzle:
         line = ""
         if stream.read(3) == "---":
             header = "yaml"
+            self._source_format = "yaml"
         else:
             header = "moth"
+            self._source_format = "moth"
 
         stream.seek(0)
 

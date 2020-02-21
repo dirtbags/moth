@@ -118,6 +118,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         obj["hint"] = puzzle.hint
         obj["summary"] = puzzle.summary
         obj["logs"] = puzzle.logs
+        obj["format"] = puzzle._source_format
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
