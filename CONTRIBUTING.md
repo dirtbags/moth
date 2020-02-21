@@ -21,7 +21,7 @@ Pull requests are the best way to propose changes to the codebase (we use [Gitfl
 7. Issue that pull request!
 
 ## We Deploy to a Variety of Architectures
-MOTH is most often deployed using Docker, but we strive to ensure that it can easily be run outside of a Docker environment. Please ensure that and changes will not break or substantially alter Dockerized deployments and that, conversely, changes will not so substantially tie MOTH to Docker or particular Docker deployment that it becomes impracticle to run MOTH anywhere but inside of Docker
+MOTH is most often deployed using Docker, but we strive to ensure that it can easily be run outside of a Docker environment. Please ensure that and changes will not break or substantially alter Dockerized deployments and that, conversely, changes will not so substantially tie MOTH to Docker or particular Docker deployment that it becomes impractical to run MOTH anywhere but inside of Docker
 
 ## Any contributions you make will be under the MIT Software License
 When you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
