@@ -24,7 +24,7 @@ Pull requests are the best way to propose changes to the codebase (we use [Gitfl
 MOTH is most often deployed using Docker, but we strive to ensure that it can easily be run outside of a Docker environment. Please ensure that and changes will not break or substantially alter Dockerized deployments and that, conversely, changes will not so substantially tie MOTH to Docker or particular Docker deployment that it becomes impracticle to run MOTH anywhere but inside of Docker
 
 ## Any contributions you make will be under the MIT Software License
-In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
+When you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
 
 ## Report bugs using Github's [issues](https://github.com/dirtbags/moth/issues)
 We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/dirtbags/moth/issues/new); it's that easy!
@@ -42,6 +42,9 @@ We use GitHub issues to track public bugs. Report a bug by [opening a new issue]
 - Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
 
 ## Use a Consistent Coding Style
+
+### Go
+* Run it through `gofmt`
 
 ### Javascript
 * We use Javascript ASI
