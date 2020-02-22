@@ -40,10 +40,11 @@ func main() {
 
 	stateFs := afero.NewBasePathFs(afero.NewOsFs(), *statePath)
 	themeFs := afero.NewBasePathFs(afero.NewOsFs(), *themePath)
+	mothballFs := afero.NewBasePathFs(afero.NewOsFs(), *mothballPath)
 
 	theme := NewTheme(themeFs)
 	state := NewState(stateFs)
-	puzzles := NewMothballs(*puzzlePath)
+	puzzles := NewMothballs(mothballFs)
 
 	go state.Run(*refreshInterval)
 	go puzzles.Run(*refreshInterval)

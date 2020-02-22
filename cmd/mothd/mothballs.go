@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/spf13/afero"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -8,22 +9,20 @@ import (
 )
 
 type Mothballs struct {
-	Component
+	fs afero.Fs
 	categories map[string]*Zipfs
 }
 
-func NewMothballs(baseDir string) *Mothballs {
+func NewMothballs(fs afero.Fs) *Mothballs {
 	return &Mothballs{
-		Component: Component{
-			baseDir: baseDir,
-		},
+		fs: fs,
 		categories: make(map[string]*Zipfs),
 	}
 }
 
 func (m *Mothballs) update() {
 	// Any new categories?
-	files, err := ioutil.ReadDir(m.path())
+	files, err := afero.ReadDir(m.fs, "/")
 	if err != nil {
 		log.Print("Error listing mothballs: ", err)
 		return

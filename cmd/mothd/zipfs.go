@@ -12,6 +12,7 @@ import (
 
 type Zipfs struct {
 	zf       *zip.ReadCloser
+	fs       afero.Fs
 	filename string
 	mtime    time.Time
 }
@@ -111,9 +112,10 @@ func (zfsf *ZipfsFile) Close() error {
 	return zfsf.f.Close()
 }
 
-func OpenZipfs(filename string) (*Zipfs, error) {
+func OpenZipfs(fs afero.fs, filename string) (*Zipfs, error) {
 	var zfs Zipfs
 
+	zfs.fs = fs
 	zfs.filename = filename
 
 	err := zfs.Refresh()
@@ -129,7 +131,7 @@ func (zfs *Zipfs) Close() error {
 }
 
 func (zfs *Zipfs) Refresh() error {
-	info, err := os.Stat(zfs.filename)
+	info, err := zfs.fs.Stat(zfs.filename)
 	if err != nil {
 		return err
 	}
@@ -139,6 +141,11 @@ func (zfs *Zipfs) Refresh() error {
 		return nil
 	}
 
+	f, err := zfs.fs.Open(zfs.filename)
+	if err != nil {
+		return err
+	}
+	
 	zf, err := zip.OpenReader(zfs.filename)
 	if err != nil {
 		return err
