@@ -260,15 +260,12 @@ class Puzzle:
 
         elif key == 'script':
             stream = open(val, 'rb')
-            # Make sure this shows up in the header block of the HTML output.
-            self.files[val] = PuzzleFile(stream, val, visible=False)
-            self.scripts.append(val)
+            self.add_script_stream(stream, val)
 
         elif key == "scripts" and isinstance(val, list):
             for script in val:
                 stream = open(script, "rb")
-                self.files[script] = PuzzleFile(stream, script, visible=False)
-                self.scripts.append(script)
+                self.add_script_stream(stream, val)
 
         elif key == "objective":
             self.objective = val
@@ -321,6 +318,11 @@ class Puzzle:
         stream = tempfile.TemporaryFile()
         self.add_stream(stream, name, visible)
         return stream
+
+    def add_script_stream(self, stream, name):
+        # Make sure this shows up in the header block of the HTML output.
+        self.files[name] = PuzzleFile(stream, name, visible=False)
+        self.scripts.append(name)
 
     def add_stream(self, stream, name=None, visible=True):
         if name is None:
