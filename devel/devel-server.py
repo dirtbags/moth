@@ -61,7 +61,27 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         cat = moth.Category(catpath, self.seed)
         puzzle = cat.puzzle(points)
         return puzzle
+        
+        
+    def send_json(self, obj):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(obj).encode("utf-8"))
 
+    
+    def handle_register(self):
+        # Everybody eats when they come to my house
+        ret = {
+            "status": "success",
+            "data": {
+                "short": "You win",
+                "description": "Welcome to the development server, you wily hacker you"
+            }
+        }
+        self.send_json(ret)
+    endpoints.append(('/{seed}/register', handle_register))
+        
 
     def handle_answer(self):
         for f in ("cat", "points", "answer"):
@@ -77,17 +97,12 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         if self.req.get("answer") in puzzle.answers:
             ret["data"]["description"] = "Answer is correct"
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(ret).encode("utf-8"))
+        self.send_json(ret)
     endpoints.append(('/{seed}/answer', handle_answer))
 
-    
-    def handle_puzzlelist(self):
-        puzzles = {
-            "__devel__": [[0, ""]],
-        }
+
+    def puzzlelist(self):
+        puzzles = {}
         for p in self.server.args["puzzles_dir"].glob("*"):
             if not p.is_dir() or p.match(".*"):
                 continue
@@ -97,12 +112,27 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             puzzles[catName].append([0, ""])
         if len(puzzles) <= 1:
             logging.warning("No directories found matching {}/*".format(self.server.args["puzzles_dir"]))
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(puzzles).encode("utf-8"))
+        
+        return puzzles
+
+
+    # XXX: Remove this (redundant) when we've upgraded the bundled theme (probably v3.6 and beyond)
+    def handle_puzzlelist(self):
+        self.send_json(self.puzzlelist())
     endpoints.append(('/{seed}/puzzles.json', handle_puzzlelist))
     
+    
+    def handle_state(self):
+        resp = {
+            "config": {
+                "devel": True,
+            },
+            "puzzles": self.puzzlelist(),
+            "messages": "<p><b>[MOTH Development Server]</b> Participant broadcast messages would go here.</p>",
+        }
+        self.send_json(resp)
+    endpoints.append(('/{seed}/state', handle_state))
+
     
     def handle_puzzle(self):
         puzzle = self.get_puzzle()
@@ -113,10 +143,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         obj["summary"] = puzzle.summary
         obj["logs"] = puzzle.logs
 
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps(obj).encode("utf-8"))
+        self.send_json(obj)
     endpoints.append(('/{seed}/content/{cat}/{points}/puzzle.json', handle_puzzle))
 
 
@@ -144,7 +171,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         try:
             catdir = self.server.args["puzzles_dir"].joinpath(category)
-            mb = mothballer.package(category, catdir, self.seed)
+            mb = mothballer.package(category, str(catdir), self.seed)
         except Exception as ex:
             logging.exception(ex)
             self.send_response(200)
@@ -162,48 +189,11 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_index(self):
         seed = random.getrandbits(32)
-        body = """<!DOCTYPE html>
-<html>
-  <head>
-    <title>Dev Server</title>
-    <script>
-// Skip trying to log in
-sessionStorage.setItem("id", "devel-server")
-    </script>
-  </head>
-  <body>
-    <h1>Dev Server</h1>
-
-    <p>
-      Pick a seed:
-    </p>
-    <ul>
-      <li><a href="{seed}/">{seed}</a>: a special seed I made just for you!</li>
-      <li><a href="random/">random</a>: will use a different seed every time you load a page (could be useful for debugging)</li>
-      <li>You can also hack your own seed into the URL, if you want to.</li>
-    </ul>
-
-    <p>
-      Puzzles can be generated from Python code: these puzzles can use a random number generator if they want.
-      The seed is used to create these random numbers.
-    </p>
-    
-    <p>
-      We like to make a new seed for every contest,
-      and re-use that seed whenever we regenerate a category during an event
-      (say to fix a bug).
-      By using the same seed,
-      we make sure that all the dynamically-generated puzzles have the same values
-      in any new packages we build.
-    </p>
-  </body>
-</html>
-""".format(seed=seed)
-
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_response(307)
+        self.send_header("Location", "%s/" % seed)
+        self.send_header("Content-Type", "text/html")
         self.end_headers()
-        self.wfile.write(body.encode('utf-8'))
+        self.wfile.write("Your browser was supposed to redirect you to <a href=\"%s/\">here</a>." % seed)
     endpoints.append((r"/", handle_index))
 
 
