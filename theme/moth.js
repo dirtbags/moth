@@ -1,5 +1,6 @@
 // jshint asi:true
 
+var devel = false
 var teamId
 var heartbeatInterval = 40000
 
@@ -42,7 +43,7 @@ function renderPuzzles(obj) {
     h.textContent = cat
     
     // Extras if we're running a devel server
-    if (obj.__devel__) {
+    if (devel) {
       let a = document.createElement('a')
       h.insertBefore(a, h.firstChild)
       a.textContent = "⬇️"
@@ -88,20 +89,16 @@ function renderPuzzles(obj) {
   container.appendChild(puzzlesElement)
 }
 
+function renderState(obj) {
+  devel = obj.config.devel
+  console.log(obj)
+  renderPuzzles(obj.puzzles)
+  renderNotices(obj.messages)
+}
+
 
 function heartbeat(teamId, participantId) {
-  let noticesUrl = new URL("notices.html", window.location)
-  fetch(noticesUrl)
-  .then(resp => {
-    if (resp.ok) {
-      resp.text()
-      .then(renderNotices)
-      .catch(err => console.log)
-    }
-  })
-  .catch(err => console.log)
-  
-  let url = new URL("puzzles.json", window.location)
+  let url = new URL("state", window.location)
   url.searchParams.set("id", teamId)
   if (participantId) {
     url.searchParams.set("pid", participantId)
@@ -112,7 +109,7 @@ function heartbeat(teamId, participantId) {
   .then(resp => {
     if (resp.ok) {
       resp.json()
-      .then(renderPuzzles)
+      .then(renderState)
       .catch(err => {
         toast("Error fetching recent puzzles. I'll try again in a moment.")
         console.log(err)

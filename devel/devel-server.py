@@ -193,7 +193,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Location", "%s/" % seed)
         self.send_header("Content-Type", "text/html")
         self.end_headers()
-        self.wfile.write("Your browser was supposed to redirect you to <a href=\"%s/\">here</a>." % seed)
+        self.wfile.write(b"Your browser was supposed to redirect you to <a href=\"%i/\">here</a>." % seed)
     endpoints.append((r"/", handle_index))
 
 
