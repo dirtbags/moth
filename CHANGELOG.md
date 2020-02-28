@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle cases where non-legacy puzzles don't have an `author` attribute
 - Handle YAML-formatted file and script lists as expected
 - YAML-formatted example puzzle actually works as expected
+### Removed
+- Built-in Scapy library in devel server
 
 ## [3.4.3] - 2019-11-20
 ### Fixed
