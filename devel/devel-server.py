@@ -7,6 +7,7 @@ import cgi
 import http.server
 import io
 import json
+import mimetypes
 import moth
 import logging
 import os
@@ -41,6 +42,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             super().__init__(request, client_address, server, directory=server.args["theme_dir"])
         except TypeError:
             super().__init__(request, client_address, server)
+
 
     # Backport from Python 3.7
     def translate_path(self, path):
@@ -158,7 +160,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         self.send_response(200)
-        self.send_header("Content-Type", self.guess_type(file.name))
+        self.send_header("Content-Type", mimetypes.guess_type(file.name))
         self.end_headers()
         shutil.copyfileobj(file.stream, self.wfile)
     endpoints.append(("/{seed}/content/{cat}/{points}/{filename}", handle_puzzlefile))
@@ -192,7 +194,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "text/html")
         self.end_headers()
         self.wfile.write("Your browser was supposed to redirect you to <a href=\"%s/\">here</a>." % seed)
-    endpoints.append(("/", handle_index))
+    endpoints.append((r"/", handle_index))
 
 
     def handle_theme_file(self):
@@ -280,6 +282,6 @@ if __name__ == '__main__':
     server.args["base_url"] = args.base
     server.args["puzzles_dir"] = pathlib.Path(args.puzzles)
     server.args["theme_dir"] = args.theme
-    
+
     logging.info("Listening on %s:%d", addr, port)
     server.serve_forever()
