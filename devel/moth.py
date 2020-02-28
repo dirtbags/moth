@@ -233,6 +233,12 @@ class Puzzle:
             except IndexError:
                 pass
             self.files[name] = PuzzleFile(stream, name, not hidden)
+        elif key == 'files':
+            for file in val:
+                path = file["path"]
+                stream = open(path, "rb")
+                name = file.get("name") or path
+                self.files[name] = PuzzleFile(stream, name, not file.get("hidden"))
         elif key == 'script':
             stream = open(val, 'rb')
             self.add_script_stream(stream, val)
@@ -400,10 +406,12 @@ class Puzzle:
         """Return a dict packaging of the puzzle."""
 
         files = [fn for fn,f in self.files.items() if f.visible]
+        hidden = [fn for fn,f in self.files.items() if not f.visible]
         return {
             'authors': self.get_authors(),
             'hashes': self.hashes(),
             'files': files,
+            'hidden': hidden,
             'scripts': self.scripts,
             'pattern': self.pattern,
             'body': self.html_body(),

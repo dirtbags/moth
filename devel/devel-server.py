@@ -153,7 +153,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         except KeyError:
             self.send_error(
                 HTTPStatus.NOT_FOUND,
-                "File Not Found",
+                "File Not Found: %s" % self.req["filename"],
             )
             return
 
@@ -233,6 +233,8 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             HTTPStatus.NOT_IMPLEMENTED,
             "Unsupported method (%r)" % self.command,
         )
+
+# I don't fully understand why you can't do this inside the class definition.
 MothRequestHandler.extensions_map[".mjs"] = "application/ecmascript"
 
 
