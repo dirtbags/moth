@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+ - Endpoints `/points.json`, `/puzzles.json`, and `/messages.html` (optional theme file) combine into `/state`
+ - No more `__devel__` category for dev server: this is now `state.config.devel` in the `/state` endpoint
+ - Development server no longer serves a static `/` with links: it now redirects you to a randomly-generated seed URL
+ - Default theme modifications to handle all this
+ - Default theme now automatically "logs you in" with Team ID if it's getting state from the devel server
 
 ## [3.4.3] - 2019-11-20
 ### Fixed
