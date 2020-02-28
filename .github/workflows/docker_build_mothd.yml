@@ -1,0 +1,12 @@
+name: Mothd Docker build
+on: [push]
+
+jobs:
+  build-mothd:
+    name: Build mothd
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve code
+        uses: actions/checkout@v1
+      - name: Build mothd
+        run: docker build -f Dockerfile.moth .
