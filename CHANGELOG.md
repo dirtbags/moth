@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - URL parameter to points.json to allow returning only the JSON for a single
   team by its team id (e.g., points.json?id=abc123).
+- A CONTRIBUTING.md to describe expectations when contributing to MOTH
 - Include basic metadata in mothballs
 - add_script_stream convenience function allows easy script addition to puzzle
 ### Fixed

@@ -161,4 +161,7 @@ If you remove a mothball,
 the category will vanish,
 but points scored in that category won't!
 
+Contributing to MOTH
+==================
 
+Please read [CONTRIBUTING.md](CONTRIBUTING.md)

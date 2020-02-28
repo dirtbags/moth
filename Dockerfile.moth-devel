@@ -16,6 +16,7 @@ RUN apk --no-cache add \
 COPY devel /app/
 COPY example-puzzles /puzzles/
 COPY theme /theme/
+COPY LICENSE.md /LICENSE
 COPY VERSION /VERSION
 
 ENTRYPOINT [ "python3", "/app/devel-server.py" ]
