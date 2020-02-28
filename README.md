@@ -1,6 +1,14 @@
 Dirtbags Monarch Of The Hill Server
 =====================
 
+Master:
+![](https://github.com/dirtbags/moth/workflows/Mothd%20Docker%20build/badge.svg?branch=master)
+![](https://github.com/dirtbags/moth/workflows/moth-devel%20Docker%20build/badge.svg?branch=master)
+
+Devel:
+![](https://github.com/dirtbags/moth/workflows/Mothd%20Docker%20build/badge.svg?branch=devel)
+![](https://github.com/dirtbags/moth/workflows/moth-devel%20Docker%20build/badge.svg?branch=devel)
+
 This is a set of thingies to run our Monarch-Of-The-Hill contest,
 which in the past has been called
 "Tracer FIRE",
