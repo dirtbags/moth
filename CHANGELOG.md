@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A CONTRIBUTING.md to describe expectations when contributing to MOTH
 - Include basic metadata in mothballs
 - add_script_stream convenience function allows easy script addition to puzzle
+- Autobuild Docker images to test buildability
 ### Fixed
 - Handle cases where non-legacy puzzles don't have an `author` attribute
 - Handle YAML-formatted file and script lists as expected
