@@ -35,28 +35,26 @@ type StateExport struct {
 // The only thing State methods need to know is the path to the state directory.
 type State struct {
 	Enabled bool
-	update  chan bool
-	fs      afero.Fs
+	afero.Fs
 }
 
 func NewState(fs afero.Fs) *State {
 	return &State{
 		Enabled: true,
-		update:  make(chan bool, 10),
-		fs:      fs,
+		Fs:      fs,
 	}
 }
 
 // Check a few things to see if this state directory is "enabled".
 func (s *State) UpdateEnabled() {
-	if _, err := s.fs.Stat("enabled"); os.IsNotExist(err) {
+	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
 		s.Enabled = false
 		log.Print("Suspended: enabled file missing")
 		return
 	}
 
 	nextEnabled := true
-	untilFile, err := s.fs.Open("hours")
+	untilFile, err := s.Open("hours")
 	if err != nil {
 		return
 	}
@@ -101,7 +99,7 @@ func (s *State) UpdateEnabled() {
 // Returns team name given a team ID.
 func (s *State) TeamName(teamId string) (string, error) {
 	teamFile := filepath.Join("teams", teamId)
-	teamNameBytes, err := afero.ReadFile(s.fs, teamFile)
+	teamNameBytes, err := afero.ReadFile(s, teamFile)
 	teamName := strings.TrimSpace(string(teamNameBytes))
 
 	if os.IsNotExist(err) {
@@ -115,7 +113,7 @@ func (s *State) TeamName(teamId string) (string, error) {
 
 // Write out team name. This can only be done once.
 func (s *State) SetTeamName(teamId string, teamName string) error {
-	if f, err := s.fs.Open("teamids.txt"); err != nil {
+	if f, err := s.Open("teamids.txt"); err != nil {
 		return fmt.Errorf("Team IDs file does not exist")
 	} else {
 		found := false
@@ -133,7 +131,7 @@ func (s *State) SetTeamName(teamId string, teamName string) error {
 	}
 
 	teamFile := filepath.Join("teams", teamId)
-	err := afero.WriteFile(s.fs, teamFile, []byte(teamName), os.ModeExclusive|0644)
+	err := afero.WriteFile(s, teamFile, []byte(teamName), os.ModeExclusive|0644)
 	if os.IsExist(err) {
 		return fmt.Errorf("Team ID is already registered")
 	}
@@ -142,7 +140,7 @@ func (s *State) SetTeamName(teamId string, teamName string) error {
 
 // Retrieve the current points log
 func (s *State) PointsLog() []*Award {
-	f, err := s.fs.Open("points.log")
+	f, err := s.Open("points.log")
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -178,7 +176,7 @@ func (s *State) Export(teamId string) *StateExport {
 	}
 
 	// Read in messages
-	if f, err := s.fs.Open("messages.txt"); err != nil {
+	if f, err := s.Open("messages.txt"); err != nil {
 		log.Print(err)
 	} else {
 		defer f.Close()
@@ -243,29 +241,29 @@ func (s *State) AwardPoints(teamId, category string, points int) error {
 	tmpfn := filepath.Join("points.tmp", fn)
 	newfn := filepath.Join("points.new", fn)
 
-	if err := afero.WriteFile(s.fs, tmpfn, []byte(a.String()), 0644); err != nil {
+	if err := afero.WriteFile(s, tmpfn, []byte(a.String()), 0644); err != nil {
 		return err
 	}
 
-	if err := s.fs.Rename(tmpfn, newfn); err != nil {
+	if err := s.Rename(tmpfn, newfn); err != nil {
 		return err
 	}
 
-	s.update <- true
+	// XXX: update everything
 	return nil
 }
 
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func (s *State) collectPoints() {
-	files, err := afero.ReadDir(s.fs, "points.new")
+	files, err := afero.ReadDir(s, "points.new")
 	if err != nil {
 		log.Print(err)
 		return
 	}
 	for _, f := range files {
 		filename := filepath.Join("points.new", f.Name())
-		awardstr, err := afero.ReadFile(s.fs, filename)
+		awardstr, err := afero.ReadFile(s, filename)
 		if err != nil {
 			log.Print("Opening new points: ", err)
 			continue
@@ -289,7 +287,7 @@ func (s *State) collectPoints() {
 		} else {
 			log.Print("Award: ", award.String())
 
-			logf, err := s.fs.OpenFile("points.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+			logf, err := s.OpenFile("points.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Print("Can't append to points log: ", err)
 				return
@@ -298,7 +296,7 @@ func (s *State) collectPoints() {
 			logf.Close()
 		}
 
-		if err := s.fs.Remove(filename); err != nil {
+		if err := s.Remove(filename); err != nil {
 			log.Print("Unable to remove new points file: ", err)
 		}
 	}
@@ -306,28 +304,28 @@ func (s *State) collectPoints() {
 
 func (s *State) maybeInitialize() {
 	// Are we supposed to re-initialize?
-	if _, err := s.fs.Stat("initialized"); !os.IsNotExist(err) {
+	if _, err := s.Stat("initialized"); !os.IsNotExist(err) {
 		return
 	}
 
 	log.Print("initialized file missing, re-initializing")
 
 	// Remove any extant control and state files
-	s.fs.Remove("enabled")
-	s.fs.Remove("hours")
-	s.fs.Remove("points.log")
-	s.fs.Remove("messages.txt")
-	s.fs.RemoveAll("points.tmp")
-	s.fs.RemoveAll("points.new")
-	s.fs.RemoveAll("teams")
+	s.Remove("enabled")
+	s.Remove("hours")
+	s.Remove("points.log")
+	s.Remove("messages.txt")
+	s.RemoveAll("points.tmp")
+	s.RemoveAll("points.new")
+	s.RemoveAll("teams")
 
 	// Make sure various subdirectories exist
-	s.fs.Mkdir("points.tmp", 0755)
-	s.fs.Mkdir("points.new", 0755)
-	s.fs.Mkdir("teams", 0755)
+	s.Mkdir("points.tmp", 0755)
+	s.Mkdir("points.new", 0755)
+	s.Mkdir("teams", 0755)
 
 	// Preseed available team ids if file doesn't exist
-	if f, err := s.fs.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
+	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		defer f.Close()
 		for i := 0; i < 100; i += 1 {
 			fmt.Fprintln(f, mktoken())
@@ -336,19 +334,19 @@ func (s *State) maybeInitialize() {
 
 	// Create some files
 	afero.WriteFile(
-		s.fs,
+		s,
 		"initialized",
 		[]byte("state/initialized: remove to re-initialize the contest\n"),
 		0644,
 	)
 	afero.WriteFile(
-		s.fs,
+		s,
 		"enabled",
 		[]byte("state/enabled: remove to suspend the contest\n"),
 		0644,
 	)
 	afero.WriteFile(
-		s.fs,
+		s,
 		"hours",
 		[]byte(
 			"# state/hours: when the contest is enabled\n"+
@@ -360,33 +358,23 @@ func (s *State) maybeInitialize() {
 		0644,
 	)
 	afero.WriteFile(
-		s.fs,
+		s,
 		"messages.txt",
 		[]byte(fmt.Sprintf("[%s] Initialized.\n", time.Now().UTC().Format(time.RFC3339))),
 		0644,
 	)
 	afero.WriteFile(
-		s.fs,
+		s,
 		"points.log",
 		[]byte(""),
 		0644,
 	)
 }
 
-func (s *State) Cleanup() {
+func (s *State) Update() {
 	s.maybeInitialize()
 	s.UpdateEnabled()
 	if s.Enabled {
 		s.collectPoints()
-	}
-}
-
-func (s *State) Run(updateInterval time.Duration) {
-	for {
-		s.Cleanup()
-		select {
-		case <-s.update:
-		case <-time.After(updateInterval):
-		}
 	}
 }

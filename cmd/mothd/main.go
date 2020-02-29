@@ -5,9 +5,22 @@ import (
 	"github.com/spf13/afero"
 	"log"
 	"mime"
-	"net/http"
 	"time"
 )
+
+func custodian(updateInterval time.Duration, components []Component) {
+	update := func() {
+		for _, c := range components {
+			c.Update()
+		}
+	}
+	
+	ticker := time.NewTicker(updateInterval)
+	update()
+	for _ = range ticker.C {
+		update()
+	}
+}
 
 func main() {
 	log.Print("Started")
@@ -22,7 +35,7 @@ func main() {
 		"state",
 		"Path to state files",
 	)
-	puzzlePath := flag.String(
+	mothballPath := flag.String(
 		"mothballs",
 		"mothballs",
 		"Path to mothballs to host",
@@ -37,25 +50,23 @@ func main() {
 		":8000",
 		"Bind [host]:port for HTTP service",
 	)
+	base := flag.String(
+		"base",
+		"/",
+		"Base URL of this instance",
+	)
 
-	stateFs := afero.NewBasePathFs(afero.NewOsFs(), *statePath)
-	themeFs := afero.NewBasePathFs(afero.NewOsFs(), *themePath)
-	mothballFs := afero.NewBasePathFs(afero.NewOsFs(), *mothballPath)
-
-	theme := NewTheme(themeFs)
-	state := NewState(stateFs)
-	puzzles := NewMothballs(mothballFs)
-
-	go state.Run(*refreshInterval)
-	go puzzles.Run(*refreshInterval)
+	theme := NewTheme(afero.NewBasePathFs(afero.NewOsFs(), *themePath))
+	state := NewState(afero.NewBasePathFs(afero.NewOsFs(), *statePath))
+	puzzles := NewMothballs(afero.NewBasePathFs(afero.NewOsFs(), *mothballPath))
 
 	// Add some MIME extensions
 	// Doing this avoids decompressing a mothball entry twice per request
 	mime.AddExtensionType(".json", "application/json")
 	mime.AddExtensionType(".zip", "application/zip")
 
-	http.HandleFunc("/", theme.staticHandler)
+	go custodian(*refreshInterval, []Component{theme, state, puzzles})
 
-	log.Printf("Listening on %s", *bindStr)
-	log.Fatal(http.ListenAndServe(*bindStr, nil))
+	httpd := NewHTTPServer(*base, theme, state, puzzles)
+	httpd.Run(*bindStr)
 }

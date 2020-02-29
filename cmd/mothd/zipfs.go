@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
+	"github.com/spf13/afero"
 	"strings"
 	"time"
 )
 
 type Zipfs struct {
-	zf       *zip.ReadCloser
-	fs       afero.Fs
+	f        io.Closer
+	zf       *zip.Reader
 	filename string
 	mtime    time.Time
+	fs       afero.Fs
 }
 
 type ZipfsFile struct {
@@ -112,7 +113,7 @@ func (zfsf *ZipfsFile) Close() error {
 	return zfsf.f.Close()
 }
 
-func OpenZipfs(fs afero.fs, filename string) (*Zipfs, error) {
+func OpenZipfs(fs afero.Fs, filename string) (*Zipfs, error) {
 	var zfs Zipfs
 
 	zfs.fs = fs
@@ -127,7 +128,7 @@ func OpenZipfs(fs afero.fs, filename string) (*Zipfs, error) {
 }
 
 func (zfs *Zipfs) Close() error {
-	return zfs.zf.Close()
+	return zfs.f.Close()
 }
 
 func (zfs *Zipfs) Refresh() error {
@@ -146,15 +147,18 @@ func (zfs *Zipfs) Refresh() error {
 		return err
 	}
 	
-	zf, err := zip.OpenReader(zfs.filename)
+	zf, err := zip.NewReader(f, info.Size())
 	if err != nil {
+		f.Close()
 		return err
 	}
 
+	// Clean up the last one
 	if zfs.zf != nil {
-		zfs.zf.Close()
+		zfs.f.Close()
 	}
 	zfs.zf = zf
+	zfs.f = f
 	zfs.mtime = mtime
 
 	return nil

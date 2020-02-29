@@ -2,42 +2,32 @@ package main
 
 import (
 	"github.com/spf13/afero"
-	"net/http"
-	"strings"
+	"time"
 )
 
 type Theme struct {
-	fs afero.Fs
+	afero.Fs
 }
 
 func NewTheme(fs afero.Fs) *Theme {
 	return &Theme{
-		fs: fs,
+		Fs: fs,
 	}
 }
 
-func (t *Theme) staticHandler(w http.ResponseWriter, req *http.Request) {
-	path := req.URL.Path
-	if strings.Contains(path, "/.") {
-		http.Error(w, "Invalid path", http.StatusBadRequest)
-		return
-	}
-	if path == "/" {
-		path = "/index.html"
-	}
+// I don't understand why I need this. The type checking system is weird here.
+func (t *Theme) Open(name string) (ReadSeekCloser, error) {
+	return t.Fs.Open(name)
+}
 
-	f, err := t.fs.Open(path)
-	if err != nil {
-		http.NotFound(w, req)
-		return
+func (t *Theme) ModTime(name string) (mt time.Time, err error) {
+	fi, err := t.Fs.Stat(name)
+	if err == nil {
+		mt = fi.ModTime()
 	}
-	defer f.Close()
+	return
+}
 
-	d, err := f.Stat()
-	if err != nil {
-		http.NotFound(w, req)
-		return
-	}
-
-	http.ServeContent(w, req, path, d.ModTime(), f)
+func (t *Theme) Update() {
+	// No periodic tasks for a theme
 }

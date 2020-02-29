@@ -2,43 +2,56 @@ package main
 
 import (
 	"github.com/spf13/afero"
-	"io/ioutil"
 	"log"
+	"io"
 	"strings"
-	"time"
 )
 
 type Mothballs struct {
-	fs afero.Fs
 	categories map[string]*Zipfs
+	afero.Fs
 }
 
 func NewMothballs(fs afero.Fs) *Mothballs {
 	return &Mothballs{
-		fs: fs,
+		Fs: fs,
 		categories: make(map[string]*Zipfs),
 	}
 }
 
-func (m *Mothballs) update() {
+func (m *Mothballs) Metadata(cat string, points int) (io.ReadCloser, error) {
+	f, err := m.Fs.Open("/dev/null")
+	return f, err
+}
+
+func (m *Mothballs) Open(cat string, points int, filename string) (io.ReadCloser, error) {
+	f, err := m.Fs.Open("/dev/null")
+	return f, err
+}
+
+func (m *Mothballs) Inventory() []Category {
+	return []Category{}
+}
+
+
+func (m *Mothballs) Update() {
 	// Any new categories?
-	files, err := afero.ReadDir(m.fs, "/")
+	files, err := afero.ReadDir(m.Fs, "/")
 	if err != nil {
 		log.Print("Error listing mothballs: ", err)
 		return
 	}
 	for _, f := range files {
 		filename := f.Name()
-		filepath := m.path(filename)
 		if !strings.HasSuffix(filename, ".mb") {
 			continue
 		}
 		categoryName := strings.TrimSuffix(filename, ".mb")
 
 		if _, ok := m.categories[categoryName]; !ok {
-			zfs, err := OpenZipfs(filepath)
+			zfs, err := OpenZipfs(m.Fs, filename)
 			if err != nil {
-				log.Print("Error opening ", filepath, ": ", err)
+				log.Print("Error opening ", filename, ": ", err)
 				continue
 			}
 			log.Print("New mothball: ", filename)
@@ -47,14 +60,3 @@ func (m *Mothballs) update() {
 	}
 }
 
-func (m *Mothballs) Run(updateInterval time.Duration) {
-	ticker := time.NewTicker(updateInterval)
-	m.update()
-	for {
-		select {
-		case when := <-ticker.C:
-			log.Print("Tick: ", when)
-			m.update()
-		}
-	}
-}

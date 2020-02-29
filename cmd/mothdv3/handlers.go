@@ -12,37 +12,7 @@ import (
 	"strings"
 )
 
-// https://github.com/omniti-labs/jsend
-type JSend struct {
-	Status string `json:"status"`
-	Data   struct {
-		Short       string `json:"short"`
-		Description string `json:"description"`
-	} `json:"data"`
-}
 
-const (
-	JSendSuccess = "success"
-	JSendFail    = "fail"
-	JSendError   = "error"
-)
-
-func respond(w http.ResponseWriter, req *http.Request, status string, short string, format string, a ...interface{}) {
-	resp := JSend{}
-	resp.Status = status
-	resp.Data.Short = short
-	resp.Data.Description = fmt.Sprintf(format, a...)
-
-	respBytes, err := json.Marshal(resp)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
-	w.Write(respBytes)
-}
 
 // hasLine returns true if line appears in r.
 // The entire line must match.
@@ -120,9 +90,9 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	points, err := strconv.Atoi(pointstr)
 	if err != nil {
 		respond(
+	points, err := strconv.Atoi(pointstr)
 			w, req, JSendFail,
 			"Cannot parse point value",
 			"This doesn't look like an integer: %s", pointstr,
