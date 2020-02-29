@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/namsral/flag"
+	"flag"
 	"github.com/spf13/afero"
 	"log"
 	"mime"
@@ -47,7 +47,7 @@ func main() {
 	)
 	bindStr := flag.String(
 		"bind",
-		":8000",
+		":8080",
 		"Bind [host]:port for HTTP service",
 	)
 	base := flag.String(
@@ -55,6 +55,7 @@ func main() {
 		"/",
 		"Base URL of this instance",
 	)
+	flag.Parse()
 
 	theme := NewTheme(afero.NewBasePathFs(afero.NewOsFs(), *themePath))
 	state := NewState(afero.NewBasePathFs(afero.NewOsFs(), *statePath))

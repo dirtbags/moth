@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/spf13/afero"
 	"time"
+	"log"
 )
 
 type Theme struct {
@@ -17,6 +18,7 @@ func NewTheme(fs afero.Fs) *Theme {
 
 // I don't understand why I need this. The type checking system is weird here.
 func (t *Theme) Open(name string) (ReadSeekCloser, error) {
+	log.Println(name)
 	return t.Fs.Open(name)
 }
 
