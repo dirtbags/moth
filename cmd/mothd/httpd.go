@@ -95,9 +95,28 @@ func (h *HTTPServer) StateHandler(w http.ResponseWriter, req *http.Request) {
 	state.PointsLog = export.PointsLog
 
 	state.Puzzles = make(map[string][]int)
-	log.Println("Puzzles")
-	for category := range h.Puzzles.Inventory() {
-		log.Println(category)
+
+	//XXX: move to brains.go
+	for _, category := range h.Puzzles.Inventory() {
+		maxSolved := 0
+		
+		// XXX: We don't have to iterate the log for every category
+		for _, a := range export.PointsLog {
+			if (a.Category == category.Name) && (a.Points > maxSolved) {
+				maxSolved = a.Points
+			}
+		}
+		
+		// Append sentry (end of puzzles)
+		allPuzzles := append(category.Puzzles, 0)
+		puzzles := make([]int, 0, len(allPuzzles))
+		for i, val := range allPuzzles {
+			puzzles = allPuzzles[:i+1]
+			if val > maxSolved {
+				break
+			}
+		}
+		state.Puzzles[category.Name] = puzzles
 	}
 
 	JSONWrite(w, state)

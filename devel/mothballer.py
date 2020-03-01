@@ -71,9 +71,11 @@ def package(categoryname, categorydir, seed):
     cat = moth.Category(categorydir, seed)
     answers = {}
     summary = {}
+    puzzles = []
     for puzzle in cat:
         logging.info("Processing point value {}".format(puzzle.points))
 
+        puzzles.append(puzzle.points)
         answers[puzzle.points] = puzzle.answers
         summary[puzzle.points] = puzzle.summary
 
@@ -85,6 +87,7 @@ def package(categoryname, categorydir, seed):
         obj = puzzle.package()
         zf.writestr(os.path.join(puzzledir, 'puzzle.json'), json.dumps(obj))
 
+    zf.writestr("puzzles.txt", "\n".join(str(p) for p in puzzles) + "\n")
     write_kv_pairs(zf, 'answers.txt', answers)
     write_kv_pairs(zf, 'summaries.txt', summary)
 

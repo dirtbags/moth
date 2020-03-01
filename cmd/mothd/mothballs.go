@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"strings"
+	"bufio"
+	"strconv"
 )
 
 type Mothballs struct {
@@ -30,11 +32,26 @@ func (m *Mothballs) Open(cat string, points int, filename string) (io.ReadCloser
 }
 
 func (m *Mothballs) Inventory() []Category {
+	categories := make([]Category, 0, 20)
 	for cat, zfs := range m.categories {
-		map, err := zfs.Open("map.txt")
-		log.Println("mothballs", cat, zfs)
+		pointsList := make([]int, 0, 20)
+		pf, err := zfs.Open("puzzles.txt")
+		if err != nil {
+			// No puzzles = no category
+			continue
+		}
+		scanner := bufio.NewScanner(pf)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if pointval, err := strconv.Atoi(line); err != nil {
+				log.Printf("Reading points for %s: %s", cat, err.Error())
+			} else {
+				pointsList = append(pointsList, pointval)
+			}
+		}
+		categories = append(categories, Category{cat, pointsList})
 	}
-	return []Category{}
+	return categories
 }
 
 func (m *Mothballs) Update() {
