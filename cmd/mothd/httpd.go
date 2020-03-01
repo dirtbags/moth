@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"strconv"
 )
 
 type HTTPServer struct {
@@ -11,16 +12,18 @@ type HTTPServer struct {
 	Puzzles PuzzleProvider
 	Theme   ThemeProvider
 	State   StateProvider
+	Base    string
 }
 
 func NewHTTPServer(base string, theme ThemeProvider, state StateProvider, puzzles PuzzleProvider) *HTTPServer {
+	base = strings.TrimRight(base, "/")
 	h := &HTTPServer{
 		ServeMux: http.NewServeMux(),
 		Puzzles:  puzzles,
 		Theme:    theme,
 		State:    state,
+		Base:     base,
 	}
-	base = strings.TrimRight(base, "/")
 	h.HandleFunc(base+"/", h.ThemeHandler)
 	h.HandleFunc(base+"/state", h.StateHandler)
 	h.HandleFunc(base+"/register", h.RegisterHandler)
@@ -137,9 +140,36 @@ func (h *HTTPServer) AnswerHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HTTPServer) ContentHandler(w http.ResponseWriter, req *http.Request) {
-	path := req.URL.Path
-	if path == "/" {
-		path = "/puzzle.json"
+	teamId := req.FormValue("id")
+	if _, err := h.State.TeamName(teamId); err != nil {
+    http.Error(w, "Team Not Found", http.StatusNotFound)
+    return
 	}
-	JSendf(w, JSendFail, "unimplemented", "I haven't written this yet")
+	
+	trimLen := len(h.Base) + len("/content/")
+	parts := strings.SplitN(req.URL.Path[trimLen:], "/", 3)
+  if len(parts) < 3 {
+    http.Error(w, "Not Found", http.StatusNotFound)
+    return
+  }
+
+	cat := parts[0]
+	pointsStr := parts[1]
+	filename := parts[2]
+
+	if (filename == "") {
+		filename = "puzzles.json"
+	}
+	
+	points, _ := strconv.Atoi(pointsStr)
+
+	mf, err := h.Puzzles.Open(cat, points, filename)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	defer mf.Close()
+
+	mt, _ := h.Puzzles.ModTime(cat, points, filename)
+  http.ServeContent(w, req, filename, mt, mf)
 }

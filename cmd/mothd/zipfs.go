@@ -164,6 +164,10 @@ func (zfs *Zipfs) Refresh() error {
 	return nil
 }
 
+func (zfs *Zipfs) ModTime() (time.Time) {
+	return zfs.mtime
+}
+
 func (zfs *Zipfs) get(filename string) (*zip.File, error) {
 	for _, f := range zfs.zf.File {
 		if filename == f.Name {

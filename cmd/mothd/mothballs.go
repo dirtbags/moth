@@ -2,11 +2,12 @@ package main
 
 import (
 	"github.com/spf13/afero"
-	"io"
 	"log"
 	"strings"
 	"bufio"
 	"strconv"
+	"time"
+	"fmt"
 )
 
 type Mothballs struct {
@@ -21,14 +22,23 @@ func NewMothballs(fs afero.Fs) *Mothballs {
 	}
 }
 
-func (m *Mothballs) Metadata(cat string, points int) (io.ReadCloser, error) {
-	f, err := m.Fs.Open("/dev/null")
-	return f, err
+func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekCloser, error) {
+	mb, ok := m.categories[cat]
+	if ! ok {
+		return nil, fmt.Errorf("No such category: %s", cat)
+	}
+
+	path := fmt.Sprintf("content/%d/%s", points, filename)
+	return mb.Open(path)
 }
 
-func (m *Mothballs) Open(cat string, points int, filename string) (io.ReadCloser, error) {
-	f, err := m.Fs.Open("/dev/null")
-	return f, err
+func (m *Mothballs) ModTime(cat string, points int, filename string) (mt time.Time, err error) {
+	mb, ok := m.categories[cat]
+	if ! ok {
+		return mt, fmt.Errorf("No such category: %s", cat)
+	}
+	mt = mb.ModTime()
+	return
 }
 
 func (m *Mothballs) Inventory() []Category {

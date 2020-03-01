@@ -17,8 +17,8 @@ type ReadSeekCloser interface {
 }
 
 type PuzzleProvider interface {
-	Metadata(cat string, points int) (io.ReadCloser, error)
-	Open(cat string, points int, path string) (io.ReadCloser, error)
+	Open(cat string, points int, path string) (ReadSeekCloser, error)
+	ModTime(cat string, points int, path string) (time.Time, error)
 	Inventory() []Category
 }
 
@@ -35,6 +35,7 @@ type StateExport struct {
 
 type StateProvider interface {
 	Export(teamId string) *StateExport
+	TeamName(teamId string) (string, error)
 	SetTeamName(teamId, teamName string) error
 }
 
