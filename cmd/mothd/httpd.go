@@ -21,6 +21,7 @@ func NewHTTPServer(base string, theme ThemeProvider, state StateProvider, puzzle
 		PuzzleProvider: puzzles,
 		ServeMux: http.NewServeMux(),
 	}
+	base = strings.TrimRight(base, "/")
 	h.HandleFunc(base+"/", h.ThemeHandler)
 	h.HandleFunc(base+"/state", h.StateHandler)
 	h.HandleFunc(base+"/register", h.RegisterHandler)
