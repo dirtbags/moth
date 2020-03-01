@@ -22,23 +22,14 @@ func NewMothballs(fs afero.Fs) *Mothballs {
 	}
 }
 
-func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekCloser, error) {
+func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekCloser, time.Time, error) {
 	mb, ok := m.categories[cat]
 	if ! ok {
-		return nil, fmt.Errorf("No such category: %s", cat)
+		return nil, time.Time{}, fmt.Errorf("No such category: %s", cat)
 	}
 
-	path := fmt.Sprintf("content/%d/%s", points, filename)
-	return mb.Open(path)
-}
-
-func (m *Mothballs) ModTime(cat string, points int, filename string) (mt time.Time, err error) {
-	mb, ok := m.categories[cat]
-	if ! ok {
-		return mt, fmt.Errorf("No such category: %s", cat)
-	}
-	mt = mb.ModTime()
-	return
+	f, err := mb.Open(fmt.Sprintf("content/%d/%s", points, filename))
+	return f, mb.ModTime(), err
 }
 
 func (m *Mothballs) Inventory() []Category {
@@ -62,6 +53,29 @@ func (m *Mothballs) Inventory() []Category {
 		categories = append(categories, Category{cat, pointsList})
 	}
 	return categories
+}
+
+func (m *Mothballs) CheckAnswer(cat string, points int, answer string) error {
+	zfs, ok := m.categories[cat]
+	if ! ok {
+		return fmt.Errorf("No such category: %s", cat)
+	}
+	
+	af, err := zfs.Open("answers.txt")
+	if err != nil {
+		return fmt.Errorf("No answers.txt file")
+	}
+	defer af.Close()
+	
+	needle := fmt.Sprintf("%d %s", points, answer)
+	scanner := bufio.NewScanner(af)
+	for scanner.Scan() {
+		if scanner.Text() == needle {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Invalid answer")
 }
 
 func (m *Mothballs) Update() {

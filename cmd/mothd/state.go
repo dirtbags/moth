@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -146,36 +145,10 @@ func (s *State) PointsLog() []*Award {
 	return pointsLog
 }
 
-// Return an exportable points log for a client
-func (s *State) Export(teamId string) *StateExport {
-	var export StateExport
-
+// Retrieve current messages
+func (s *State) Messages() string {
 	bMessages, _ := afero.ReadFile(s, "messages.html")
-	export.Messages = string(bMessages)
-
-	teamName, _ := s.TeamName(teamId)
-	export.TeamNames = map[string]string{"self": teamName}
-
-	pointsLog := s.PointsLog()
-	export.PointsLog = make([]Award, len(pointsLog))
-
-	// Read in points
-	exportIds := map[string]string{teamId: "self"}
-	for logno, award := range pointsLog {
-		exportAward := *award
-		if id, ok := exportIds[award.TeamId]; ok {
-			exportAward.TeamId = id
-		} else {
-			exportId := strconv.Itoa(logno)
-			name, _ := s.TeamName(award.TeamId)
-			exportAward.TeamId = exportId
-			exportIds[award.TeamId] = exportAward.TeamId
-			export.TeamNames[exportId] = name
-		}
-		export.PointsLog[logno] = exportAward
-	}
-
-	return &export
+	return string(bMessages)
 }
 
 // AwardPoints gives points to teamId in category.

@@ -68,6 +68,7 @@ func main() {
 
 	go custodian(*refreshInterval, []Component{theme, state, puzzles})
 
-	httpd := NewHTTPServer(*base, theme, state, puzzles)
+	server := NewMothServer(puzzles, theme, state)
+	httpd := NewHTTPServer(*base, server)
 	httpd.Run(*bindStr)
 }

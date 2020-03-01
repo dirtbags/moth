@@ -9,42 +9,34 @@ import (
 
 type HTTPServer struct {
 	*http.ServeMux
-	Puzzles PuzzleProvider
-	Theme   ThemeProvider
-	State   StateProvider
-	Base    string
+	server  *MothServer
+	base    string
 }
 
-func NewHTTPServer(base string, theme ThemeProvider, state StateProvider, puzzles PuzzleProvider) *HTTPServer {
+func NewHTTPServer(base string, server *MothServer) *HTTPServer {
 	base = strings.TrimRight(base, "/")
 	h := &HTTPServer{
 		ServeMux: http.NewServeMux(),
-		Puzzles:  puzzles,
-		Theme:    theme,
-		State:    state,
-		Base:     base,
+		server:   server,
+		base:     base,
 	}
-	h.HandleFunc(base+"/", h.ThemeHandler)
-	h.HandleFunc(base+"/state", h.StateHandler)
-	h.HandleFunc(base+"/register", h.RegisterHandler)
-	h.HandleFunc(base+"/answer", h.AnswerHandler)
-	h.HandleFunc(base+"/content/", h.ContentHandler)
+	h.HandleMothFunc("/", h.ThemeHandler)
+	h.HandleMothFunc("/state", h.StateHandler)
+	h.HandleMothFunc("/register", h.RegisterHandler)
+	h.HandleMothFunc("/answer", h.AnswerHandler)
+	h.HandleMothFunc("/content/", h.ContentHandler)
 	return h
 }
 
-func (h *HTTPServer) Run(bindStr string) {
-	log.Printf("Listening on %s", bindStr)
-	log.Fatal(http.ListenAndServe(bindStr, h))
-}
-
-type MothResponseWriter struct {
-	statusCode *int
-	http.ResponseWriter
-}
-
-func (w MothResponseWriter) WriteHeader(statusCode int) {
-	*w.statusCode = statusCode
-	w.ResponseWriter.WriteHeader(statusCode)
+func (h *HTTPServer) HandleMothFunc(
+	pattern string,
+	mothHandler func(MothRequestHandler, http.ResponseWriter, *http.Request),
+) {
+	handler := func(w http.ResponseWriter, req *http.Request) {
+		mh := h.server.NewHandler(req.FormValue("id"))
+		mothHandler(mh, w, req)
+	}
+	h.HandleFunc(h.base + pattern, handler)
 }
 
 // This gives Instances the signature of http.Handler
@@ -63,90 +55,65 @@ func (h *HTTPServer) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func (h *HTTPServer) ThemeHandler(w http.ResponseWriter, req *http.Request) {
+type MothResponseWriter struct {
+	statusCode *int
+	http.ResponseWriter
+}
+
+func (w MothResponseWriter) WriteHeader(statusCode int) {
+	*w.statusCode = statusCode
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (h *HTTPServer) Run(bindStr string) {
+	log.Printf("Listening on %s", bindStr)
+	log.Fatal(http.ListenAndServe(bindStr, h))
+}
+
+func (h *HTTPServer) ThemeHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
 	if path == "/" {
 		path = "/index.html"
 	}
-
-	f, err := h.Theme.Open(path)
+	
+	f, mtime, err := mh.ThemeOpen(path)
 	if err != nil {
 		http.NotFound(w, req)
 		return
 	}
 	defer f.Close()
-	mtime, _ := h.Theme.ModTime(path)
 	http.ServeContent(w, req, path, mtime, f)
 }
 
-func (h *HTTPServer) StateHandler(w http.ResponseWriter, req *http.Request) {
-	var state struct {
-		Config struct {
-			Devel bool
-		}
-		Messages  string
-		TeamNames map[string]string
-		PointsLog []Award
-		Puzzles   map[string][]int
-	}
-
-	teamId := req.FormValue("id")
-	export := h.State.Export(teamId)
-
-	state.Messages = export.Messages
-	state.TeamNames = export.TeamNames
-	state.PointsLog = export.PointsLog
-
-	state.Puzzles = make(map[string][]int)
-
-	//XXX: move to brains.go
-	for _, category := range h.Puzzles.Inventory() {
-		maxSolved := 0
-		
-		// XXX: We don't have to iterate the log for every category
-		for _, a := range export.PointsLog {
-			if (a.Category == category.Name) && (a.Points > maxSolved) {
-				maxSolved = a.Points
-			}
-		}
-		
-		// Append sentry (end of puzzles)
-		allPuzzles := append(category.Puzzles, 0)
-		puzzles := make([]int, 0, len(allPuzzles))
-		for i, val := range allPuzzles {
-			puzzles = allPuzzles[:i+1]
-			if val > maxSolved {
-				break
-			}
-		}
-		state.Puzzles[category.Name] = puzzles
-	}
-
-	JSONWrite(w, state)
+func (h *HTTPServer) StateHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
+	JSONWrite(w, mh.ExportState())
 }
 
-func (h *HTTPServer) RegisterHandler(w http.ResponseWriter, req *http.Request) {
-	teamId := req.FormValue("id")
+func (h *HTTPServer) RegisterHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
 	teamName := req.FormValue("name")
-	if err := h.State.SetTeamName(teamId, teamName); err != nil {
+	if err := mh.Register(teamName); err != nil {
 		JSendf(w, JSendFail, "not registered", err.Error())
 	} else {
 		JSendf(w, JSendSuccess, "registered", "Team ID registered")
 	}
 }
 
-func (h *HTTPServer) AnswerHandler(w http.ResponseWriter, req *http.Request) {
-	JSendf(w, JSendFail, "unimplemented", "I haven't written this yet")
+func (h *HTTPServer) AnswerHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
+	cat := req.FormValue("cat")
+	pointstr := req.FormValue("points")
+	answer := req.FormValue("answer")
+	
+	points, _ := strconv.Atoi(pointstr)
+	
+	if err := mh.CheckAnswer(cat, points, answer); err != nil {
+		JSendf(w, JSendFail, "not accepted", err.Error())
+	} else {
+		JSendf(w, JSendSuccess, "accepted", "%d points awarded in %s", points, cat)
+	}
 }
 
-func (h *HTTPServer) ContentHandler(w http.ResponseWriter, req *http.Request) {
-	teamId := req.FormValue("id")
-	if _, err := h.State.TeamName(teamId); err != nil {
-    http.Error(w, "Team Not Found", http.StatusNotFound)
-    return
-	}
-	
-	trimLen := len(h.Base) + len("/content/")
+func (h *HTTPServer) ContentHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
+	trimLen := len(h.base) + len("/content/")
 	parts := strings.SplitN(req.URL.Path[trimLen:], "/", 3)
   if len(parts) < 3 {
     http.Error(w, "Not Found", http.StatusNotFound)
@@ -163,13 +130,12 @@ func (h *HTTPServer) ContentHandler(w http.ResponseWriter, req *http.Request) {
 	
 	points, _ := strconv.Atoi(pointsStr)
 
-	mf, err := h.Puzzles.Open(cat, points, filename)
+	mf, mtime, err := mh.PuzzlesOpen(cat, points, filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	defer mf.Close()
 
-	mt, _ := h.Puzzles.ModTime(cat, points, filename)
-  http.ServeContent(w, req, filename, mt, mf)
+  http.ServeContent(w, req, filename, mtime, mf)
 }
