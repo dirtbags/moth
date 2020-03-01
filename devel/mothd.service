@@ -1,0 +1,18 @@
+# To install:
+#    sudo cp mothd.service /etc/systemd/system/moth.service
+#    sudo systemctl enable mothd
+#    sudo systemctl start mothd
+
+[Unit]
+Description=Monarch Of The Hill server
+After=network.target auditd.service
+
+[Service]
+WorkingDirectory=/srv/moth
+User=www-data
+ExecStart=/srv/moth/mothd
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -30,6 +30,10 @@ func (m *Mothballs) Open(cat string, points int, filename string) (io.ReadCloser
 }
 
 func (m *Mothballs) Inventory() []Category {
+	for cat, zfs := range m.categories {
+		map, err := zfs.Open("map.txt")
+		log.Println("mothballs", cat, zfs)
+	}
 	return []Category{}
 }
 

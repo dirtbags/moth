@@ -94,8 +94,11 @@ func (h *HTTPServer) StateHandler(w http.ResponseWriter, req *http.Request) {
 	state.TeamNames = export.TeamNames
 	state.PointsLog = export.PointsLog
 
-	// XXX: unstub this
-	state.Puzzles = map[string][]int{"sequence": {1}}
+	state.Puzzles = make(map[string][]int)
+	log.Println("Puzzles")
+	for category := range h.Puzzles.Inventory() {
+		log.Println(category)
+	}
 
 	JSONWrite(w, state)
 }

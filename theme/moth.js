@@ -98,7 +98,8 @@ function renderPuzzles(obj) {
 function renderState(obj) {
   devel = obj.Config.Devel
   if (devel) {
-    sessionStorage.id = "1234"
+    let params = new URLSearchParams(window.location.search)
+    sessionStorage.id = "1"
     sessionStorage.pid = "rodney"
   }
   if (Object.keys(obj.Puzzles).length > 0) {
