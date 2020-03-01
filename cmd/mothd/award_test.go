@@ -30,8 +30,7 @@ func TestAward(t *testing.T) {
 	} else if string(ja) != `[1536958399,"1a2b3c4d","counting",1]` {
 		t.Error("JSON wrong")
 	}
-	
-	
+
 	if _, err := ParseAward("bad bad bad 1"); err == nil {
 		t.Error("Not throwing error on bad timestamp")
 	}

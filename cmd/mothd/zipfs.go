@@ -3,9 +3,9 @@ package main
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
-	"github.com/spf13/afero"
 	"strings"
 	"time"
 )
@@ -146,7 +146,7 @@ func (zfs *Zipfs) Refresh() error {
 	if err != nil {
 		return err
 	}
-	
+
 	zf, err := zip.NewReader(f, info.Size())
 	if err != nil {
 		f.Close()

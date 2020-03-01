@@ -1,24 +1,24 @@
 package main
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 	"strings"
 )
 
 type HTTPServer struct {
-	PuzzleProvider
-	ThemeProvider
-	StateProvider
 	*http.ServeMux
+	Puzzles PuzzleProvider
+	Theme   ThemeProvider
+	State   StateProvider
 }
 
-func NewHTTPServer(base string, theme ThemeProvider, state StateProvider, puzzles PuzzleProvider) (*HTTPServer)  {
+func NewHTTPServer(base string, theme ThemeProvider, state StateProvider, puzzles PuzzleProvider) *HTTPServer {
 	h := &HTTPServer{
-		ThemeProvider: theme,
-		StateProvider: state,
-		PuzzleProvider: puzzles,
 		ServeMux: http.NewServeMux(),
+		Puzzles:  puzzles,
+		Theme:    theme,
+		State:    state,
 	}
 	base = strings.TrimRight(base, "/")
 	h.HandleFunc(base+"/", h.ThemeHandler)
@@ -47,7 +47,7 @@ func (w MothResponseWriter) WriteHeader(statusCode int) {
 // This gives Instances the signature of http.Handler
 func (h *HTTPServer) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 	w := MothResponseWriter{
-		statusCode: new(int),
+		statusCode:     new(int),
 		ResponseWriter: wOrig,
 	}
 	h.ServeMux.ServeHTTP(w, r)
@@ -66,37 +66,48 @@ func (h *HTTPServer) ThemeHandler(w http.ResponseWriter, req *http.Request) {
 		path = "/index.html"
 	}
 
-	f, err := h.ThemeProvider.Open(path)
+	f, err := h.Theme.Open(path)
 	if err != nil {
 		http.NotFound(w, req)
 		return
 	}
 	defer f.Close()
-	mtime, _ := h.ThemeProvider.ModTime(path)
+	mtime, _ := h.Theme.ModTime(path)
 	http.ServeContent(w, req, path, mtime, f)
 }
-
 
 func (h *HTTPServer) StateHandler(w http.ResponseWriter, req *http.Request) {
 	var state struct {
 		Config struct {
-			Devel bool `json:"devel"`
-		} `json:"config"`
-		Messages string `json:"messages"`
-		Teams []string `json:"teams"`
-		Points []Award `json:"points"`
-		Puzzles map[string][]int `json:"puzzles"`
+			Devel bool
+		}
+		Messages  string
+		TeamNames map[string]string
+		PointsLog []Award
+		Puzzles   map[string][]int
 	}
-	state.Messages = "Hello world"
-	state.Teams = []string{"goobers"}
-	state.Points = []Award{{0, "0", "sequence", 1}}
+
+	teamId := req.FormValue("id")
+	export := h.State.Export(teamId)
+
+	state.Messages = export.Messages
+	state.TeamNames = export.TeamNames
+	state.PointsLog = export.PointsLog
+
+	// XXX: unstub this
 	state.Puzzles = map[string][]int{"sequence": {1}}
 
 	JSONWrite(w, state)
 }
 
 func (h *HTTPServer) RegisterHandler(w http.ResponseWriter, req *http.Request) {
-	JSendf(w, JSendFail, "unimplemented", "I haven't written this yet")
+	teamId := req.FormValue("id")
+	teamName := req.FormValue("name")
+	if err := h.State.SetTeamName(teamId, teamName); err != nil {
+		JSendf(w, JSendFail, "not registered", err.Error())
+	} else {
+		JSendf(w, JSendSuccess, "registered", "Team ID registered")
+	}
 }
 
 func (h *HTTPServer) AnswerHandler(w http.ResponseWriter, req *http.Request) {

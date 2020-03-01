@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/spf13/afero"
-	"log"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -14,7 +14,7 @@ type Mothballs struct {
 
 func NewMothballs(fs afero.Fs) *Mothballs {
 	return &Mothballs{
-		Fs: fs,
+		Fs:         fs,
 		categories: make(map[string]*Zipfs),
 	}
 }
@@ -32,7 +32,6 @@ func (m *Mothballs) Open(cat string, points int, filename string) (io.ReadCloser
 func (m *Mothballs) Inventory() []Category {
 	return []Category{}
 }
-
 
 func (m *Mothballs) Update() {
 	// Any new categories?
@@ -59,4 +58,3 @@ func (m *Mothballs) Update() {
 		}
 	}
 }
-

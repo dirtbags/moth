@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/spf13/afero"
-	"testing"
 	"io/ioutil"
+	"testing"
 )
 
 func TestTheme(t *testing.T) {

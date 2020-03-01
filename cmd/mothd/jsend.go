@@ -21,7 +21,7 @@ func JSONWrite(w http.ResponseWriter, data interface{}) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(respBytes)))
 	w.WriteHeader(http.StatusOK) // RFC2616 makes it pretty clear that 4xx codes are for the user-agent
@@ -29,8 +29,8 @@ func JSONWrite(w http.ResponseWriter, data interface{}) {
 }
 
 func JSend(w http.ResponseWriter, status string, data interface{}) {
-	resp := struct{
-		Status string `json:"status"`
+	resp := struct {
+		Status string      `json:"status"`
 		Data   interface{} `json:"data"`
 	}{}
 	resp.Status = status
@@ -40,12 +40,12 @@ func JSend(w http.ResponseWriter, status string, data interface{}) {
 }
 
 func JSendf(w http.ResponseWriter, status, short string, format string, a ...interface{}) {
-	data := struct{
+	data := struct {
 		Short       string `json:"short"`
 		Description string `json:"description"`
 	}{}
 	data.Short = short
 	data.Description = fmt.Sprintf(format, a...)
-	
+
 	JSend(w, status, data)
 }

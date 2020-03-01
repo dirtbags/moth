@@ -57,8 +57,13 @@ function renderPuzzles(obj) {
     let l = document.createElement('ul')
     pdiv.appendChild(l)
     for (let puzzle of puzzles) {
-      let points = puzzle[0]
-      let id = puzzle[1]
+      let points = puzzle
+      let id = puzzle
+      
+      if (Array.isArray(puzzle)) {
+        points = puzzle[0]
+        id = puzzle[1]
+      }
   
       let i = document.createElement('li')
       l.appendChild(i)
@@ -91,15 +96,15 @@ function renderPuzzles(obj) {
 }
 
 function renderState(obj) {
-  devel = obj.config.devel
+  devel = obj.Config.Devel
   if (devel) {
     sessionStorage.id = "1234"
     sessionStorage.pid = "rodney"
   }
-  if (Object.keys(obj.puzzles).length > 0) {
-    renderPuzzles(obj.puzzles)
+  if (Object.keys(obj.Puzzles).length > 0) {
+    renderPuzzles(obj.Puzzles)
   }
-  renderNotices(obj.messages)
+  renderNotices(obj.Messages)
 }
 
 function heartbeat() {
@@ -136,34 +141,6 @@ function showPuzzles() {
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
   heartbeat()
-  drawCacheButton()
-}
-
-function drawCacheButton() {
-  let teamId = sessionStorage.id
-  let cacher = document.querySelector("#cacheButton")
-
-  function updateCacheButton() {
-    let headers = new Headers()
-    headers.append("pragma", "no-cache")
-    headers.append("cache-control", "no-cache")
-    let url = new URL("current_manifest.json", window.location)
-    url.searchParams.set("id", teamId)
-    fetch(url, {method: "HEAD", headers: headers})
-      .then( resp => {
-        if (resp.ok) {
-	  cacher.classList.remove("disabled")
-        } else {
-	  cacher.classList.add("disabled")
-        }
-      })
-      .catch(ex => {
-	  cacher.classList.add("disabled")
-      })
-  }
-
-  setInterval (updateCacheButton , 30000)
-  updateCacheButton()
 }
 
 async function fetchAll() {

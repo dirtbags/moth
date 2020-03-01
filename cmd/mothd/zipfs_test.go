@@ -3,15 +3,14 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"io"
 	"github.com/spf13/afero"
+	"io"
 	"testing"
 )
 
-
 func TestZipfs(t *testing.T) {
 	fs := new(afero.MemMapFs)
-	
+
 	tf, err := fs.Create("/test.zip")
 	if err != nil {
 		t.Error(err)

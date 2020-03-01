@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
 )
 
 type Award struct {
@@ -34,17 +34,17 @@ func (a *Award) String() string {
 }
 
 func (a *Award) MarshalJSON() ([]byte, error) {
-  if a == nil {
-    return []byte("null"), nil
-  }
-  ao := []interface{}{
-  	a.When,
-  	a.TeamId,
-  	a.Category,
-  	a.Points,
-  }
-  
-  return json.Marshal(ao)
+	if a == nil {
+		return []byte("null"), nil
+	}
+	ao := []interface{}{
+		a.When,
+		a.TeamId,
+		a.Category,
+		a.Points,
+	}
+
+	return json.Marshal(ao)
 }
 
 func (a *Award) Same(o *Award) bool {

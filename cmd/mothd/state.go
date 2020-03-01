@@ -14,34 +14,19 @@ import (
 )
 
 // Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
-const distinguishableChars = "234678abcdefhijkmnpqrtwxyz="
-
-func mktoken() string {
-	a := make([]byte, 8)
-	for i := range a {
-		char := rand.Intn(len(distinguishableChars))
-		a[i] = distinguishableChars[char]
-	}
-	return string(a)
-}
-
-type StateExport struct {
-	TeamNames map[string]string
-	PointsLog []Award
-	Messages  []string
-}
+const DistinguishableChars = "234678abcdefhikmnpqrtwxyz="
 
 // We use the filesystem for synchronization between threads.
 // The only thing State methods need to know is the path to the state directory.
 type State struct {
-	Enabled bool
 	afero.Fs
+	Enabled bool
 }
 
 func NewState(fs afero.Fs) *State {
 	return &State{
-		Enabled: true,
 		Fs:      fs,
+		Enabled: true,
 	}
 }
 
@@ -49,7 +34,7 @@ func NewState(fs afero.Fs) *State {
 func (s *State) UpdateEnabled() {
 	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
 		s.Enabled = false
-		log.Print("Suspended: enabled file missing")
+		log.Println("Suspended: enabled file missing")
 		return
 	}
 
@@ -78,12 +63,12 @@ func (s *State) UpdateEnabled() {
 		case '#':
 			continue
 		default:
-			log.Printf("Misformatted line in hours file")
+			log.Println("Misformatted line in hours file")
 		}
 		line = strings.TrimSpace(line)
 		until, err := time.Parse(time.RFC3339, line)
 		if err != nil {
-			log.Printf("Suspended: Unparseable until date: %s", line)
+			log.Println("Suspended: Unparseable until date:", line)
 			continue
 		}
 		if until.Before(time.Now()) {
@@ -112,7 +97,7 @@ func (s *State) TeamName(teamId string) (string, error) {
 }
 
 // Write out team name. This can only be done once.
-func (s *State) SetTeamName(teamId string, teamName string) error {
+func (s *State) SetTeamName(teamId, teamName string) error {
 	if f, err := s.Open("teamids.txt"); err != nil {
 		return fmt.Errorf("Team IDs file does not exist")
 	} else {
@@ -161,53 +146,33 @@ func (s *State) PointsLog() []*Award {
 	return pointsLog
 }
 
-// Return an exportable points log,
-// This anonymizes teamId with either an integer, or the string "self"
-// for the requesting teamId.
+// Return an exportable points log for a client
 func (s *State) Export(teamId string) *StateExport {
+	var export StateExport
+
+	bMessages, _ := afero.ReadFile(s, "messages.html")
+	export.Messages = string(bMessages)
+
 	teamName, _ := s.TeamName(teamId)
+	export.TeamNames = map[string]string{"self": teamName}
 
 	pointsLog := s.PointsLog()
-
-	export := StateExport{
-		PointsLog: make([]Award, len(pointsLog)),
-		Messages:  make([]string, 0, 10),
-		TeamNames: map[string]string{"self": teamName},
-	}
-
-	// Read in messages
-	if f, err := s.Open("messages.txt"); err != nil {
-		log.Print(err)
-	} else {
-		defer f.Close()
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			message := scanner.Text()
-			if strings.HasPrefix(message, "#") {
-				continue
-			}
-			export.Messages = append(export.Messages, message)
-		}
-	}
+	export.PointsLog = make([]Award, len(pointsLog))
 
 	// Read in points
 	exportIds := map[string]string{teamId: "self"}
 	for logno, award := range pointsLog {
-		exportAward := award
+		exportAward := *award
 		if id, ok := exportIds[award.TeamId]; ok {
 			exportAward.TeamId = id
 		} else {
 			exportId := strconv.Itoa(logno)
+			name, _ := s.TeamName(award.TeamId)
 			exportAward.TeamId = exportId
 			exportIds[award.TeamId] = exportAward.TeamId
-
-			name, err := s.TeamName(award.TeamId)
-			if err != nil {
-				name = "Rodney" // https://en.wikipedia.org/wiki/Rogue_(video_game)#Gameplay
-			}
 			export.TeamNames[exportId] = name
 		}
-		export.PointsLog[logno] = *exportAward
+		export.PointsLog[logno] = exportAward
 	}
 
 	return &export
@@ -308,13 +273,14 @@ func (s *State) maybeInitialize() {
 		return
 	}
 
+	now := time.Now().UTC().Format(time.RFC3339)
 	log.Print("initialized file missing, re-initializing")
 
 	// Remove any extant control and state files
 	s.Remove("enabled")
 	s.Remove("hours")
 	s.Remove("points.log")
-	s.Remove("messages.txt")
+	s.Remove("messages.html")
 	s.RemoveAll("points.tmp")
 	s.RemoveAll("points.new")
 	s.RemoveAll("teams")
@@ -326,49 +292,54 @@ func (s *State) maybeInitialize() {
 
 	// Preseed available team ids if file doesn't exist
 	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
-		defer f.Close()
+		id := make([]byte, 8)
 		for i := 0; i < 100; i += 1 {
-			fmt.Fprintln(f, mktoken())
+			for i := range id {
+				char := rand.Intn(len(DistinguishableChars))
+				id[i] = DistinguishableChars[char]
+			}
+			fmt.Fprintln(f, string(id))
 		}
+		f.Close()
 	}
 
 	// Create some files
-	afero.WriteFile(
-		s,
-		"initialized",
-		[]byte("state/initialized: remove to re-initialize the contest\n"),
-		0644,
-	)
-	afero.WriteFile(
-		s,
-		"enabled",
-		[]byte("state/enabled: remove to suspend the contest\n"),
-		0644,
-	)
-	afero.WriteFile(
-		s,
-		"hours",
-		[]byte(
-			"# state/hours: when the contest is enabled\n"+
-				"# Lines starting with + enable, with - disable.\n"+
-				"\n"+
-				"+ 1970-01-01T00:00:00Z\n"+
-				"- 3019-10-31T00:00:00Z\n",
-		),
-		0644,
-	)
-	afero.WriteFile(
-		s,
-		"messages.txt",
-		[]byte(fmt.Sprintf("[%s] Initialized.\n", time.Now().UTC().Format(time.RFC3339))),
-		0644,
-	)
-	afero.WriteFile(
-		s,
-		"points.log",
-		[]byte(""),
-		0644,
-	)
+	if f, err := s.Create("initialized"); err == nil {
+		fmt.Fprintln(f, "initialized: remove to re-initialize the contest.")
+		fmt.Fprintln(f)
+		fmt.Fprintln(f, "This instance was initaliazed at", now)
+		f.Close()
+	}
+
+	if f, err := s.Create("enabled"); err == nil {
+		fmt.Fprintln(f, "enabled: remove or rename to suspend the contest.")
+		f.Close()
+	}
+
+	if f, err := s.Create("hours"); err == nil {
+		fmt.Fprintln(f, "# hours: when the contest is enabled")
+		fmt.Fprintln(f, "#")
+		fmt.Fprintln(f, "# Enable:  + timestamp")
+		fmt.Fprintln(f, "# Disable: - timestamp")
+		fmt.Fprintln(f, "#")
+		fmt.Fprintln(f, "# You can have multiple start/stop times.")
+		fmt.Fprintln(f, "# Whatever time is the most recent, wins.")
+		fmt.Fprintln(f, "# Times in the future are ignored.")
+		fmt.Fprintln(f)
+		fmt.Fprintln(f, "+", now)
+		fmt.Fprintln(f, "- 3019-10-31T00:00:00Z")
+		f.Close()
+	}
+
+	if f, err := s.Create("messages.html"); err == nil {
+		fmt.Fprintln(f, "<!-- messages.html: put client broadcast messages here. -->")
+		f.Close()
+	}
+
+	if f, err := s.Create("points.log"); err == nil {
+		f.Close()
+	}
+
 }
 
 func (s *State) Update() {

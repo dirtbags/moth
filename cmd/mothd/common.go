@@ -6,7 +6,7 @@ import (
 )
 
 type Category struct {
-	Name string
+	Name    string
 	Puzzles []int
 }
 
@@ -27,8 +27,15 @@ type ThemeProvider interface {
 	ModTime(path string) (time.Time, error)
 }
 
+type StateExport struct {
+	Messages  string
+	TeamNames map[string]string
+	PointsLog []Award
+}
+
 type StateProvider interface {
-	
+	Export(teamId string) *StateExport
+	SetTeamName(teamId, teamName string) error
 }
 
 type Component interface {

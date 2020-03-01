@@ -14,7 +14,7 @@ func custodian(updateInterval time.Duration, components []Component) {
 			c.Update()
 		}
 	}
-	
+
 	ticker := time.NewTicker(updateInterval)
 	update()
 	for _ = range ticker.C {
