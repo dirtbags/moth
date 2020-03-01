@@ -4,131 +4,16 @@
     <title>Scoreboard</title>
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
-    <script>
-function update(state) {
-  let element = document.getElementById("scoreboard");
-  let teamnames = state["teams"];
-  let pointslog = state["points"];
-  let highscore = {};
-  let teams = {};
-  
-  // Every machine that's displaying the scoreboard helpfully stores the last 20 values of
-  // points.json for us, in case of catastrophe. Thanks, y'all!
-  //
-  // We have been doing some letiation on this "everybody backs up the server state" trick since 2009.
-  // We have needed it 0 times.
-  let pointshistory = JSON.parse(localStorage.getItem("pointshistory")) || [];
-  if (pointshistory.length >= 20){
-    pointshistory.shift();
-  }
-  pointshistory.push(pointslog);
-  localStorage.setItem("pointshistory", JSON.stringify(pointshistory));
-
-  // Dole out points
-  for (let i in pointslog) {
-    let entry = pointslog[i];
-    let timestamp = entry[0];
-    let teamhash = entry[1];
-    let category = entry[2];
-    let points = entry[3];
-
-    let team = teams[teamhash] || {__hash__: teamhash};
-
-    // Add points to team's points for that category
-    team[category] = (team[category] || 0) + points;
-
-    // Record highest score in a category
-    highscore[category] = Math.max(highscore[category] || 0, team[category]);
-
-    teams[teamhash] = team;
-  }
-
-  // Sort by team score
-  function teamScore(t) {
-    let score = 0;
-    for (let category in highscore) {
-      score += (t[category] || 0) / highscore[category];
-    }
-    return score;
-  }
-  function teamCompare(a, b) {
-    return teamScore(a) - teamScore(b);
-  }
-
-  // Figure out how to order each team on the scoreboard
-  let winners = [];
-  for (let i in teams) {
-    winners.push(teams[i]);
-  }
-  winners.sort(teamCompare);
-  winners.reverse();
-
-  // Clear out the element we're about to populate
-  Array.from(element.childNodes).map(e => e.remove());
-
-  let maxWidth = 100 / Object.keys(highscore).length;
-  for (let i in winners) {
-    let team = winners[i];
-    let row = document.createElement("div");
-    let ncat = 0;
-    for (let category in highscore) {
-      let catHigh = highscore[category];
-      let catTeam = team[category] || 0;
-      let catPct = catTeam / catHigh;
-      let width = maxWidth * catPct;
-
-      let bar = document.createElement("span");
-      bar.classList.add("category");
-      bar.classList.add("cat" + ncat);
-      bar.style.width = width + "%";
-      bar.textContent = category + ": " + catTeam;
-      bar.title = bar.textContent;
-
-      row.appendChild(bar);
-      ncat += 1;
-    }
-
-    let te = document.createElement("span");
-    te.classList.add("teamname");
-    te.textContent = teamnames[team.__hash__];
-    row.appendChild(te);
-
-    element.appendChild(row);
-  }
-}
-
-function once() {
-  fetch("points.json")
-  .then(resp => {
-    return resp.json();
-  })
-  .then(obj => {
-    update(obj);
-  })
-  .catch(err => {
-    console.log(err);
-  });
-}
-
-function init() {
-  let base = window.location.href.replace("scoreboard.html", "")
-  document.querySelector("#location").textContent = base
-
-  setInterval(once, 60000);
-  once();
-}
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
-    </script>
+    <script src="moth-pwa.js"></script>
+    <script src="moment.min.js" async></script>
+    <script src="Chart.min.js" async></script>
+    <script src="scoreboard.js" async></script>
   </head>
-  <body>
-    <h1 class="Success">Scoreboard</h1>
+  <body class="wide">
     <h4 id="location"></h4>
-    <section>
-      <div id="scoreboard"></div>
+    <section class="rotate">
+      <div id="chart"></div>
+      <div id="rankings"></div>
     </section>
     <nav>
       <ul>
