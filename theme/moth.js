@@ -103,6 +103,9 @@ function renderState(obj) {
   }
   if (Object.keys(obj.Puzzles).length > 0) {
     renderPuzzles(obj.Puzzles)
+    if (obj.Config.Detachable) {
+      fetchAll(obj.Puzzles)
+    }
   }
   renderNotices(obj.Messages)
 }
@@ -143,62 +146,27 @@ function showPuzzles() {
   heartbeat()
 }
 
-async function fetchAll() {
+async function fetchAll(puzzles) {
   let teamId = sessionStorage.id
-  let headers = new Headers()
-  headers.append("pragma", "no-cache")
-  headers.append("cache-control", "no-cache")
-  requests = []
-  let url = new URL("current_manifest.json", window.location)
-  url.searchParams.set("id", teamId)
 
-  toast("Caching all currently-open content")
-  requests.push( fetch(url, {headers: headers})
-   .then( resp => {
-    if (resp.ok) {
-      resp.json()
-       .then(contents => {
-        console.log("Processing manifest")
-        for (let resource of contents) {
-          if (resource == "puzzles.json") {
-            continue
-          }
-          fetch(resource)
-           .then(e => {
-             console.log("Fetched " + resource)
-          })
-        }
-      })
-   }
-  }))
+  console.log("Caching all currently-open content")
 
-  let resp = await fetch("puzzles.json?id=" + teamId, {headers: headers})
-	
-  if (resp.ok) {
-    let categories = await resp.json()
-    let cat_names = Object.keys(categories)
-    cat_names.sort()
-    for (let cat_name of cat_names) {
-      if (cat_name.startsWith("__")) {
-        // Skip metadata
+  for (let cat in puzzles) {
+    for (let points of puzzles[cat]) {
+      let resp = await fetch(cat + "/" + points + "/")
+      if (! resp.ok) {
         continue
       }
-      let puzzles = categories[cat_name]
-      for (let puzzle of puzzles) {
-      	let url = new URL("puzzle.html", window.location)
-      	url.searchParams.set("cat", cat_name)
-      	url.searchParams.set("points", puzzle[0])
-      	url.searchParams.set("pid", puzzle[1])
-        requests.push(
-          fetch(url)
-          .then(e => {
-            console.log("Fetched " + url)
-          })
-        )
+      let obj = await resp.json()
+      for (let file of obj.files) {
+        fetch(cat + "/" + points + "/" + file.name)
+      }
+      for (let file of obj.scripts) {
+        fetch(cat + "/" + points + "/" + file.name)
       }
     }
   }
-  await Promise.all(requests)
+
   toast("Done caching content")
 }
 
