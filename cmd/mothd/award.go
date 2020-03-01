@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"encoding/json"
 )
 
 type Award struct {
@@ -30,6 +31,20 @@ func ParseAward(s string) (*Award, error) {
 
 func (a *Award) String() string {
 	return fmt.Sprintf("%d %s %s %d", a.When, a.TeamId, a.Category, a.Points)
+}
+
+func (a *Award) MarshalJSON() ([]byte, error) {
+  if a == nil {
+    return []byte("null"), nil
+  }
+  ao := []interface{}{
+  	a.When,
+  	a.TeamId,
+  	a.Category,
+  	a.Points,
+  }
+  
+  return json.Marshal(ao)
 }
 
 func (a *Award) Same(o *Award) bool {

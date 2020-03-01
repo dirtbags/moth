@@ -18,7 +18,7 @@ func TestState(t *testing.T) {
 	}
 
 	s := NewState(fs)
-	s.Cleanup()
+	s.Update()
 
 	pl := s.PointsLog()
 	if len(pl) != 0 {
@@ -51,7 +51,7 @@ func TestState(t *testing.T) {
 	category := "poot"
 	points := 3928
 	s.AwardPoints(teamId, category, points)
-	s.Cleanup()
+	s.Update()
 
 	pl = s.PointsLog()
 	if len(pl) != 1 {
@@ -61,7 +61,7 @@ func TestState(t *testing.T) {
 	}
 
 	fs.Remove("initialized")
-	s.Cleanup()
+	s.Update()
 
 	pl = s.PointsLog()
 	if len(pl) != 0 {

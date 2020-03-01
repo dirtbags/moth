@@ -4,88 +4,20 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"math/rand"
-	"os"
+	"github.com/spf13/afero"
 	"testing"
-	"time"
 )
 
-func TestZipPerformance(t *testing.T) {
-	// I get 4.8s for 10,000 reads
-	if os.Getenv("BENCHMARK") == "" {
-		return
-	}
-	
-	rng := rand.New(rand.NewSource(rand.Int63()))
-	
-	tf, err := ioutil.TempFile("", "zipfs")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer os.Remove(tf.Name())
-
-	w := zip.NewWriter(tf)
-	for i := 0; i < 100; i += 1 {
-		fsize := 1000
-		switch {
-		case i % 10 == 0:
-			fsize = 400000
-		case i % 20 == 6:
-			fsize  = 5000000
-		case i == 80:
-			fsize = 1000000000
-		}
-		
-		f, err := w.Create(fmt.Sprintf("%d.bin", i))
-		if err != nil {
-			t.Fatal(err)
-			return
-		}
-		if _, err := io.CopyN(f, rng, int64(fsize)); err != nil {
-			t.Error(err)
-		}
-	}
-	w.Close()
-	
-	tfsize, err := tf.Seek(0, 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	
-	startTime := time.Now()
-	nReads := 10000
-	for i := 0; i < 10000; i += 1 {
-		r, err := zip.NewReader(tf, tfsize)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		filenum := rng.Intn(len(r.File))
-		f, err := r.File[filenum].Open()
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-		buf, err := ioutil.ReadAll(f)
-		if err != nil {
-			t.Error(err)
-		}
-		t.Log("Read file of size", len(buf))
-		f.Close()
-	}
-	t.Log(nReads, "reads took", time.Since(startTime))
-	t.Error("moo")
-}
 
 func TestZipfs(t *testing.T) {
-	tf, err := ioutil.TempFile("", "zipfs")
+	fs := new(afero.MemMapFs)
+	
+	tf, err := fs.Create("/test.zip")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer os.Remove(tf.Name())
+	defer fs.Remove(tf.Name())
 
 	w := zip.NewWriter(tf)
 	f, err := w.Create("moo.txt")
@@ -105,7 +37,7 @@ func TestZipfs(t *testing.T) {
 	tf.Close()
 
 	// Now read it in
-	mb, err := OpenZipfs(tf.Name())
+	mb, err := OpenZipfs(fs, tf.Name())
 	if err != nil {
 		t.Error(err)
 		return

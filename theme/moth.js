@@ -102,7 +102,6 @@ function renderState(obj) {
   renderNotices(obj.messages)
 }
 
-
 function heartbeat() {
   let teamId = sessionStorage.id || ""
   let participantId = sessionStorage.pid

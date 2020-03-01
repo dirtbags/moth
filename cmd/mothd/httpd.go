@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"log"
 	"strings"
-	"github.com/dirtbags/moth/jsend"
 )
 
 type HTTPServer struct {
@@ -29,7 +28,6 @@ func NewHTTPServer(base string, theme ThemeProvider, state StateProvider, puzzle
 	h.HandleFunc(base+"/content/", h.ContentHandler)
 	return h
 }
-
 
 func (h *HTTPServer) Run(bindStr string) {
 	log.Printf("Listening on %s", bindStr)
@@ -64,10 +62,6 @@ func (h *HTTPServer) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 
 func (h *HTTPServer) ThemeHandler(w http.ResponseWriter, req *http.Request) {
 	path := req.URL.Path
-	if strings.Contains(path, "..") {
-		http.Error(w, "Invalid URL path", http.StatusBadRequest)
-		return
-	}
 	if path == "/" {
 		path = "/index.html"
 	}
@@ -84,17 +78,35 @@ func (h *HTTPServer) ThemeHandler(w http.ResponseWriter, req *http.Request) {
 
 
 func (h *HTTPServer) StateHandler(w http.ResponseWriter, req *http.Request) {
-	jsend.Write(w, jsend.Fail, "unimplemented", "I haven't written this yet")
+	var state struct {
+		Config struct {
+			Devel bool `json:"devel"`
+		} `json:"config"`
+		Messages string `json:"messages"`
+		Teams []string `json:"teams"`
+		Points []Award `json:"points"`
+		Puzzles map[string][]int `json:"puzzles"`
+	}
+	state.Messages = "Hello world"
+	state.Teams = []string{"goobers"}
+	state.Points = []Award{{0, "0", "sequence", 1}}
+	state.Puzzles = map[string][]int{"sequence": {1}}
+
+	JSONWrite(w, state)
 }
 
 func (h *HTTPServer) RegisterHandler(w http.ResponseWriter, req *http.Request) {
-	jsend.Write(w, jsend.Fail, "unimplemented", "I haven't written this yet")
+	JSendf(w, JSendFail, "unimplemented", "I haven't written this yet")
 }
 
 func (h *HTTPServer) AnswerHandler(w http.ResponseWriter, req *http.Request) {
-	jsend.Write(w, jsend.Fail, "unimplemented", "I haven't written this yet")
+	JSendf(w, JSendFail, "unimplemented", "I haven't written this yet")
 }
 
 func (h *HTTPServer) ContentHandler(w http.ResponseWriter, req *http.Request) {
-	jsend.Write(w, jsend.Fail, "unimplemented", "I haven't written this yet")
+	path := req.URL.Path
+	if path == "/" {
+		path = "/puzzle.json"
+	}
+	JSendf(w, JSendFail, "unimplemented", "I haven't written this yet")
 }
