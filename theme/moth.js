@@ -167,7 +167,7 @@ async function fetchAll(puzzles) {
     }
   }
 
-  toast("Done caching content")
+  console.log("Done caching content")
 }
 
 function login(e) {
