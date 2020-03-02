@@ -82,6 +82,7 @@ func (s *State) UpdateEnabled() {
 
 // Returns team name given a team ID.
 func (s *State) TeamName(teamId string) (string, error) {
+	// XXX: directory traversal
 	teamFile := filepath.Join("teams", teamId)
 	teamNameBytes, err := afero.ReadFile(s, teamFile)
 	teamName := strings.TrimSpace(string(teamNameBytes))

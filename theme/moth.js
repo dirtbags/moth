@@ -144,7 +144,6 @@ function showPuzzles() {
 
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
-  heartbeat()
 }
 
 async function fetchAll(puzzles) {
@@ -191,6 +190,7 @@ function login(e) {
           sessionStorage.id = teamId
           sessionStorage.pid = participantId
           showPuzzles()
+          heartbeat()
         } else {
           toast(obj.data.description)
         }
@@ -211,10 +211,6 @@ function login(e) {
 }
 
 function init() {
-  // Already signed in?
-  if (sessionStorage.id) {
-    showPuzzles()
-  }
   heartbeat()
   setInterval(e => heartbeat(), 40000)
 

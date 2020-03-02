@@ -45,6 +45,7 @@ type StateProvider interface {
 	PointsLog() []*Award
 	TeamName(teamId string) (string, error)
 	SetTeamName(teamId, teamName string) error
+	AwardPoints(teamId string, cat string, points int) error
 	Component
 }
 
@@ -82,17 +83,20 @@ type MothRequestHandler struct {
 }
 
 func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
-	// XXX: Make sure this puzzle is unlocked
-	return mh.Puzzles.Open(cat, points, path)
+	export := mh.ExportAllState()
+	fmt.Println(export.Puzzles)
+	for _, p := range export.Puzzles[cat] {
+		fmt.Println(points, p)
+		if p == points {
+			return mh.Puzzles.Open(cat, points, path)
+		}
+	}
+	
+	return nil, time.Time{}, fmt.Errorf("Puzzle locked")
 }
 
 func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time, error) {
 	return mh.Theme.Open(path)
-}
-
-func (mh *MothRequestHandler) xxxTeamName() string {
-	teamName, _ := mh.State.TeamName(mh.teamId)
-	return teamName
 }
 
 func (mh *MothRequestHandler) Register(teamName string) error {
@@ -105,10 +109,18 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 }
 
 func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
-	return mh.Puzzles.CheckAnswer(cat, points, answer)
+	if err := mh.Puzzles.CheckAnswer(cat, points, answer); err != nil {
+		return err
+	}
+	
+	if err := mh.State.AwardPoints(mh.teamId, cat, points); err != nil {
+		return err
+	}
+	
+	return nil
 }
 
-func (mh *MothRequestHandler) ExportState() *StateExport {
+func (mh *MothRequestHandler) ExportAllState() *StateExport {
 	export := StateExport{}
 
 	teamName, _ := mh.State.TeamName(mh.teamId)
@@ -142,8 +154,6 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 
 
 	export.Puzzles = make(map[string][]int)
-
-	//XXX: move to brains.go
 	for _, category := range mh.Puzzles.Inventory() {
 		// Append sentry (end of puzzles)
 		allPuzzles := append(category.Puzzles, 0)
@@ -161,4 +171,18 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	}
 
 	return &export
+}
+
+func (mh *MothRequestHandler) ExportState() *StateExport {
+	export := mh.ExportAllState()
+	
+	// We don't give this out to just anybody,
+	// because back when we did,
+	// we got a bad reputation on some secretive blacklist,
+	// and now the Navy can't register for events.
+	if export.TeamNames["self"] == "" {
+		export.Puzzles = map[string][]int{}
+	}
+	
+	return export
 }
