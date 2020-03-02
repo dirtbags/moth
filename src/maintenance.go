@@ -284,12 +284,6 @@ func (ctx *Instance) sortPoints() {
 
 		sort.SliceStable(points, func(i, j int) bool { return points[i].When.Before(points[j].When) })
 
-		fmt.Println("By time: \n")
-
-		for i := range points {
-			fmt.Println(points[i])
-		}
-
 		logf.Seek(0, io.SeekStart)
 
 		for i := range points {
