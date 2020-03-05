@@ -25,6 +25,7 @@ type Instance struct {
 	StateDir        string
 	ThemeDir        string
 	AttemptInterval time.Duration
+	UseXForwarded	bool
 
 	Runtime RuntimeConfig
 

@@ -339,10 +339,22 @@ func (ctx *Instance) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 		w:          wOrig,
 		statusCode: new(int),
 	}
+
+	clientIP := r.RemoteAddr
+
+	if (ctx.UseXForwarded) {
+		forwardedIP := r.Header.Get("X-Forwarded-For")
+		forwardedIP = strings.Split(forwardedIP, ", ")[0]
+
+		if forwardedIP != "" {
+			clientIP = forwardedIP
+		}
+	}
+
 	ctx.mux.ServeHTTP(w, r)
 	log.Printf(
 		"%s %s %s %d\n",
-		r.RemoteAddr,
+		clientIP,
 		r.Method,
 		r.URL,
 		*w.statusCode,
