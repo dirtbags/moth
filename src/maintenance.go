@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -95,7 +97,7 @@ func (ctx *Instance) generatePointsLog(teamId string) []byte {
 		log.Printf("Marshalling points.js: %v", err)
 		return nil
 	}
-	
+
 	if len(teamId) == 0 {
 		ctx.jPointsLog = jpl
 	}
@@ -203,6 +205,9 @@ func (ctx *Instance) readTeams() {
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func (ctx *Instance) collectPoints() {
+	ctx.PointsMux.Lock()
+	defer ctx.PointsMux.Unlock()
+
 	logf, err := os.OpenFile(ctx.StatePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Printf("Can't append to points log: %s", err)
@@ -244,6 +249,46 @@ func (ctx *Instance) collectPoints() {
 		logf.Sync()
 		if err := os.Remove(filename); err != nil {
 			log.Printf("Unable to remove %s: %s", filename, err)
+		}
+	}
+}
+
+// Ensure that points.log is sorted chronologically
+func (ctx *Instance) sortPoints() {
+	var points []*Award
+
+	ctx.PointsMux.Lock()
+	defer ctx.PointsMux.Unlock()
+
+	logf, err := os.OpenFile(ctx.StatePath("points.log"), os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		log.Printf("Can't sort points.log: %s", err)
+		return
+	}
+	defer logf.Close()
+
+	scanner := bufio.NewScanner(logf)
+	for scanner.Scan() {
+		line := scanner.Text()
+		cur, err := ParseAward(line)
+		if err != nil {
+			log.Printf("Encountered malformed award line, not sorting %s: %s", line, err)
+			return
+		}
+
+		points = append(points, cur)
+	}
+
+	// Only sort and write to file if we need to
+	if ! sort.SliceIsSorted(points, func( i, j int) bool { return points[i].When.Before(points[j].When) }) {
+
+		sort.SliceStable(points, func(i, j int) bool { return points[i].When.Before(points[j].When) })
+
+		logf.Seek(0, io.SeekStart)
+
+		for i := range points {
+			point := points[i]
+			fmt.Fprintf(logf, "%s\n", point.String())
 		}
 	}
 }
@@ -293,6 +338,7 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 			ctx.tidy()
 			ctx.readTeams()
 			ctx.collectPoints()
+			ctx.sortPoints()
 			ctx.generatePuzzleList()
 			ctx.generatePointsLog("")
 		}
