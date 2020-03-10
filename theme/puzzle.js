@@ -215,8 +215,8 @@ function answerCheck(e) {
   
   possiblyCorrect(answer)
   .then (correct => {
+    document.querySelector("[name=xAnswer").value = correct || answer
     if (correct) {
-      document.querySelector("[name=xAnswer").value = correct
       ok.textContent = "⭕"
       ok.title = "Possibly correct"
     } else {
