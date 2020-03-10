@@ -51,6 +51,16 @@ function devel_addin(obj, e) {
   }
 }
 
+// Hash routine used in v3.4 and earlier
+function djb2hash(buf) {
+  let h = 5381
+  for (let c of (new TextEncoder()).encode(buf)) { // Encode as UTF-8 and read in each byte
+    // JavaScript converts everything to a signed 32-bit integer when you do bitwise operations.
+    // So we have to do "unsigned right shift" by zero to get it back to unsigned.
+    h = (((h * 33) + c) & 0xffffffff) >>> 0
+  }
+  return h
+}
 
 // The routine used to hash answers in compiled puzzle packages
 async function sha256Hash(message) {
@@ -69,6 +79,10 @@ async function possiblyCorrect(answer) {
     // We're counting on hash collisions being extremely rare with the algorithm we use.
     // And honestly, this pales in comparison to the amount of CPU being eaten by
     // something like the github 404 page.
+    
+    if (djb2hash(answer) == correctHash) {
+      return answer
+    }
     for (let len = 0; len <= answer.length; len += 1) {
       if (window.puzzle.xAnchors.includes("end") && (len != answer.length)) {
         continue
