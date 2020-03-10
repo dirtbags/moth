@@ -27,6 +27,7 @@ def sha256hash(str):
 
 @contextlib.contextmanager
 def pushd(newdir):
+    newdir = str(newdir)
     curdir = os.getcwd()
     LOGGER.debug("Attempting to chdir from %s to %s" % (curdir, newdir))
     os.chdir(newdir)
@@ -273,7 +274,7 @@ class Puzzle:
         elif key == "scripts" and isinstance(val, list):
             for script in val:
                 stream = open(script, "rb")
-                self.add_script_stream(stream, val)
+                self.add_script_stream(stream, script)
 
         elif key == "objective":
             self.objective = val
