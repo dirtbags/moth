@@ -22,11 +22,8 @@ messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 LOGGER = logging.getLogger(__name__)
 
-def djb2hash(str):
-    h = 5381
-    for c in str.encode("utf-8"):
-        h = ((h * 33) + c) & 0xffffffff
-    return h
+def sha256hash(str):
+    return hashlib.sha256(str.encode("utf-8")).hexdigest()
 
 @contextlib.contextmanager
 def pushd(newdir):
@@ -129,6 +126,7 @@ class Puzzle:
         self.summary = None
         self.authors = []
         self.answers = []
+        self.xAnchors = {"begin", "end"}
         self.scripts = []
         self.pattern = None
         self.hint = None
@@ -214,6 +212,16 @@ class Puzzle:
             if not isinstance(val, str):
                 raise ValueError("Answers must be strings, got %s, instead" % (type(val),))
             self.answers.append(val)
+        elif key == 'x-answer-pattern':
+            a = val.strip("*")
+            assert "*" not in a, "Patterns may only have * at the beginning and end"
+            assert "?" not in a, "Patterns do not currently support ? characters"
+            assert "[" not in a, "Patterns do not currently support character ranges"
+            self.answers.append(a)
+            if val.startswith("*"):
+                self.xAnchors.discard("begin")
+            if val.endswith("*"):
+                self.xAnchors.discard("end")
         elif key == "answers":
             for answer in val:
                 if not isinstance(answer, str):
@@ -447,12 +455,13 @@ class Puzzle:
             'success': self.success,
             'solution': self.solution,
             'ksas': self.ksas,
+            'xAnchors': list(self.xAnchors),
         }
 
     def hashes(self):
         "Return a list of answer hashes"
 
-        return [djb2hash(a) for a in self.answers]
+        return [sha256hash(a) for a in self.answers]
 
 
 class Category:

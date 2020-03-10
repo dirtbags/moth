@@ -52,16 +52,46 @@ function devel_addin(obj, e) {
 }
 
 
-
 // The routine used to hash answers in compiled puzzle packages
-function djb2hash(buf) {
-  let h = 5381
-  for (let c of (new TextEncoder).encode(buf)) { // Encode as UTF-8 and read in each byte
-    // JavaScript converts everything to a signed 32-bit integer when you do bitwise operations.
-    // So we have to do "unsigned right shift" by zero to get it back to unsigned.
-    h = (((h * 33) + c) & 0xffffffff) >>> 0
+async function sha256Hash(message) {
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
+}
+
+// Is the provided answer possibly correct?
+async function possiblyCorrect(answer) {
+  for (let correctHash of window.puzzle.hashes) {
+    // CPU time is cheap. Especially if it's not our server's time.
+    // So we'll just try absolutely everything and see what happens.
+    // We're counting on hash collisions being extremely rare with the algorithm we use.
+    // And honestly, this pales in comparison to the amount of CPU being eaten by
+    // something like the github 404 page.
+    for (let len = 0; len <= answer.length; len += 1) {
+      if (window.puzzle.xAnchors.includes("end") && (len != answer.length)) {
+        console.log(` Skipping unanchored end (len=${len})`)
+        continue
+      }
+      console.log(" What about length", len)
+      for (let pos = 0; pos < answer.length - len + 1; pos += 1) {
+        if (window.puzzle.xAnchors.includes("begin") && (pos > 0)) {
+          console.log(` Skipping unanchored begin (pos=${pos})`)
+          continue
+        }
+        let sub = answer.substring(pos, pos+len)
+        let digest = await sha256Hash(sub)
+        
+        console.log("  Could it be", sub, digest)
+        if (digest == correctHash) {
+          console.log("   YESSS")
+          return sub
+        }
+      }
+    }
   }
-  return h
+  return false
 }
 
 
@@ -80,6 +110,14 @@ function toast(message, timeout=5000) {
 // When the user submits an answer
 function submit(e) {
   e.preventDefault()
+  let data = new FormData(e.target)
+  
+  // Kludge for patterned answers
+  let xAnswer = data.get("xAnswer")
+  if (xAnswer) {
+    data.set("answer", xAnswer)
+  }
+  window.data = data
   fetch("answer", {
     method: "POST",
     body: new FormData(e.target),
@@ -180,21 +218,17 @@ function answerCheck(e) {
     return
   }
   
-  let possiblyCorrect = false
-  let answerHash = djb2hash(answer)
-  for (let correctHash of window.puzzle.hashes) {
-    if (correctHash == answerHash) {
-      possiblyCorrect = true
+  possiblyCorrect(answer)
+  .then (correct => {
+    if (correct) {
+      document.querySelector("[name=xAnswer").value = correct
+      ok.textContent = "⭕"
+      ok.title = "Possibly correct"
+    } else {
+      ok.textContent = "❌"
+      ok.title = "Definitely not correct"
     }
-  }
-  
-  if (possiblyCorrect) {
-    ok.textContent = "❓"
-    ok.title = "Possibly correct"
-  } else {
-    ok.textContent = "⛔"
-    ok.title = "Definitely not correct"
-  }
+  })
 }
 
 function init() {
