@@ -71,21 +71,16 @@ async function possiblyCorrect(answer) {
     // something like the github 404 page.
     for (let len = 0; len <= answer.length; len += 1) {
       if (window.puzzle.xAnchors.includes("end") && (len != answer.length)) {
-        console.log(` Skipping unanchored end (len=${len})`)
         continue
       }
-      console.log(" What about length", len)
       for (let pos = 0; pos < answer.length - len + 1; pos += 1) {
         if (window.puzzle.xAnchors.includes("begin") && (pos > 0)) {
-          console.log(` Skipping unanchored begin (pos=${pos})`)
           continue
         }
         let sub = answer.substring(pos, pos+len)
         let digest = await sha256Hash(sub)
         
-        console.log("  Could it be", sub, digest)
         if (digest == correctHash) {
-          console.log("   YESSS")
           return sub
         }
       }
@@ -120,7 +115,7 @@ function submit(e) {
   window.data = data
   fetch("answer", {
     method: "POST",
-    body: new FormData(e.target),
+    body: data,
   })
   .then(resp => {
     if (resp.ok) {

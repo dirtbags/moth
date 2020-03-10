@@ -77,12 +77,12 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             "status": "success",
             "data": {
                "short": "",
-               "description": "Provided answer was not in list of answers"
+               "description": "%r was not in list of answers" % self.req.get("answer")
             },
         }
 
         if self.req.get("answer") in puzzle.answers:
-            ret["data"]["description"] = "Answer is correct"
+            ret["data"]["description"] = "Answer %r is correct" % self.req.get("answer")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
