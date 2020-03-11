@@ -14,6 +14,24 @@ type Award struct {
 	Points   int
 }
 
+type AwardList []*Award
+
+// Implement sort.Interface on AwardList
+func (awards AwardList) Len() int {
+  return len(awards)
+}
+
+func (awards AwardList) Less(i, j int) bool {
+  return awards[i].When.Before(awards[j].When)
+}
+
+func (awards AwardList) Swap(i, j int) {
+  tmp := awards[i]
+  awards[i] = awards[j]
+  awards[j] = tmp
+}
+
+
 func ParseAward(s string) (*Award, error) {
 	ret := Award{}
 
