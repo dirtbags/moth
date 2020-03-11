@@ -83,15 +83,15 @@ async function possiblyCorrect(answer) {
     if (djb2hash(answer) == correctHash) {
       return answer
     }
-    for (let len = 0; len <= answer.length; len += 1) {
-      if (window.puzzle.xAnchors.includes("end") && (len != answer.length)) {
+    for (let end = 0; end <= answer.length; end += 1) {
+      if (window.puzzle.xAnchors.includes("end") && (end != answer.length)) {
         continue
       }
-      for (let pos = 0; pos < answer.length - len + 1; pos += 1) {
-        if (window.puzzle.xAnchors.includes("begin") && (pos > 0)) {
+      for (let beg = 0; beg < answer.length; beg += 1) {
+        if (window.puzzle.xAnchors.includes("begin") && (beg != 0)) {
           continue
         }
-        let sub = answer.substring(pos, pos+len)
+        let sub = answer.substring(beg, end)
         let digest = await sha256Hash(sub)
         
         if (digest == correctHash) {
