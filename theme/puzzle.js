@@ -151,6 +151,12 @@ function submit(e) {
 function loadPuzzle(categoryName, points, puzzleId) {
   let puzzle = document.getElementById("puzzle")
   let base = "content/" + categoryName + "/" + puzzleId + "/"
+  
+  let helpElement = document.querySelector("#help")
+  if (helpElement) {
+    helpElement.classList.remove("hidden")
+    helpElement.href = "https://mattermost.cyfi.training/cyber-fire/channels/puzzle-" + categoryName
+  }
 
   fetch(base + "puzzle.json")
   .then(resp => {
