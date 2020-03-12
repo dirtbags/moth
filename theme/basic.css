@@ -140,12 +140,3 @@ li[draggable] {
 #cacheButton.disabled {
   display: none;
 }
-
-#help {
-  text-decoration: none;
-  color: #fff;
-  background-color: #118;
-  padding: 0.25em;
-  border: 1px solid black;
-  font-size: 120%;
-}
