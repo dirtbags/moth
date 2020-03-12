@@ -37,7 +37,6 @@ type Instance struct {
 	nextAttempt       map[string]time.Time
 	nextAttemptMutex  *sync.RWMutex
 	mux               *http.ServeMux
-	PointsMux         *sync.RWMutex
 }
 
 func (ctx *Instance) Initialize() error {
@@ -55,7 +54,6 @@ func (ctx *Instance) Initialize() error {
 	ctx.nextAttempt = map[string]time.Time{}
 	ctx.nextAttemptMutex = new(sync.RWMutex)
 	ctx.mux = http.NewServeMux()
-	ctx.PointsMux = new(sync.RWMutex)
 
 	ctx.BindHandlers()
 	ctx.MaybeInitialize()
@@ -85,10 +83,7 @@ func (ctx *Instance) MaybeInitialize() {
 	// Remove any extant control and state files
 	os.Remove(ctx.StatePath("until"))
 	os.Remove(ctx.StatePath("disabled"))
-
-	ctx.PointsMux.Lock()
 	os.Remove(ctx.StatePath("points.log"))
-	ctx.PointsMux.Unlock()
 
 	os.RemoveAll(ctx.StatePath("points.tmp"))
 	os.RemoveAll(ctx.StatePath("points.new"))
@@ -158,18 +153,15 @@ func (ctx *Instance) TooFast(teamId string) bool {
 	return now.Before(next)
 }
 
-func (ctx *Instance) PointsLog(teamId string) []*Award {
-	var ret []*Award
-
+func (ctx *Instance) PointsLog(teamId string) AwardList {
+	awardlist := AwardList{}
+	
 	fn := ctx.StatePath("points.log")
-
-	ctx.PointsMux.RLock()
-	defer ctx.PointsMux.RUnlock()
 
 	f, err := os.Open(fn)
 	if err != nil {
 		log.Printf("Unable to open %s: %s", fn, err)
-		return ret
+		return awardlist
 	}
 	defer f.Close()
 
@@ -184,10 +176,10 @@ func (ctx *Instance) PointsLog(teamId string) []*Award {
 		if len(teamId) > 0 && cur.TeamId != teamId {
 			continue
 		}
-		ret = append(ret, cur)
+		awardlist = append(awardlist, cur)
 	}
 
-	return ret
+	return awardlist
 }
 
 // AwardPoints gives points to teamId in category.

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -205,20 +204,26 @@ func (ctx *Instance) readTeams() {
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func (ctx *Instance) collectPoints() {
-	ctx.PointsMux.Lock()
-	defer ctx.PointsMux.Unlock()
+  points := ctx.PointsLog("")
 
-	logf, err := os.OpenFile(ctx.StatePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+  pointsFilename := ctx.StatePath("points.log")
+  pointsNewFilename := ctx.StatePath("points.log.new")
+  
+  // Yo, this is delicate.
+  // If we have to return early, we must remove this file.
+  // If the file's written and we move it successfully,
+  // we need to remove all the little points files that built it.
+	newPoints, err := os.OpenFile(pointsNewFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 	if err != nil {
 		log.Printf("Can't append to points log: %s", err)
 		return
 	}
-	defer logf.Close()
 
 	files, err := ioutil.ReadDir(ctx.StatePath("points.new"))
 	if err != nil {
 		log.Printf("Error reading packages: %s", err)
 	}
+	removearino := make([]string, 0, len(files))
 	for _, f := range files {
 		filename := ctx.StatePath("points.new", f.Name())
 		s, err := ioutil.ReadFile(filename)
@@ -233,7 +238,7 @@ func (ctx *Instance) collectPoints() {
 		}
 
 		duplicate := false
-		for _, e := range ctx.PointsLog("") {
+		for _, e := range points {
 			if award.Same(e) {
 				duplicate = true
 				break
@@ -243,53 +248,30 @@ func (ctx *Instance) collectPoints() {
 		if duplicate {
 			log.Printf("Skipping duplicate points: %s", award.String())
 		} else {
-			fmt.Fprintf(logf, "%s\n", award.String())
+		  points = append(points, award)
 		}
-
-		logf.Sync()
-		if err := os.Remove(filename); err != nil {
-			log.Printf("Unable to remove %s: %s", filename, err)
-		}
-	}
-}
-
-// Ensure that points.log is sorted chronologically
-func (ctx *Instance) sortPoints() {
-	var points []*Award
-
-	ctx.PointsMux.Lock()
-	defer ctx.PointsMux.Unlock()
-
-	logf, err := os.OpenFile(ctx.StatePath("points.log"), os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		log.Printf("Can't sort points.log: %s", err)
-		return
-	}
-	defer logf.Close()
-
-	scanner := bufio.NewScanner(logf)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cur, err := ParseAward(line)
-		if err != nil {
-			log.Printf("Encountered malformed award line, not sorting %s: %s", line, err)
-			return
-		}
-
-		points = append(points, cur)
+		removearino = append(removearino, filename)
 	}
 
-	// Only sort and write to file if we need to
-	if ! sort.SliceIsSorted(points, func( i, j int) bool { return points[i].When.Before(points[j].When) }) {
+	sort.Stable(points)
+	for _, point := range points {
+		fmt.Fprintln(newPoints, point.String())
+	}
+	
+	newPoints.Close()
+	
+	if err := os.Rename(pointsNewFilename, pointsFilename); err != nil {
+	  log.Printf("Unable to move %s to %s: %s", pointsFilename, pointsNewFilename, err)
+	  if err := os.Remove(pointsNewFilename); err != nil {
+	    log.Printf("Also couldn't remove %s: %s", pointsNewFilename, err)
+	  }
+	  return
+	}
 
-		sort.SliceStable(points, func(i, j int) bool { return points[i].When.Before(points[j].When) })
-
-		logf.Seek(0, io.SeekStart)
-
-		for i := range points {
-			point := points[i]
-			fmt.Fprintf(logf, "%s\n", point.String())
-		}
+	for _, filename := range removearino {
+  	if err := os.Remove(filename); err != nil {
+  		log.Printf("Unable to remove %s: %s", filename, err)
+  	}
 	}
 }
 
@@ -338,7 +320,6 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 			ctx.tidy()
 			ctx.readTeams()
 			ctx.collectPoints()
-			ctx.sortPoints()
 			ctx.generatePuzzleList()
 			ctx.generatePointsLog("")
 		}
