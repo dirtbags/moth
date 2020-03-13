@@ -25,6 +25,7 @@ type Instance struct {
 	StateDir        string
 	ThemeDir        string
 	AttemptInterval time.Duration
+	UseXForwarded	bool
 
 	Runtime RuntimeConfig
 
@@ -83,6 +84,7 @@ func (ctx *Instance) MaybeInitialize() {
 	os.Remove(ctx.StatePath("until"))
 	os.Remove(ctx.StatePath("disabled"))
 	os.Remove(ctx.StatePath("points.log"))
+
 	os.RemoveAll(ctx.StatePath("points.tmp"))
 	os.RemoveAll(ctx.StatePath("points.new"))
 	os.RemoveAll(ctx.StatePath("teams"))
@@ -151,14 +153,15 @@ func (ctx *Instance) TooFast(teamId string) bool {
 	return now.Before(next)
 }
 
-func (ctx *Instance) PointsLog() []*Award {
-	var ret []*Award
-
+func (ctx *Instance) PointsLog(teamId string) AwardList {
+	awardlist := AwardList{}
+	
 	fn := ctx.StatePath("points.log")
+
 	f, err := os.Open(fn)
 	if err != nil {
 		log.Printf("Unable to open %s: %s", fn, err)
-		return ret
+		return awardlist
 	}
 	defer f.Close()
 
@@ -170,10 +173,13 @@ func (ctx *Instance) PointsLog() []*Award {
 			log.Printf("Skipping malformed award line %s: %s", line, err)
 			continue
 		}
-		ret = append(ret, cur)
+		if len(teamId) > 0 && cur.TeamId != teamId {
+			continue
+		}
+		awardlist = append(awardlist, cur)
 	}
 
-	return ret
+	return awardlist
 }
 
 // AwardPoints gives points to teamId in category.
@@ -194,7 +200,7 @@ func (ctx *Instance) AwardPoints(teamId, category string, points int) error {
 		return fmt.Errorf("No registered team with this hash")
 	}
 
-	for _, e := range ctx.PointsLog() {
+	for _, e := range ctx.PointsLog("") {
 		if a.Same(e) {
 			return fmt.Errorf("Points already awarded to this team in this category")
 		}
