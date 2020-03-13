@@ -22,14 +22,12 @@ messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 LOGGER = logging.getLogger(__name__)
 
-def djb2hash(str):
-    h = 5381
-    for c in str.encode("utf-8"):
-        h = ((h * 33) + c) & 0xffffffff
-    return h
+def sha256hash(str):
+    return hashlib.sha256(str.encode("utf-8")).hexdigest()
 
 @contextlib.contextmanager
 def pushd(newdir):
+    newdir = str(newdir)
     curdir = os.getcwd()
     LOGGER.debug("Attempting to chdir from %s to %s" % (curdir, newdir))
     os.chdir(newdir)
@@ -123,10 +121,13 @@ class Puzzle:
 
         super().__init__()
 
+        self._source_format = "py"
+
         self.points = points
         self.summary = None
         self.authors = []
         self.answers = []
+        self.xAnchors = {"begin", "end"}
         self.scripts = []
         self.pattern = None
         self.hint = None
@@ -153,8 +154,10 @@ class Puzzle:
         line = ""
         if stream.read(3) == "---":
             header = "yaml"
+            self._source_format = "yaml"
         else:
             header = "moth"
+            self._source_format = "moth"
 
         stream.seek(0)
 
@@ -210,6 +213,16 @@ class Puzzle:
             if not isinstance(val, str):
                 raise ValueError("Answers must be strings, got %s, instead" % (type(val),))
             self.answers.append(val)
+        elif key == 'x-answer-pattern':
+            a = val.strip("*")
+            assert "*" not in a, "Patterns may only have * at the beginning and end"
+            assert "?" not in a, "Patterns do not currently support ? characters"
+            assert "[" not in a, "Patterns do not currently support character ranges"
+            self.answers.append(a)
+            if val.startswith("*"):
+                self.xAnchors.discard("begin")
+            if val.endswith("*"):
+                self.xAnchors.discard("end")
         elif key == "answers":
             for answer in val:
                 if not isinstance(answer, str):
@@ -233,11 +246,36 @@ class Puzzle:
             except IndexError:
                 pass
             self.files[name] = PuzzleFile(stream, name, not hidden)
+
+        elif key == 'files' and isinstance(val, dict):
+            for filename, options in val.items():
+                if "source" in options:
+                    source = options["source"]
+                else:
+                    source = filename
+                
+                if "hidden" in options and options["hidden"]:
+                    hidden = True
+                else:
+                    hidden = False
+
+                stream = open(source, "rb")
+                self.files[filename] = PuzzleFile(stream, filename, not hidden)
+
+        elif key == 'files' and isinstance(val, list):
+            for filename in val:
+                stream = open(filename, "rb")
+                self.files[filename] = PuzzleFile(stream, filename)
+
         elif key == 'script':
             stream = open(val, 'rb')
-            # Make sure this shows up in the header block of the HTML output.
-            self.files[val] = PuzzleFile(stream, val, visible=False)
-            self.scripts.append(val)
+            self.add_script_stream(stream, val)
+
+        elif key == "scripts" and isinstance(val, list):
+            for script in val:
+                stream = open(script, "rb")
+                self.add_script_stream(stream, script)
+
         elif key == "objective":
             self.objective = val
         elif key == "success":
@@ -289,6 +327,11 @@ class Puzzle:
         stream = tempfile.TemporaryFile()
         self.add_stream(stream, name, visible)
         return stream
+
+    def add_script_stream(self, stream, name):
+        # Make sure this shows up in the header block of the HTML output.
+        self.files[name] = PuzzleFile(stream, name, visible=False)
+        self.scripts.append(name)
 
     def add_stream(self, stream, name=None, visible=True):
         if name is None:
@@ -384,7 +427,12 @@ class Puzzle:
         self.body.write('</pre>')
 
     def get_authors(self):
-        return self.authors or [self.author]
+        if len(self.authors) > 0:
+            return self.authors
+        elif hasattr(self, "author"):
+            return [self.author]
+        else:
+            return []
 
     def get_body(self):
         return self.body.getvalue()
@@ -408,12 +456,13 @@ class Puzzle:
             'success': self.success,
             'solution': self.solution,
             'ksas': self.ksas,
+            'xAnchors': list(self.xAnchors),
         }
 
     def hashes(self):
         "Return a list of answer hashes"
 
-        return [djb2hash(a) for a in self.answers]
+        return [sha256hash(a) for a in self.answers]
 
 
 class Category:

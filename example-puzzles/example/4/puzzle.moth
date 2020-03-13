@@ -1,6 +1,8 @@
 Summary: Answer patterns
 Answer: command.com
 Answer: COMMAND.COM
+X-Answer-Pattern: PINBALL.*
+X-Answer-Pattern: pinball.*
 Author: neale
 Pattern: [0-9A-Za-z]{1,8}\.[A-Za-z]{1,3}
 

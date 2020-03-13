@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import asyncio
 import cgitb
 import html
 import cgi
@@ -43,6 +42,13 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         except TypeError:
             super().__init__(request, client_address, server)
 
+    # Why isn't this the default?!
+    def guess_type(self, path):
+        mtype, encoding = mimetypes.guess_type(path)
+        if encoding:
+            return "%s; encoding=%s" % (mtype, encoding)
+        else:
+            return mtype
 
     # Backport from Python 3.7
     def translate_path(self, path):
@@ -71,12 +77,12 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             "status": "success",
             "data": {
                "short": "",
-               "description": "Provided answer was not in list of answers"
+               "description": "%r was not in list of answers" % self.req.get("answer")
             },
         }
 
         if self.req.get("answer") in puzzle.answers:
-            ret["data"]["description"] = "Answer is correct"
+            ret["data"]["description"] = "Answer %r is correct" % self.req.get("answer")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
@@ -112,6 +118,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         obj["hint"] = puzzle.hint
         obj["summary"] = puzzle.summary
         obj["logs"] = puzzle.logs
+        obj["format"] = puzzle._source_format
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -285,6 +292,8 @@ if __name__ == '__main__':
     
     logging.basicConfig(level=log_level)
     
+    mimetypes.add_type("application/javascript", ".mjs")
+
     server = MothServer((addr, port), MothRequestHandler)
     server.args["base_url"] = args.base
     server.args["puzzles_dir"] = pathlib.Path(args.puzzles)
