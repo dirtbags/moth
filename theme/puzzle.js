@@ -84,11 +84,11 @@ async function possiblyCorrect(answer) {
       return answer
     }
     for (let end = 0; end <= answer.length; end += 1) {
-      if (window.puzzle.xAnchors.includes("end") && (end != answer.length)) {
+      if (window.puzzle.xAnchors && window.puzzle.xAnchors.includes("end") && (end != answer.length)) {
         continue
       }
       for (let beg = 0; beg < answer.length; beg += 1) {
-        if (window.puzzle.xAnchors.includes("begin") && (beg != 0)) {
+        if (window.puzzle.xAnchors && window.puzzle.xAnchors.includes("begin") && (beg != 0)) {
           continue
         }
         let sub = answer.substring(beg, end)
@@ -266,4 +266,3 @@ if (document.readyState === "loading") {
 } else {
   init()
 }
-

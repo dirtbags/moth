@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Default theme modifications to handle all this
  - Default theme now automatically "logs you in" with Team ID if it's getting state from the devel server
 
+## [v3.5.1] - 2020-03-16
+### Fixed
+- Support insta-checking for legacy puzzles
+
 ## [v3.5.0] - 2020-03-13
 ### Changed
 - We are now using SHA256 instead of djb2hash
