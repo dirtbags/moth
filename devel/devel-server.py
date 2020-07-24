@@ -262,7 +262,7 @@ if __name__ == '__main__':
         '--theme', default='theme',
         help="Directory containing theme files")
     parser.add_argument(
-        '--bind', default="127.0.0.1:8080",
+        '--bind', default=":8080",
         help="Bind to ip:port"
     )
     parser.add_argument(
@@ -277,7 +277,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     parts = args.bind.split(":")
-    addr = parts[0] or "0.0.0.0"
+    addr = parts[0]
     port = int(parts[1])
     if args.verbose >= 2:
         log_level = logging.DEBUG

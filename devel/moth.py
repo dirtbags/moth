@@ -497,7 +497,6 @@ class Category:
             with pushd(self.path):
                 self.catmod.make(points, puzzle)
         else:
-            with pushd(self.path):
                 puzzle.read_directory(path)
         return puzzle
 
