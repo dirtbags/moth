@@ -249,15 +249,10 @@ class Puzzle:
 
         elif key == 'files' and isinstance(val, dict):
             for filename, options in val.items():
-                if "source" in options:
-                    source = options["source"]
-                else:
-                    source = filename
-                
-                if "hidden" in options and options["hidden"]:
-                    hidden = True
-                else:
-                    hidden = False
+                if not options:
+                    options = {}
+                source = options.get("source", filename)
+                hidden = options.get("hidden", False)
 
                 stream = open(source, "rb")
                 self.files[filename] = PuzzleFile(stream, filename, not hidden)
@@ -337,6 +332,11 @@ class Puzzle:
         if name is None:
             name = self.random_hash()
         self.files[name] = PuzzleFile(stream, name, visible)
+
+    def create_stream(self, name=None, visible=True):
+        stream = io.BytesIO()
+        self.add_stream(stream, name, visible)
+        return stream
 
     def add_file(self, filename, visible=True):
         fd = open(filename, 'rb')
@@ -444,7 +444,7 @@ class Puzzle:
     def package(self, answers=False):
         """Return a dict packaging of the puzzle."""
 
-        files = [fn for fn,f in self.files.items() if f.visible]
+        files = sorted([fn for fn,f in self.files.items() if f.visible])
         hidden = [fn for fn,f in self.files.items() if not f.visible]
         return {
             'authors': self.get_authors(),
