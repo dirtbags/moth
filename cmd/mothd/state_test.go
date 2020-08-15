@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
-	"github.com/spf13/afero"
 	"os"
 	"testing"
+
+	"github.com/spf13/afero"
 )
 
 func TestState(t *testing.T) {
@@ -56,7 +57,7 @@ func TestState(t *testing.T) {
 	pl = s.PointsLog()
 	if len(pl) != 1 {
 		t.Errorf("After awarding points, points log has length %d", len(pl))
-	} else if (pl[0].TeamId != teamId) || (pl[0].Category != category) || (pl[0].Points != points) {
+	} else if (pl[0].TeamID != teamId) || (pl[0].Category != category) || (pl[0].Points != points) {
 		t.Errorf("Incorrect logged award %v", pl)
 	}
 

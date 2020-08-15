@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"sort"
+	"testing"
 )
 
 func TestAward(t *testing.T) {
@@ -12,7 +12,7 @@ func TestAward(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if a.TeamId != "1a2b3c4d" {
+	if a.TeamID != "1a2b3c4d" {
 		t.Error("TeamID parsed wrong")
 	}
 	if a.Category != "counting" {
@@ -41,21 +41,21 @@ func TestAward(t *testing.T) {
 }
 
 func TestAwardList(t *testing.T) {
-  a, _ := ParseAward("1536958399 1a2b3c4d counting 1")
-  b, _ := ParseAward("1536958400 1a2b3c4d counting 1")
-  c, _ := ParseAward("1536958300 1a2b3c4d counting 1")
-  list := AwardList{a, b, c}
-  
-  if sort.IsSorted(list) {
-    t.Error("Unsorted list thinks it's sorted")
-  }
-  
-  sort.Stable(list)
-  if (list[0] != c) || (list[1] != a) || (list[2] != b) {
-    t.Error("Sorting didn't")
-  }
-  
-  if ! sort.IsSorted(list) {
-    t.Error("Sorted list thinks it isn't")
-  }
+	a, _ := ParseAward("1536958399 1a2b3c4d counting 1")
+	b, _ := ParseAward("1536958400 1a2b3c4d counting 1")
+	c, _ := ParseAward("1536958300 1a2b3c4d counting 1")
+	list := AwardList{a, b, c}
+
+	if sort.IsSorted(list) {
+		t.Error("Unsorted list thinks it's sorted")
+	}
+
+	sort.Stable(list)
+	if (list[0] != c) || (list[1] != a) || (list[2] != b) {
+		t.Error("Sorting didn't")
+	}
+
+	if !sort.IsSorted(list) {
+		t.Error("Sorted list thinks it isn't")
+	}
 }

@@ -3,13 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/afero"
 	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
 // Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
@@ -81,30 +82,30 @@ func (s *State) UpdateEnabled() {
 }
 
 // Returns team name given a team ID.
-func (s *State) TeamName(teamId string) (string, error) {
+func (s *State) TeamName(teamID string) (string, error) {
 	// XXX: directory traversal
-	teamFile := filepath.Join("teams", teamId)
+	teamFile := filepath.Join("teams", teamID)
 	teamNameBytes, err := afero.ReadFile(s, teamFile)
 	teamName := strings.TrimSpace(string(teamNameBytes))
 
 	if os.IsNotExist(err) {
-		return "", fmt.Errorf("Unregistered team ID: %s", teamId)
+		return "", fmt.Errorf("Unregistered team ID: %s", teamID)
 	} else if err != nil {
-		return "", fmt.Errorf("Unregistered team ID: %s (%s)", teamId, err)
+		return "", fmt.Errorf("Unregistered team ID: %s (%s)", teamID, err)
 	}
 
 	return teamName, nil
 }
 
 // Write out team name. This can only be done once.
-func (s *State) SetTeamName(teamId, teamName string) error {
+func (s *State) SetTeamName(teamID, teamName string) error {
 	if f, err := s.Open("teamids.txt"); err != nil {
 		return fmt.Errorf("Team IDs file does not exist")
 	} else {
 		found := false
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			if scanner.Text() == teamId {
+			if scanner.Text() == teamID {
 				found = true
 				break
 			}
@@ -115,7 +116,7 @@ func (s *State) SetTeamName(teamId, teamName string) error {
 		}
 	}
 
-	teamFile := filepath.Join("teams", teamId)
+	teamFile := filepath.Join("teams", teamID)
 	err := afero.WriteFile(s, teamFile, []byte(teamName), os.ModeExclusive|0644)
 	if os.IsExist(err) {
 		return fmt.Errorf("Team ID is already registered")
@@ -152,20 +153,20 @@ func (s *State) Messages() string {
 	return string(bMessages)
 }
 
-// AwardPoints gives points to teamId in category.
+// AwardPoints gives points to teamID in category.
 // It first checks to make sure these are not duplicate points.
 // This is not a perfect check, you can trigger a race condition here.
 // It's just a courtesy to the user.
 // The update task makes sure we never have duplicate points in the log.
-func (s *State) AwardPoints(teamId, category string, points int) error {
+func (s *State) AwardPoints(teamID, category string, points int) error {
 	a := Award{
 		When:     time.Now().Unix(),
-		TeamId:   teamId,
+		TeamID:   teamID,
 		Category: category,
 		Points:   points,
 	}
 
-	_, err := s.TeamName(teamId)
+	_, err := s.TeamName(teamID)
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,7 @@ func (s *State) AwardPoints(teamId, category string, points int) error {
 		}
 	}
 
-	fn := fmt.Sprintf("%s-%s-%d", teamId, category, points)
+	fn := fmt.Sprintf("%s-%s-%d", teamID, category, points)
 	tmpfn := filepath.Join("points.tmp", fn)
 	newfn := filepath.Join("points.new", fn)
 

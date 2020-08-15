@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/spf13/afero"
 	"log"
 	"mime"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
 func custodian(updateInterval time.Duration, components []Component) {
@@ -17,7 +18,7 @@ func custodian(updateInterval time.Duration, components []Component) {
 
 	ticker := time.NewTicker(updateInterval)
 	update()
-	for _ = range ticker.C {
+	for range ticker.C {
 		update()
 	}
 }

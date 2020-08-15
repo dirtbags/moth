@@ -1,10 +1,10 @@
 package main
 
 import (
-	"io"
-	"time"
 	"fmt"
+	"io"
 	"strconv"
+	"time"
 )
 
 type Category struct {
@@ -25,7 +25,7 @@ type StateExport struct {
 	Messages  string
 	TeamNames map[string]string
 	PointsLog []Award
-	Puzzles map[string][]int
+	Puzzles   map[string][]int
 }
 
 type PuzzleProvider interface {
@@ -49,30 +49,28 @@ type StateProvider interface {
 	Component
 }
 
-
 type Component interface {
 	Update()
 }
 
-
 type MothServer struct {
 	Puzzles PuzzleProvider
-	Theme ThemeProvider
-	State StateProvider
+	Theme   ThemeProvider
+	State   StateProvider
 }
 
 func NewMothServer(puzzles PuzzleProvider, theme ThemeProvider, state StateProvider) *MothServer {
 	return &MothServer{
 		Puzzles: puzzles,
-		Theme: theme,
-		State: state,
+		Theme:   theme,
+		State:   state,
 	}
 }
 
 func (s *MothServer) NewHandler(teamId string) MothRequestHandler {
 	return MothRequestHandler{
 		MothServer: s,
-		teamId: teamId,
+		teamId:     teamId,
 	}
 }
 
@@ -91,7 +89,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 			return mh.Puzzles.Open(cat, points, path)
 		}
 	}
-	
+
 	return nil, time.Time{}, fmt.Errorf("Puzzle locked")
 }
 
@@ -112,11 +110,11 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 	if err := mh.Puzzles.CheckAnswer(cat, points, answer); err != nil {
 		return err
 	}
-	
+
 	if err := mh.State.AwardPoints(mh.teamId, cat, points); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -124,7 +122,7 @@ func (mh *MothRequestHandler) ExportAllState() *StateExport {
 	export := StateExport{}
 
 	teamName, _ := mh.State.TeamName(mh.teamId)
-	
+
 	export.Messages = mh.State.Messages()
 	export.TeamNames = map[string]string{"self": teamName}
 
@@ -135,23 +133,22 @@ func (mh *MothRequestHandler) ExportAllState() *StateExport {
 	export.PointsLog = make([]Award, len(pointsLog))
 	for logno, award := range pointsLog {
 		exportAward := *award
-		if id, ok := exportIds[award.TeamId]; ok {
-			exportAward.TeamId = id
+		if id, ok := exportIds[award.TeamID]; ok {
+			exportAward.TeamID = id
 		} else {
 			exportId := strconv.Itoa(logno)
-			name, _ := mh.State.TeamName(award.TeamId)
-			exportAward.TeamId = exportId
-			exportIds[award.TeamId] = exportAward.TeamId
+			name, _ := mh.State.TeamName(award.TeamID)
+			exportAward.TeamID = exportId
+			exportIds[award.TeamID] = exportAward.TeamID
 			export.TeamNames[exportId] = name
 		}
 		export.PointsLog[logno] = exportAward
-		
+
 		// Record the highest-value unlocked puzzle in each category
 		if award.Points > maxSolved[award.Category] {
 			maxSolved[award.Category] = award.Points
 		}
 	}
-
 
 	export.Puzzles = make(map[string][]int)
 	for _, category := range mh.Puzzles.Inventory() {
@@ -175,7 +172,7 @@ func (mh *MothRequestHandler) ExportAllState() *StateExport {
 
 func (mh *MothRequestHandler) ExportState() *StateExport {
 	export := mh.ExportAllState()
-	
+
 	// We don't give this out to just anybody,
 	// because back when we did,
 	// we got a bad reputation on some secretive blacklist,
@@ -183,6 +180,6 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	if export.TeamNames["self"] == "" {
 		export.Puzzles = map[string][]int{}
 	}
-	
+
 	return export
 }

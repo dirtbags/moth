@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"gopkg.in/russross/blackfriday.v2"
-	"gopkg.in/yaml.v2"
 	"io"
 	"log"
 	"net/mail"
 	"strings"
+
+	"github.com/russross/blackfriday"
+	"gopkg.in/yaml.v2"
 )
 
 type Attachment struct {
@@ -55,7 +56,7 @@ func YamlParser(input []byte) (*Puzzle, error) {
 	return puzzle, nil
 }
 
-func AttachmentParser(val []string) ([]Attachment) {
+func AttachmentParser(val []string) []Attachment {
 	ret := make([]Attachment, len(val))
 	for idx, txt := range val {
 		parts := strings.SplitN(txt, " ", 3)
@@ -150,7 +151,7 @@ func ParseMoth(r io.Reader) (*Puzzle, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Markdownify the body
 	bodyB := blackfriday.Run(bodyBuf.Bytes())
 	if (puzzle.Pre.Body != "") && (len(bodyB) > 0) {
