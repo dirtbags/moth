@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import asyncio
 import cgitb
 import html
 import cgi
@@ -43,6 +42,13 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         except TypeError:
             super().__init__(request, client_address, server)
 
+    # Why isn't this the default?!
+    def guess_type(self, path):
+        mtype, encoding = mimetypes.guess_type(path)
+        if encoding:
+            return "%s; encoding=%s" % (mtype, encoding)
+        else:
+            return mtype
 
     # Backport from Python 3.7
     def translate_path(self, path):
@@ -91,7 +97,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             "status": "success",
             "data": {
                "short": "",
-               "description": "Provided answer was not in list of answers"
+               "description": "%r was not in list of answers" % self.req.get("answer")
             },
         }
 
@@ -142,6 +148,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
         obj["hint"] = puzzle.hint
         obj["summary"] = puzzle.summary
         obj["logs"] = puzzle.logs
+        obj["format"] = puzzle._source_format
 
         self.send_json(obj)
     endpoints.append(('/{seed}/content/{cat}/{points}/puzzle.json', handle_puzzle))
@@ -252,7 +259,7 @@ if __name__ == '__main__':
         '--theme', default='theme',
         help="Directory containing theme files")
     parser.add_argument(
-        '--bind', default="127.0.0.1:8080",
+        '--bind', default=":8080",
         help="Bind to ip:port"
     )
     parser.add_argument(
@@ -267,7 +274,7 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
     parts = args.bind.split(":")
-    addr = parts[0] or "0.0.0.0"
+    addr = parts[0]
     port = int(parts[1])
     if args.verbose >= 2:
         log_level = logging.DEBUG
@@ -278,6 +285,8 @@ if __name__ == '__main__':
     
     logging.basicConfig(level=log_level)
     
+    mimetypes.add_type("application/javascript", ".mjs")
+
     server = MothServer((addr, port), MothRequestHandler)
     server.args["base_url"] = args.base
     server.args["puzzles_dir"] = pathlib.Path(args.puzzles)

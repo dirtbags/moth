@@ -1,6 +1,7 @@
 // jshint asi:true
 
 var devel = false
+var teamId
 var heartbeatInterval = 40000
 
 function toast(message, timeout=5000) {

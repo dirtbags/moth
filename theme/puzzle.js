@@ -51,17 +51,56 @@ function devel_addin(obj, e) {
   }
 }
 
-
-
-// The routine used to hash answers in compiled puzzle packages
+// Hash routine used in v3.4 and earlier
 function djb2hash(buf) {
   let h = 5381
-  for (let c of (new TextEncoder).encode(buf)) { // Encode as UTF-8 and read in each byte
+  for (let c of (new TextEncoder()).encode(buf)) { // Encode as UTF-8 and read in each byte
     // JavaScript converts everything to a signed 32-bit integer when you do bitwise operations.
     // So we have to do "unsigned right shift" by zero to get it back to unsigned.
     h = (((h * 33) + c) & 0xffffffff) >>> 0
   }
   return h
+}
+
+// The routine used to hash answers in compiled puzzle packages
+async function sha256Hash(message) {
+  const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+  const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+  return hashHex;
+}
+
+// Is the provided answer possibly correct?
+async function possiblyCorrect(answer) {
+  for (let correctHash of window.puzzle.hashes) {
+    // CPU time is cheap. Especially if it's not our server's time.
+    // So we'll just try absolutely everything and see what happens.
+    // We're counting on hash collisions being extremely rare with the algorithm we use.
+    // And honestly, this pales in comparison to the amount of CPU being eaten by
+    // something like the github 404 page.
+    
+    if (djb2hash(answer) == correctHash) {
+      return answer
+    }
+    for (let end = 0; end <= answer.length; end += 1) {
+      if (window.puzzle.xAnchors && window.puzzle.xAnchors.includes("end") && (end != answer.length)) {
+        continue
+      }
+      for (let beg = 0; beg < answer.length; beg += 1) {
+        if (window.puzzle.xAnchors && window.puzzle.xAnchors.includes("begin") && (beg != 0)) {
+          continue
+        }
+        let sub = answer.substring(beg, end)
+        let digest = await sha256Hash(sub)
+        
+        if (digest == correctHash) {
+          return sub
+        }
+      }
+    }
+  }
+  return false
 }
 
 
@@ -80,9 +119,17 @@ function toast(message, timeout=5000) {
 // When the user submits an answer
 function submit(e) {
   e.preventDefault()
+  let data = new FormData(e.target)
+  
+  // Kludge for patterned answers
+  let xAnswer = data.get("xAnswer")
+  if (xAnswer) {
+    data.set("answer", xAnswer)
+  }
+  window.data = data
   fetch("answer", {
     method: "POST",
-    body: new FormData(e.target),
+    body: data,
   })
   .then(resp => {
     if (resp.ok) {
@@ -180,21 +227,17 @@ function answerCheck(e) {
     return
   }
   
-  let possiblyCorrect = false
-  let answerHash = djb2hash(answer)
-  for (let correctHash of window.puzzle.hashes) {
-    if (correctHash == answerHash) {
-      possiblyCorrect = true
+  possiblyCorrect(answer)
+  .then (correct => {
+    document.querySelector("[name=xAnswer").value = correct || answer
+    if (correct) {
+      ok.textContent = "⭕"
+      ok.title = "Possibly correct"
+    } else {
+      ok.textContent = "❌"
+      ok.title = "Definitely not correct"
     }
-  }
-  
-  if (possiblyCorrect) {
-    ok.textContent = "❓"
-    ok.title = "Possibly correct"
-  } else {
-    ok.textContent = "⛔"
-    ok.title = "Definitely not correct"
-  }
+  })
 }
 
 function init() {
@@ -223,4 +266,3 @@ if (document.readyState === "loading") {
 } else {
   init()
 }
-

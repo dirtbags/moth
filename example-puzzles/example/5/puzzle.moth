@@ -1,6 +1,7 @@
 Summary: Using JavaScript Input Helpers
 Author: neale
 Script: helpers.js
+Script: draggable.js
 Answer: helper
 
 MOTH only takes static answers:
@@ -40,6 +41,13 @@ Free input, sorted, concatenated values
 <ul class="answer lower sort">
   <li><input></li>
   <li><button class="expand" title="Add another input">➕</button><l/i>
+</ul>
+
+User-draggable values
+<ul class="answer">
+  <li draggable="true"><input value="First" readonly></li>
+  <li draggable="true"><input value="Third" readonly></li>
+  <li draggable="true"><input value="Second" readonly></li>
 </ul>
 
 Select from an ordered list of options

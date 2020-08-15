@@ -7,15 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
-
-type PuzzleMap struct {
-	Points int
-	Path   string
-}
 
 func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 	if pm == nil {
@@ -33,7 +29,7 @@ func (pm *PuzzleMap) MarshalJSON() ([]byte, error) {
 
 func (ctx *Instance) generatePuzzleList() {
 	maxByCategory := map[string]int{}
-	for _, a := range ctx.PointsLog() {
+	for _, a := range ctx.PointsLog("") {
 		if a.Points > maxByCategory[a.Category] {
 			maxByCategory[a.Category] = a.Points
 		}
@@ -41,44 +37,28 @@ func (ctx *Instance) generatePuzzleList() {
 
 	ret := map[string][]PuzzleMap{}
 	for catName, mb := range ctx.categories {
-		mf, err := mb.Open("map.txt")
-		if err != nil {
-			// File isn't in there
-			continue
-		}
-		defer mf.Close()
-
-		pm := make([]PuzzleMap, 0, 30)
+		filtered_puzzlemap := make([]PuzzleMap, 0, 30)
 		completed := true
-		scanner := bufio.NewScanner(mf)
-		for scanner.Scan() {
-			line := scanner.Text()
 
-			var pointval int
-			var dir string
+		for _, pm := range mb.puzzlemap {
+			filtered_puzzlemap = append(filtered_puzzlemap, pm)
 
-			n, err := fmt.Sscanf(line, "%d %s", &pointval, &dir)
-			if err != nil {
-				log.Printf("Parsing map for %s: %v", catName, err)
-				continue
-			} else if n != 2 {
-				log.Printf("Parsing map for %s: short read", catName)
-				continue
-			}
-
-			pm = append(pm, PuzzleMap{pointval, dir})
-
-			if pointval > maxByCategory[catName] {
+			if pm.Points > maxByCategory[catName] {
 				completed = false
+				maxByCategory[catName] = pm.Points
 				break
 			}
 		}
+
 		if completed {
-			pm = append(pm, PuzzleMap{0, ""})
+			filtered_puzzlemap = append(filtered_puzzlemap, PuzzleMap{0, ""})
 		}
 
-		ret[catName] = pm
+		ret[catName] = filtered_puzzlemap
 	}
+
+	// Cache the unlocked points for use in other functions
+	ctx.MaxPointsUnlocked = maxByCategory
 
 	jpl, err := json.Marshal(ret)
 	if err != nil {
@@ -88,13 +68,13 @@ func (ctx *Instance) generatePuzzleList() {
 	ctx.jPuzzleList = jpl
 }
 
-func (ctx *Instance) generatePointsLog() {
+func (ctx *Instance) generatePointsLog(teamId string) []byte {
 	var ret struct {
 		Teams  map[string]string `json:"teams"`
 		Points []*Award          `json:"points"`
 	}
 	ret.Teams = map[string]string{}
-	ret.Points = ctx.PointsLog()
+	ret.Points = ctx.PointsLog(teamId)
 
 	teamNumbersById := map[string]int{}
 	for nr, a := range ret.Points {
@@ -114,15 +94,22 @@ func (ctx *Instance) generatePointsLog() {
 	jpl, err := json.Marshal(ret)
 	if err != nil {
 		log.Printf("Marshalling points.js: %v", err)
-		return
+		return nil
 	}
-	ctx.jPointsLog = jpl
+
+	if len(teamId) == 0 {
+		ctx.jPointsLog = jpl
+	}
+	return jpl
 }
 
 // maintenance runs
 func (ctx *Instance) tidy() {
 	// Do they want to reset everything?
 	ctx.MaybeInitialize()
+
+	// Check set config
+	ctx.UpdateConfig()
 
 	// Refresh all current categories
 	for categoryName, mb := range ctx.categories {
@@ -217,17 +204,26 @@ func (ctx *Instance) readTeams() {
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func (ctx *Instance) collectPoints() {
-	logf, err := os.OpenFile(ctx.StatePath("points.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+  points := ctx.PointsLog("")
+
+  pointsFilename := ctx.StatePath("points.log")
+  pointsNewFilename := ctx.StatePath("points.log.new")
+  
+  // Yo, this is delicate.
+  // If we have to return early, we must remove this file.
+  // If the file's written and we move it successfully,
+  // we need to remove all the little points files that built it.
+	newPoints, err := os.OpenFile(pointsNewFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 	if err != nil {
 		log.Printf("Can't append to points log: %s", err)
 		return
 	}
-	defer logf.Close()
 
 	files, err := ioutil.ReadDir(ctx.StatePath("points.new"))
 	if err != nil {
 		log.Printf("Error reading packages: %s", err)
 	}
+	removearino := make([]string, 0, len(files))
 	for _, f := range files {
 		filename := ctx.StatePath("points.new", f.Name())
 		s, err := ioutil.ReadFile(filename)
@@ -242,7 +238,7 @@ func (ctx *Instance) collectPoints() {
 		}
 
 		duplicate := false
-		for _, e := range ctx.PointsLog() {
+		for _, e := range points {
 			if award.Same(e) {
 				duplicate = true
 				break
@@ -252,13 +248,30 @@ func (ctx *Instance) collectPoints() {
 		if duplicate {
 			log.Printf("Skipping duplicate points: %s", award.String())
 		} else {
-			fmt.Fprintf(logf, "%s\n", award.String())
+		  points = append(points, award)
 		}
+		removearino = append(removearino, filename)
+	}
 
-		logf.Sync()
-		if err := os.Remove(filename); err != nil {
-			log.Printf("Unable to remove %s: %s", filename, err)
-		}
+	sort.Stable(points)
+	for _, point := range points {
+		fmt.Fprintln(newPoints, point.String())
+	}
+	
+	newPoints.Close()
+	
+	if err := os.Rename(pointsNewFilename, pointsFilename); err != nil {
+	  log.Printf("Unable to move %s to %s: %s", pointsFilename, pointsNewFilename, err)
+	  if err := os.Remove(pointsNewFilename); err != nil {
+	    log.Printf("Also couldn't remove %s: %s", pointsNewFilename, err)
+	  }
+	  return
+	}
+
+	for _, filename := range removearino {
+  	if err := os.Remove(filename); err != nil {
+  		log.Printf("Unable to remove %s: %s", filename, err)
+  	}
 	}
 }
 
@@ -286,6 +299,20 @@ func (ctx *Instance) isEnabled() bool {
 	return true
 }
 
+func (ctx *Instance) UpdateConfig() {
+	// Handle export manifest
+	if _, err := os.Stat(ctx.StatePath("export_manifest")); err == nil {
+		if !ctx.Runtime.export_manifest {
+			log.Print("Enabling manifest export")
+			ctx.Runtime.export_manifest = true
+		}
+	} else if ctx.Runtime.export_manifest {
+		log.Print("Disabling manifest export")
+		ctx.Runtime.export_manifest = false
+	}
+
+}
+
 // maintenance is the goroutine that runs a periodic maintenance task
 func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 	for {
@@ -294,7 +321,7 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 			ctx.readTeams()
 			ctx.collectPoints()
 			ctx.generatePuzzleList()
-			ctx.generatePointsLog()
+			ctx.generatePointsLog("")
 		}
 		select {
 		case <-ctx.update:

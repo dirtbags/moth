@@ -3,6 +3,7 @@ Summary: Static puzzle resource files
 File: salad.jpg s.jpg
 File: salad2.jpg s2.jpg hidden
 Answer: salad
+X-Answer-Pattern: *pong
 
 You can include additional resources in a static puzzle,
 by dropping them in the directory and listing them in a `File:` header field.

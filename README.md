@@ -1,6 +1,14 @@
 Dirtbags Monarch Of The Hill Server
 =====================
 
+Master:
+![](https://github.com/dirtbags/moth/workflows/Mothd%20Docker%20build/badge.svg?branch=master)
+![](https://github.com/dirtbags/moth/workflows/moth-devel%20Docker%20build/badge.svg?branch=master)
+
+Devel:
+![](https://github.com/dirtbags/moth/workflows/Mothd%20Docker%20build/badge.svg?branch=devel)
+![](https://github.com/dirtbags/moth/workflows/moth-devel%20Docker%20build/badge.svg?branch=devel)
+
 This is a set of thingies to run our Monarch-Of-The-Hill contest,
 which in the past has been called
 "Tracer FIRE",
@@ -67,7 +75,7 @@ you can copy the example puzzles as a starting point:
 
 Then launch the development server:
 
-    $ python3 tools/devel-server.py
+    $ python3 devel/devel-server.py
 
 Point a web browser at http://localhost:8080/
 and start hacking on things in your `puzzles` directory.
@@ -133,6 +141,18 @@ We sometimes to set `teamids.txt` to a bunch of random 8-digit hex values:
 Remember that team IDs are essentially passwords.
 
 
+Enabling offline/PWA mode
+-------------------
+
+If the file `state/export_manifest` is found, the server will expose the 
+endpoint `/current_manifest.json?id=<teamId>`. This endpoint will return 
+a list of all files, including static theme content and JSON and content 
+for currently-unlocked puzzles. This is used by the native PWA 
+implementation and `Cache` button on the index page to cache all of the 
+content necessary to display currently-open puzzles while offline. 
+Grading will be unavailable while offline. Some puzzles may not function 
+as expected while offline. A valid team ID must be provided.
+
 Mothball Directory
 ==================
 
@@ -149,4 +169,7 @@ If you remove a mothball,
 the category will vanish,
 but points scored in that category won't!
 
+Contributing to MOTH
+==================
 
+Please read [CONTRIBUTING.md](CONTRIBUTING.md)

@@ -58,6 +58,12 @@ func main() {
 		20*time.Second,
 		"Time between maintenance tasks",
 	)
+	flag.BoolVar(
+		&ctx.UseXForwarded,
+		"x-forwarded-for",
+		false,
+		"Emit IPs from the X-Forwarded-For header in logs, when available, instead of the source IP. Use this when running behind a load-balancer or proxy",
+	)
 	listen := flag.String(
 		"listen",
 		":8080",
