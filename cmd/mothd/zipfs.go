@@ -3,13 +3,15 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"strings"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
+// Zipfs defines a Zip Filesystem structure
 type Zipfs struct {
 	f        io.Closer
 	zf       *zip.Reader
@@ -164,7 +166,7 @@ func (zfs *Zipfs) Refresh() error {
 	return nil
 }
 
-func (zfs *Zipfs) ModTime() (time.Time) {
+func (zfs *Zipfs) ModTime() time.Time {
 	return zfs.mtime
 }
 

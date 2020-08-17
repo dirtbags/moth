@@ -17,7 +17,7 @@ type T struct {
 }
 
 // List is a collection of award events.
-type List []*T
+type List []T
 
 // Len implements sort.Interface.
 func (awards List) Len() int {
@@ -37,31 +37,28 @@ func (awards List) Swap(i, j int) {
 }
 
 // Parse parses a string log entry into an award.T.
-func Parse(s string) (*T, error) {
+func Parse(s string) (T, error) {
 	ret := T{}
 
 	s = strings.TrimSpace(s)
 
 	n, err := fmt.Sscanf(s, "%d %s %s %d", &ret.When, &ret.TeamID, &ret.Category, &ret.Points)
 	if err != nil {
-		return nil, err
+		return ret, err
 	} else if n != 4 {
-		return nil, fmt.Errorf("Malformed award string: only parsed %d fields", n)
+		return ret, fmt.Errorf("Malformed award string: only parsed %d fields", n)
 	}
 
-	return &ret, nil
+	return ret, nil
 }
 
 // String returns a log entry string for an award.T.
-func (a *T) String() string {
+func (a T) String() string {
 	return fmt.Sprintf("%d %s %s %d", a.When, a.TeamID, a.Category, a.Points)
 }
 
 // MarshalJSON returns the award event, encoded as a list.
-func (a *T) MarshalJSON() ([]byte, error) {
-	if a == nil {
-		return []byte("null"), nil
-	}
+func (a T) MarshalJSON() ([]byte, error) {
 	ao := []interface{}{
 		a.When,
 		a.TeamID,
@@ -74,7 +71,7 @@ func (a *T) MarshalJSON() ([]byte, error) {
 
 // Equal returns true if two award events represent the same award.
 // Timestamps are ignored in this comparison!
-func (a *T) Equal(o *T) bool {
+func (a T) Equal(o T) bool {
 	switch {
 	case a.TeamID != o.TeamID:
 		return false

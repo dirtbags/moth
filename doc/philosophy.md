@@ -30,3 +30,8 @@ This pretty much set the entire design:
   * It should be easy to remember in your head everything it does
 * Server is also compiled
   * Static type-checking helps assure no run-time errors
+* Server only tracks who scored how many points at what time
+  * This means the scoreboard program determines rankings
+  * Want to provide a time bonus for quick answers? I don't, but if you do, you can just modify the scoreboard to do so.
+  * Maybe you want to show a graph of team rankings over time: just replay the event log.
+  * Want to do some analysis of what puzzles take the longest to answer? It's all there.

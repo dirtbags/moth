@@ -8,18 +8,21 @@ import (
 	"github.com/spf13/afero"
 )
 
+func NewTestState() *State {
+	s := NewState(new(afero.MemMapFs))
+	s.Update()
+	return s
+}
+
 func TestState(t *testing.T) {
-	fs := new(afero.MemMapFs)
+	s := NewTestState()
 
 	mustExist := func(path string) {
-		_, err := fs.Stat(path)
+		_, err := s.Fs.Stat(path)
 		if os.IsNotExist(err) {
 			t.Errorf("File %s does not exist", path)
 		}
 	}
-
-	s := NewState(fs)
-	s.Update()
 
 	pl := s.PointsLog()
 	if len(pl) != 0 {
@@ -30,38 +33,38 @@ func TestState(t *testing.T) {
 	mustExist("enabled")
 	mustExist("hours")
 
-	teamidsBuf, err := afero.ReadFile(fs, "teamids.txt")
+	teamIDsBuf, err := afero.ReadFile(s.Fs, "teamids.txt")
 	if err != nil {
 		t.Errorf("Reading teamids.txt: %v", err)
 	}
 
-	teamids := bytes.Split(teamidsBuf, []byte("\n"))
-	if (len(teamids) != 101) || (len(teamids[100]) > 0) {
-		t.Errorf("There weren't 100 teamids, there were %d", len(teamids))
+	teamIDs := bytes.Split(teamIDsBuf, []byte("\n"))
+	if (len(teamIDs) != 101) || (len(teamIDs[100]) > 0) {
+		t.Errorf("There weren't 100 teamIDs, there were %d", len(teamIDs))
 	}
-	teamId := string(teamids[0])
+	teamID := string(teamIDs[0])
 
 	if err := s.SetTeamName("bad team ID", "bad team name"); err == nil {
 		t.Errorf("Setting bad team ID didn't raise an error")
 	}
 
-	if err := s.SetTeamName(teamId, "My Team"); err != nil {
+	if err := s.SetTeamName(teamID, "My Team"); err != nil {
 		t.Errorf("Setting team name: %v", err)
 	}
 
 	category := "poot"
 	points := 3928
-	s.AwardPoints(teamId, category, points)
+	s.AwardPoints(teamID, category, points)
 	s.Update()
 
 	pl = s.PointsLog()
 	if len(pl) != 1 {
 		t.Errorf("After awarding points, points log has length %d", len(pl))
-	} else if (pl[0].TeamID != teamId) || (pl[0].Category != category) || (pl[0].Points != points) {
+	} else if (pl[0].TeamID != teamID) || (pl[0].Category != category) || (pl[0].Points != points) {
 		t.Errorf("Incorrect logged award %v", pl)
 	}
 
-	fs.Remove("initialized")
+	s.Fs.Remove("initialized")
 	s.Update()
 
 	pl = s.PointsLog()

@@ -5,60 +5,71 @@ import (
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/dirtbags/moth/pkg/award"
 )
 
+// Category represents a puzzle category.
 type Category struct {
 	Name    string
 	Puzzles []int
 }
 
+// ReadSeekCloser defines a struct that can read, seek, and close.
 type ReadSeekCloser interface {
 	io.Reader
 	io.Seeker
 	io.Closer
 }
 
+// StateExport is given to clients requesting the current state.
 type StateExport struct {
 	Config struct {
 		Devel bool
 	}
 	Messages  string
 	TeamNames map[string]string
-	PointsLog []Award
+	PointsLog award.List
 	Puzzles   map[string][]int
 }
 
+// PuzzleProvider defines what's required to provide puzzles.
 type PuzzleProvider interface {
 	Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error)
 	Inventory() []Category
 	CheckAnswer(cat string, points int, answer string) error
-	Component
+	Provider
 }
 
+// ThemeProvider defines what's required to provide a theme.
 type ThemeProvider interface {
 	Open(path string) (ReadSeekCloser, time.Time, error)
-	Component
+	Provider
 }
 
+// StateProvider defines what's required to provide MOTH state.
 type StateProvider interface {
 	Messages() string
-	PointsLog() []*Award
-	TeamName(teamId string) (string, error)
-	SetTeamName(teamId, teamName string) error
-	AwardPoints(teamId string, cat string, points int) error
-	Component
+	PointsLog() award.List
+	TeamName(teamID string) (string, error)
+	SetTeamName(teamID, teamName string) error
+	AwardPoints(teamID string, cat string, points int) error
+	Provider
 }
 
-type Component interface {
+// Provider defines providers that can be updated.
+type Provider interface {
 	Update()
 }
 
+// MothServer gathers together the providers that make up a MOTH server.
 type MothServer struct {
 	Puzzles PuzzleProvider
 	Theme   ThemeProvider
 	State   StateProvider
 }
 
+// NewMothServer returns a new MothServer.
 func NewMothServer(puzzles PuzzleProvider, theme ThemeProvider, state StateProvider) *MothServer {
 	return &MothServer{
 		Puzzles: puzzles,
@@ -67,21 +78,23 @@ func NewMothServer(puzzles PuzzleProvider, theme ThemeProvider, state StateProvi
 	}
 }
 
-func (s *MothServer) NewHandler(teamId string) MothRequestHandler {
+// NewHandler returns a new http.RequestHandler for the provided teamID.
+func (s *MothServer) NewHandler(teamID string) MothRequestHandler {
 	return MothRequestHandler{
 		MothServer: s,
-		teamId:     teamId,
+		teamID:     teamID,
 	}
 }
 
-// XXX: Come up with a better name for this.
+// MothRequestHandler provides http.RequestHandler for a MothServer.
 type MothRequestHandler struct {
 	*MothServer
-	teamId string
+	teamID string
 }
 
+// PuzzlesOpen opens a file associated with a puzzle.
 func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
-	export := mh.ExportAllState()
+	export := mh.ExportState()
 	fmt.Println(export.Puzzles)
 	for _, p := range export.Puzzles[cat] {
 		fmt.Println(points, p)
@@ -93,93 +106,91 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 	return nil, time.Time{}, fmt.Errorf("Puzzle locked")
 }
 
+// ThemeOpen opens a file from a theme.
 func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time, error) {
 	return mh.Theme.Open(path)
 }
 
+// Register associates a team name with a team ID.
 func (mh *MothRequestHandler) Register(teamName string) error {
 	// XXX: Should we just return success if the team is already registered?
 	// XXX: Should this function be renamed to Login?
 	if teamName == "" {
 		return fmt.Errorf("Empty team name")
 	}
-	return mh.State.SetTeamName(mh.teamId, teamName)
+	return mh.State.SetTeamName(mh.teamID, teamName)
 }
 
+// CheckAnswer returns an error if answer is not a correct answer for puzzle points in category cat
 func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
 	if err := mh.Puzzles.CheckAnswer(cat, points, answer); err != nil {
 		return err
 	}
 
-	if err := mh.State.AwardPoints(mh.teamId, cat, points); err != nil {
+	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (mh *MothRequestHandler) ExportAllState() *StateExport {
+// ExportState anonymizes team IDs and returns StateExport.
+// If a teamID has been specified for this MothRequestHandler,
+// the anonymized team name for this teamID has the special value "self".
+// If not, the puzzles list is empty.
+func (mh *MothRequestHandler) ExportState() *StateExport {
 	export := StateExport{}
 
-	teamName, _ := mh.State.TeamName(mh.teamId)
+	teamName, _ := mh.State.TeamName(mh.teamID)
 
 	export.Messages = mh.State.Messages()
 	export.TeamNames = map[string]string{"self": teamName}
 
 	// Anonymize team IDs in points log, and write out team names
 	pointsLog := mh.State.PointsLog()
-	exportIds := map[string]string{mh.teamId: "self"}
+	exportIDs := map[string]string{mh.teamID: "self"}
 	maxSolved := map[string]int{}
-	export.PointsLog = make([]Award, len(pointsLog))
-	for logno, award := range pointsLog {
-		exportAward := *award
-		if id, ok := exportIds[award.TeamID]; ok {
-			exportAward.TeamID = id
+	export.PointsLog = make(award.List, len(pointsLog))
+	for logno, awd := range pointsLog {
+		if id, ok := exportIDs[awd.TeamID]; ok {
+			awd.TeamID = id
 		} else {
-			exportId := strconv.Itoa(logno)
-			name, _ := mh.State.TeamName(award.TeamID)
-			exportAward.TeamID = exportId
-			exportIds[award.TeamID] = exportAward.TeamID
-			export.TeamNames[exportId] = name
+			exportID := strconv.Itoa(logno)
+			name, _ := mh.State.TeamName(awd.TeamID)
+			awd.TeamID = exportID
+			exportIDs[awd.TeamID] = awd.TeamID
+			export.TeamNames[exportID] = name
 		}
-		export.PointsLog[logno] = exportAward
+		export.PointsLog[logno] = awd
 
 		// Record the highest-value unlocked puzzle in each category
-		if award.Points > maxSolved[award.Category] {
-			maxSolved[award.Category] = award.Points
+		if awd.Points > maxSolved[awd.Category] {
+			maxSolved[awd.Category] = awd.Points
 		}
 	}
 
 	export.Puzzles = make(map[string][]int)
-	for _, category := range mh.Puzzles.Inventory() {
-		// Append sentry (end of puzzles)
-		allPuzzles := append(category.Puzzles, 0)
+	if _, ok := export.TeamNames["self"]; ok {
+		// We used to hand this out to everyone,
+		// but then we got a bad reputation on some secretive blacklist,
+		// and now the Navy can't register for events.
 
-		max := maxSolved[category.Name]
+		for _, category := range mh.Puzzles.Inventory() {
+			// Append sentry (end of puzzles)
+			allPuzzles := append(category.Puzzles, 0)
 
-		puzzles := make([]int, 0, len(allPuzzles))
-		for i, val := range allPuzzles {
-			puzzles = allPuzzles[:i+1]
-			if val > max {
-				break
+			max := maxSolved[category.Name]
+
+			puzzles := make([]int, 0, len(allPuzzles))
+			for i, val := range allPuzzles {
+				puzzles = allPuzzles[:i+1]
+				if val > max {
+					break
+				}
 			}
+			export.Puzzles[category.Name] = puzzles
 		}
-		export.Puzzles[category.Name] = puzzles
 	}
 
 	return &export
-}
-
-func (mh *MothRequestHandler) ExportState() *StateExport {
-	export := mh.ExportAllState()
-
-	// We don't give this out to just anybody,
-	// because back when we did,
-	// we got a bad reputation on some secretive blacklist,
-	// and now the Navy can't register for events.
-	if export.TeamNames["self"] == "" {
-		export.Puzzles = map[string][]int{}
-	}
-
-	return export
 }

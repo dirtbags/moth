@@ -1,36 +1,40 @@
 package main
 
 import (
-	"github.com/spf13/afero"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
+// Theme defines a filesystem-backed ThemeProvider.
 type Theme struct {
 	afero.Fs
 }
 
+// NewTheme returns a new Theme, backed by Fs.
 func NewTheme(fs afero.Fs) *Theme {
 	return &Theme{
 		Fs: fs,
 	}
 }
 
-// I don't understand why I need this. The type checking system is weird here.
+// Open returns a new opened file.
 func (t *Theme) Open(name string) (ReadSeekCloser, time.Time, error) {
 	f, err := t.Fs.Open(name)
 	if err != nil {
 		return nil, time.Time{}, err
 	}
-	
+
 	fi, err := f.Stat()
 	if err != nil {
 		f.Close()
 		return nil, time.Time{}, err
 	}
-	
+
 	return f, fi.ModTime(), nil
 }
 
+// Update performs housekeeping for a Theme.
 func (t *Theme) Update() {
 	// No periodic tasks for a theme
 }

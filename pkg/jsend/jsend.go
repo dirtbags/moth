@@ -1,4 +1,4 @@
-package main
+package jsend
 
 import (
 	"encoding/json"
@@ -10,11 +10,17 @@ import (
 // https://github.com/omniti-labs/jsend
 
 const (
-	JSendSuccess = "success"
-	JSendFail    = "fail"
-	JSendError   = "error"
+	// Success is the return code indicating "All went well, and (usually) some data was returned".
+	Success = "success"
+
+	// Fail is the return code indicating "There was a problem with the data submitted, or some pre-condition of the API call wasn't satisfied".
+	Fail = "fail"
+
+	// Error is the return code indicating "An error occurred in processing the request, i.e. an exception was thrown".
+	Error = "error"
 )
 
+// JSONWrite writes out data as JSON, sending headers and content length
 func JSONWrite(w http.ResponseWriter, data interface{}) {
 	respBytes, err := json.Marshal(data)
 	if err != nil {
@@ -28,7 +34,8 @@ func JSONWrite(w http.ResponseWriter, data interface{}) {
 	w.Write(respBytes)
 }
 
-func JSend(w http.ResponseWriter, status string, data interface{}) {
+// Send sends arbitrary data as a JSend response
+func Send(w http.ResponseWriter, status string, data interface{}) {
 	resp := struct {
 		Status string      `json:"status"`
 		Data   interface{} `json:"data"`
@@ -39,7 +46,8 @@ func JSend(w http.ResponseWriter, status string, data interface{}) {
 	JSONWrite(w, resp)
 }
 
-func JSendf(w http.ResponseWriter, status, short string, format string, a ...interface{}) {
+// Sendf sends a Sprintf()-formatted string as a JSend response
+func Sendf(w http.ResponseWriter, status, short string, format string, a ...interface{}) {
 	data := struct {
 		Short       string `json:"short"`
 		Description string `json:"description"`
@@ -47,5 +55,5 @@ func JSendf(w http.ResponseWriter, status, short string, format string, a ...int
 	data.Short = short
 	data.Description = fmt.Sprintf(format, a...)
 
-	JSend(w, status, data)
+	Send(w, status, data)
 }

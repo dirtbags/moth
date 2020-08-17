@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/dirtbags/moth/pkg/jsend"
 )
 
 // HTTPServer is a MOTH HTTP server
@@ -44,7 +46,7 @@ func (h *HTTPServer) HandleMothFunc(
 
 // ServeHTTP provides the http.Handler interface
 func (h *HTTPServer) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
-	w := MothResponseWriter{
+	w := StatusResponseWriter{
 		statusCode:     new(int),
 		ResponseWriter: wOrig,
 	}
@@ -58,14 +60,14 @@ func (h *HTTPServer) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// MothResponseWriter provides a ResponseWriter that remembers what the status code was
-type MothResponseWriter struct {
+// StatusResponseWriter provides a ResponseWriter that remembers what the status code was
+type StatusResponseWriter struct {
 	statusCode *int
 	http.ResponseWriter
 }
 
 // WriteHeader sends an HTTP response header with the provided status code
-func (w MothResponseWriter) WriteHeader(statusCode int) {
+func (w StatusResponseWriter) WriteHeader(statusCode int) {
 	*w.statusCode = statusCode
 	w.ResponseWriter.WriteHeader(statusCode)
 }
@@ -94,16 +96,16 @@ func (h *HTTPServer) ThemeHandler(mh MothRequestHandler, w http.ResponseWriter, 
 
 // StateHandler returns the full JSON-encoded state of the event
 func (h *HTTPServer) StateHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
-	JSONWrite(w, mh.ExportState())
+	jsend.JSONWrite(w, mh.ExportState())
 }
 
 // RegisterHandler handles attempts to register a team
 func (h *HTTPServer) RegisterHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
 	teamName := req.FormValue("name")
 	if err := mh.Register(teamName); err != nil {
-		JSendf(w, JSendFail, "not registered", err.Error())
+		jsend.Sendf(w, jsend.Fail, "not registered", err.Error())
 	} else {
-		JSendf(w, JSendSuccess, "registered", "Team ID registered")
+		jsend.Sendf(w, jsend.Success, "registered", "Team ID registered")
 	}
 }
 
@@ -116,9 +118,9 @@ func (h *HTTPServer) AnswerHandler(mh MothRequestHandler, w http.ResponseWriter,
 	points, _ := strconv.Atoi(pointstr)
 
 	if err := mh.CheckAnswer(cat, points, answer); err != nil {
-		JSendf(w, JSendFail, "not accepted", err.Error())
+		jsend.Sendf(w, jsend.Fail, "not accepted", err.Error())
 	} else {
-		JSendf(w, JSendSuccess, "accepted", "%d points awarded in %s", points, cat)
+		jsend.Sendf(w, jsend.Success, "accepted", "%d points awarded in %s", points, cat)
 	}
 }
 

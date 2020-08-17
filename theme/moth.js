@@ -176,7 +176,7 @@ function login(e) {
   let name = document.querySelector("[name=name]").value
   let teamId = document.querySelector("[name=id]").value
   let pide = document.querySelector("[name=pid]")
-  let participantId = pide?pide.value:""
+  let participantId = pide?pide.value:Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
   
   fetch("register", {
     method: "POST",

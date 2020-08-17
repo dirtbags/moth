@@ -1,20 +1,23 @@
 package main
 
 import (
-	"github.com/spf13/afero"
-	"log"
-	"strings"
 	"bufio"
-	"strconv"
-	"time"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/spf13/afero"
 )
 
+// Mothballs provides a collection of active mothball files (puzzle categories)
 type Mothballs struct {
 	categories map[string]*Zipfs
 	afero.Fs
 }
 
+// NewMothballs returns a new Mothballs structure backed by the provided directory
 func NewMothballs(fs afero.Fs) *Mothballs {
 	return &Mothballs{
 		Fs:         fs,
@@ -22,9 +25,10 @@ func NewMothballs(fs afero.Fs) *Mothballs {
 	}
 }
 
+// Open returns a ReadSeekCloser corresponding to the filename in a puzzle's category and points
 func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekCloser, time.Time, error) {
 	mb, ok := m.categories[cat]
-	if ! ok {
+	if !ok {
 		return nil, time.Time{}, fmt.Errorf("No such category: %s", cat)
 	}
 
@@ -32,6 +36,7 @@ func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekClose
 	return f, mb.ModTime(), err
 }
 
+// Inventory returns the list of current categories
 func (m *Mothballs) Inventory() []Category {
 	categories := make([]Category, 0, 20)
 	for cat, zfs := range m.categories {
@@ -55,18 +60,19 @@ func (m *Mothballs) Inventory() []Category {
 	return categories
 }
 
+// CheckAnswer returns an error if the provided answer is in any way incorrect for the given category and points
 func (m *Mothballs) CheckAnswer(cat string, points int, answer string) error {
 	zfs, ok := m.categories[cat]
-	if ! ok {
+	if !ok {
 		return fmt.Errorf("No such category: %s", cat)
 	}
-	
+
 	af, err := zfs.Open("answers.txt")
 	if err != nil {
 		return fmt.Errorf("No answers.txt file")
 	}
 	defer af.Close()
-	
+
 	needle := fmt.Sprintf("%d %s", points, answer)
 	scanner := bufio.NewScanner(af)
 	for scanner.Scan() {
@@ -78,6 +84,8 @@ func (m *Mothballs) CheckAnswer(cat string, points int, answer string) error {
 	return fmt.Errorf("Invalid answer")
 }
 
+// Update refreshes internal state.
+// It looks for changes to the directory listing, and caches any new mothballs.
 func (m *Mothballs) Update() {
 	// Any new categories?
 	files, err := afero.ReadDir(m.Fs, "/")

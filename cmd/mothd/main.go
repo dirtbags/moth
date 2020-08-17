@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func custodian(updateInterval time.Duration, components []Component) {
+func custodian(updateInterval time.Duration, components []Provider) {
 	update := func() {
 		for _, c := range components {
 			c.Update()
@@ -39,7 +39,7 @@ func main() {
 	mothballPath := flag.String(
 		"mothballs",
 		"mothballs",
-		"Path to mothballs to host",
+		"Path to mothball files",
 	)
 	refreshInterval := flag.Duration(
 		"refresh",
@@ -67,7 +67,7 @@ func main() {
 	mime.AddExtensionType(".json", "application/json")
 	mime.AddExtensionType(".zip", "application/zip")
 
-	go custodian(*refreshInterval, []Component{theme, state, puzzles})
+	go custodian(*refreshInterval, []Provider{theme, state, puzzles})
 
 	server := NewMothServer(puzzles, theme, state)
 	httpd := NewHTTPServer(*base, server)

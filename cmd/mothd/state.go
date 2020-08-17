@@ -10,12 +10,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dirtbags/moth/pkg/award"
 	"github.com/spf13/afero"
 )
 
-// Stuff people with mediocre handwriting could write down unambiguously, and can be entered without holding down shift
+// DistinguishableChars are visually unambiguous glyphs.
+// People with mediocre handwriting could write these down unambiguously,
+// and they can be entered without holding down shift.
 const DistinguishableChars = "234678abcdefhikmnpqrtwxyz="
 
+// State defines the current state of a MOTH instance.
 // We use the filesystem for synchronization between threads.
 // The only thing State methods need to know is the path to the state directory.
 type State struct {
@@ -23,6 +27,7 @@ type State struct {
 	Enabled bool
 }
 
+// NewState returns a new State struct backed by the given Fs
 func NewState(fs afero.Fs) *State {
 	return &State{
 		Fs:      fs,
@@ -30,7 +35,7 @@ func NewState(fs afero.Fs) *State {
 	}
 }
 
-// Check a few things to see if this state directory is "enabled".
+// UpdateEnabled checks a few things to see if this state directory is "enabled".
 func (s *State) UpdateEnabled() {
 	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
 		s.Enabled = false
@@ -81,7 +86,7 @@ func (s *State) UpdateEnabled() {
 	}
 }
 
-// Returns team name given a team ID.
+// TeamName returns team name given a team ID.
 func (s *State) TeamName(teamID string) (string, error) {
 	// XXX: directory traversal
 	teamFile := filepath.Join("teams", teamID)
@@ -97,35 +102,35 @@ func (s *State) TeamName(teamID string) (string, error) {
 	return teamName, nil
 }
 
-// Write out team name. This can only be done once.
+// SetTeamName writes out team name.
+// This can only be done once.
 func (s *State) SetTeamName(teamID, teamName string) error {
-	if f, err := s.Open("teamids.txt"); err != nil {
+	f, err := s.Open("teamids.txt")
+	if err != nil {
 		return fmt.Errorf("Team IDs file does not exist")
-	} else {
-		found := false
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			if scanner.Text() == teamID {
-				found = true
-				break
-			}
+	}
+	found := false
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if scanner.Text() == teamID {
+			found = true
+			break
 		}
-		f.Close()
-		if !found {
-			return fmt.Errorf("Team ID not found in list of valid Team IDs")
-		}
+	}
+	f.Close()
+	if !found {
+		return fmt.Errorf("Team ID not found in list of valid Team IDs")
 	}
 
 	teamFile := filepath.Join("teams", teamID)
-	err := afero.WriteFile(s, teamFile, []byte(teamName), os.ModeExclusive|0644)
-	if os.IsExist(err) {
+	if err := afero.WriteFile(s, teamFile, []byte(teamName), os.ModeExclusive|0644); os.IsExist(err) {
 		return fmt.Errorf("Team ID is already registered")
 	}
 	return err
 }
 
-// Retrieve the current points log
-func (s *State) PointsLog() []*Award {
+// PointsLog retrieves the current points log.
+func (s *State) PointsLog() award.List {
 	f, err := s.Open("points.log")
 	if err != nil {
 		log.Println(err)
@@ -133,11 +138,11 @@ func (s *State) PointsLog() []*Award {
 	}
 	defer f.Close()
 
-	pointsLog := make([]*Award, 0, 200)
+	pointsLog := make(award.List, 0, 200)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		cur, err := ParseAward(line)
+		cur, err := award.Parse(line)
 		if err != nil {
 			log.Printf("Skipping malformed award line %s: %s", line, err)
 			continue
@@ -147,7 +152,7 @@ func (s *State) PointsLog() []*Award {
 	return pointsLog
 }
 
-// Retrieve current messages
+// Messages retrieves the current messages.
 func (s *State) Messages() string {
 	bMessages, _ := afero.ReadFile(s, "messages.html")
 	return string(bMessages)
@@ -159,7 +164,7 @@ func (s *State) Messages() string {
 // It's just a courtesy to the user.
 // The update task makes sure we never have duplicate points in the log.
 func (s *State) AwardPoints(teamID, category string, points int) error {
-	a := Award{
+	a := award.T{
 		When:     time.Now().Unix(),
 		TeamID:   teamID,
 		Category: category,
@@ -172,7 +177,7 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 	}
 
 	for _, e := range s.PointsLog() {
-		if a.Same(e) {
+		if a.Equal(e) {
 			return fmt.Errorf("Points already awarded to this team in this category")
 		}
 	}
@@ -208,7 +213,7 @@ func (s *State) collectPoints() {
 			log.Print("Opening new points: ", err)
 			continue
 		}
-		award, err := ParseAward(string(awardstr))
+		awd, err := award.Parse(string(awardstr))
 		if err != nil {
 			log.Print("Can't parse award file ", filename, ": ", err)
 			continue
@@ -216,23 +221,23 @@ func (s *State) collectPoints() {
 
 		duplicate := false
 		for _, e := range s.PointsLog() {
-			if award.Same(e) {
+			if awd.Equal(e) {
 				duplicate = true
 				break
 			}
 		}
 
 		if duplicate {
-			log.Print("Skipping duplicate points: ", award.String())
+			log.Print("Skipping duplicate points: ", awd.String())
 		} else {
-			log.Print("Award: ", award.String())
+			log.Print("Award: ", awd.String())
 
 			logf, err := s.OpenFile("points.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Print("Can't append to points log: ", err)
 				return
 			}
-			fmt.Fprintln(logf, award.String())
+			fmt.Fprintln(logf, awd.String())
 			logf.Close()
 		}
 
@@ -268,7 +273,7 @@ func (s *State) maybeInitialize() {
 	// Preseed available team ids if file doesn't exist
 	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		id := make([]byte, 8)
-		for i := 0; i < 100; i += 1 {
+		for i := 0; i < 100; i++ {
 			for i := range id {
 				char := rand.Intn(len(DistinguishableChars))
 				id[i] = DistinguishableChars[char]
@@ -317,6 +322,7 @@ func (s *State) maybeInitialize() {
 
 }
 
+// Update performs housekeeping on a State struct.
 func (s *State) Update() {
 	s.maybeInitialize()
 	s.UpdateEnabled()

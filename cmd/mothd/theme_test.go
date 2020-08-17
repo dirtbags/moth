@@ -7,17 +7,20 @@ import (
 	"github.com/spf13/afero"
 )
 
+func NewTestTheme() *Theme {
+	return NewTheme(new(afero.MemMapFs))
+}
+
 func TestTheme(t *testing.T) {
+	s := NewTestTheme()
+
 	filename := "/index.html"
-	fs := new(afero.MemMapFs)
 	index := "this is the index"
-	afero.WriteFile(fs, filename, []byte(index), 0644)
-	fileInfo, err := fs.Stat(filename)
+	afero.WriteFile(s.Fs, filename, []byte(index), 0644)
+	fileInfo, err := s.Fs.Stat(filename)
 	if err != nil {
 		t.Error(err)
 	}
-
-	s := NewTheme(fs)
 
 	if f, timestamp, err := s.Open("/index.html"); err != nil {
 		t.Error(err)
