@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/spf13/afero"
 )
 
 func NewTestState() *State {
 	s := NewState(new(afero.MemMapFs))
-	s.Update()
+	s.refresh()
 	return s
 }
 
@@ -55,7 +56,7 @@ func TestState(t *testing.T) {
 	category := "poot"
 	points := 3928
 	s.AwardPoints(teamID, category, points)
-	s.Update()
+	s.refresh()
 
 	pl = s.PointsLog()
 	if len(pl) != 1 {
@@ -65,10 +66,34 @@ func TestState(t *testing.T) {
 	}
 
 	s.Fs.Remove("initialized")
-	s.Update()
+	s.refresh()
 
 	pl = s.PointsLog()
 	if len(pl) != 0 {
 		t.Errorf("After reinitialization, points log has length %d", len(pl))
+	}
+}
+
+func TestStateEvents(t *testing.T) {
+	s := NewTestState()
+	s.LogEvent("moo")
+	s.LogEventf("moo %d", 2)
+
+	if msg := <-s.eventStream; msg != "moo" {
+		t.Error("Wrong message from event stream", msg)
+	}
+	if msg := <-s.eventStream; msg != "moo 2" {
+		t.Error("Formatted event is wrong:", msg)
+	}
+}
+
+func TestStateMaintainer(t *testing.T) {
+	s := NewTestState()
+	go s.Maintain(2 * time.Second)
+
+	s.LogEvent("Hello!")
+	eventLog, _ := afero.ReadFile(s.Fs, "event.log")
+	if len(eventLog) != 12 {
+		t.Error("Wrong event log length:", len(eventLog))
 	}
 }

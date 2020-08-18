@@ -38,13 +38,13 @@ type PuzzleProvider interface {
 	Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error)
 	Inventory() []Category
 	CheckAnswer(cat string, points int, answer string) error
-	Provider
+	Maintainer
 }
 
 // ThemeProvider defines what's required to provide a theme.
 type ThemeProvider interface {
 	Open(path string) (ReadSeekCloser, time.Time, error)
-	Provider
+	Maintainer
 }
 
 // StateProvider defines what's required to provide MOTH state.
@@ -54,12 +54,15 @@ type StateProvider interface {
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
 	AwardPoints(teamID string, cat string, points int) error
-	Provider
+	Maintainer
 }
 
-// Provider defines providers that can be updated.
-type Provider interface {
-	Update()
+// Maintainer is something that can be maintained.
+type Maintainer interface {
+	// Maintain is the maintenance loop.
+	// It will only be called once, when execution begins.
+	// It's okay to just exit if there's no maintenance to be done.
+	Maintain(updateInterval time.Duration)
 }
 
 // MothServer gathers together the providers that make up a MOTH server.
@@ -113,8 +116,7 @@ func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time,
 
 // Register associates a team name with a team ID.
 func (mh *MothRequestHandler) Register(teamName string) error {
-	// XXX: Should we just return success if the team is already registered?
-	// XXX: Should this function be renamed to Login?
+	// BUG(neale): Register returns an error if a team is already registered; it may make more sense to return success
 	if teamName == "" {
 		return fmt.Errorf("Empty team name")
 	}

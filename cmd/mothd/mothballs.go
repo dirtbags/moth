@@ -109,9 +109,9 @@ func (m *Mothballs) CheckAnswer(cat string, points int, answer string) error {
 	return fmt.Errorf("Invalid answer")
 }
 
-// Update refreshes internal state.
+// refresh refreshes internal state.
 // It looks for changes to the directory listing, and caches any new mothballs.
-func (m *Mothballs) Update() {
+func (m *Mothballs) refresh() {
 	m.categoryLock.Lock()
 	defer m.categoryLock.Unlock()
 
@@ -167,5 +167,13 @@ func (m *Mothballs) Update() {
 			delete(m.categories, categoryName)
 			log.Println("Removing category:", categoryName)
 		}
+	}
+}
+
+// Maintain performs housekeeping for Mothballs.
+func (m *Mothballs) Maintain(updateInterval time.Duration) {
+	m.refresh()
+	for range time.NewTicker(updateInterval).C {
+		m.refresh()
 	}
 }

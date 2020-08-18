@@ -9,20 +9,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-func custodian(updateInterval time.Duration, components []Provider) {
-	update := func() {
-		for _, c := range components {
-			c.Update()
-		}
-	}
-
-	ticker := time.NewTicker(updateInterval)
-	update()
-	for range ticker.C {
-		update()
-	}
-}
-
 func main() {
 	log.Print("Started")
 
@@ -67,7 +53,9 @@ func main() {
 	mime.AddExtensionType(".json", "application/json")
 	mime.AddExtensionType(".zip", "application/zip")
 
-	go custodian(*refreshInterval, []Provider{theme, state, puzzles})
+	go theme.Maintain(*refreshInterval)
+	go state.Maintain(*refreshInterval)
+	go puzzles.Maintain(*refreshInterval)
 
 	server := NewMothServer(puzzles, theme, state)
 	httpd := NewHTTPServer(*base, server)

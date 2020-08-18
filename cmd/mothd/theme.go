@@ -34,7 +34,7 @@ func (t *Theme) Open(name string) (ReadSeekCloser, time.Time, error) {
 	return f, fi.ModTime(), nil
 }
 
-// Update performs housekeeping for a Theme.
-func (t *Theme) Update() {
+// Maintain performs housekeeping for a Theme.
+func (t *Theme) Maintain(i time.Duration) {
 	// No periodic tasks for a theme
 }

@@ -24,19 +24,31 @@ const DistinguishableChars = "234678abcdefhikmnpqrtwxyz="
 // The only thing State methods need to know is the path to the state directory.
 type State struct {
 	afero.Fs
+
+	// Enabled tracks whether the current State system is processing updates
 	Enabled bool
+
+	refreshNow  chan bool
+	eventStream chan string
+	eventWriter afero.File
 }
 
 // NewState returns a new State struct backed by the given Fs
 func NewState(fs afero.Fs) *State {
-	return &State{
-		Fs:      fs,
-		Enabled: true,
+	s := &State{
+		Fs:          fs,
+		Enabled:     true,
+		refreshNow:  make(chan bool, 5),
+		eventStream: make(chan string, 80),
 	}
+	if err := s.reopenEventLog(); err != nil {
+		log.Fatal(err)
+	}
+	return s
 }
 
-// UpdateEnabled checks a few things to see if this state directory is "enabled".
-func (s *State) UpdateEnabled() {
+// updateEnabled checks a few things to see if this state directory is "enabled".
+func (s *State) updateEnabled() {
 	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
 		s.Enabled = false
 		log.Println("Suspended: enabled file missing")
@@ -88,17 +100,15 @@ func (s *State) UpdateEnabled() {
 
 // TeamName returns team name given a team ID.
 func (s *State) TeamName(teamID string) (string, error) {
-	// XXX: directory traversal
-	teamFile := filepath.Join("teams", teamID)
-	teamNameBytes, err := afero.ReadFile(s, teamFile)
-	teamName := strings.TrimSpace(string(teamNameBytes))
-
+	teamFs := afero.NewBasePathFs(s.Fs, "teams")
+	teamNameBytes, err := afero.ReadFile(teamFs, teamID)
 	if os.IsNotExist(err) {
 		return "", fmt.Errorf("Unregistered team ID: %s", teamID)
 	} else if err != nil {
 		return "", fmt.Errorf("Unregistered team ID: %s (%s)", teamID, err)
 	}
 
+	teamName := strings.TrimSpace(string(teamNameBytes))
 	return teamName, nil
 }
 
@@ -194,7 +204,7 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 		return err
 	}
 
-	// XXX: update everything
+	// BUG(neale): When points are awarded, state should be updated immediately
 	return nil
 }
 
@@ -261,9 +271,15 @@ func (s *State) maybeInitialize() {
 	s.Remove("hours")
 	s.Remove("points.log")
 	s.Remove("messages.html")
+	s.Remove("mothd.log")
 	s.RemoveAll("points.tmp")
 	s.RemoveAll("points.new")
 	s.RemoveAll("teams")
+
+	// Open log file
+	if err := s.reopenEventLog(); err != nil {
+		log.Fatal(err)
+	}
 
 	// Make sure various subdirectories exist
 	s.Mkdir("points.tmp", 0755)
@@ -319,14 +335,55 @@ func (s *State) maybeInitialize() {
 	if f, err := s.Create("points.log"); err == nil {
 		f.Close()
 	}
-
 }
 
-// Update performs housekeeping on a State struct.
-func (s *State) Update() {
+// LogEvent writes msg to the event log
+func (s *State) LogEvent(msg string) {
+	s.eventStream <- msg
+}
+
+// LogEventf writes a formatted message to the event log
+func (s *State) LogEventf(format string, a ...interface{}) {
+	msg := fmt.Sprintf(format, a...)
+	s.LogEvent(msg)
+}
+
+func (s *State) reopenEventLog() error {
+	if s.eventWriter != nil {
+		if err := s.eventWriter.Close(); err != nil {
+			// We're going to soldier on if Close returns error
+			log.Print(err)
+		}
+	}
+	eventWriter, err := s.OpenFile("events.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	s.eventWriter = eventWriter
+	return nil
+}
+
+func (s *State) refresh() {
 	s.maybeInitialize()
-	s.UpdateEnabled()
+	s.updateEnabled()
 	if s.Enabled {
 		s.collectPoints()
+	}
+}
+
+// Maintain performs housekeeping on a State struct.
+func (s *State) Maintain(updateInterval time.Duration) {
+	ticker := time.NewTicker(updateInterval)
+	s.refresh()
+	for {
+		select {
+		case msg := <-s.eventStream:
+			fmt.Println(s.eventWriter, time.Now().Unix(), msg)
+			s.eventWriter.Sync()
+		case <-ticker.C:
+			s.refresh()
+		case <-s.refreshNow:
+			s.refresh()
+		}
 	}
 }

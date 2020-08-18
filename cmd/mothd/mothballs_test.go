@@ -32,7 +32,7 @@ func (m *Mothballs) createMothball(cat string) {
 func TestMothballs(t *testing.T) {
 	m := NewMothballs(new(afero.MemMapFs))
 	m.createMothball("test1")
-	m.Update()
+	m.refresh()
 	if _, ok := m.categories["test1"]; !ok {
 		t.Error("Didn't create a new category")
 	}
@@ -54,7 +54,7 @@ func TestMothballs(t *testing.T) {
 
 	m.createMothball("test2")
 	m.Fs.Remove("test1.mb")
-	m.Update()
+	m.refresh()
 	inv = m.Inventory()
 	if len(inv) != 1 {
 		t.Error("Deleted mothball is still around", inv)
