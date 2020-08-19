@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -88,12 +89,53 @@ func TestStateEvents(t *testing.T) {
 }
 
 func TestStateMaintainer(t *testing.T) {
+	updateInterval := 10 * time.Millisecond
+
 	s := NewTestState()
-	go s.Maintain(2 * time.Second)
+	go s.Maintain(updateInterval)
+
+	if _, err := s.Stat("initialized"); err != nil {
+		t.Error(err)
+	}
+	teamIDLines, err := afero.ReadFile(s, "teamids.txt")
+	if err != nil {
+		t.Error(err)
+	}
+	teamIDList := strings.Split(string(teamIDLines), "\n")
+	if len(teamIDList) != 101 {
+		t.Error("TeamIDList length is", len(teamIDList))
+	}
+	teamID := teamIDList[0]
+	if len(teamID) < 6 {
+		t.Error("Team ID too short:", teamID)
+	}
 
 	s.LogEvent("Hello!")
-	eventLog, _ := afero.ReadFile(s.Fs, "event.log")
-	if len(eventLog) != 12 {
+
+	if len(s.PointsLog()) != 0 {
+		t.Error("Points log is not empty")
+	}
+	if err := s.SetTeamName(teamID, "The Patricks"); err != nil {
+		t.Error(err)
+	}
+	if err := s.AwardPoints(teamID, "pategory", 31337); err != nil {
+		t.Error(err)
+	}
+	time.Sleep(updateInterval)
+	pl := s.PointsLog()
+	if len(pl) != 1 {
+		t.Error("Points log should have one entry")
+	}
+	if (pl[0].Category != "pategory") || (pl[0].TeamID != teamID) {
+		t.Error("Wrong points event was recorded")
+	}
+
+	time.Sleep(updateInterval)
+
+	eventLog, err := afero.ReadFile(s.Fs, "event.log")
+	if err != nil {
+		t.Error(err)
+	} else if len(eventLog) != 18 {
 		t.Error("Wrong event log length:", len(eventLog))
 	}
 }

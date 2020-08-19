@@ -19,17 +19,17 @@ type T struct {
 // List is a collection of award events.
 type List []T
 
-// Len implements sort.Interface.
+// Len returns the length of the awards list.
 func (awards List) Len() int {
 	return len(awards)
 }
 
-// Less implements sort.Interface.
+// Less returns true if i was awarded before j.
 func (awards List) Less(i, j int) bool {
 	return awards[i].When < awards[j].When
 }
 
-// Swap implements sort.Interface.
+// Swap exchanges the awards in positions i and j.
 func (awards List) Swap(i, j int) {
 	tmp := awards[i]
 	awards[i] = awards[j]

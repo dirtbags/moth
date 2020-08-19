@@ -355,7 +355,7 @@ func (s *State) reopenEventLog() error {
 			log.Print(err)
 		}
 	}
-	eventWriter, err := s.OpenFile("events.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	eventWriter, err := s.OpenFile("event.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -378,7 +378,7 @@ func (s *State) Maintain(updateInterval time.Duration) {
 	for {
 		select {
 		case msg := <-s.eventStream:
-			fmt.Println(s.eventWriter, time.Now().Unix(), msg)
+			fmt.Fprintln(s.eventWriter, time.Now().Unix(), msg)
 			s.eventWriter.Sync()
 		case <-ticker.C:
 			s.refresh()
