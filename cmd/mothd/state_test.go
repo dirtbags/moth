@@ -78,7 +78,7 @@ func TestState(t *testing.T) {
 func TestStateEvents(t *testing.T) {
 	s := NewTestState()
 	s.LogEvent("moo")
-	s.LogEventf("moo %d", 2)
+	s.LogEvent("moo 2")
 
 	if msg := <-s.eventStream; msg != "moo" {
 		t.Error("Wrong message from event stream", msg)

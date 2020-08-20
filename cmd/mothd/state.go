@@ -204,7 +204,9 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 		return err
 	}
 
-	// BUG(neale): When points are awarded, state should be updated immediately
+	//  State should be updated immediately
+	s.refreshNow <- true
+
 	return nil
 }
 
@@ -340,12 +342,6 @@ func (s *State) maybeInitialize() {
 // LogEvent writes msg to the event log
 func (s *State) LogEvent(msg string) {
 	s.eventStream <- msg
-}
-
-// LogEventf writes a formatted message to the event log
-func (s *State) LogEventf(format string, a ...interface{}) {
-	msg := fmt.Sprintf(format, a...)
-	s.LogEvent(msg)
 }
 
 func (s *State) reopenEventLog() error {

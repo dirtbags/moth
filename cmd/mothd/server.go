@@ -54,6 +54,7 @@ type StateProvider interface {
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
 	AwardPoints(teamID string, cat string, points int) error
+	LogEvent(msg string)
 	Maintainer
 }
 
@@ -82,17 +83,19 @@ func NewMothServer(puzzles PuzzleProvider, theme ThemeProvider, state StateProvi
 }
 
 // NewHandler returns a new http.RequestHandler for the provided teamID.
-func (s *MothServer) NewHandler(teamID string) MothRequestHandler {
+func (s *MothServer) NewHandler(participantID, teamID string) MothRequestHandler {
 	return MothRequestHandler{
-		MothServer: s,
-		teamID:     teamID,
+		MothServer:    s,
+		participantID: participantID,
+		teamID:        teamID,
 	}
 }
 
 // MothRequestHandler provides http.RequestHandler for a MothServer.
 type MothRequestHandler struct {
 	*MothServer
-	teamID string
+	participantID string
+	teamID        string
 }
 
 // PuzzlesOpen opens a file associated with a puzzle.
@@ -126,10 +129,14 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 // CheckAnswer returns an error if answer is not a correct answer for puzzle points in category cat
 func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
 	if err := mh.Puzzles.CheckAnswer(cat, points, answer); err != nil {
+		msg := fmt.Sprintf("BAD %s %s %s %d %s", mh.participantID, mh.teamID, cat, points, err.Error())
+		mh.State.LogEvent(msg)
 		return err
 	}
 
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
+		msg := fmt.Sprintf("GOOD %s %s %s %d", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent(msg)
 		return err
 	}
 

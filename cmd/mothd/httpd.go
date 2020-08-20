@@ -38,7 +38,9 @@ func (h *HTTPServer) HandleMothFunc(
 	mothHandler func(MothRequestHandler, http.ResponseWriter, *http.Request),
 ) {
 	handler := func(w http.ResponseWriter, req *http.Request) {
-		mh := h.server.NewHandler(req.FormValue("id"))
+		participantID := req.FormValue("pid")
+		teamID := req.FormValue("id")
+		mh := h.server.NewHandler(participantID, teamID)
 		mothHandler(mh, w, req)
 	}
 	h.HandleFunc(h.base+pattern, handler)

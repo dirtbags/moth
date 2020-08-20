@@ -12,8 +12,9 @@ var testFiles = []struct {
 	Name, Body string
 }{
 	{"puzzles.txt", "1"},
+	{"answers.txt", "1 answer123\n1 answer456\n"},
 	{"content/1/puzzle.json", `{"name": "moo"}`},
-	{"content/1/moo.txt", `My cow goes "moo"`},
+	{"content/1/moo.txt", `moo`},
 }
 
 func (m *Mothballs) createMothball(cat string) {
@@ -29,11 +30,16 @@ func (m *Mothballs) createMothball(cat string) {
 	}
 }
 
-func TestMothballs(t *testing.T) {
+func NewTestMothballs() *Mothballs {
 	m := NewMothballs(new(afero.MemMapFs))
-	m.createMothball("test1")
+	m.createMothball("pategory")
 	m.refresh()
-	if _, ok := m.categories["test1"]; !ok {
+	return m
+}
+
+func TestMothballs(t *testing.T) {
+	m := NewTestMothballs()
+	if _, ok := m.categories["pategory"]; !ok {
 		t.Error("Didn't create a new category")
 	}
 
@@ -52,11 +58,22 @@ func TestMothballs(t *testing.T) {
 		}
 	}
 
+	if err := m.CheckAnswer("pategory", 1, "answer"); err == nil {
+		t.Error("Wrong answer marked right")
+	}
+	if err := m.CheckAnswer("pategory", 1, "answer123"); err != nil {
+		t.Error("Right answer marked wrong", err)
+	}
+	if err := m.CheckAnswer("pategory", 1, "answer456"); err != nil {
+		t.Error("Right answer marked wrong", err)
+	}
+
 	m.createMothball("test2")
-	m.Fs.Remove("test1.mb")
+	m.Fs.Remove("pategory.mb")
 	m.refresh()
 	inv = m.Inventory()
 	if len(inv) != 1 {
 		t.Error("Deleted mothball is still around", inv)
 	}
+
 }

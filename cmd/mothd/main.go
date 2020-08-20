@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"mime"
 	"time"
 
@@ -10,8 +9,6 @@ import (
 )
 
 func main() {
-	log.Print("Started")
-
 	themePath := flag.String(
 		"theme",
 		"theme",
@@ -59,5 +56,6 @@ func main() {
 
 	server := NewMothServer(puzzles, theme, state)
 	httpd := NewHTTPServer(*base, server)
+
 	httpd.Run(*bindStr)
 }
