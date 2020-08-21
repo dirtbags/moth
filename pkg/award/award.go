@@ -2,8 +2,11 @@
 package award
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -67,6 +70,80 @@ func (a T) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(ao)
+}
+
+// UnmarshalJSON decodes the JSON string b.
+func (a T) UnmarshalJSON(b []byte) error {
+	r := bytes.NewReader(b)
+	dec := json.NewDecoder(r)
+	dec.UseNumber() // Don't use floats
+
+	// All this to make sure we get `[`
+	if t, err := dec.Token(); err != nil {
+		return err
+	} else {
+		switch token := t.(type) {
+		case json.Delim:
+			if token.String() != "[" {
+				return &json.UnmarshalTypeError{
+					Value:  token.String(),
+					Type:   reflect.TypeOf(a),
+					Offset: 0,
+				}
+			}
+		default:
+			return &json.UnmarshalTypeError{
+				Value:  fmt.Sprintf("%v", t),
+				Type:   reflect.TypeOf(a),
+				Offset: 0,
+			}
+		}
+	}
+
+	var num json.Number
+	var err error
+	if err := dec.Decode(&num); err != nil {
+		return err
+	}
+	if a.When, err = strconv.ParseInt(string(num), 10, 64); err != nil {
+		return err
+	}
+	if err := dec.Decode(&a.Category); err != nil {
+		return err
+	}
+	if err := dec.Decode(&a.TeamID); err != nil {
+		return err
+	}
+	if err := dec.Decode(&num); err != nil {
+		return err
+	}
+	if a.Points, err = strconv.Atoi(string(num)); err != nil {
+		return err
+	}
+
+	// All this to make sure we get `]`
+	if t, err := dec.Token(); err != nil {
+		return err
+	} else {
+		switch token := t.(type) {
+		case json.Delim:
+			if token.String() != "]" {
+				return &json.UnmarshalTypeError{
+					Value:  token.String(),
+					Type:   reflect.TypeOf(a),
+					Offset: 0,
+				}
+			}
+		default:
+			return &json.UnmarshalTypeError{
+				Value:  fmt.Sprintf("%v", t),
+				Type:   reflect.TypeOf(a),
+				Offset: 0,
+			}
+		}
+	}
+
+	return nil
 }
 
 // Equal returns true if two award events represent the same award.

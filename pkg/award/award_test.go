@@ -42,7 +42,8 @@ func TestAward(t *testing.T) {
 		t.Error("Different pount values compare equal")
 	}
 
-	if ja, err := a.MarshalJSON(); err != nil {
+	ja, err := a.MarshalJSON()
+	if err != nil {
 		t.Error(err)
 	} else if string(ja) != `[1536958399,"1a2b3c4d","counting",10]` {
 		t.Error("JSON wrong")
@@ -54,6 +55,20 @@ func TestAward(t *testing.T) {
 	if _, err := Parse("1 bad bad bad"); err == nil {
 		t.Error("Not throwing error on bad points")
 	}
+
+	if err := b.UnmarshalJSON(ja); err != nil {
+		t.Error(err)
+	} else if !b.Equal(a) {
+		t.Error("UnmarshalJSON didn't work")
+	}
+
+	for _, s := range []string{`12`, `"moo"`, `{"a":1}`, `[1 2 3 4]`, `[]`, `[1,"a"]`, `[1,"a","b",4, 5]`} {
+		buf := []byte(s)
+		if err := a.UnmarshalJSON(buf); err == nil {
+			t.Error("Bad unmarshal didn't return error:", s)
+		}
+	}
+
 }
 
 func TestAwardList(t *testing.T) {
