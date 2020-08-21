@@ -140,7 +140,7 @@ func (h *HTTPServer) ContentHandler(mh MothRequestHandler, w http.ResponseWriter
 	filename := parts[2]
 
 	if filename == "" {
-		filename = "puzzles.json"
+		filename = "puzzle.json"
 	}
 
 	points, _ := strconv.Atoi(pointsStr)

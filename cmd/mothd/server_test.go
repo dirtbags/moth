@@ -21,7 +21,7 @@ func NewTestServer() *MothServer {
 	go state.Maintain(TestMaintenanceInterval)
 
 	theme := NewTestTheme()
-	afero.WriteFile(theme.Fs, "index.html", []byte("index.html"), 0644)
+	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
 	go theme.Maintain(TestMaintenanceInterval)
 
 	return NewMothServer(puzzles, theme, state)
@@ -37,7 +37,7 @@ func TestServer(t *testing.T) {
 	if err := handler.Register(teamName); err != nil {
 		t.Error(err)
 	}
-	if r, _, err := handler.ThemeOpen("index.html"); err != nil {
+	if r, _, err := handler.ThemeOpen("/index.html"); err != nil {
 		t.Error(err)
 	} else if contents, err := ioutil.ReadAll(r); err != nil {
 		t.Error(err)
@@ -68,9 +68,23 @@ func TestServer(t *testing.T) {
 	if r, _, err := handler.PuzzlesOpen("pategory", 1, "moo.txt"); err != nil {
 		t.Error(err)
 	} else if contents, err := ioutil.ReadAll(r); err != nil {
+		r.Close()
 		t.Error(err)
 	} else if string(contents) != "moo" {
+		r.Close()
 		t.Error("moo.txt has wrong contents", contents)
+	} else {
+		r.Close()
+	}
+
+	if r, _, err := handler.PuzzlesOpen("pategory", 2, "puzzles.json"); err == nil {
+		t.Error("Opening locked puzzle shouldn't work")
+		r.Close()
+	}
+
+	if r, _, err := handler.PuzzlesOpen("pategory", 20, "puzzles.json"); err == nil {
+		t.Error("Opening non-existent puzzle shouldn't work")
+		r.Close()
 	}
 
 	if err := handler.CheckAnswer("pategory", 1, "answer123"); err != nil {
@@ -83,4 +97,6 @@ func TestServer(t *testing.T) {
 	if len(es.PointsLog) != 1 {
 		t.Error("I didn't get my points!")
 	}
+
+	// BUG(neale): We aren't currently testing the various ways to disable the server
 }

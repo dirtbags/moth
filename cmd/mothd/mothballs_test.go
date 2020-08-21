@@ -11,10 +11,12 @@ import (
 var testFiles = []struct {
 	Name, Body string
 }{
-	{"puzzles.txt", "1"},
-	{"answers.txt", "1 answer123\n1 answer456\n"},
+	{"puzzles.txt", "1\n2\n"},
+	{"answers.txt", "1 answer123\n1 answer456\n2 wat\n"},
 	{"content/1/puzzle.json", `{"name": "moo"}`},
 	{"content/1/moo.txt", `moo`},
+	{"content/2/puzzle.json", `{}`},
+	{"content/2/moo.txt", `moo`},
 }
 
 func (m *Mothballs) createMothball(cat string) {
@@ -58,6 +60,16 @@ func TestMothballs(t *testing.T) {
 		}
 	}
 
+	if f, _, err := m.Open("nealegory", 1, "puzzle.json"); err == nil {
+		f.Close()
+		t.Error("You can't open a puzzle in a nealegory, that doesn't even rhyme!")
+	}
+
+	if f, _, err := m.Open("pategory", 1, "bozo"); err == nil {
+		f.Close()
+		t.Error("This file shouldn't exist")
+	}
+
 	if err := m.CheckAnswer("pategory", 1, "answer"); err == nil {
 		t.Error("Wrong answer marked right")
 	}
@@ -66,6 +78,11 @@ func TestMothballs(t *testing.T) {
 	}
 	if err := m.CheckAnswer("pategory", 1, "answer456"); err != nil {
 		t.Error("Right answer marked wrong", err)
+	}
+	if err := m.CheckAnswer("nealegory", 1, "moo"); err == nil {
+		t.Error("Checking answer in non-existent category should fail")
+	} else if err.Error() != "No such category: nealegory" {
+		t.Error("Wrong error message")
 	}
 
 	m.createMothball("test2")

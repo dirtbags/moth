@@ -31,4 +31,9 @@ func TestTheme(t *testing.T) {
 	} else if !timestamp.Equal(fileInfo.ModTime()) {
 		t.Error("Timestamp compared wrong")
 	}
+
+	if f, _, err := s.Open("nofile"); err == nil {
+		f.Close()
+		t.Error("Opening non-existent file didn't return an error")
+	}
 }

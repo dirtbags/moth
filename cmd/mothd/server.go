@@ -101,9 +101,7 @@ type MothRequestHandler struct {
 // PuzzlesOpen opens a file associated with a puzzle.
 func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
 	export := mh.ExportState()
-	fmt.Println(export.Puzzles)
 	for _, p := range export.Puzzles[cat] {
-		fmt.Println(points, p)
 		if p == points {
 			return mh.Puzzles.Open(cat, points, path)
 		}

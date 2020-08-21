@@ -49,52 +49,59 @@ func NewState(fs afero.Fs) *State {
 
 // updateEnabled checks a few things to see if this state directory is "enabled".
 func (s *State) updateEnabled() {
-	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
-		s.Enabled = false
-		log.Println("Suspended: enabled file missing")
-		return
-	}
-
 	nextEnabled := true
-	untilFile, err := s.Open("hours")
-	if err != nil {
-		return
-	}
-	defer untilFile.Close()
+	why := "`state/enabled` present, `state/hours` missing"
 
-	scanner := bufio.NewScanner(untilFile)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) < 1 {
-			continue
-		}
+	if untilFile, err := s.Open("hours"); err == nil {
+		defer untilFile.Close()
+		why = "`state/hours` present"
 
-		thisEnabled := true
-		switch line[0] {
-		case '+':
-			thisEnabled = true
-			line = line[1:]
-		case '-':
-			thisEnabled = false
-			line = line[1:]
-		case '#':
-			continue
-		default:
-			log.Println("Misformatted line in hours file")
-		}
-		line = strings.TrimSpace(line)
-		until, err := time.Parse(time.RFC3339, line)
-		if err != nil {
-			log.Println("Suspended: Unparseable until date:", line)
-			continue
-		}
-		if until.Before(time.Now()) {
-			nextEnabled = thisEnabled
+		scanner := bufio.NewScanner(untilFile)
+		for scanner.Scan() {
+			line := scanner.Text()
+			if len(line) < 1 {
+				continue
+			}
+
+			thisEnabled := true
+			switch line[0] {
+			case '+':
+				thisEnabled = true
+				line = line[1:]
+			case '-':
+				thisEnabled = false
+				line = line[1:]
+			case '#':
+				continue
+			default:
+				log.Println("Misformatted line in hours file")
+			}
+			line = strings.TrimSpace(line)
+			until, err := time.Parse(time.RFC3339, line)
+			if err != nil {
+				log.Println("Suspended: Unparseable until date:", line)
+				continue
+			}
+			if until.Before(time.Now()) {
+				nextEnabled = thisEnabled
+			}
 		}
 	}
+
+	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
+		dirs, _ := afero.ReadDir(s, ".")
+		for _, dir := range dirs {
+			log.Println(dir.Name())
+		}
+
+		log.Print(s, err)
+		nextEnabled = false
+		why = "`state/enabled` missing"
+	}
+
 	if nextEnabled != s.Enabled {
 		s.Enabled = nextEnabled
-		log.Println("Setting enabled to", s.Enabled, "based on hours file")
+		log.Printf("Setting enabled=%v: %s", s.Enabled, why)
 	}
 }
 
@@ -115,28 +122,33 @@ func (s *State) TeamName(teamID string) (string, error) {
 // SetTeamName writes out team name.
 // This can only be done once.
 func (s *State) SetTeamName(teamID, teamName string) error {
-	f, err := s.Open("teamids.txt")
+	idsFile, err := s.Open("teamids.txt")
 	if err != nil {
 		return fmt.Errorf("Team IDs file does not exist")
 	}
+	defer idsFile.Close()
 	found := false
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(idsFile)
 	for scanner.Scan() {
 		if scanner.Text() == teamID {
 			found = true
 			break
 		}
 	}
-	f.Close()
 	if !found {
 		return fmt.Errorf("Team ID not found in list of valid Team IDs")
 	}
 
-	teamFile := filepath.Join("teams", teamID)
-	if err := afero.WriteFile(s, teamFile, []byte(teamName), os.ModeExclusive|0644); os.IsExist(err) {
+	teamFilename := filepath.Join("teams", teamID)
+	teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_EXCL, 0644)
+	if os.IsExist(err) {
 		return fmt.Errorf("Team ID is already registered")
+	} else if err != nil {
+		return err
 	}
-	return err
+	defer teamFile.Close()
+	fmt.Fprintln(teamFile, teamName)
+	return nil
 }
 
 // PointsLog retrieves the current points log.
@@ -152,6 +164,7 @@ func (s *State) PointsLog() award.List {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
+		log.Println(line)
 		cur, err := award.Parse(line)
 		if err != nil {
 			log.Printf("Skipping malformed award line %s: %s", line, err)
