@@ -98,7 +98,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             if not p.is_dir() or p.match(".*"):
                 continue
             catName = p.parts[-1]
-            cat = moth.Category(str(p), self.seed)
+            cat = moth.Category(p, self.seed)
             puzzles[catName] = [[i, str(i)] for i in cat.pointvals()]
             puzzles[catName].append([0, ""])
         if len(puzzles) <= 1:
@@ -157,7 +157,7 @@ class MothRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=\"utf-8\"")
             self.end_headers()
-            self.wfile.write(cgitb.html(sys.exc_info()))
+            self.wfile.write(bytes(cgitb.html(sys.exc_info()), "utf-8"))
             return
         
         self.send_response(200)

@@ -16,6 +16,7 @@ import string
 import sys
 import tempfile
 import shlex
+import pathlib
 import yaml
 
 messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -55,7 +56,7 @@ def pushd(newdir):
 
 
 def loadmod(name, path):
-    abspath = os.path.abspath(path)
+    abspath = str(path.resolve())
     loader = importlib.machinery.SourceFileLoader(name, abspath)
     return loader.load_module()
 
@@ -298,8 +299,9 @@ class Puzzle:
 
 
     def read_directory(self, path):
+        path = pathlib.Path(path)
         try:
-            puzzle_mod = loadmod("puzzle", os.path.join(path, "puzzle.py"))
+            puzzle_mod = loadmod("puzzle", path / "puzzle.py")
         except FileNotFoundError:
             puzzle_mod = None
 
@@ -467,12 +469,12 @@ class Puzzle:
 
 class Category:
     def __init__(self, path, seed):
-        self.path = path
+        self.path = pathlib.Path(path)
         self.seed = seed
         self.catmod = None
 
         try:
-            self.catmod = loadmod('category', os.path.join(path, 'category.py'))
+            self.catmod = loadmod('category', self.path / 'category.py')
         except FileNotFoundError:
             self.catmod = None
 
@@ -482,15 +484,14 @@ class Category:
                 pointvals = self.catmod.pointvals()
         else:
             pointvals = []
-            for fpath in glob.glob(os.path.join(self.path, "[0-9]*")):
-                pn = os.path.basename(fpath)
-                points = int(pn)
+            for fpath in self.path.glob("[0-9]*"):
+                points = int(fpath.name)
                 pointvals.append(points)
         return sorted(pointvals)
 
     def puzzle(self, points):
         puzzle = Puzzle(self.seed, points)
-        path = os.path.join(self.path, str(points))
+        path = self.path / str(points)
         if self.catmod:
             with pushd(self.path):
                 self.catmod.make(points, puzzle)
