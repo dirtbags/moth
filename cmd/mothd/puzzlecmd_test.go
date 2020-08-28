@@ -28,6 +28,9 @@ func TestPuzzleCommand(t *testing.T) {
 			if len(cat.Puzzles) != 3 {
 				t.Errorf("nealegoy wrong number of puzzles: %d", len(cat.Puzzles))
 			}
+			if cat.Puzzles[2] != 3 {
+				t.Errorf("out of order point values were not sorted")
+			}
 		}
 	}
 
@@ -58,5 +61,10 @@ func TestPuzzleCommand(t *testing.T) {
 		t.Errorf("Wrong contents: %#v", string(buf))
 	} else {
 		f.Close()
+	}
+
+	if f, _, err := pc.Open("pategory", 1, "not.there"); err == nil {
+		f.Close()
+		t.Errorf("Non-existent file didn't return error: %#v", f)
 	}
 }

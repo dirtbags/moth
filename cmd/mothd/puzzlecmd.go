@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +28,7 @@ func (pc PuzzleCommand) Inventory() (inv []Category) {
 
 	cmd := exec.CommandContext(ctx, pc.Path, pc.Args...)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "action=inventory")
+	cmd.Env = append(cmd.Env, "ACTION=inventory")
 
 	stdout, err := cmd.Output()
 	if err != nil {
@@ -55,6 +56,7 @@ func (pc PuzzleCommand) Inventory() (inv []Category) {
 			}
 			puzzles = append(puzzles, points)
 		}
+		sort.Ints(puzzles)
 		inv = append(inv, Category{name, puzzles})
 	}
 	return
@@ -75,10 +77,10 @@ func (pc PuzzleCommand) Open(cat string, points int, path string) (ReadSeekClose
 
 	cmd := exec.CommandContext(ctx, pc.Path, pc.Args...)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "action=open")
-	cmd.Env = append(cmd.Env, "cat="+cat)
-	cmd.Env = append(cmd.Env, "points="+strconv.Itoa(points))
-	cmd.Env = append(cmd.Env, "path="+path)
+	cmd.Env = append(cmd.Env, "ACTION=open")
+	cmd.Env = append(cmd.Env, "CAT="+cat)
+	cmd.Env = append(cmd.Env, "POINTS="+strconv.Itoa(points))
+	cmd.Env = append(cmd.Env, "FILENAME="+path)
 
 	stdoutBytes, err := cmd.Output()
 	stdout := NullReadSeekCloser{bytes.NewReader(stdoutBytes)}
@@ -95,10 +97,10 @@ func (pc PuzzleCommand) CheckAnswer(cat string, points int, answer string) error
 
 	cmd := exec.CommandContext(ctx, pc.Path, pc.Args...)
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, "action=answer")
-	cmd.Env = append(cmd.Env, "cat="+cat)
-	cmd.Env = append(cmd.Env, "points="+strconv.Itoa(points))
-	cmd.Env = append(cmd.Env, "answer="+answer)
+	cmd.Env = append(cmd.Env, "ACTION=answer")
+	cmd.Env = append(cmd.Env, "CAT="+cat)
+	cmd.Env = append(cmd.Env, "POINTS="+strconv.Itoa(points))
+	cmd.Env = append(cmd.Env, "ANSWER="+answer)
 
 	stdout, err := cmd.Output()
 	if ee, ok := err.(*exec.ExitError); ok {
