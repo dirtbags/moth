@@ -1,74 +1,125 @@
 package main
 
 import (
-	"flag"
 	"encoding/json"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"os"
-	"log"
+	"flag"
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"sort"
+
+	"github.com/GoBike/envflag"
+	"github.com/spf13/afero"
 )
 
-func seedJoin(parts ...string) string {
-	return strings.Join(parts, "::")
+// T contains everything required for a transpilation invocation (across the nation).
+type T struct {
+	// What action to take
+	w        io.Writer
+	Cat      string
+	Points   int
+	Answer   string
+	Filename string
+	Fs       afero.Fs
 }
 
-func usage() {
-	out := flag.CommandLine.Output()
-	name := flag.CommandLine.Name()
-	fmt.Fprintf(out, "Usage: %s [OPTION]... CATEGORY [PUZZLE [FILENAME]]\n", name)
-	fmt.Fprintf(out, "\n")
-	fmt.Fprintf(out, "Transpile CATEGORY, or provide individual category components.\n")
-	fmt.Fprintf(out, "If PUZZLE is provided, only transpile the given puzzle.\n")
-	fmt.Fprintf(out, "If FILENAME is provided, output provided file.\n")
-	flag.PrintDefaults()
+// NewCategory returns a new Category as specified by cat.
+func (t *T) NewCategory(cat string) Category {
+	return NewCategory(t.Fs, cat)
+}
+
+// ParseArgs parses command-line arguments into T, returning the action to take
+func (t *T) ParseArgs() string {
+	action := flag.String("action", "inventory", "Action to take: must be 'inventory', 'open', 'answer', or 'mothball'")
+	flag.StringVar(&t.Cat, "cat", "", "Puzzle category")
+	flag.IntVar(&t.Points, "points", 0, "Puzzle point value")
+	flag.StringVar(&t.Answer, "answer", "", "Answer to check for correctness, for 'answer' action")
+	flag.StringVar(&t.Filename, "filename", "", "Filename, for 'open' action")
+	basedir := flag.String("basedir", ".", "Base directory containing all puzzles")
+	envflag.Parse()
+
+	osfs := afero.NewOsFs()
+	t.Fs = afero.NewBasePathFs(osfs, *basedir)
+
+	return *action
+}
+
+// Handle performs the requested action
+func (t *T) Handle(action string) error {
+	switch action {
+	case "inventory":
+		return t.PrintInventory()
+	case "open":
+		return t.Open()
+	default:
+		return fmt.Errorf("Unimplemented action: %s", action)
+	}
+}
+
+// PrintInventory prints a puzzle inventory to stdout
+func (t *T) PrintInventory() error {
+	dirEnts, err := afero.ReadDir(t.Fs, ".")
+	if err != nil {
+		return err
+	}
+	for _, ent := range dirEnts {
+		if ent.IsDir() {
+			c := t.NewCategory(ent.Name())
+			if puzzles, err := c.Puzzles(); err != nil {
+				log.Print(err)
+				continue
+			} else {
+				fmt.Fprint(t.w, ent.Name())
+				sort.Ints(puzzles)
+				for _, points := range puzzles {
+					fmt.Fprint(t.w, " ")
+					fmt.Fprint(t.w, points)
+				}
+				fmt.Fprintln(t.w)
+			}
+		}
+	}
+	return nil
+}
+
+// Open writes a file to the writer.
+func (t *T) Open() error {
+	c := t.NewCategory(t.Cat)
+	p, err := c.Puzzle(t.Points)
+	if err != nil {
+		return err
+	}
+
+	switch t.Filename {
+	case "puzzle.json", "":
+		jp, err := json.Marshal(p)
+		if err != nil {
+			return err
+		}
+		t.w.Write(jp)
+	default:
+		f, err := p.Open(t.Filename)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		if _, err := io.Copy(t.w, f); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func main() {
 	// XXX: Convert puzzle.py to standalone thingies
-	
-	flag.Usage = usage
-	
-	points := flag.Int("points", 0, "Transpile only this point value puzzle")
-	mothball := flag.Bool("mothball", false, "Generate a mothball")
-	flag.Parse()
 
-	baseSeedString := os.Getenv("MOTH_SEED")
-	
-	jsenc := json.NewEncoder(os.Stdout)
-	jsenc.SetEscapeHTML(false)
-	jsenc.SetIndent("", "  ")
-
-	for _, categoryPath := range flag.Args() {
-		categoryName := filepath.Base(categoryPath)
-		categorySeed := seedJoin(baseSeedString, categoryName)
-
-		if *points > 0 {
-			puzzleDir := strconv.Itoa(*points)
-			puzzleSeed := seedJoin(categorySeed, puzzleDir)
-			puzzlePath := filepath.Join(categoryPath, puzzleDir)
-			puzzle, err := ParsePuzzle(puzzlePath, puzzleSeed)
-			if err != nil {
-				log.Print(err)
-				continue
-			}
-			
-			if err := jsenc.Encode(puzzle); err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			puzzles, err := ParseCategory(categoryPath, categorySeed)
-			if err != nil {
-				log.Print(err)
-				continue
-			}
-			
-			if err := jsenc.Encode(puzzles); err != nil {
-				log.Print(err)
-				continue
-			}
-		}
+	t := &T{
+		w: os.Stdout,
+	}
+	action := t.ParseArgs()
+	if err := t.Handle(action); err != nil {
+		log.Fatal(err)
 	}
 }

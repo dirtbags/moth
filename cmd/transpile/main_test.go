@@ -1,0 +1,88 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"testing"
+
+	"github.com/spf13/afero"
+)
+
+var testMothYaml = []byte(`---
+answers:
+  - YAML answer
+pre:
+  authors:
+    - Arthur
+    - Buster
+    - DW
+---
+YAML body
+`)
+var testMothRfc822 = []byte(`author: test
+Author: Arthur
+author: Fred Flintstone
+answer: RFC822 answer
+
+RFC822 body
+`)
+
+func newTestFs() afero.Fs {
+	fs := afero.NewMemMapFs()
+	afero.WriteFile(fs, "cat0/1/puzzle.moth", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/1/moo.txt", []byte("Moo."), 0644)
+	afero.WriteFile(fs, "cat0/2/puzzle.moth", testMothRfc822, 0644)
+	afero.WriteFile(fs, "cat0/3/puzzle.moth", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/4/puzzle.moth", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/5/puzzle.moth", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/10/puzzle.moth", []byte(`---
+Answers:
+  - moo
+Authors:
+  - bad field
+---
+body
+`), 0644)
+	afero.WriteFile(fs, "cat0/20/puzzle.moth", []byte("Answer: no\nBadField: yes\n\nbody\n"), 0644)
+	afero.WriteFile(fs, "cat1/93/puzzle.moth", []byte("Answer: no\n\nbody"), 0644)
+	return fs
+}
+
+func TestThings(t *testing.T) {
+	stdout := new(bytes.Buffer)
+	tp := T{
+		w:  stdout,
+		Fs: newTestFs(),
+	}
+
+	if err := tp.Handle("inventory"); err != nil {
+		t.Error(err)
+	}
+	if stdout.String() != "cat0 1 2 3 4 5 10 20\ncat1 93\n" {
+		t.Errorf("Bad inventory: %#v", stdout.String())
+	}
+
+	stdout.Reset()
+	tp.Cat = "cat0"
+	tp.Points = 1
+	if err := tp.Handle("open"); err != nil {
+		t.Error(err)
+	}
+
+	p := Puzzle{}
+	if err := json.Unmarshal(stdout.Bytes(), &p); err != nil {
+		t.Error(err)
+	}
+	if p.Answers[0] != "YAML answer" {
+		t.Error("Didn't return the right object")
+	}
+
+	stdout.Reset()
+	tp.Filename = "moo.txt"
+	if err := tp.Handle("open"); err != nil {
+		t.Error(err)
+	}
+	if stdout.String() != "Moo." {
+		t.Error("Wrong file pulled")
+	}
+}

@@ -1,138 +1,47 @@
 package main
 
 import (
-	"os"
-	"fmt"
 	"log"
-	"path/filepath"
-	"hash/fnv"
-	"encoding/binary"
-	"encoding/json"
-	"encoding/hex"
 	"strconv"
-	"math/rand"
-	"context"
-	"time"
-	"os/exec"
-	"bytes"
+
+	"github.com/spf13/afero"
 )
 
-
-type PuzzleEntry struct {
-	Id string
-	Points int
-	Puzzle Puzzle
-}
-
-func PrngOfStrings(input ...string) (*rand.Rand) {
-	hasher := fnv.New64()
-	for _, s := range input {
-		fmt.Fprint(hasher, s, "\n")
+// NewCategory returns a new category for the given path in the given fs.
+func NewCategory(fs afero.Fs, cat string) Category {
+	return Category{
+		Fs: afero.NewBasePathFs(fs, cat),
 	}
-	seed := binary.BigEndian.Uint64(hasher.Sum(nil))
-	source := rand.NewSource(int64(seed))
-	return rand.New(source)
 }
 
+// Category represents an on-disk category.
+type Category struct {
+	afero.Fs
+}
 
-func runPuzzleGen(puzzlePath string, seed string) (*Puzzle, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	
-	cmd := exec.CommandContext(ctx, puzzlePath)
-	cmd.Env = append(
-		os.Environ(),
-		fmt.Sprintf("MOTH_PUZZLE_SEED=%s", seed),
-	)
-	stdout, err := cmd.Output()
+// Puzzles returns a list of puzzle values.
+func (c Category) Puzzles() ([]int, error) {
+	puzzleEntries, err := afero.ReadDir(c, ".")
 	if err != nil {
 		return nil, err
 	}
-	
-	jsdec := json.NewDecoder(bytes.NewReader(stdout))
-	jsdec.DisallowUnknownFields()
-	puzzle := new(Puzzle)
-	err = jsdec.Decode(puzzle)
-	if err != nil {
-		return nil, err
-	}
-	
-	return puzzle, nil
-}
 
-func ParsePuzzle(puzzlePath string, puzzleSeed string) (*Puzzle, error) {
-	var puzzle *Puzzle
-
-	// Try the .moth file first
-	puzzleMothPath := filepath.Join(puzzlePath, "puzzle.moth")
-	puzzleFd, err := os.Open(puzzleMothPath)
-	if err == nil {
-		defer puzzleFd.Close()
-		puzzle, err = ParseMoth(puzzleFd)
-		if err != nil {
-			return nil, err
-		}
-	} else if os.IsNotExist(err) {
-		var genErr error
-		
-		puzzleGenPath := filepath.Join(puzzlePath, "mkpuzzle")
-		puzzle, genErr = runPuzzleGen(puzzleGenPath, puzzlePath)
-		if genErr != nil {
-			bigErr := fmt.Errorf(
-				"%v; (%s: %v)",
-				genErr,
-				filepath.Base(puzzleMothPath), err,
-			)
-			return nil, bigErr
-		}
-	} else {
-		return nil, err
-	}
-	
-	return puzzle, nil
-}
-
-
-func ParseCategory(categoryPath string, seed string) ([]PuzzleEntry, error) {
-	categoryFd, err := os.Open(categoryPath)
-	if err != nil {
-		return nil, err
-	}
-	defer categoryFd.Close()
-	
-	puzzleDirs, err := categoryFd.Readdirnames(0)
-	if err != nil {
-		return nil, err
-	}
-	
-	puzzleEntries := make([]PuzzleEntry, 0, len(puzzleDirs))
-	for _, puzzleDir := range puzzleDirs {
-		puzzlePath := filepath.Join(categoryPath, puzzleDir)
-		puzzleSeed := fmt.Sprintf("%s/%s", seed, puzzleDir)
-		puzzle, err := ParsePuzzle(puzzlePath, puzzleSeed)
-		if err != nil {
-			log.Printf("Skipping %s: %v", puzzlePath, err)
+	puzzles := make([]int, 0, len(puzzleEntries))
+	for _, ent := range puzzleEntries {
+		if !ent.IsDir() {
 			continue
 		}
-		
-		// Determine point value from directory name
-		points, err := strconv.Atoi(puzzleDir)
-		if err != nil {
-			return nil, err
+		if points, err := strconv.Atoi(ent.Name()); err != nil {
+			log.Println("Skipping non-numeric directory", ent.Name())
+			continue
+		} else {
+			puzzles = append(puzzles, points)
 		}
-
-		// Create a category entry for this
-		prng := PrngOfStrings(puzzlePath)
-		idBytes := make([]byte, 16)
-		prng.Read(idBytes)
-		id := hex.EncodeToString(idBytes)
-		puzzleEntry := PuzzleEntry{
-			Id: id,
-			Puzzle: *puzzle,
-			Points: points,
-		}
-		puzzleEntries = append(puzzleEntries, puzzleEntry)
 	}
-	
-	return puzzleEntries, nil
+	return puzzles, nil
+}
+
+// Puzzle returns the Puzzle associated with points.
+func (c Category) Puzzle(points int) (*Puzzle, error) {
+	return NewPuzzle(c.Fs, points)
 }

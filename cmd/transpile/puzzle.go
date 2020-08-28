@@ -3,22 +3,36 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/mail"
+	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/russross/blackfriday"
+	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
 
-type Attachment struct {
-	Filename       string // Filename presented as part of puzzle
-	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
-	Listed         bool   // Whether this file is listed as an attachment
+// NewPuzzle returns a new Puzzle for points.
+func NewPuzzle(fs afero.Fs, points int) (*Puzzle, error) {
+	p := &Puzzle{
+		fs: afero.NewBasePathFs(fs, strconv.Itoa(points)),
+	}
+
+	if err := p.parseMoth(); err != nil {
+		return p, err
+	}
+	// BUG(neale): Doesn't yet handle "puzzle.py" or "mkpuzzle"
+
+	return p, nil
 }
 
+// Puzzle contains everything about a puzzle.
 type Puzzle struct {
 	Pre struct {
 		Authors       []string
@@ -42,21 +56,17 @@ type Puzzle struct {
 		Summary string
 	}
 	Answers []string
+	fs      afero.Fs
 }
 
-type HeaderParser func([]byte) (*Puzzle, error)
-
-func YamlParser(input []byte) (*Puzzle, error) {
-	puzzle := new(Puzzle)
-
-	err := yaml.Unmarshal(input, puzzle)
-	if err != nil {
-		return nil, err
-	}
-	return puzzle, nil
+// Attachment carries information about an attached file.
+type Attachment struct {
+	Filename       string // Filename presented as part of puzzle
+	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
+	Listed         bool   // Whether this file is listed as an attachment
 }
 
-func AttachmentParser(val []string) []Attachment {
+func legacyAttachmentParser(val []string) []Attachment {
 	ret := make([]Attachment, len(val))
 	for idx, txt := range val {
 		parts := strings.SplitN(txt, " ", 3)
@@ -77,62 +87,70 @@ func AttachmentParser(val []string) []Attachment {
 	return ret
 }
 
-func Rfc822Parser(input []byte) (*Puzzle, error) {
-	msgBytes := append(input, '\n')
-	r := bytes.NewReader(msgBytes)
+func (p *Puzzle) yamlHeaderParser(r io.Reader) error {
+	decoder := yaml.NewDecoder(r)
+	decoder.SetStrict(true)
+	return decoder.Decode(p)
+}
+
+func (p *Puzzle) rfc822HeaderParser(r io.Reader) error {
 	m, err := mail.ReadMessage(r)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("Parsing RFC822 headers: %v", err)
 	}
 
-	puzzle := new(Puzzle)
 	for key, val := range m.Header {
 		key = strings.ToLower(key)
 		switch key {
 		case "author":
-			puzzle.Pre.Authors = val
+			p.Pre.Authors = val
 		case "pattern":
-			puzzle.Pre.AnswerPattern = val[0]
+			p.Pre.AnswerPattern = val[0]
 		case "script":
-			puzzle.Pre.Scripts = AttachmentParser(val)
+			p.Pre.Scripts = legacyAttachmentParser(val)
 		case "file":
-			puzzle.Pre.Attachments = AttachmentParser(val)
+			p.Pre.Attachments = legacyAttachmentParser(val)
 		case "answer":
-			puzzle.Answers = val
+			p.Answers = val
 		case "summary":
-			puzzle.Debug.Summary = val[0]
+			p.Debug.Summary = val[0]
 		case "hint":
-			puzzle.Debug.Hints = val
+			p.Debug.Hints = val
 		case "ksa":
-			puzzle.Post.KSAs = val
+			p.Post.KSAs = val
 		default:
-			return nil, fmt.Errorf("Unknown header field: %s", key)
+			return fmt.Errorf("Unknown header field: %s", key)
 		}
 	}
 
-	return puzzle, nil
+	return nil
 }
 
-func ParseMoth(r io.Reader) (*Puzzle, error) {
-	headerEnd := ""
+func (p *Puzzle) parseMoth() error {
+	r, err := p.fs.Open("puzzle.moth")
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
 	headerBuf := new(bytes.Buffer)
-	headerParser := Rfc822Parser
+	headerParser := p.rfc822HeaderParser
+	headerEnd := ""
 
 	scanner := bufio.NewScanner(r)
 	lineNo := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		lineNo += 1
+		lineNo++
 		if lineNo == 1 {
 			if line == "---" {
-				headerParser = YamlParser
+				headerParser = p.yamlHeaderParser
 				headerEnd = "---"
 				continue
-			} else {
-				headerParser = Rfc822Parser
 			}
 		}
 		if line == headerEnd {
+			headerBuf.WriteRune('\n')
 			break
 		}
 		headerBuf.WriteString(line)
@@ -142,22 +160,55 @@ func ParseMoth(r io.Reader) (*Puzzle, error) {
 	bodyBuf := new(bytes.Buffer)
 	for scanner.Scan() {
 		line := scanner.Text()
-		lineNo += 1
+		lineNo++
 		bodyBuf.WriteString(line)
 		bodyBuf.WriteRune('\n')
 	}
 
-	puzzle, err := headerParser(headerBuf.Bytes())
-	if err != nil {
-		return nil, err
+	if err := headerParser(headerBuf); err != nil {
+		return err
 	}
 
 	// Markdownify the body
-	bodyB := blackfriday.Run(bodyBuf.Bytes())
-	if (puzzle.Pre.Body != "") && (len(bodyB) > 0) {
-		log.Print("Body specified in header; overwriting...")
+	if (p.Pre.Body != "") && (bodyBuf.Len() > 0) {
+		return fmt.Errorf("Puzzle body present in header and in moth body")
 	}
-	puzzle.Pre.Body = string(bodyB)
+	p.Pre.Body = string(blackfriday.Run(bodyBuf.Bytes()))
 
-	return puzzle, nil
+	return nil
+}
+
+func (p *Puzzle) mkpuzzle() error {
+	bfs, ok := p.fs.(*afero.BasePathFs)
+	if !ok {
+		return fmt.Errorf("Fs won't resolve real paths for %v", p)
+	}
+	mkpuzzlePath, err := bfs.RealPath("mkpuzzle")
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, mkpuzzlePath)
+	stdout, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+
+	jsdec := json.NewDecoder(bytes.NewReader(stdout))
+	jsdec.DisallowUnknownFields()
+	puzzle := new(Puzzle)
+	if err := jsdec.Decode(puzzle); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Open returns a newly-opened file.
+func (p *Puzzle) Open(name string) (io.ReadCloser, error) {
+	// BUG(neale): You cannot open generated files in puzzles, only files actually on the disk
+	return p.fs.Open(name)
 }
