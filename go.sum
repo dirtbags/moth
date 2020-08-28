@@ -1,3 +1,5 @@
+github.com/GoBike/envflag v0.0.0-20160830095501-ae3268980a29 h1:84c6FHGkcCdLxe0CcyrKdw8to2rMldZRhTAant7A6Q0=
+github.com/GoBike/envflag v0.0.0-20160830095501-ae3268980a29/go.mod h1:rC4GgElEkJwdt5ldDml0BgrkguMji8hFftI6d1d6SeU=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/kr/fs v0.1.0 h1:Jskdu9ieNAYnjxsi0LbQp1ulIKZV1LAFgK1tWhpZgl8=

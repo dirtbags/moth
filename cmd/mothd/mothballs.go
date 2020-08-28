@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -80,6 +81,7 @@ func (m *Mothballs) Inventory() []Category {
 				pointsList = append(pointsList, pointval)
 			}
 		}
+		sort.Ints(pointsList)
 		categories = append(categories, Category{cat, pointsList})
 	}
 	return categories

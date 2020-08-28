@@ -11,12 +11,14 @@ import (
 var testFiles = []struct {
 	Name, Body string
 }{
-	{"puzzles.txt", "1\n2\n"},
+	{"puzzles.txt", "1\n3\n2\n"},
 	{"answers.txt", "1 answer123\n1 answer456\n2 wat\n"},
 	{"content/1/puzzle.json", `{"name": "moo"}`},
 	{"content/1/moo.txt", `moo`},
 	{"content/2/puzzle.json", `{}`},
 	{"content/2/moo.txt", `moo`},
+	{"content/3/puzzle.json", `{}`},
+	{"content/3/moo.txt", `moo`},
 }
 
 func (m *Mothballs) createMothball(cat string) {
@@ -50,6 +52,15 @@ func TestMothballs(t *testing.T) {
 		t.Error("Wrong inventory size:", inv)
 	}
 	for _, cat := range inv {
+		switch cat.Name {
+		case "pategory":
+			if len(cat.Puzzles) != 3 {
+				t.Error("Puzzles list wrong length")
+			}
+			if cat.Puzzles[1] != 2 {
+				t.Error("Puzzles list not sorted")
+			}
+		}
 		for _, points := range cat.Puzzles {
 			f, _, err := m.Open(cat.Name, points, "puzzle.json")
 			if err != nil {
