@@ -29,13 +29,13 @@ RFC822 body
 
 func newTestFs() afero.Fs {
 	fs := afero.NewMemMapFs()
-	afero.WriteFile(fs, "cat0/1/puzzle.moth", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/1/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/1/moo.txt", []byte("Moo."), 0644)
-	afero.WriteFile(fs, "cat0/2/puzzle.moth", testMothRfc822, 0644)
+	afero.WriteFile(fs, "cat0/2/puzzle.md", testMothRfc822, 0644)
 	afero.WriteFile(fs, "cat0/3/puzzle.moth", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/4/puzzle.moth", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/5/puzzle.moth", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/10/puzzle.moth", []byte(`---
+	afero.WriteFile(fs, "cat0/4/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/5/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/10/puzzle.md", []byte(`---
 Answers:
   - moo
 Authors:
@@ -43,8 +43,10 @@ Authors:
 ---
 body
 `), 0644)
-	afero.WriteFile(fs, "cat0/20/puzzle.moth", []byte("Answer: no\nBadField: yes\n\nbody\n"), 0644)
-	afero.WriteFile(fs, "cat1/93/puzzle.moth", []byte("Answer: no\n\nbody"), 0644)
+	afero.WriteFile(fs, "cat0/20/puzzle.md", []byte("Answer: no\nBadField: yes\n\nbody\n"), 0644)
+	afero.WriteFile(fs, "cat0/21/puzzle.md", []byte("Answer: broken\nSpooon\n"), 0644)
+	afero.WriteFile(fs, "cat0/22/puzzle.md", []byte("---\nanswers:\n  - pencil\npre:\n body: Spooon\n---\nSpoon?\n"), 0644)
+	afero.WriteFile(fs, "cat1/93/puzzle.md", []byte("Answer: no\n\nbody"), 0644)
 	return fs
 }
 
@@ -58,7 +60,7 @@ func TestThings(t *testing.T) {
 	if err := tp.Handle("inventory"); err != nil {
 		t.Error(err)
 	}
-	if stdout.String() != "cat0 1 2 3 4 5 10 20\ncat1 93\n" {
+	if stdout.String() != "cat0 1 2 3 4 5 10 20 21 22\ncat1 93\n" {
 		t.Errorf("Bad inventory: %#v", stdout.String())
 	}
 

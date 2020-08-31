@@ -127,9 +127,12 @@ func (p *Puzzle) rfc822HeaderParser(r io.Reader) error {
 }
 
 func (p *Puzzle) parseMoth() error {
-	r, err := p.fs.Open("puzzle.moth")
+	r, err := p.fs.Open("puzzle.md")
 	if err != nil {
-		return err
+		var err2 error
+		if r, err2 = p.fs.Open("puzzle.moth"); err2 != nil {
+			return err
+		}
 	}
 	defer r.Close()
 

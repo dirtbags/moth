@@ -1,0 +1,23 @@
+#! /bin/sh
+
+case $1 in
+    "")
+        cat <<'EOT'
+{
+    "Answers": ["answer"],
+    "Pre": {
+        "Authors": "neale",
+        "Body": "I am a generated puzzle."
+    }
+}
+EOT
+        ;;
+    moo.txt)
+        echo "Moo."
+        ;;
+    *)
+        echo "Error: no such file: $1" 1>&2
+        exit 1
+        ;;
+esac
+    
