@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"io"
 	"strings"
 	"testing"
 
@@ -12,11 +14,12 @@ func TestPuzzle(t *testing.T) {
 	catFs := afero.NewBasePathFs(puzzleFs, "cat0")
 
 	{
-		p, err := NewPuzzle(catFs, 1)
+		pd := NewPuzzleDir(catFs, 1)
+		p, err := pd.Export()
 		if err != nil {
 			t.Error(err)
 		}
-		t.Log(p)
+
 		if (len(p.Answers) == 0) || (p.Answers[0] != "YAML answer") {
 			t.Error("Answers are wrong", p.Answers)
 		}
@@ -29,7 +32,7 @@ func TestPuzzle(t *testing.T) {
 	}
 
 	{
-		p, err := NewPuzzle(catFs, 2)
+		p, err := NewPuzzleDir(catFs, 2).Export()
 		if err != nil {
 			t.Error(err)
 		}
@@ -44,26 +47,27 @@ func TestPuzzle(t *testing.T) {
 		}
 	}
 
-	if _, err := NewPuzzle(catFs, 3); err != nil {
+	if _, err := NewPuzzleDir(catFs, 3).Export(); err != nil {
 		t.Error("Legacy `puzzle.moth` file:", err)
 	}
 
-	if _, err := NewPuzzle(catFs, 99); err == nil {
+	if _, err := NewPuzzleDir(catFs, 99).Export(); err == nil {
 		t.Error("Non-existent puzzle", err)
 	}
 
-	if _, err := NewPuzzle(catFs, 10); err == nil {
+	if _, err := NewPuzzleDir(catFs, 10).Export(); err == nil {
 		t.Error("Broken YAML")
 	}
-	if _, err := NewPuzzle(catFs, 20); err == nil {
+	if _, err := NewPuzzleDir(catFs, 20).Export(); err == nil {
 		t.Error("Bad RFC822 header")
 	}
-	if _, err := NewPuzzle(catFs, 21); err == nil {
+	if _, err := NewPuzzleDir(catFs, 21).Export(); err == nil {
 		t.Error("Boken RFC822 header")
 	}
-	if _, err := NewPuzzle(catFs, 22); err == nil {
+	if p, err := NewPuzzleDir(catFs, 22).Export(); err == nil {
 		t.Error("Duplicate bodies")
 	} else if !strings.HasPrefix(err.Error(), "Puzzle body present") {
+		t.Log(p)
 		t.Error("Wrong error for duplicate body:", err)
 	}
 }
@@ -71,11 +75,29 @@ func TestPuzzle(t *testing.T) {
 func TestFsPuzzle(t *testing.T) {
 	catFs := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
 
-	if _, err := NewPuzzle(catFs, 1); err != nil {
+	if _, err := NewPuzzleDir(catFs, 1).Export(); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := NewPuzzle(catFs, 2); err != nil {
+	if _, err := NewPuzzleDir(catFs, 2).Export(); err != nil {
 		t.Error(err)
+	}
+
+	mkpuzzleDir := NewPuzzleDir(catFs, 3)
+	if _, err := mkpuzzleDir.Export(); err != nil {
+		t.Error(err)
+	}
+
+	if body, err := mkpuzzleDir.Open("moo.txt"); err != nil {
+		t.Error(err)
+	} else {
+		defer body.Close()
+		buf := new(bytes.Buffer)
+		if _, err := io.Copy(buf, body); err != nil {
+			t.Error(err)
+		}
+		if buf.String() != "Moo.\n" {
+			t.Error("Wrong body")
+		}
 	}
 }

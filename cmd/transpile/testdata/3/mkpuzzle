@@ -6,7 +6,7 @@ case $1 in
 {
     "Answers": ["answer"],
     "Pre": {
-        "Authors": "neale",
+        "Authors": ["neale"],
         "Body": "I am a generated puzzle."
     }
 }

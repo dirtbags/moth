@@ -47,10 +47,11 @@ body
 	afero.WriteFile(fs, "cat0/21/puzzle.md", []byte("Answer: broken\nSpooon\n"), 0644)
 	afero.WriteFile(fs, "cat0/22/puzzle.md", []byte("---\nanswers:\n  - pencil\npre:\n body: Spooon\n---\nSpoon?\n"), 0644)
 	afero.WriteFile(fs, "cat1/93/puzzle.md", []byte("Answer: no\n\nbody"), 0644)
+	afero.WriteFile(fs, "cat1/barney/puzzle.md", testMothYaml, 0644)
 	return fs
 }
 
-func TestThings(t *testing.T) {
+func TestEverything(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	tp := T{
 		w:  stdout,
@@ -75,8 +76,8 @@ func TestThings(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &p); err != nil {
 		t.Error(err)
 	}
-	if p.Answers[0] != "YAML answer" {
-		t.Error("Didn't return the right object")
+	if (len(p.Answers) != 1) || (p.Answers[0] != "YAML answer") {
+		t.Error("Didn't return the right object", p)
 	}
 
 	stdout.Reset()

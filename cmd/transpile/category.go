@@ -10,7 +10,7 @@ import (
 // NewCategory returns a new category for the given path in the given fs.
 func NewCategory(fs afero.Fs, cat string) Category {
 	return Category{
-		Fs: afero.NewBasePathFs(fs, cat),
+		Fs: NewBasePathFs(fs, cat),
 	}
 }
 
@@ -41,7 +41,7 @@ func (c Category) Puzzles() ([]int, error) {
 	return puzzles, nil
 }
 
-// Puzzle returns the Puzzle associated with points.
-func (c Category) Puzzle(points int) (*Puzzle, error) {
-	return NewPuzzle(c.Fs, points)
+// PuzzleDir returns the PuzzleDir associated with points.
+func (c Category) PuzzleDir(points int) *PuzzleDir {
+	return NewPuzzleDir(c.Fs, points)
 }

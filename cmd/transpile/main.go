@@ -86,20 +86,21 @@ func (t *T) PrintInventory() error {
 // Open writes a file to the writer.
 func (t *T) Open() error {
 	c := t.NewCategory(t.Cat)
-	p, err := c.Puzzle(t.Points)
-	if err != nil {
-		return err
-	}
+	pd := c.PuzzleDir(t.Points)
 
 	switch t.Filename {
 	case "puzzle.json", "":
+		p, err := pd.Export()
+		if err != nil {
+			return err
+		}
 		jp, err := json.Marshal(p)
 		if err != nil {
 			return err
 		}
 		t.w.Write(jp)
 	default:
-		f, err := p.Open(t.Filename)
+		f, err := pd.Open(t.Filename)
 		if err != nil {
 			return err
 		}
