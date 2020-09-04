@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -61,7 +62,7 @@ func TestEverything(t *testing.T) {
 	if err := tp.Handle("inventory"); err != nil {
 		t.Error(err)
 	}
-	if stdout.String() != "cat0 1 2 3 4 5 10 20 21 22\ncat1 93\n" {
+	if strings.TrimSpace(stdout.String()) != `{"cat0":[1,2,3,4,5,10,20,21,22],"cat1":[93]}` {
 		t.Errorf("Bad inventory: %#v", stdout.String())
 	}
 

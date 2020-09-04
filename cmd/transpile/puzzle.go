@@ -227,12 +227,12 @@ func (fp FsCommandPuzzle) Open(filename string) (io.ReadCloser, error) {
 	cmd := exec.CommandContext(ctx, fp.command, "-file", filename)
 	// BUG(neale): FsCommandPuzzle.Open() reads everything into memory, and will suck for large files.
 	out, err := cmd.Output()
+	buf := ioutil.NopCloser(bytes.NewBuffer(out))
 	if err != nil {
-		return NopReadCloser{}, err
+		return buf, err
 	}
-	buf := bytes.NewBuffer(out)
 
-	return ioutil.NopCloser(buf), nil
+	return buf, nil
 }
 
 // Answer checks whether the given answer is correct.
@@ -243,7 +243,7 @@ func (fp FsCommandPuzzle) Answer(answer string) bool {
 	cmd := exec.CommandContext(ctx, fp.command, "-answer", answer)
 	out, err := cmd.Output()
 	if err != nil {
-		log.Print("ERROR", err)
+		log.Printf("ERROR: checking answer: %s", err)
 		return false
 	}
 

@@ -87,7 +87,7 @@ func TestPuzzle(t *testing.T) {
 }
 
 func TestFsPuzzle(t *testing.T) {
-	catFs := NewRecursiveBasePathFs(afero.NewOsFs(), "testdata")
+	catFs := NewRecursiveBasePathFs(NewRecursiveBasePathFs(afero.NewOsFs(), "testdata"), "static")
 
 	if _, err := NewFsPuzzle(catFs, 1).Puzzle(); err != nil {
 		t.Error(err)

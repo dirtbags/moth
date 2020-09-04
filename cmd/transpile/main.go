@@ -102,6 +102,8 @@ func (t *T) Handle(action string) error {
 
 // PrintInventory prints a puzzle inventory to stdout
 func (t *T) PrintInventory() error {
+	inv := make(map[string][]int)
+
 	dirEnts, err := afero.ReadDir(t.Fs, ".")
 	if err != nil {
 		return err
@@ -113,15 +115,15 @@ func (t *T) PrintInventory() error {
 				log.Print(err)
 				continue
 			} else {
-				fmt.Fprint(t.w, ent.Name())
 				sort.Ints(puzzles)
-				for _, points := range puzzles {
-					fmt.Fprint(t.w, " ")
-					fmt.Fprint(t.w, points)
-				}
-				fmt.Fprintln(t.w)
+				inv[ent.Name()] = puzzles
 			}
 		}
+	}
+
+	m := json.NewEncoder(t.w)
+	if err := m.Encode(inv); err != nil {
+		return err
 	}
 	return nil
 }
@@ -157,7 +159,7 @@ func (t *T) Open() error {
 
 // NewCategory returns a new Fs-backed category.
 func (t *T) NewCategory(name string) Category {
-	return NewFsCategory(NewRecursiveBasePathFs(t.Fs, name))
+	return NewFsCategory(t.Fs, name)
 }
 
 func main() {

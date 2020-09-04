@@ -1,0 +1,45 @@
+#! /bin/sh -e
+
+fail () {
+    echo "ERROR: $*" 1>&2
+    exit 1
+}
+
+case $1:$2:$3 in
+    inventory::)
+        echo "[1,2,3,"
+        echo "4,5]"
+        ;;
+    puzzle:1:)
+        cat <<EOT
+{
+    "Answers": ["answer1.0"],
+    "Pre": {
+        "Authors": ["author1.0"],
+        "Body": "<h1>moo.</h1>"
+    }
+}
+EOT
+                ;;
+    puzzle:*:)
+        fail "No such puzzle"
+        ;;
+    file:1:moo.txt)
+        echo "Moo."
+        ;;
+    file:*:*)
+        fail "No such file: $2"
+        ;;
+    answer:1:answer1.0)
+        echo "correct"
+        ;;
+    answer:1:*)
+        echo "incorrect"
+        ;;
+    answer:*:*)
+        fail "Fail answer"
+        ;;
+    *)
+        fail "What is $1" 1>&2
+        ;;
+esac
