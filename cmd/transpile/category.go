@@ -1,27 +1,42 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"strconv"
 
 	"github.com/spf13/afero"
 )
 
-// NewCategory returns a new category for the given path in the given fs.
-func NewCategory(fs afero.Fs, cat string) Category {
-	return Category{
-		Fs: NewBasePathFs(fs, cat),
+type NopReadCloser struct {
+}
+
+func (n NopReadCloser) Read(b []byte) (int, error) {
+	return 0, nil
+}
+func (n NopReadCloser) Close() error {
+	return nil
+}
+
+// NewFsCategory returns a Category based on which files are present.
+// If 'mkcategory' is present and executable, an FsCommandCategory is returned.
+// Otherwise, FsCategory is returned.
+func NewFsCategory(fs afero.Fs) Category {
+	if info, err := fs.Stat("mkcategory"); (err == nil) && (info.Mode()&0100 != 0) {
+		return FsCommandCategory{fs: fs}
+	} else {
+		return FsCategory{fs: fs}
 	}
 }
 
-// Category represents an on-disk category.
-type Category struct {
-	afero.Fs
+type FsCategory struct {
+	fs afero.Fs
 }
 
-// Puzzles returns a list of puzzle values.
-func (c Category) Puzzles() ([]int, error) {
-	puzzleEntries, err := afero.ReadDir(c, ".")
+// Category returns a list of puzzle values.
+func (c FsCategory) Inventory() ([]int, error) {
+	puzzleEntries, err := afero.ReadDir(c.fs, ".")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +56,44 @@ func (c Category) Puzzles() ([]int, error) {
 	return puzzles, nil
 }
 
-// PuzzleDir returns the PuzzleDir associated with points.
-func (c Category) PuzzleDir(points int) *PuzzleDir {
-	return NewPuzzleDir(c.Fs, points)
+func (c FsCategory) Puzzle(points int) (Puzzle, error) {
+	return NewFsPuzzle(c.fs, points).Puzzle()
+}
+
+func (c FsCategory) Open(points int, filename string) (io.ReadCloser, error) {
+	return NewFsPuzzle(c.fs, points).Open(filename)
+}
+
+func (c FsCategory) Answer(points int, answer string) bool {
+	// BUG(neale): FsCategory.Answer should probably always return false, to prevent you from running uncompiled puzzles with participants.
+	p, err := c.Puzzle(points)
+	if err != nil {
+		return false
+	}
+	for _, a := range p.Answers {
+		if a == answer {
+			return true
+		}
+	}
+	return false
+}
+
+type FsCommandCategory struct {
+	fs afero.Fs
+}
+
+func (c FsCommandCategory) Inventory() ([]int, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
+func (c FsCommandCategory) Puzzle(points int) (Puzzle, error) {
+	return Puzzle{}, fmt.Errorf("Not implemented")
+}
+
+func (c FsCommandCategory) Open(points int, filename string) (io.ReadCloser, error) {
+	return NopReadCloser{}, fmt.Errorf("Not implemented")
+}
+
+func (c FsCommandCategory) Answer(points int, answer string) bool {
+	return false
 }

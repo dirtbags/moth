@@ -14,8 +14,8 @@ func TestPuzzle(t *testing.T) {
 	catFs := afero.NewBasePathFs(puzzleFs, "cat0")
 
 	{
-		pd := NewPuzzleDir(catFs, 1)
-		p, err := pd.Export()
+		pd := NewFsPuzzle(catFs, 1)
+		p, err := pd.Puzzle()
 		if err != nil {
 			t.Error(err)
 		}
@@ -32,7 +32,7 @@ func TestPuzzle(t *testing.T) {
 	}
 
 	{
-		p, err := NewPuzzleDir(catFs, 2).Export()
+		p, err := NewFsPuzzle(catFs, 2).Puzzle()
 		if err != nil {
 			t.Error(err)
 		}
@@ -47,24 +47,24 @@ func TestPuzzle(t *testing.T) {
 		}
 	}
 
-	if _, err := NewPuzzleDir(catFs, 3).Export(); err != nil {
+	if _, err := NewFsPuzzle(catFs, 3).Puzzle(); err != nil {
 		t.Error("Legacy `puzzle.moth` file:", err)
 	}
 
-	if _, err := NewPuzzleDir(catFs, 99).Export(); err == nil {
+	if _, err := NewFsPuzzle(catFs, 99).Puzzle(); err == nil {
 		t.Error("Non-existent puzzle", err)
 	}
 
-	if _, err := NewPuzzleDir(catFs, 10).Export(); err == nil {
+	if _, err := NewFsPuzzle(catFs, 10).Puzzle(); err == nil {
 		t.Error("Broken YAML")
 	}
-	if _, err := NewPuzzleDir(catFs, 20).Export(); err == nil {
+	if _, err := NewFsPuzzle(catFs, 20).Puzzle(); err == nil {
 		t.Error("Bad RFC822 header")
 	}
-	if _, err := NewPuzzleDir(catFs, 21).Export(); err == nil {
+	if _, err := NewFsPuzzle(catFs, 21).Puzzle(); err == nil {
 		t.Error("Boken RFC822 header")
 	}
-	if p, err := NewPuzzleDir(catFs, 22).Export(); err == nil {
+	if p, err := NewFsPuzzle(catFs, 22).Puzzle(); err == nil {
 		t.Error("Duplicate bodies")
 	} else if !strings.HasPrefix(err.Error(), "Puzzle body present") {
 		t.Log(p)
@@ -75,16 +75,16 @@ func TestPuzzle(t *testing.T) {
 func TestFsPuzzle(t *testing.T) {
 	catFs := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
 
-	if _, err := NewPuzzleDir(catFs, 1).Export(); err != nil {
+	if _, err := NewFsPuzzle(catFs, 1).Puzzle(); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := NewPuzzleDir(catFs, 2).Export(); err != nil {
+	if _, err := NewFsPuzzle(catFs, 2).Puzzle(); err != nil {
 		t.Error(err)
 	}
 
-	mkpuzzleDir := NewPuzzleDir(catFs, 3)
-	if _, err := mkpuzzleDir.Export(); err != nil {
+	mkpuzzleDir := NewFsPuzzle(catFs, 3)
+	if _, err := mkpuzzleDir.Puzzle(); err != nil {
 		t.Error(err)
 	}
 

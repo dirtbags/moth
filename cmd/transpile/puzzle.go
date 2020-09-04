@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/mail"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -20,56 +19,27 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// NewPuzzleDir returns a new PuzzleDir for points.
-func NewPuzzleDir(fs afero.Fs, points int) *PuzzleDir {
-	pd := &PuzzleDir{
+// NewFsPuzzle returns a new FsPuzzle for points.
+func NewFsPuzzle(fs afero.Fs, points int) *FsPuzzle {
+	fp := &FsPuzzle{
 		fs: NewBasePathFs(fs, strconv.Itoa(points)),
 	}
-	// BUG(neale): Doesn't yet handle "puzzle.py" or "mkpuzzle"
 
-	return pd
+	return fp
 }
 
-// PuzzleDir is a single puzzle's directory.
-type PuzzleDir struct {
-	fs afero.Fs
+// FsPuzzle is a single puzzle's directory.
+type FsPuzzle struct {
+	fs       afero.Fs
 	mkpuzzle bool
 }
 
-// Open returns a newly-opened file.
-func (pd *PuzzleDir) Open(name string) (io.ReadCloser, error) {
-	// BUG(neale): You cannot open generated files in puzzles, only files actually on the disk
-	if _, err := pd.fs.Stat(""
-	return pd.fs.Open(name)
-}
-
-// Export returns a Puzzle struct for the current puzzle.
-func (pd *PuzzleDir) Export() (Puzzle, error) {
-	p, staticErr := pd.exportStatic()
-	if staticErr == nil {
-		return p, nil
-	}
-
-	// Only fall through if the static files don't exist. Otherwise, report the error.
-	if !os.IsNotExist(staticErr) {
-		return p, staticErr
-	}
-
-	if p, cmdErr := pd.exportCommand(); cmdErr == nil {
-		return p, nil
-	} else if os.IsNotExist(cmdErr) {
-		// If the command doesn't exist either, report the non-existence of the static file instead.
-		return p, staticErr
-	} else {
-		return p, cmdErr
-	}
-}
-
-func (pd *PuzzleDir) exportStatic() (Puzzle, error) {
-	r, err := pd.fs.Open("puzzle.md")
+// Puzzle returns a Puzzle struct for the current puzzle.
+func (fp FsPuzzle) Puzzle() (Puzzle, error) {
+	r, err := fp.fs.Open("puzzle.md")
 	if err != nil {
 		var err2 error
-		if r, err2 = pd.fs.Open("puzzle.moth"); err2 != nil {
+		if r, err2 = fp.fs.Open("puzzle.moth"); err2 != nil {
 			return Puzzle{}, err
 		}
 	}
@@ -124,34 +94,9 @@ func (pd *PuzzleDir) exportStatic() (Puzzle, error) {
 	return puzzle, nil
 }
 
-func (pd *PuzzleDir) exportCommand() (Puzzle, error) {
-	bfs, ok := pd.fs.(*BasePathFs)
-	if !ok {
-		return Puzzle{}, fmt.Errorf("Fs won't resolve real paths for %v", pd)
-	}
-	mkpuzzlePath, err := bfs.RealPath("mkpuzzle")
-	if err != nil {
-		return Puzzle{}, err
-	}
-	log.Print(mkpuzzlePath)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, mkpuzzlePath)
-	stdout, err := cmd.Output()
-	if err != nil {
-		return Puzzle{}, err
-	}
-
-	jsdec := json.NewDecoder(bytes.NewReader(stdout))
-	jsdec.DisallowUnknownFields()
-	puzzle := Puzzle{}
-	if err := jsdec.Decode(&puzzle); err != nil {
-		return Puzzle{}, err
-	}
-
-	return puzzle, nil
+// Open returns a newly-opened file.
+func (fp FsPuzzle) Open(name string) (io.ReadCloser, error) {
+	return fp.fs.Open(name)
 }
 
 func legacyAttachmentParser(val []string) []Attachment {
@@ -173,39 +118,6 @@ func legacyAttachmentParser(val []string) []Attachment {
 		ret[idx] = cur
 	}
 	return ret
-}
-
-// Puzzle contains everything about a puzzle.
-type Puzzle struct {
-	Pre struct {
-		Authors       []string
-		Attachments   []Attachment
-		Scripts       []Attachment
-		AnswerPattern string
-		Body          string
-	}
-	Post struct {
-		Objective string
-		Success   struct {
-			Acceptable string
-			Mastery    string
-		}
-		KSAs []string
-	}
-	Debug struct {
-		Log     []string
-		Errors  []string
-		Hints   []string
-		Summary string
-	}
-	Answers []string
-}
-
-// Attachment carries information about an attached file.
-type Attachment struct {
-	Filename       string // Filename presented as part of puzzle
-	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
-	Listed         bool   // Whether this file is listed as an attachment
 }
 
 func yamlHeaderParser(r io.Reader) (Puzzle, error) {
@@ -248,4 +160,50 @@ func rfc822HeaderParser(r io.Reader) (Puzzle, error) {
 	}
 
 	return p, nil
+}
+
+func (fp FsPuzzle) Answer(answer string) bool {
+	return false
+}
+
+type FsCommandPuzzle struct {
+	fs afero.Fs
+}
+
+func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
+	bfs, ok := fp.fs.(*BasePathFs)
+	if !ok {
+		return Puzzle{}, fmt.Errorf("Fs won't resolve real paths for %v", fp)
+	}
+	mkpuzzlePath, err := bfs.RealPath("mkpuzzle")
+	if err != nil {
+		return Puzzle{}, err
+	}
+	log.Print(mkpuzzlePath)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, mkpuzzlePath)
+	stdout, err := cmd.Output()
+	if err != nil {
+		return Puzzle{}, err
+	}
+
+	jsdec := json.NewDecoder(bytes.NewReader(stdout))
+	jsdec.DisallowUnknownFields()
+	puzzle := Puzzle{}
+	if err := jsdec.Decode(&puzzle); err != nil {
+		return Puzzle{}, err
+	}
+
+	return puzzle, nil
+}
+
+func (fp FsCommandPuzzle) Open(filename string) (io.ReadCloser, error) {
+	return NopReadCloser{}, fmt.Errorf("Not implemented")
+}
+
+func (fp FsCommandPuzzle) Answer(answer string) bool {
+	return false
 }

@@ -13,6 +13,54 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Category defines the functionality required to be a puzzle category.
+type Category interface {
+	// Inventory lists every puzzle in the category.
+	Inventory() ([]int, error)
+
+	// Puzzle provides a Puzzle structure for the given point value.
+	Puzzle(points int) (Puzzle, error)
+
+	// Open returns an io.ReadCloser for the given filename.
+	Open(points int, filename string) (io.ReadCloser, error)
+
+	// Answer returns whether the given answer is correct.
+	Answer(points int, answer string) bool
+}
+
+// PuzzleDef contains everything about a puzzle.
+type Puzzle struct {
+	Pre struct {
+		Authors       []string
+		Attachments   []Attachment
+		Scripts       []Attachment
+		AnswerPattern string
+		Body          string
+	}
+	Post struct {
+		Objective string
+		Success   struct {
+			Acceptable string
+			Mastery    string
+		}
+		KSAs []string
+	}
+	Debug struct {
+		Log     []string
+		Errors  []string
+		Hints   []string
+		Summary string
+	}
+	Answers []string
+}
+
+// Attachment carries information about an attached file.
+type Attachment struct {
+	Filename       string // Filename presented as part of puzzle
+	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
+	Listed         bool   // Whether this file is listed as an attachment
+}
+
 // T contains everything required for a transpilation invocation (across the nation).
 type T struct {
 	// What action to take
@@ -22,11 +70,6 @@ type T struct {
 	Answer   string
 	Filename string
 	Fs       afero.Fs
-}
-
-// NewCategory returns a new Category as specified by cat.
-func (t *T) NewCategory(cat string) Category {
-	return NewCategory(t.Fs, cat)
 }
 
 // ParseArgs parses command-line arguments into T, returning the action to take
@@ -66,7 +109,7 @@ func (t *T) PrintInventory() error {
 	for _, ent := range dirEnts {
 		if ent.IsDir() {
 			c := t.NewCategory(ent.Name())
-			if puzzles, err := c.Puzzles(); err != nil {
+			if puzzles, err := c.Inventory(); err != nil {
 				log.Print(err)
 				continue
 			} else {
@@ -86,11 +129,10 @@ func (t *T) PrintInventory() error {
 // Open writes a file to the writer.
 func (t *T) Open() error {
 	c := t.NewCategory(t.Cat)
-	pd := c.PuzzleDir(t.Points)
 
 	switch t.Filename {
 	case "puzzle.json", "":
-		p, err := pd.Export()
+		p, err := c.Puzzle(t.Points)
 		if err != nil {
 			return err
 		}
@@ -100,7 +142,7 @@ func (t *T) Open() error {
 		}
 		t.w.Write(jp)
 	default:
-		f, err := pd.Open(t.Filename)
+		f, err := c.Open(t.Points, t.Filename)
 		if err != nil {
 			return err
 		}
@@ -111,6 +153,10 @@ func (t *T) Open() error {
 	}
 
 	return nil
+}
+
+func (t *T) NewCategory(name string) Category {
+	return NewFsCategory(NewBasePathFs(t.Fs, name))
 }
 
 func main() {
