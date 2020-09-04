@@ -28,7 +28,7 @@ type Category interface {
 	Answer(points int, answer string) bool
 }
 
-// PuzzleDef contains everything about a puzzle.
+// Puzzle contains everything about a puzzle.
 type Puzzle struct {
 	Pre struct {
 		Authors       []string
@@ -155,8 +155,9 @@ func (t *T) Open() error {
 	return nil
 }
 
+// NewCategory returns a new Fs-backed category.
 func (t *T) NewCategory(name string) Category {
-	return NewFsCategory(NewBasePathFs(t.Fs, name))
+	return NewFsCategory(NewRecursiveBasePathFs(t.Fs, name))
 }
 
 func main() {

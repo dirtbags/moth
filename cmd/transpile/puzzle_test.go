@@ -11,7 +11,7 @@ import (
 
 func TestPuzzle(t *testing.T) {
 	puzzleFs := newTestFs()
-	catFs := afero.NewBasePathFs(puzzleFs, "cat0")
+	catFs := NewRecursiveBasePathFs(puzzleFs, "cat0")
 
 	{
 		pd := NewFsPuzzle(catFs, 1)
@@ -70,10 +70,24 @@ func TestPuzzle(t *testing.T) {
 		t.Log(p)
 		t.Error("Wrong error for duplicate body:", err)
 	}
+
+	{
+		fs := afero.NewMemMapFs()
+		if err := afero.WriteFile(fs, "1/mkpuzzle", []byte("bleat"), 0755); err != nil {
+			t.Error(err)
+		}
+		p := NewFsPuzzle(fs, 1)
+		if _, ok := p.(FsCommandPuzzle); !ok {
+			t.Error("We didn't get an FsCommandPuzzle")
+		}
+		if _, err := p.Puzzle(); err == nil {
+			t.Error("We didn't get an error trying to run a command from a MemMapFs")
+		}
+	}
 }
 
 func TestFsPuzzle(t *testing.T) {
-	catFs := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
+	catFs := NewRecursiveBasePathFs(afero.NewOsFs(), "testdata")
 
 	if _, err := NewFsPuzzle(catFs, 1).Puzzle(); err != nil {
 		t.Error(err)
@@ -88,16 +102,31 @@ func TestFsPuzzle(t *testing.T) {
 		t.Error(err)
 	}
 
-	if body, err := mkpuzzleDir.Open("moo.txt"); err != nil {
+	if r, err := mkpuzzleDir.Open("moo.txt"); err != nil {
 		t.Error(err)
 	} else {
-		defer body.Close()
+		defer r.Close()
 		buf := new(bytes.Buffer)
-		if _, err := io.Copy(buf, body); err != nil {
+		if _, err := io.Copy(buf, r); err != nil {
 			t.Error(err)
 		}
 		if buf.String() != "Moo.\n" {
-			t.Error("Wrong body")
+			t.Errorf("Wrong body: %#v", buf.String())
 		}
+	}
+
+	if r, err := mkpuzzleDir.Open("error"); err == nil {
+		r.Close()
+		t.Error("Error open didn't return error")
+	}
+
+	if !mkpuzzleDir.Answer("moo") {
+		t.Error("Right answer marked wrong")
+	}
+	if mkpuzzleDir.Answer("wrong") {
+		t.Error("Wrong answer marked correct")
+	}
+	if mkpuzzleDir.Answer("error") {
+		t.Error("Error answer marked correct")
 	}
 }

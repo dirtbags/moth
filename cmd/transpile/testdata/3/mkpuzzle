@@ -12,11 +12,33 @@ case $1 in
 }
 EOT
         ;;
-    moo.txt)
-        echo "Moo."
+    -file|--file)
+        case $2 in
+            moo.txt)
+                echo "Moo."
+                ;;
+            *)
+                echo "ERROR: no such file: $1" 1>&2
+                exit 1
+                ;;
+        esac
+        ;;
+    -answer|--answer)
+        case $2 in
+            moo)
+                echo "correct"
+                ;;
+            error)
+                echo "error" 1>&2
+                exit 1
+                ;;
+            *)
+                echo "incorrect"
+                ;;
+        esac
         ;;
     *)
-        echo "Error: no such file: $1" 1>&2
+        echo "ERROR: don't know what to do with $1" 1>&2
         exit 1
         ;;
 esac

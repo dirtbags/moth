@@ -9,24 +9,24 @@ import (
 	"github.com/spf13/afero"
 )
 
-// BasePathFs is an overloaded afero.BasePathFs that has a recursive RealPath().
-type BasePathFs struct {
+// RecursiveBasePathFs is an overloaded afero.BasePathFs that has a recursive RealPath().
+type RecursiveBasePathFs struct {
 	afero.Fs
 	source afero.Fs
 	path   string
 }
 
-// NewBasePathFs returns a new BasePathFs.
-func NewBasePathFs(source afero.Fs, path string) afero.Fs {
-	return &BasePathFs{
+// NewRecursiveBasePathFs returns a new RecursiveBasePathFs.
+func NewRecursiveBasePathFs(source afero.Fs, path string) *RecursiveBasePathFs {
+	return &RecursiveBasePathFs{
 		Fs:     afero.NewBasePathFs(source, path),
 		source: source,
 		path:   path,
 	}
 }
 
-// RealPath returns the real path to a file, "breaking out" of the BasePathFs.
-func (b *BasePathFs) RealPath(name string) (path string, err error) {
+// RealPath returns the real path to a file, "breaking out" of the RecursiveBasePathFs.
+func (b *RecursiveBasePathFs) RealPath(name string) (path string, err error) {
 	if err := validateBasePathName(name); err != nil {
 		return name, err
 	}
@@ -34,10 +34,10 @@ func (b *BasePathFs) RealPath(name string) (path string, err error) {
 	bpath := filepath.Clean(b.path)
 	path = filepath.Clean(filepath.Join(bpath, name))
 
-	if parentBasePathFs, ok := b.source.(*BasePathFs); ok {
-		return parentBasePathFs.RealPath(path)
-	} else if parentBasePathFs, ok := b.source.(*afero.BasePathFs); ok {
-		return parentBasePathFs.RealPath(path)
+	if parentRecursiveBasePathFs, ok := b.source.(*RecursiveBasePathFs); ok {
+		return parentRecursiveBasePathFs.RealPath(path)
+	} else if parentRecursiveBasePathFs, ok := b.source.(*afero.BasePathFs); ok {
+		return parentRecursiveBasePathFs.RealPath(path)
 	}
 
 	if !strings.HasPrefix(path, bpath) {

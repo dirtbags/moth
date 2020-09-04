@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/mail"
 	"os/exec"
@@ -19,13 +20,36 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// PuzzleProvider establishes the functionality required to provide one puzzle.
+type PuzzleProvider interface {
+	// Puzzle returns a Puzzle struct for the current puzzle.
+	Puzzle() (Puzzle, error)
+
+	// Open returns a newly-opened file.
+	Open(filename string) (io.ReadCloser, error)
+
+	// Answer returns whether the provided answer is correct.
+	Answer(answer string) bool
+}
+
 // NewFsPuzzle returns a new FsPuzzle for points.
-func NewFsPuzzle(fs afero.Fs, points int) *FsPuzzle {
-	fp := &FsPuzzle{
-		fs: NewBasePathFs(fs, strconv.Itoa(points)),
+func NewFsPuzzle(fs afero.Fs, points int) PuzzleProvider {
+	pfs := NewRecursiveBasePathFs(fs, strconv.Itoa(points))
+	if info, err := pfs.Stat("mkpuzzle"); (err == nil) && (info.Mode()&0100 != 0) {
+		if command, err := pfs.RealPath(info.Name()); err != nil {
+			log.Println("Unable to resolve full path to", info.Name(), pfs)
+		} else {
+			return FsCommandPuzzle{
+				fs:      pfs,
+				command: command,
+				timeout: 2 * time.Second,
+			}
+		}
 	}
 
-	return fp
+	return FsPuzzle{
+		fs: pfs,
+	}
 }
 
 // FsPuzzle is a single puzzle's directory.
@@ -162,29 +186,24 @@ func rfc822HeaderParser(r io.Reader) (Puzzle, error) {
 	return p, nil
 }
 
+// Answer checks whether the given answer is correct.
 func (fp FsPuzzle) Answer(answer string) bool {
 	return false
 }
 
+// FsCommandPuzzle provides an FsPuzzle backed by running a command.
 type FsCommandPuzzle struct {
-	fs afero.Fs
+	fs      afero.Fs
+	command string
+	timeout time.Duration
 }
 
+// Puzzle returns a Puzzle struct for the current puzzle.
 func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
-	bfs, ok := fp.fs.(*BasePathFs)
-	if !ok {
-		return Puzzle{}, fmt.Errorf("Fs won't resolve real paths for %v", fp)
-	}
-	mkpuzzlePath, err := bfs.RealPath("mkpuzzle")
-	if err != nil {
-		return Puzzle{}, err
-	}
-	log.Print(mkpuzzlePath)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, mkpuzzlePath)
+	cmd := exec.CommandContext(ctx, fp.command)
 	stdout, err := cmd.Output()
 	if err != nil {
 		return Puzzle{}, err
@@ -200,10 +219,37 @@ func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
 	return puzzle, nil
 }
 
+// Open returns a newly-opened file.
 func (fp FsCommandPuzzle) Open(filename string) (io.ReadCloser, error) {
-	return NopReadCloser{}, fmt.Errorf("Not implemented")
+	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, fp.command, "-file", filename)
+	// BUG(neale): FsCommandPuzzle.Open() reads everything into memory, and will suck for large files.
+	out, err := cmd.Output()
+	if err != nil {
+		return NopReadCloser{}, err
+	}
+	buf := bytes.NewBuffer(out)
+
+	return ioutil.NopCloser(buf), nil
 }
 
+// Answer checks whether the given answer is correct.
 func (fp FsCommandPuzzle) Answer(answer string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, fp.command, "-answer", answer)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Print("ERROR", err)
+		return false
+	}
+
+	switch strings.TrimSpace(string(out)) {
+	case "correct":
+		return true
+	}
 	return false
 }
