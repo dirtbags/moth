@@ -32,6 +32,7 @@ func TestFsCategory(t *testing.T) {
 	}
 
 	if r, err := c.Open(1, "moo.txt"); err != nil {
+		t.Log(c.Puzzle(1))
 		t.Error(err)
 	} else {
 		defer r.Close()

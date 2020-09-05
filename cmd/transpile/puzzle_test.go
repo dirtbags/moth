@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io"
-	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -63,12 +62,6 @@ func TestPuzzle(t *testing.T) {
 	}
 	if _, err := NewFsPuzzle(catFs, 21).Puzzle(); err == nil {
 		t.Error("Boken RFC822 header")
-	}
-	if p, err := NewFsPuzzle(catFs, 22).Puzzle(); err == nil {
-		t.Error("Duplicate bodies")
-	} else if !strings.HasPrefix(err.Error(), "Puzzle body present") {
-		t.Log(p)
-		t.Error("Wrong error for duplicate body:", err)
 	}
 
 	{

@@ -143,6 +143,8 @@ func (c FsCommandCategory) Puzzle(points int) (Puzzle, error) {
 		return p, err
 	}
 
+	p.computeAnswerHashes()
+
 	return p, nil
 }
 

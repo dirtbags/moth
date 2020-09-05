@@ -17,6 +17,8 @@ pre:
     - Arthur
     - Buster
     - DW
+  attachments:
+    - filename: moo.txt
 ---
 YAML body
 `)
@@ -46,9 +48,12 @@ body
 `), 0644)
 	afero.WriteFile(fs, "cat0/20/puzzle.md", []byte("Answer: no\nBadField: yes\n\nbody\n"), 0644)
 	afero.WriteFile(fs, "cat0/21/puzzle.md", []byte("Answer: broken\nSpooon\n"), 0644)
-	afero.WriteFile(fs, "cat0/22/puzzle.md", []byte("---\nanswers:\n  - pencil\npre:\n body: Spooon\n---\nSpoon?\n"), 0644)
+	afero.WriteFile(fs, "cat0/22/puzzle.md", []byte("---\nanswers:\n  - pencil\npre:\n unused-field: Spooon\n---\nSpoon?\n"), 0644)
 	afero.WriteFile(fs, "cat1/93/puzzle.md", []byte("Answer: no\n\nbody"), 0644)
 	afero.WriteFile(fs, "cat1/barney/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "unbroken/1/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "unbroken/1/moo.txt", []byte("Moo."), 0644)
+	afero.WriteFile(fs, "unbroken/2/puzzle.md", testMothRfc822, 0644)
 	return fs
 }
 
@@ -62,7 +67,7 @@ func TestEverything(t *testing.T) {
 	if err := tp.Handle("inventory"); err != nil {
 		t.Error(err)
 	}
-	if strings.TrimSpace(stdout.String()) != `{"cat0":[1,2,3,4,5,10,20,21,22],"cat1":[93]}` {
+	if strings.TrimSpace(stdout.String()) != `{"cat0":[1,2,3,4,5,10,20,21,22],"cat1":[93],"unbroken":[1,2]}` {
 		t.Errorf("Bad inventory: %#v", stdout.String())
 	}
 
@@ -88,5 +93,17 @@ func TestEverything(t *testing.T) {
 	}
 	if stdout.String() != "Moo." {
 		t.Error("Wrong file pulled")
+	}
+
+	stdout.Reset()
+	tp.Cat = "unbroken"
+	if err := tp.Handle("mothball"); err != nil {
+		t.Error(err)
+	}
+	if stdout.Len() < 200 {
+		t.Error("That's way too short to be a mothball")
+	}
+	if stdout.String()[:2] != "PK" {
+		t.Error("This mothball isn't a zip file!")
 	}
 }

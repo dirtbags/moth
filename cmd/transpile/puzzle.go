@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,6 +20,77 @@ import (
 	"github.com/spf13/afero"
 	"gopkg.in/yaml.v2"
 )
+
+// Puzzle contains everything about a puzzle that a client would see.
+type Puzzle struct {
+	Pre struct {
+		Authors       []string
+		Attachments   []string
+		Scripts       []string
+		AnswerHashes  []string
+		AnswerPattern string
+		Body          string
+	}
+	Post struct {
+		Objective string
+		Success   struct {
+			Acceptable string
+			Mastery    string
+		}
+		KSAs []string
+	}
+	Debug struct {
+		Log     []string
+		Errors  []string
+		Hints   []string
+		Summary string
+	}
+	Answers []string
+}
+
+func (puzzle *Puzzle) computeAnswerHashes() {
+	if len(puzzle.Answers) == 0 {
+		return
+	}
+	puzzle.Pre.AnswerHashes = make([]string, len(puzzle.Answers))
+	for i, answer := range puzzle.Answers {
+		sum := sha256.Sum256([]byte(answer))
+		hexsum := fmt.Sprintf("%x", sum)
+		puzzle.Pre.AnswerHashes[i] = hexsum
+	}
+}
+
+// StaticPuzzle contains everything a static puzzle might tell us.
+type StaticPuzzle struct {
+	Pre struct {
+		Authors       []string
+		Attachments   []StaticAttachment
+		Scripts       []StaticAttachment
+		AnswerPattern string
+	}
+	Post struct {
+		Objective string
+		Success   struct {
+			Acceptable string
+			Mastery    string
+		}
+		KSAs []string
+	}
+	Debug struct {
+		Log     []string
+		Errors  []string
+		Hints   []string
+		Summary string
+	}
+	Answers []string
+}
+
+// StaticAttachment carries information about an attached file.
+type StaticAttachment struct {
+	Filename       string // Filename presented as part of puzzle
+	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
+	Listed         bool   // Whether this file is listed as an attachment
+}
 
 // PuzzleProvider establishes the functionality required to provide one puzzle.
 type PuzzleProvider interface {
@@ -60,11 +132,64 @@ type FsPuzzle struct {
 
 // Puzzle returns a Puzzle struct for the current puzzle.
 func (fp FsPuzzle) Puzzle() (Puzzle, error) {
+	var puzzle Puzzle
+
+	static, body, err := fp.staticPuzzle()
+	if err != nil {
+		return puzzle, err
+	}
+
+	// Convert to an exportable Puzzle
+	puzzle.Post = static.Post
+	puzzle.Debug = static.Debug
+	puzzle.Answers = static.Answers
+	puzzle.Pre.Authors = static.Pre.Authors
+	puzzle.Pre.Body = string(body)
+	puzzle.Pre.AnswerPattern = static.Pre.AnswerPattern
+	puzzle.Pre.Attachments = make([]string, len(static.Pre.Attachments))
+	for i, attachment := range static.Pre.Attachments {
+		puzzle.Pre.Attachments[i] = attachment.Filename
+	}
+	puzzle.Pre.Scripts = make([]string, len(static.Pre.Scripts))
+	for i, script := range static.Pre.Scripts {
+		puzzle.Pre.Scripts[i] = script.Filename
+	}
+	puzzle.computeAnswerHashes()
+
+	return puzzle, nil
+}
+
+// Open returns a newly-opened file.
+func (fp FsPuzzle) Open(name string) (io.ReadCloser, error) {
+	empty := ioutil.NopCloser(new(bytes.Buffer))
+	static, _, err := fp.staticPuzzle()
+	if err != nil {
+		return empty, err
+	}
+
+	var fsPath string
+	for _, attachment := range append(static.Pre.Attachments, static.Pre.Scripts...) {
+		if attachment.Filename == name {
+			if attachment.FilesystemPath == "" {
+				fsPath = attachment.Filename
+			} else {
+				fsPath = attachment.FilesystemPath
+			}
+		}
+	}
+	if fsPath == "" {
+		return empty, fmt.Errorf("Not listed in attachments or scripts: %s", name)
+	}
+
+	return fp.fs.Open(fsPath)
+}
+
+func (fp FsPuzzle) staticPuzzle() (StaticPuzzle, []byte, error) {
 	r, err := fp.fs.Open("puzzle.md")
 	if err != nil {
 		var err2 error
 		if r, err2 = fp.fs.Open("puzzle.moth"); err2 != nil {
-			return Puzzle{}, err
+			return StaticPuzzle{}, nil, err
 		}
 	}
 	defer r.Close()
@@ -101,33 +226,21 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 		bodyBuf.WriteRune('\n')
 	}
 
-	puzzle, err := headerParser(headerBuf)
+	static, err := headerParser(headerBuf)
 	if err != nil {
-		return puzzle, err
+		return static, nil, err
 	}
 
-	// Markdownify the body
-	if puzzle.Pre.Body != "" {
-		if bodyBuf.Len() > 0 {
-			return puzzle, fmt.Errorf("Puzzle body present in header and in moth body")
-		}
-	} else {
-		puzzle.Pre.Body = string(blackfriday.Run(bodyBuf.Bytes()))
-	}
+	body := blackfriday.Run(bodyBuf.Bytes())
 
-	return puzzle, nil
+	return static, body, err
 }
 
-// Open returns a newly-opened file.
-func (fp FsPuzzle) Open(name string) (io.ReadCloser, error) {
-	return fp.fs.Open(name)
-}
-
-func legacyAttachmentParser(val []string) []Attachment {
-	ret := make([]Attachment, len(val))
+func legacyAttachmentParser(val []string) []StaticAttachment {
+	ret := make([]StaticAttachment, len(val))
 	for idx, txt := range val {
 		parts := strings.SplitN(txt, " ", 3)
-		cur := Attachment{}
+		cur := StaticAttachment{}
 		cur.FilesystemPath = parts[0]
 		if len(parts) > 1 {
 			cur.Filename = parts[1]
@@ -144,16 +257,16 @@ func legacyAttachmentParser(val []string) []Attachment {
 	return ret
 }
 
-func yamlHeaderParser(r io.Reader) (Puzzle, error) {
-	p := Puzzle{}
+func yamlHeaderParser(r io.Reader) (StaticPuzzle, error) {
+	p := StaticPuzzle{}
 	decoder := yaml.NewDecoder(r)
 	decoder.SetStrict(true)
 	err := decoder.Decode(&p)
 	return p, err
 }
 
-func rfc822HeaderParser(r io.Reader) (Puzzle, error) {
-	p := Puzzle{}
+func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
+	p := StaticPuzzle{}
 	m, err := mail.ReadMessage(r)
 	if err != nil {
 		return p, fmt.Errorf("Parsing RFC822 headers: %v", err)
@@ -188,6 +301,15 @@ func rfc822HeaderParser(r io.Reader) (Puzzle, error) {
 
 // Answer checks whether the given answer is correct.
 func (fp FsPuzzle) Answer(answer string) bool {
+	p, _, err := fp.staticPuzzle()
+	if err != nil {
+		return false
+	}
+	for _, ans := range p.Answers {
+		if ans == answer {
+			return true
+		}
+	}
 	return false
 }
 
@@ -215,6 +337,8 @@ func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
 	if err := jsdec.Decode(&puzzle); err != nil {
 		return Puzzle{}, err
 	}
+
+	puzzle.computeAnswerHashes()
 
 	return puzzle, nil
 }

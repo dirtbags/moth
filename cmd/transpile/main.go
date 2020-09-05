@@ -28,39 +28,6 @@ type Category interface {
 	Answer(points int, answer string) bool
 }
 
-// Puzzle contains everything about a puzzle.
-type Puzzle struct {
-	Pre struct {
-		Authors       []string
-		Attachments   []Attachment
-		Scripts       []Attachment
-		AnswerPattern string
-		Body          string
-	}
-	Post struct {
-		Objective string
-		Success   struct {
-			Acceptable string
-			Mastery    string
-		}
-		KSAs []string
-	}
-	Debug struct {
-		Log     []string
-		Errors  []string
-		Hints   []string
-		Summary string
-	}
-	Answers []string
-}
-
-// Attachment carries information about an attached file.
-type Attachment struct {
-	Filename       string // Filename presented as part of puzzle
-	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
-	Listed         bool   // Whether this file is listed as an attachment
-}
-
 // T contains everything required for a transpilation invocation (across the nation).
 type T struct {
 	// What action to take
@@ -95,6 +62,8 @@ func (t *T) Handle(action string) error {
 		return t.PrintInventory()
 	case "open":
 		return t.Open()
+	case "mothball":
+		return t.Mothball()
 	default:
 		return fmt.Errorf("Unimplemented action: %s", action)
 	}
@@ -134,6 +103,7 @@ func (t *T) Open() error {
 
 	switch t.Filename {
 	case "puzzle.json", "":
+		// BUG(neale): we need a way to tell the transpiler to strip answers
 		p, err := c.Puzzle(t.Points)
 		if err != nil {
 			return err
@@ -154,6 +124,19 @@ func (t *T) Open() error {
 		}
 	}
 
+	return nil
+}
+
+// Mothball writes a mothball to the writer.
+func (t *T) Mothball() error {
+	c := t.NewCategory(t.Cat)
+	mb, err := Mothball(c)
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(t.w, mb); err != nil {
+		return err
+	}
 	return nil
 }
 
