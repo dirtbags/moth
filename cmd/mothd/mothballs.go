@@ -88,15 +88,15 @@ func (m *Mothballs) Inventory() []Category {
 }
 
 // CheckAnswer returns an error if the provided answer is in any way incorrect for the given category and points
-func (m *Mothballs) CheckAnswer(cat string, points int, answer string) error {
+func (m *Mothballs) CheckAnswer(cat string, points int, answer string) (bool, error) {
 	zfs, ok := m.getCat(cat)
 	if !ok {
-		return fmt.Errorf("No such category: %s", cat)
+		return false, fmt.Errorf("No such category: %s", cat)
 	}
 
 	af, err := zfs.Open("answers.txt")
 	if err != nil {
-		return fmt.Errorf("No answers.txt file")
+		return false, fmt.Errorf("No answers.txt file")
 	}
 	defer af.Close()
 
@@ -104,11 +104,11 @@ func (m *Mothballs) CheckAnswer(cat string, points int, answer string) error {
 	scanner := bufio.NewScanner(af)
 	for scanner.Scan() {
 		if scanner.Text() == needle {
-			return nil
+			return true, nil
 		}
 	}
 
-	return fmt.Errorf("Invalid answer")
+	return false, nil
 }
 
 // refresh refreshes internal state.

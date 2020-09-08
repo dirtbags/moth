@@ -9,24 +9,10 @@ import (
 	"os"
 	"sort"
 
-	"github.com/GoBike/envflag"
+	"github.com/dirtbags/moth/pkg/transpile"
+
 	"github.com/spf13/afero"
 )
-
-// Category defines the functionality required to be a puzzle category.
-type Category interface {
-	// Inventory lists every puzzle in the category.
-	Inventory() ([]int, error)
-
-	// Puzzle provides a Puzzle structure for the given point value.
-	Puzzle(points int) (Puzzle, error)
-
-	// Open returns an io.ReadCloser for the given filename.
-	Open(points int, filename string) (io.ReadCloser, error)
-
-	// Answer returns whether the given answer is correct.
-	Answer(points int, answer string) bool
-}
 
 // T contains everything required for a transpilation invocation (across the nation).
 type T struct {
@@ -39,7 +25,8 @@ type T struct {
 	Fs       afero.Fs
 }
 
-// ParseArgs parses command-line arguments into T, returning the action to take
+// ParseArgs parses command-line arguments into T, returning the action to take.
+// BUG(neale): CLI arguments are not related to how the CLI will be used.
 func (t *T) ParseArgs() string {
 	action := flag.String("action", "inventory", "Action to take: must be 'inventory', 'open', 'answer', or 'mothball'")
 	flag.StringVar(&t.Cat, "cat", "", "Puzzle category")
@@ -47,7 +34,7 @@ func (t *T) ParseArgs() string {
 	flag.StringVar(&t.Answer, "answer", "", "Answer to check for correctness, for 'answer' action")
 	flag.StringVar(&t.Filename, "filename", "", "Filename, for 'open' action")
 	basedir := flag.String("basedir", ".", "Base directory containing all puzzles")
-	envflag.Parse()
+	flag.Parse()
 
 	osfs := afero.NewOsFs()
 	t.Fs = afero.NewBasePathFs(osfs, *basedir)
@@ -130,7 +117,7 @@ func (t *T) Open() error {
 // Mothball writes a mothball to the writer.
 func (t *T) Mothball() error {
 	c := t.NewCategory(t.Cat)
-	mb, err := Mothball(c)
+	mb, err := transpile.Mothball(c)
 	if err != nil {
 		return err
 	}
@@ -141,8 +128,8 @@ func (t *T) Mothball() error {
 }
 
 // NewCategory returns a new Fs-backed category.
-func (t *T) NewCategory(name string) Category {
-	return NewFsCategory(t.Fs, name)
+func (t *T) NewCategory(name string) transpile.Category {
+	return transpile.NewFsCategory(t.Fs, name)
 }
 
 func main() {

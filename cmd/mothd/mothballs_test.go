@@ -81,16 +81,16 @@ func TestMothballs(t *testing.T) {
 		t.Error("This file shouldn't exist")
 	}
 
-	if err := m.CheckAnswer("pategory", 1, "answer"); err == nil {
+	if ok, _ := m.CheckAnswer("pategory", 1, "answer"); ok {
 		t.Error("Wrong answer marked right")
 	}
-	if err := m.CheckAnswer("pategory", 1, "answer123"); err != nil {
+	if _, err := m.CheckAnswer("pategory", 1, "answer123"); err != nil {
 		t.Error("Right answer marked wrong", err)
 	}
-	if err := m.CheckAnswer("pategory", 1, "answer456"); err != nil {
+	if _, err := m.CheckAnswer("pategory", 1, "answer456"); err != nil {
 		t.Error("Right answer marked wrong", err)
 	}
-	if err := m.CheckAnswer("nealegory", 1, "moo"); err == nil {
+	if ok, err := m.CheckAnswer("nealegory", 1, "moo"); ok {
 		t.Error("Checking answer in non-existent category should fail")
 	} else if err.Error() != "No such category: nealegory" {
 		t.Error("Wrong error message")

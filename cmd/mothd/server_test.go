@@ -24,7 +24,7 @@ func NewTestServer() *MothServer {
 	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
 	go theme.Maintain(TestMaintenanceInterval)
 
-	return NewMothServer(puzzles, theme, state)
+	return NewMothServer(Configuration{Devel: true}, theme, state, puzzles)
 }
 
 func TestServer(t *testing.T) {

@@ -1,0 +1,11 @@
+# hours: when the contest is enabled
+#
+# Enable:  + timestamp
+# Disable: - timestamp
+#
+# You can have multiple start/stop times.
+# Whatever time is the most recent, wins.
+# Times in the future are ignored.
+
++ 2020-09-08T23:43:53Z
+- 3019-10-31T00:00:00Z

@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestPuzzleCommand(t *testing.T) {
-	pc := PuzzleCommand{
+func TestProviderCommand(t *testing.T) {
+	pc := ProviderCommand{
 		Path: "testdata/testpiler.sh",
 	}
 
@@ -34,14 +34,14 @@ func TestPuzzleCommand(t *testing.T) {
 		}
 	}
 
-	if err := pc.CheckAnswer("pategory", 1, "answer"); err != nil {
+	if ok, err := pc.CheckAnswer("pategory", 1, "answer"); !ok {
 		t.Errorf("Correct answer for pategory: %v", err)
 	}
-	if err := pc.CheckAnswer("pategory", 1, "wrong"); err == nil {
+	if ok, _ := pc.CheckAnswer("pategory", 1, "wrong"); ok {
 		t.Errorf("Wrong answer for pategory judged correct")
 	}
 
-	if err := pc.CheckAnswer("pategory", 2, "answer"); err == nil {
+	if _, err := pc.CheckAnswer("pategory", 2, "answer"); err == nil {
 		t.Errorf("Internal error not returned")
 	} else if ee, ok := err.(*exec.ExitError); ok {
 		if string(ee.Stderr) != "Internal error\n" {

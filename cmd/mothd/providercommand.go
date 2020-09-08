@@ -4,7 +4,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -15,14 +14,14 @@ import (
 	"time"
 )
 
-// PuzzleCommand specifies a command to run for the puzzle API
-type PuzzleCommand struct {
+// ProviderCommand specifies a command to run for the puzzle API
+type ProviderCommand struct {
 	Path string
 	Args []string
 }
 
 // Inventory runs with "action=inventory", and parses the output into a category list.
-func (pc PuzzleCommand) Inventory() (inv []Category) {
+func (pc ProviderCommand) Inventory() (inv []Category) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
@@ -62,16 +61,18 @@ func (pc PuzzleCommand) Inventory() (inv []Category) {
 	return
 }
 
+// NullReadSeekCloser wraps a no-op Close method around an io.ReadSeeker.
 type NullReadSeekCloser struct {
 	io.ReadSeeker
 }
 
+// Close does nothing.
 func (f NullReadSeekCloser) Close() error {
 	return nil
 }
 
 // Open passes its arguments to the command with "action=open".
-func (pc PuzzleCommand) Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
+func (pc ProviderCommand) Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
@@ -91,7 +92,7 @@ func (pc PuzzleCommand) Open(cat string, points int, path string) (ReadSeekClose
 // CheckAnswer passes its arguments to the command with "action=answer".
 // If the command exits successfully and sends "correct" to stdout,
 // nil is returned.
-func (pc PuzzleCommand) CheckAnswer(cat string, points int, answer string) error {
+func (pc ProviderCommand) CheckAnswer(cat string, points int, answer string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
@@ -105,9 +106,9 @@ func (pc PuzzleCommand) CheckAnswer(cat string, points int, answer string) error
 	stdout, err := cmd.Output()
 	if ee, ok := err.(*exec.ExitError); ok {
 		log.Printf("%s: %s", pc.Path, string(ee.Stderr))
-		return err
+		return false, err
 	} else if err != nil {
-		return err
+		return false, err
 	}
 	result := strings.TrimSpace(string(stdout))
 
@@ -115,12 +116,12 @@ func (pc PuzzleCommand) CheckAnswer(cat string, points int, answer string) error
 		if result == "" {
 			result = "Nothing written to stdout"
 		}
-		return fmt.Errorf("Wrong answer: %s", result)
+		return false, nil
 	}
 
-	return nil
+	return true, nil
 }
 
-// Maintain does nothing: a command puzzle provider has no housekeeping
-func (pc PuzzleCommand) Maintain(updateInterval time.Duration) {
+// Maintain does nothing: a command puzzle ProviderCommand has no housekeeping
+func (pc ProviderCommand) Maintain(updateInterval time.Duration) {
 }

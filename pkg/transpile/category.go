@@ -1,11 +1,9 @@
-package main
+package transpile
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"log"
 	"os/exec"
 	"strconv"
@@ -14,6 +12,21 @@ import (
 
 	"github.com/spf13/afero"
 )
+
+// Category defines the functionality required to be a puzzle category.
+type Category interface {
+	// Inventory lists every puzzle in the category.
+	Inventory() ([]int, error)
+
+	// Puzzle provides a Puzzle structure for the given point value.
+	Puzzle(points int) (Puzzle, error)
+
+	// Open returns an io.ReadCloser for the given filename.
+	Open(points int, filename string) (ReadSeekCloser, error)
+
+	// Answer returns whether the given answer is correct.
+	Answer(points int, answer string) bool
+}
 
 // NopReadCloser provides an io.ReadCloser which does nothing.
 type NopReadCloser struct {
@@ -81,7 +94,7 @@ func (c FsCategory) Puzzle(points int) (Puzzle, error) {
 }
 
 // Open returns an io.ReadCloser for the given filename.
-func (c FsCategory) Open(points int, filename string) (io.ReadCloser, error) {
+func (c FsCategory) Open(points int, filename string) (ReadSeekCloser, error) {
 	return NewFsPuzzle(c.fs, points).Open(filename)
 }
 
@@ -149,18 +162,13 @@ func (c FsCommandCategory) Puzzle(points int) (Puzzle, error) {
 }
 
 // Open returns an io.ReadCloser for the given filename.
-func (c FsCommandCategory) Open(points int, filename string) (io.ReadCloser, error) {
+func (c FsCommandCategory) Open(points int, filename string) (ReadSeekCloser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, c.command, "file", strconv.Itoa(points), filename)
 	stdout, err := cmd.Output()
-	buf := ioutil.NopCloser(bytes.NewBuffer(stdout))
-	if err != nil {
-		return buf, err
-	}
-
-	return buf, nil
+	return nopCloser{bytes.NewReader(stdout)}, err
 }
 
 // Answer checks whether an answer is correct.

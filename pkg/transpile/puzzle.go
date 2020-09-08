@@ -1,4 +1,4 @@
-package main
+package transpile
 
 import (
 	"bufio"
@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/mail"
 	"os/exec"
@@ -92,13 +91,20 @@ type StaticAttachment struct {
 	Listed         bool   // Whether this file is listed as an attachment
 }
 
+// ReadSeekCloser provides io.Reader, io.Seeker, and io.Closer.
+type ReadSeekCloser interface {
+	io.Reader
+	io.Seeker
+	io.Closer
+}
+
 // PuzzleProvider establishes the functionality required to provide one puzzle.
 type PuzzleProvider interface {
 	// Puzzle returns a Puzzle struct for the current puzzle.
 	Puzzle() (Puzzle, error)
 
 	// Open returns a newly-opened file.
-	Open(filename string) (io.ReadCloser, error)
+	Open(filename string) (ReadSeekCloser, error)
 
 	// Answer returns whether the provided answer is correct.
 	Answer(answer string) bool
@@ -160,8 +166,8 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 }
 
 // Open returns a newly-opened file.
-func (fp FsPuzzle) Open(name string) (io.ReadCloser, error) {
-	empty := ioutil.NopCloser(new(bytes.Buffer))
+func (fp FsPuzzle) Open(name string) (ReadSeekCloser, error) {
+	empty := nopCloser{new(bytes.Reader)}
 	static, _, err := fp.staticPuzzle()
 	if err != nil {
 		return empty, err
@@ -343,15 +349,23 @@ func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
 	return puzzle, nil
 }
 
+type nopCloser struct {
+	io.ReadSeeker
+}
+
+func (c nopCloser) Close() error {
+	return nil
+}
+
 // Open returns a newly-opened file.
-func (fp FsCommandPuzzle) Open(filename string) (io.ReadCloser, error) {
+// BUG(neale): FsCommandPuzzle.Open() reads everything into memory, and will suck for large files.
+func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, fp.command, "-file", filename)
-	// BUG(neale): FsCommandPuzzle.Open() reads everything into memory, and will suck for large files.
 	out, err := cmd.Output()
-	buf := ioutil.NopCloser(bytes.NewBuffer(out))
+	buf := nopCloser{bytes.NewReader(out)}
 	if err != nil {
 		return buf, err
 	}

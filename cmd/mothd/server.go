@@ -22,11 +22,14 @@ type ReadSeekCloser interface {
 	io.Closer
 }
 
+// Configuration stores information about server configuration.
+type Configuration struct {
+	Devel bool
+}
+
 // StateExport is given to clients requesting the current state.
 type StateExport struct {
-	Config struct {
-		Devel bool
-	}
+	Config    Configuration
 	Messages  string
 	TeamNames map[string]string
 	PointsLog award.List
@@ -37,7 +40,7 @@ type StateExport struct {
 type PuzzleProvider interface {
 	Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error)
 	Inventory() []Category
-	CheckAnswer(cat string, points int, answer string) error
+	CheckAnswer(cat string, points int, answer string) (bool, error)
 	Maintainer
 }
 
@@ -68,17 +71,19 @@ type Maintainer interface {
 
 // MothServer gathers together the providers that make up a MOTH server.
 type MothServer struct {
-	Puzzles PuzzleProvider
-	Theme   ThemeProvider
-	State   StateProvider
+	PuzzleProviders []PuzzleProvider
+	Theme           ThemeProvider
+	State           StateProvider
+	Config          Configuration
 }
 
 // NewMothServer returns a new MothServer.
-func NewMothServer(puzzles PuzzleProvider, theme ThemeProvider, state StateProvider) *MothServer {
+func NewMothServer(config Configuration, theme ThemeProvider, state StateProvider, puzzleProviders ...PuzzleProvider) *MothServer {
 	return &MothServer{
-		Puzzles: puzzles,
-		Theme:   theme,
-		State:   state,
+		Config:          config,
+		PuzzleProviders: puzzleProviders,
+		Theme:           theme,
+		State:           state,
 	}
 }
 
@@ -99,15 +104,52 @@ type MothRequestHandler struct {
 }
 
 // PuzzlesOpen opens a file associated with a puzzle.
-func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
+// BUG(neale): Multiple providers with the same category name are not detected or handled well.
+func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (r ReadSeekCloser, ts time.Time, err error) {
 	export := mh.ExportState()
+	found := false
 	for _, p := range export.Puzzles[cat] {
 		if p == points {
-			return mh.Puzzles.Open(cat, points, path)
+			found = true
+		}
+	}
+	if !found {
+		return nil, time.Time{}, fmt.Errorf("Category not found")
+	}
+
+	// Try every provider until someone doesn't return an error
+	for _, provider := range mh.PuzzleProviders {
+		r, ts, err = provider.Open(cat, points, path)
+		if err != nil {
+			return r, ts, err
 		}
 	}
 
-	return nil, time.Time{}, fmt.Errorf("Puzzle locked")
+	return
+}
+
+// CheckAnswer returns an error if answer is not a correct answer for puzzle points in category cat
+func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
+	correct := false
+	for _, provider := range mh.PuzzleProviders {
+		if ok, err := provider.CheckAnswer(cat, points, answer); err != nil {
+			return err
+		} else if ok {
+			correct = true
+		}
+	}
+	if !correct {
+		return fmt.Errorf("Incorrect answer")
+	}
+
+	msg := fmt.Sprintf("GOOD %s %s %s %d", mh.participantID, mh.teamID, cat, points)
+	mh.State.LogEvent(msg)
+
+	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
+		return fmt.Errorf("Error awarding points: %s", err)
+	}
+
+	return nil
 }
 
 // ThemeOpen opens a file from a theme.
@@ -124,29 +166,13 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 	return mh.State.SetTeamName(mh.teamID, teamName)
 }
 
-// CheckAnswer returns an error if answer is not a correct answer for puzzle points in category cat
-func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
-	if err := mh.Puzzles.CheckAnswer(cat, points, answer); err != nil {
-		msg := fmt.Sprintf("BAD %s %s %s %d %s", mh.participantID, mh.teamID, cat, points, err.Error())
-		mh.State.LogEvent(msg)
-		return err
-	}
-
-	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
-		msg := fmt.Sprintf("GOOD %s %s %s %d", mh.participantID, mh.teamID, cat, points)
-		mh.State.LogEvent(msg)
-		return err
-	}
-
-	return nil
-}
-
 // ExportState anonymizes team IDs and returns StateExport.
 // If a teamID has been specified for this MothRequestHandler,
 // the anonymized team name for this teamID has the special value "self".
 // If not, the puzzles list is empty.
 func (mh *MothRequestHandler) ExportState() *StateExport {
 	export := StateExport{}
+	export.Config = mh.Config
 
 	teamName, _ := mh.State.TeamName(mh.teamID)
 
@@ -182,20 +208,22 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 		// but then we got a bad reputation on some secretive blacklist,
 		// and now the Navy can't register for events.
 
-		for _, category := range mh.Puzzles.Inventory() {
-			// Append sentry (end of puzzles)
-			allPuzzles := append(category.Puzzles, 0)
+		for _, provider := range mh.PuzzleProviders {
+			for _, category := range provider.Inventory() {
+				// Append sentry (end of puzzles)
+				allPuzzles := append(category.Puzzles, 0)
 
-			max := maxSolved[category.Name]
+				max := maxSolved[category.Name]
 
-			puzzles := make([]int, 0, len(allPuzzles))
-			for i, val := range allPuzzles {
-				puzzles = allPuzzles[:i+1]
-				if val > max {
-					break
+				puzzles := make([]int, 0, len(allPuzzles))
+				for i, val := range allPuzzles {
+					puzzles = allPuzzles[:i+1]
+					if !mh.Config.Devel && (val > max) {
+						break
+					}
 				}
+				export.Puzzles[category.Name] = puzzles
 			}
-			export.Puzzles[category.Name] = puzzles
 		}
 	}
 

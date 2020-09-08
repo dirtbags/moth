@@ -1,12 +1,6 @@
-package main
+package transpile
 
 import (
-	"bytes"
-	"encoding/json"
-	"strings"
-	"testing"
-
-	"github.com/dirtbags/moth/pkg/transpile"
 	"github.com/spf13/afero"
 )
 
@@ -56,55 +50,4 @@ body
 	afero.WriteFile(fs, "unbroken/1/moo.txt", []byte("Moo."), 0644)
 	afero.WriteFile(fs, "unbroken/2/puzzle.md", testMothRfc822, 0644)
 	return fs
-}
-
-func TestEverything(t *testing.T) {
-	stdout := new(bytes.Buffer)
-	tp := T{
-		w:  stdout,
-		Fs: newTestFs(),
-	}
-
-	if err := tp.Handle("inventory"); err != nil {
-		t.Error(err)
-	}
-	if strings.TrimSpace(stdout.String()) != `{"cat0":[1,2,3,4,5,10,20,21,22],"cat1":[93],"unbroken":[1,2]}` {
-		t.Errorf("Bad inventory: %#v", stdout.String())
-	}
-
-	stdout.Reset()
-	tp.Cat = "cat0"
-	tp.Points = 1
-	if err := tp.Handle("open"); err != nil {
-		t.Error(err)
-	}
-
-	p := transpile.Puzzle{}
-	if err := json.Unmarshal(stdout.Bytes(), &p); err != nil {
-		t.Error(err)
-	}
-	if (len(p.Answers) != 1) || (p.Answers[0] != "YAML answer") {
-		t.Error("Didn't return the right object", p)
-	}
-
-	stdout.Reset()
-	tp.Filename = "moo.txt"
-	if err := tp.Handle("open"); err != nil {
-		t.Error(err)
-	}
-	if stdout.String() != "Moo." {
-		t.Error("Wrong file pulled")
-	}
-
-	stdout.Reset()
-	tp.Cat = "unbroken"
-	if err := tp.Handle("mothball"); err != nil {
-		t.Error(err)
-	}
-	if stdout.Len() < 200 {
-		t.Error("That's way too short to be a mothball")
-	}
-	if stdout.String()[:2] != "PK" {
-		t.Error("This mothball isn't a zip file!")
-	}
 }
