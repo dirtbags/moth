@@ -1,9 +1,15 @@
-Summary: Using JavaScript Input Helpers
-Author: neale
-Script: helpers.js
-Script: draggable.js
-Answer: helper
-
+---
+pre:
+  authors: 
+    - neale
+  scripts:
+    - filename: helpers.js
+    - filename: draggable.js
+answers:
+  - helper
+debug:
+  summary: Using JavaScript Input Helpers
+---
 MOTH only takes static answers:
 you can't, for instance, write code to check answer correctness.
 But you can provide as many correct answers as you like in a single puzzle.
@@ -18,7 +24,7 @@ This is just a demonstration page.
 You will probably only want one of these in a page,
 to avoid confusing people.
 
-RFC3339 Timestamp
+### RFC3339 Timestamp
 <div class="answer" data-join="">
   <input type="date">
   <input type="hidden" value="T">
@@ -26,10 +32,10 @@ RFC3339 Timestamp
   <input type="hidden" value="Z">
 </div>
 
-All lower-case letters
+### All lower-case letters
 <input class="answer lower">
 
-Multiple concatenated values
+### Multiple concatenated values
 <div class="answer lower">
   <input type="color">
   <input type="number">
@@ -37,22 +43,32 @@ Multiple concatenated values
   <input>
 </div>
 
-Free input, sorted, concatenated values
+### Free input, sorted, concatenated values
 <ul class="answer lower sort">
   <li><input></li>
   <li><button class="expand" title="Add another input">➕</button><l/i>
 </ul>
 
-User-draggable values
+### User-draggable values
 <ul class="answer">
   <li draggable="true"><input value="First" readonly></li>
   <li draggable="true"><input value="Third" readonly></li>
   <li draggable="true"><input value="Second" readonly></li>
 </ul>
 
-Select from an ordered list of options
+### Select from an ordered list of options
 <ul class="answer">
   <li><input type="checkbox" value="horn">Horns</li>
   <li><input type="checkbox" value="hoof">Hooves</li>
   <li><input type="checkbox" value="antler">Antlers</li>
 </ul>
+
+### Substring matches
+#### Any substring
+<input class="answer substring">
+
+#### Only if at the beginning
+<input class="answer substring anchor-beg">
+
+#### Only if at the end
+<input class="answer substring anchor-end">

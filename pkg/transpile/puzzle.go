@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -27,9 +28,9 @@ type Puzzle struct {
 		Authors       []string
 		Attachments   []string
 		Scripts       []string
-		AnswerHashes  []string
-		AnswerPattern string
 		Body          string
+		AnswerPattern string
+		AnswerHashes  []string
 	}
 	Post struct {
 		Objective string
@@ -89,7 +90,6 @@ type StaticPuzzle struct {
 type StaticAttachment struct {
 	Filename       string // Filename presented as part of puzzle
 	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
-	Listed         bool   // Whether this file is listed as an attachment
 }
 
 // ReadSeekCloser provides io.Reader, io.Seeker, and io.Closer.
@@ -270,11 +270,6 @@ func legacyAttachmentParser(val []string) []StaticAttachment {
 		} else {
 			cur.Filename = cur.FilesystemPath
 		}
-		if (len(parts) > 2) && (parts[2] == "hidden") {
-			cur.Listed = false
-		} else {
-			cur.Listed = true
-		}
 		ret[idx] = cur
 	}
 	return ret
@@ -351,7 +346,9 @@ func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
 	cmd := exec.CommandContext(ctx, fp.command)
 	cmd.Dir = path.Dir(fp.command)
 	stdout, err := cmd.Output()
-	if err != nil {
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		return Puzzle{}, errors.New(string(exiterr.Stderr))
+	} else if err != nil {
 		return Puzzle{}, err
 	}
 
@@ -381,7 +378,7 @@ func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, fp.command, "-file", filename)
+	cmd := exec.CommandContext(ctx, fp.command, "--file", filename)
 	cmd.Dir = path.Dir(fp.command)
 	out, err := cmd.Output()
 	buf := nopCloser{bytes.NewReader(out)}
@@ -397,7 +394,7 @@ func (fp FsCommandPuzzle) Answer(answer string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, fp.command, "-answer", answer)
+	cmd := exec.CommandContext(ctx, fp.command, "--answer", answer)
 	cmd.Dir = path.Dir(fp.command)
 	out, err := cmd.Output()
 	if err != nil {

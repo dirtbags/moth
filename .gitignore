@@ -8,3 +8,4 @@ build/
 cache/
 target/
 puzzles
+__debug_bin

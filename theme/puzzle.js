@@ -48,33 +48,20 @@ async function sha256Hash(message) {
 }
 
 // Is the provided answer possibly correct?
-async function possiblyCorrect(answer) {
-  let pattern = window.puzzle.Pre.AnswerPattern || []
+async function checkAnswer(answer) {
+  let answerHashes = []
+  answerHashes.push(djb2hash(answer))
+  answerHashes.push(await sha256Hash(answer))
 
-  for (let correctHash of window.puzzle.Pre.AnswerHashes) {    
-    if (djb2hash(answer) == correctHash) {
-      return answer
-    }
-    for (let end = 0; end <= answer.length; end += 1) {
-      if (pattern.includes("end") && (end != answer.length)) {
-        continue
-      }
-      for (let beg = 0; beg < answer.length; beg += 1) {
-        if (pattern.includes("begin") && (beg != 0)) {
-          continue
-        }
-        let sub = answer.substring(beg, end)
-        let digest = await sha256Hash(sub)
-        
-        if (digest == correctHash) {
-          return sub
-        }
+  for (let hash of answerHashes) {
+    for (let correctHash of window.puzzle.Pre.AnswerHashes) {    
+      if (hash == correctHash) {
+        return true
       }
     }
   }
   return false
 }
-
 
 // Pop up a message
 function toast(message, timeout=5000) {
@@ -196,7 +183,7 @@ function answerCheck(e) {
     return
   }
   
-  possiblyCorrect(answer)
+  checkAnswer(answer)
   .then (correct => {
     document.querySelector("[name=xAnswer").value = correct || answer
     if (correct) {

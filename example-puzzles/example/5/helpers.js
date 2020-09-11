@@ -1,6 +1,6 @@
 // jshint asi:true
 
-function helperUpdateAnswer(event) {
+async function helperUpdateAnswer(event) {
   let e = event.currentTarget
   let value = e.value
   let inputs = e.querySelectorAll("input")
@@ -24,7 +24,11 @@ function helperUpdateAnswer(event) {
     if (join === undefined) {
       join = ","
     }
-    value = values.join(join)
+    if (values.length == 0) {
+      value = "None"
+    } else {
+      value = values.join(join)
+    }
   }
 
   // First make any adjustments to the value
@@ -33,6 +37,35 @@ function helperUpdateAnswer(event) {
   }
   if (e.classList.contains("upper")) {
     value = value.toUpperCase()
+  }
+
+  // "substrings" answers try all substrings. If any are the answer, they're filled in.
+  if (e.classList.contains("substring")) {
+    let validated = null
+    let anchorEnd = e.classList.contains("anchor-end")
+    let anchorBeg = e.classList.contains("anchor-beg")
+
+    for (let end = 0; end <= value.length; end += 1) {
+      for (let beg = 0; beg < value.length; beg += 1) {
+        if (anchorEnd && (end != value.length)) {
+          continue
+        }
+        if (anchorBeg && (beg != 0)) {
+          continue
+        }
+        let sub = value.substring(beg, end)
+        if (await checkAnswer(sub)) {
+          validated = sub
+        }
+      }
+    }
+
+    value = validated
+  }
+
+  // If anything zeroed out value, don't update the answer field
+  if (!value) {
+    return
   }
 
   let answer = document.querySelector("#answer")
@@ -78,15 +111,16 @@ function helperActivate(e) {
   }
 }
 
-
-function helperInit(event) {
-  for (let e of document.querySelectorAll(".answer")) {
-    helperActivate(e)
+{
+  let init = function(event) {
+    for (let e of document.querySelectorAll(".answer")) {
+      helperActivate(e)
+    }
   }
-}
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", helperInit);
-} else {
-  helperInit();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init)
+  } else {
+    init()
+  }
 }

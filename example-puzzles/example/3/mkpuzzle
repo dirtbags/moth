@@ -1,34 +1,55 @@
-#! /bin/sh
+#! /usr/bin/python3
 
-number=$(seq 20 500 | shuf -n 1)
-answer=$(echo $(grep -v "['A-Z]" /usr/share/dict/words | shuf -n 4))
+import argparse
+import json
+import os
+import random
+import shutil
+import sys
 
-case "$1:$2" in
-    :)
-        cat <<EOT
-{
-    "Pre": {
-        "Authors": ["neale"],
-        "Body": "<p>Dynamic puzzles are provided with a JSON-generating <code>mkpuzzles</code> program in the puzzle directory.</p><img src='salad.jpg'>",
-        "Attachments": ["salad.jpg"]
-    },
-    "Answers": [
-        "$answer"
-    ],
-    "Debug": {
-        "Summary": "Dynamic puzzles",
-        "Hints": [
-            "Check the debug output to get the answer." 
+parser = argparse.ArgumentParser("Generate a puzzle")
+parser.add_argument("--file", dest="file", help="File to provide, instead of puzzle")
+parser.add_argument("--answer", dest="answer", help="Answer to check, instead of providing puzzle")
+args = parser.parse_args()
+
+seed = hash(os.getenv("SEED"))
+random.seed(seed)
+
+words = ["apple", "pear", "peach", "tangerine", "orange", "potato", "carrot", "pea"]
+answer = ' '.join(random.sample(words, 4))
+
+if args.file:
+    f = open(args.file, "rb")
+    shutil.copyfileobj(f, sys.stdout.buffer)
+elif args.answer:
+    if args.answer == answer:
+        print("correct")
+    else:
+        print("incorrect")
+else:
+    number = random.randint(20, 500)
+    obj = {
+        "Pre": {
+            "Authors": ["neale"],
+            "Body": (
+                "<p>Dynamic puzzles are provided with a JSON-generating <code>mkpuzzles</code> program in the puzzle directory.</p>"
+                "<p>You can write <code>mkpuzzles</code> in any language you like. This puzzle was written in Python 3.</p>"
+                "<p>Here is some salad:<img src='salad.jpg'></p>"
+            ),
+            "Attachments": ["salad.jpg"],
+        },
+        "Answers": [
+            answer,
         ],
-        "Errors": [],
-        "Log": [
-            "$number is a positive integer"
-        ]
+        "Debug": {
+            "Summary": "Dynamic puzzles",
+            "Hints": [
+                "Check the debug output to get the answer." ,
+            ],
+            "Errors": [],
+            "Log": [
+                "%d is a positive integer" % number,
+            ],
+        }
     }
-}
-EOT
-        ;;
-    -file:salad.jpg)
-        cat salad.jpg
-        ;;
-esac
+    json.dump(obj, sys.stdout)
