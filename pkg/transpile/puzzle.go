@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/mail"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -110,24 +111,40 @@ type PuzzleProvider interface {
 	Answer(answer string) bool
 }
 
-// NewFsPuzzle returns a new FsPuzzle for points.
-func NewFsPuzzle(fs afero.Fs, points int) PuzzleProvider {
-	pfs := NewRecursiveBasePathFs(fs, strconv.Itoa(points))
-	if info, err := pfs.Stat("mkpuzzle"); (err == nil) && (info.Mode()&0100 != 0) {
-		if command, err := pfs.RealPath(info.Name()); err != nil {
-			log.Println("Unable to resolve full path to", info.Name(), pfs)
-		} else {
-			return FsCommandPuzzle{
-				fs:      pfs,
-				command: command,
-				timeout: 2 * time.Second,
+// NewFsPuzzle returns a new FsPuzzle.
+func NewFsPuzzle(fs afero.Fs) PuzzleProvider {
+	var command string
+
+	if info, err := fs.Stat("mkpuzzle"); (err == nil) && (info.Mode()&0100 != 0) {
+		// Try to get the actual path to the executable
+		if pfs, ok := fs.(*RecursiveBasePathFs); ok {
+			if command, err = pfs.RealPath(info.Name()); err != nil {
+				log.Println("Unable to resolve full path to", info.Name(), pfs)
+			}
+		} else if pfs, ok := fs.(*afero.BasePathFs); ok {
+			if command, err = pfs.RealPath(info.Name()); err != nil {
+				log.Println("Unable to resolve full path to", info.Name(), pfs)
 			}
 		}
 	}
 
-	return FsPuzzle{
-		fs: pfs,
+	if command != "" {
+		return FsCommandPuzzle{
+			fs:      fs,
+			command: command,
+			timeout: 2 * time.Second,
+		}
 	}
+
+	return FsPuzzle{
+		fs: fs,
+	}
+
+}
+
+// NewFsPuzzlePoints returns a new FsPuzzle for points.
+func NewFsPuzzlePoints(fs afero.Fs, points int) PuzzleProvider {
+	return NewFsPuzzle(NewRecursiveBasePathFs(fs, strconv.Itoa(points)))
 }
 
 // FsPuzzle is a single puzzle's directory.
@@ -332,6 +349,7 @@ func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, fp.command)
+	cmd.Dir = path.Dir(fp.command)
 	stdout, err := cmd.Output()
 	if err != nil {
 		return Puzzle{}, err
@@ -364,6 +382,7 @@ func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, fp.command, "-file", filename)
+	cmd.Dir = path.Dir(fp.command)
 	out, err := cmd.Output()
 	buf := nopCloser{bytes.NewReader(out)}
 	if err != nil {
@@ -379,6 +398,7 @@ func (fp FsCommandPuzzle) Answer(answer string) bool {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, fp.command, "-answer", answer)
+	cmd.Dir = path.Dir(fp.command)
 	out, err := cmd.Output()
 	if err != nil {
 		log.Printf("ERROR: checking answer: %s", err)

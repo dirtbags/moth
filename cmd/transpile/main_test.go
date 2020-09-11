@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"strings"
+	"log"
 	"testing"
 
 	"github.com/dirtbags/moth/pkg/transpile"
@@ -23,62 +23,51 @@ pre:
 ---
 YAML body
 `)
-var testMothRfc822 = []byte(`author: test
-Author: Arthur
-author: Fred Flintstone
-answer: RFC822 answer
-
-RFC822 body
-`)
 
 func newTestFs() afero.Fs {
 	fs := afero.NewMemMapFs()
 	afero.WriteFile(fs, "cat0/1/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/1/moo.txt", []byte("Moo."), 0644)
-	afero.WriteFile(fs, "cat0/2/puzzle.md", testMothRfc822, 0644)
+	afero.WriteFile(fs, "cat0/1/moo.txt", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/2/puzzle.moth", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/3/puzzle.moth", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/4/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/5/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/10/puzzle.md", []byte(`---
-Answers:
-  - moo
-Authors:
-  - bad field
----
-body
-`), 0644)
-	afero.WriteFile(fs, "cat0/20/puzzle.md", []byte("Answer: no\nBadField: yes\n\nbody\n"), 0644)
-	afero.WriteFile(fs, "cat0/21/puzzle.md", []byte("Answer: broken\nSpooon\n"), 0644)
-	afero.WriteFile(fs, "cat0/22/puzzle.md", []byte("---\nanswers:\n  - pencil\npre:\n unused-field: Spooon\n---\nSpoon?\n"), 0644)
-	afero.WriteFile(fs, "cat1/93/puzzle.md", []byte("Answer: no\n\nbody"), 0644)
-	afero.WriteFile(fs, "cat1/barney/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/10/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "unbroken/1/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "unbroken/1/moo.txt", []byte("Moo."), 0644)
-	afero.WriteFile(fs, "unbroken/2/puzzle.md", testMothRfc822, 0644)
+	afero.WriteFile(fs, "unbroken/2/puzzle.md", testMothYaml, 0644)
 	return fs
+}
+
+func (tp T) Run(args ...string) error {
+	tp.Args = append([]string{"transpile"}, args...)
+	command, err := tp.ParseArgs()
+	log.Println(tp.fs)
+	if err != nil {
+		return err
+	}
+	return command()
 }
 
 func TestEverything(t *testing.T) {
 	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
 	tp := T{
-		w:  stdout,
-		Fs: newTestFs(),
+		Stdout: stdout,
+		Stderr: stderr,
+		BaseFs: newTestFs(),
 	}
 
-	if err := tp.Handle("inventory"); err != nil {
+	if err := tp.Run("inventory"); err != nil {
 		t.Error(err)
 	}
-	if strings.TrimSpace(stdout.String()) != `{"cat0":[1,2,3,4,5,10,20,21,22],"cat1":[93],"unbroken":[1,2]}` {
+	if stdout.String() != "cat0 1 2 3 4 5 10\nunbroken 1 2\n" {
 		t.Errorf("Bad inventory: %#v", stdout.String())
 	}
 
 	stdout.Reset()
-	tp.Cat = "cat0"
-	tp.Points = 1
-	if err := tp.Handle("open"); err != nil {
+	if err := tp.Run("open", "-dir=cat0/1"); err != nil {
 		t.Error(err)
 	}
-
 	p := transpile.Puzzle{}
 	if err := json.Unmarshal(stdout.Bytes(), &p); err != nil {
 		t.Error(err)
@@ -88,8 +77,7 @@ func TestEverything(t *testing.T) {
 	}
 
 	stdout.Reset()
-	tp.Filename = "moo.txt"
-	if err := tp.Handle("open"); err != nil {
+	if err := tp.Run("open", "-dir=cat0/1", "-file=moo.txt"); err != nil {
 		t.Error(err)
 	}
 	if stdout.String() != "Moo." {
@@ -97,8 +85,9 @@ func TestEverything(t *testing.T) {
 	}
 
 	stdout.Reset()
-	tp.Cat = "unbroken"
-	if err := tp.Handle("mothball"); err != nil {
+	if err := tp.Run("mothball", "-dir=cat0"); err != nil {
+		t.Log(tp.BaseFs)
+		t.Log(tp.fs)
 		t.Error(err)
 	}
 	if stdout.Len() < 200 {

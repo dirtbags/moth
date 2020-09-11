@@ -12,7 +12,7 @@ type Inventory map[string][]int
 
 // FsInventory returns a mapping of category names to puzzle point values.
 func FsInventory(fs afero.Fs) (Inventory, error) {
-	dirEnts, err := afero.ReadDir(fs, ".")
+	dirEnts, err := afero.ReadDir(fs, "")
 	if err != nil {
 		log.Print(err)
 		return nil, err

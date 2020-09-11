@@ -90,12 +90,12 @@ func (c FsCategory) Inventory() ([]int, error) {
 
 // Puzzle returns a Puzzle structure for the given point value.
 func (c FsCategory) Puzzle(points int) (Puzzle, error) {
-	return NewFsPuzzle(c.fs, points).Puzzle()
+	return NewFsPuzzlePoints(c.fs, points).Puzzle()
 }
 
 // Open returns an io.ReadCloser for the given filename.
 func (c FsCategory) Open(points int, filename string) (ReadSeekCloser, error) {
-	return NewFsPuzzle(c.fs, points).Open(filename)
+	return NewFsPuzzlePoints(c.fs, points).Open(filename)
 }
 
 // Answer checks whether an answer is correct.

@@ -14,84 +14,101 @@ import (
 	"github.com/spf13/afero"
 )
 
-// T contains everything required for a transpilation invocation (across the nation).
+// T represents the state of things
 type T struct {
-	// What action to take
-	w        io.Writer
-	Cat      string
-	Points   int
-	Answer   string
-	Filename string
-	Fs       afero.Fs
+	Stdout   io.Writer
+	Stderr   io.Writer
+	Args     []string
+	BaseFs   afero.Fs
+	fs       afero.Fs
+	filename string
+	answer   string
 }
 
-// ParseArgs parses command-line arguments into T, returning the action to take.
-// BUG(neale): CLI arguments are not related to how the CLI will be used.
-func (t *T) ParseArgs() string {
-	action := flag.String("action", "inventory", "Action to take: must be 'inventory', 'open', 'answer', or 'mothball'")
-	flag.StringVar(&t.Cat, "cat", "", "Puzzle category")
-	flag.IntVar(&t.Points, "points", 0, "Puzzle point value")
-	flag.StringVar(&t.Answer, "answer", "", "Answer to check for correctness, for 'answer' action")
-	flag.StringVar(&t.Filename, "filename", "", "Filename, for 'open' action")
-	basedir := flag.String("basedir", ".", "Base directory containing all puzzles")
-	flag.Parse()
+// Command is a function invoked by the user
+type Command func() error
 
-	osfs := afero.NewOsFs()
-	t.Fs = afero.NewBasePathFs(osfs, *basedir)
-
-	return *action
+func nothing() error {
+	return nil
 }
 
-// Handle performs the requested action
-func (t *T) Handle(action string) error {
-	switch action {
-	case "inventory":
-		return t.PrintInventory()
-	case "open":
-		return t.Open()
-	case "mothball":
-		return t.Mothball()
-	default:
-		return fmt.Errorf("Unimplemented action: %s", action)
+// ParseArgs parses arguments and runs the appropriate action.
+func (t *T) ParseArgs() (Command, error) {
+	var cmd Command
+
+	if len(t.Args) == 1 {
+		fmt.Fprintln(t.Stderr, "Usage: transpile COMMAND [flags]")
+		fmt.Fprintln(t.Stderr, "")
+		fmt.Fprintln(t.Stderr, " mothball: Compile a mothball")
+		fmt.Fprintln(t.Stderr, " inventory: Show category inventory")
+		fmt.Fprintln(t.Stderr, " open: Open a file for a puzzle")
+		fmt.Fprintln(t.Stderr, " answer: Check correctness of an answer")
+		return nothing, nil
 	}
+
+	flags := flag.NewFlagSet(t.Args[1], flag.ContinueOnError)
+	directory := flags.String("dir", "", "Work directory")
+
+	switch t.Args[1] {
+	case "mothball":
+		cmd = t.DumpMothball
+	case "inventory":
+		cmd = t.PrintInventory
+	case "open":
+		flags.StringVar(&t.filename, "file", "puzzle.json", "Filename to open")
+		cmd = t.DumpFile
+	case "answer":
+		flags.StringVar(&t.answer, "answer", "", "Answer to check")
+		cmd = t.CheckAnswer
+	default:
+		return nothing, fmt.Errorf("%s is not a valid command", t.Args[1])
+	}
+
+	flags.SetOutput(t.Stderr)
+	if err := flags.Parse(t.Args[2:]); err != nil {
+		return nothing, err
+	}
+	if *directory != "" {
+		t.fs = afero.NewBasePathFs(t.BaseFs, *directory)
+	} else {
+		t.fs = t.BaseFs
+	}
+	log.Println(t.Args, t.fs)
+
+	return cmd, nil
 }
 
 // PrintInventory prints a puzzle inventory to stdout
 func (t *T) PrintInventory() error {
-	inv := make(map[string][]int)
-
-	dirEnts, err := afero.ReadDir(t.Fs, ".")
+	inv, err := transpile.FsInventory(t.fs)
 	if err != nil {
 		return err
 	}
-	for _, ent := range dirEnts {
-		if ent.IsDir() {
-			c := t.NewCategory(ent.Name())
-			if puzzles, err := c.Inventory(); err != nil {
-				log.Print(err)
-				continue
-			} else {
-				sort.Ints(puzzles)
-				inv[ent.Name()] = puzzles
-			}
-		}
-	}
 
-	m := json.NewEncoder(t.w)
-	if err := m.Encode(inv); err != nil {
-		return err
+	cats := make([]string, 0, len(inv))
+	for cat := range inv {
+		cats = append(cats, cat)
+	}
+	sort.Strings(cats)
+	for _, cat := range cats {
+		puzzles := inv[cat]
+		fmt.Fprint(t.Stdout, cat)
+		for _, p := range puzzles {
+			fmt.Fprint(t.Stdout, " ", p)
+		}
+		fmt.Fprintln(t.Stdout)
 	}
 	return nil
 }
 
-// Open writes a file to the writer.
-func (t *T) Open() error {
-	c := t.NewCategory(t.Cat)
+// DumpFile writes a file to the writer.
+func (t *T) DumpFile() error {
+	puzzle := transpile.NewFsPuzzle(t.fs)
 
-	switch t.Filename {
+	switch t.filename {
 	case "puzzle.json", "":
 		// BUG(neale): we need a way to tell the transpiler to strip answers
-		p, err := c.Puzzle(t.Points)
+		p, err := puzzle.Puzzle()
 		if err != nil {
 			return err
 		}
@@ -99,14 +116,14 @@ func (t *T) Open() error {
 		if err != nil {
 			return err
 		}
-		t.w.Write(jp)
+		t.Stdout.Write(jp)
 	default:
-		f, err := c.Open(t.Points, t.Filename)
+		f, err := puzzle.Open(t.filename)
 		if err != nil {
 			return err
 		}
 		defer f.Close()
-		if _, err := io.Copy(t.w, f); err != nil {
+		if _, err := io.Copy(t.Stdout, f); err != nil {
 			return err
 		}
 	}
@@ -114,32 +131,43 @@ func (t *T) Open() error {
 	return nil
 }
 
-// Mothball writes a mothball to the writer.
-func (t *T) Mothball() error {
-	c := t.NewCategory(t.Cat)
+// DumpMothball writes a mothball to the writer.
+func (t *T) DumpMothball() error {
+	c := transpile.NewFsCategory(t.fs, "")
 	mb, err := transpile.Mothball(c)
 	if err != nil {
 		return err
 	}
-	if _, err := io.Copy(t.w, mb); err != nil {
+	if _, err := io.Copy(t.Stdout, mb); err != nil {
 		return err
 	}
 	return nil
 }
 
-// NewCategory returns a new Fs-backed category.
-func (t *T) NewCategory(name string) transpile.Category {
-	return transpile.NewFsCategory(t.Fs, name)
+// CheckAnswer prints whether an answer is correct.
+func (t *T) CheckAnswer() error {
+	c := transpile.NewFsPuzzle(t.fs)
+	if c.Answer(t.answer) {
+		fmt.Fprintln(t.Stdout, "correct")
+	} else {
+		fmt.Fprintln(t.Stdout, "wrong")
+	}
+	return nil
 }
 
 func main() {
 	// XXX: Convert puzzle.py to standalone thingies
 
 	t := &T{
-		w: os.Stdout,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+		Args:   os.Args,
 	}
-	action := t.ParseArgs()
-	if err := t.Handle(action); err != nil {
+	cmd, err := t.ParseArgs()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := cmd(); err != nil {
 		log.Fatal(err)
 	}
 }

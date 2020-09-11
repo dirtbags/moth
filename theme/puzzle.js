@@ -1,8 +1,18 @@
 // jshint asi:true
 
+// prettify adds classes to various types, returning an HTML string.
+function prettify(key, val) {
+  console.log(key, val)
+  switch (key) {
+    case "Body":
+      return '[HTML]'
+  }
+  return val
+}
+
 // devel_addin drops a bunch of development extensions into element e.
 // It will only modify stuff inside e.
-function devel_addin(obj, e) {
+function devel_addin(e) {
   let h = document.createElement("h2")
   e.appendChild(h)
   h.textContent = "Development Options"
@@ -11,44 +21,10 @@ function devel_addin(obj, e) {
   e.appendChild(g)
   g.innerText = "This section will not appear for participants."
   
-  let keys = Object.keys(obj)
-  keys.sort()
-  for (let key of keys) {
-    switch (key) {
-      case "body":
-        continue
-    }
-    let val = obj[key]
-
-    if ((! val) || (val.length === 0)) {
-      // Empty, skip it
-      continue
-    }
-
-    let d = document.createElement("div")
-    e.appendChild(d)
-    d.classList.add("kvpair")
-    
-    let ktxt = document.createElement("span")
-    d.appendChild(ktxt)
-    ktxt.textContent = key
-    
-    if (Array.isArray(val)) {
-      let vi = document.createElement("select")
-      d.appendChild(vi)
-      vi.multiple = true
-      for (let a of val) {
-        let opt = document.createElement("option")
-        vi.appendChild(opt)
-        opt.innerText = a
-      }
-    } else {
-      let vi = document.createElement("input")
-      d.appendChild(vi)
-      vi.value = val
-      vi.disabled = true
-    }
-  }
+  let hobj = JSON.stringify(window.puzzle, prettify, 2)
+  let d = e.appendChild(document.createElement("pre"))
+  d.classList.add("object")
+  d.innerHTML = hobj
 }
 
 // Hash routine used in v3.4 and earlier
@@ -73,22 +49,18 @@ async function sha256Hash(message) {
 
 // Is the provided answer possibly correct?
 async function possiblyCorrect(answer) {
-  for (let correctHash of window.puzzle.hashes) {
-    // CPU time is cheap. Especially if it's not our server's time.
-    // So we'll just try absolutely everything and see what happens.
-    // We're counting on hash collisions being extremely rare with the algorithm we use.
-    // And honestly, this pales in comparison to the amount of CPU being eaten by
-    // something like the github 404 page.
-    
+  let pattern = window.puzzle.Pre.AnswerPattern || []
+
+  for (let correctHash of window.puzzle.Pre.AnswerHashes) {    
     if (djb2hash(answer) == correctHash) {
       return answer
     }
     for (let end = 0; end <= answer.length; end += 1) {
-      if (window.puzzle.xAnchors && window.puzzle.xAnchors.includes("end") && (end != answer.length)) {
+      if (pattern.includes("end") && (end != answer.length)) {
         continue
       }
       for (let beg = 0; beg < answer.length; beg += 1) {
-        if (window.puzzle.xAnchors && window.puzzle.xAnchors.includes("begin") && (beg != 0)) {
+        if (pattern.includes("begin") && (beg != 0)) {
           continue
         }
         let sub = answer.substring(beg, end)
@@ -148,66 +120,63 @@ function submit(e) {
   })
 }
 
-function loadPuzzle(categoryName, points, puzzleId) {
+async function loadPuzzle(categoryName, points, puzzleId) {
   let puzzle = document.getElementById("puzzle")
   let base = "content/" + categoryName + "/" + puzzleId + "/"
 
-  fetch(base + "puzzle.json")
-  .then(resp => {
-    return resp.json()
-  })
-  .then(obj => {
-    // Populate authors
-    document.getElementById("authors").textContent = obj.authors.join(", ")
-    
-    // Make the whole puzzle available
-    window.puzzle = obj
-    
-    // If answers are provided, this is the devel server
-    if (obj.answers) {
-      devel_addin(obj, document.getElementById("devel"))
-    }
-    
-    // Load scripts
-    for (let script of obj.scripts) {
-      let st = document.createElement("script")
-      document.head.appendChild(st)
-      st.src = base + script
-    }
-    
-    // List associated files
-    for (let fn of obj.files) {
-      let li = document.createElement("li")
-      let a = document.createElement("a")
-      a.href = base + fn
-      a.innerText = fn
-      li.appendChild(a)
-      document.getElementById("files").appendChild(li)
-    }
-
-    // Prefix `base` to relative URLs in the puzzle body
-    let doc = new DOMParser().parseFromString(obj.body, "text/html")
-    for (let se of doc.querySelectorAll("[src],[href]")) {
-      se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
-    }
-    
-    // If a validation pattern was provided, set that
-    if (obj.pattern) {
-      document.querySelector("#answer").pattern = obj.pattern
-    }
-
-    // Replace puzzle children with what's in `doc`
+  let resp = await fetch(base + "puzzle.json")
+  if (! resp.ok) {
+    console.log(resp)
+    let err = await resp.text()
     Array.from(puzzle.childNodes).map(e => e.remove())
-    Array.from(doc.body.childNodes).map(e => puzzle.appendChild(e))
-  })
-  .catch(err => {
-    // Show error to the user
-    Array.from(puzzle.childNodes).map(e => e.remove())
-    let p = document.createElement("p")
-    puzzle.appendChild(p)
+    p = puzzle.appendChild(document.createElement("p"))
     p.classList.add("Error")
     p.textContent = err
-  })
+    return
+  }
+
+  // Make the whole puzzle available
+  window.puzzle = await resp.json()
+  
+  // Populate authors
+  document.getElementById("authors").textContent = window.puzzle.Pre.Authors.join(", ")
+
+  // If answers are provided, this is the devel server
+  if (window.puzzle.Answers) {
+    devel_addin(document.getElementById("devel"))
+  }
+  
+  // Load scripts
+  for (let script of (window.puzzle.Pre.Scripts || [])) {
+    let st = document.createElement("script")
+    document.head.appendChild(st)
+    st.src = base + script
+  }
+  
+  // List associated files
+  for (let fn of (window.puzzle.Pre.Attachments || [])) {
+    let li = document.createElement("li")
+    let a = document.createElement("a")
+    a.href = base + fn
+    a.innerText = fn
+    li.appendChild(a)
+    document.getElementById("files").appendChild(li)
+  }
+
+  // Prefix `base` to relative URLs in the puzzle body
+  let doc = new DOMParser().parseFromString(window.puzzle.Pre.Body, "text/html")
+  for (let se of doc.querySelectorAll("[src],[href]")) {
+    se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
+  }
+  
+  // If a validation pattern was provided, set that
+  if (window.puzzle.Pre.AnswerPattern) {
+    document.querySelector("#answer").pattern = window.puzzle.Pre.AnswerPattern
+  }
+
+  // Replace puzzle children with what's in `doc`
+  Array.from(puzzle.childNodes).map(e => e.remove())
+  Array.from(doc.body.childNodes).map(e => puzzle.appendChild(e))
   
   document.title = categoryName + " " + points
   document.querySelector("body > h1").innerText = document.title

@@ -1,0 +1,34 @@
+#! /bin/sh
+
+number=$(seq 20 500 | shuf -n 1)
+answer=$(echo $(grep -v "['A-Z]" /usr/share/dict/words | shuf -n 4))
+
+case "$1:$2" in
+    :)
+        cat <<EOT
+{
+    "Pre": {
+        "Authors": ["neale"],
+        "Body": "<p>Dynamic puzzles are provided with a JSON-generating <code>mkpuzzles</code> program in the puzzle directory.</p><img src='salad.jpg'>",
+        "Attachments": ["salad.jpg"]
+    },
+    "Answers": [
+        "$answer"
+    ],
+    "Debug": {
+        "Summary": "Dynamic puzzles",
+        "Hints": [
+            "Check the debug output to get the answer." 
+        ],
+        "Errors": [],
+        "Log": [
+            "$number is a positive integer"
+        ]
+    }
+}
+EOT
+        ;;
+    -file:salad.jpg)
+        cat salad.jpg
+        ;;
+esac

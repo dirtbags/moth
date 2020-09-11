@@ -27,7 +27,7 @@ func main() {
 	puzzlePath := flag.String(
 		"puzzles",
 		"",
-		"Path to puzzles tree; if specified, enables development mode",
+		"Path to puzzles tree (enables development mode)",
 	)
 	refreshInterval := flag.Duration(
 		"refresh",

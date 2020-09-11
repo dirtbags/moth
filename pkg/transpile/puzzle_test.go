@@ -13,7 +13,7 @@ func TestPuzzle(t *testing.T) {
 	catFs := NewRecursiveBasePathFs(puzzleFs, "cat0")
 
 	{
-		pd := NewFsPuzzle(catFs, 1)
+		pd := NewFsPuzzlePoints(catFs, 1)
 		p, err := pd.Puzzle()
 		if err != nil {
 			t.Error(err)
@@ -31,7 +31,7 @@ func TestPuzzle(t *testing.T) {
 	}
 
 	{
-		p, err := NewFsPuzzle(catFs, 2).Puzzle()
+		p, err := NewFsPuzzlePoints(catFs, 2).Puzzle()
 		if err != nil {
 			t.Error(err)
 		}
@@ -46,21 +46,21 @@ func TestPuzzle(t *testing.T) {
 		}
 	}
 
-	if _, err := NewFsPuzzle(catFs, 3).Puzzle(); err != nil {
+	if _, err := NewFsPuzzlePoints(catFs, 3).Puzzle(); err != nil {
 		t.Error("Legacy `puzzle.moth` file:", err)
 	}
 
-	if _, err := NewFsPuzzle(catFs, 99).Puzzle(); err == nil {
+	if _, err := NewFsPuzzlePoints(catFs, 99).Puzzle(); err == nil {
 		t.Error("Non-existent puzzle", err)
 	}
 
-	if _, err := NewFsPuzzle(catFs, 10).Puzzle(); err == nil {
+	if _, err := NewFsPuzzlePoints(catFs, 10).Puzzle(); err == nil {
 		t.Error("Broken YAML")
 	}
-	if _, err := NewFsPuzzle(catFs, 20).Puzzle(); err == nil {
+	if _, err := NewFsPuzzlePoints(catFs, 20).Puzzle(); err == nil {
 		t.Error("Bad RFC822 header")
 	}
-	if _, err := NewFsPuzzle(catFs, 21).Puzzle(); err == nil {
+	if _, err := NewFsPuzzlePoints(catFs, 21).Puzzle(); err == nil {
 		t.Error("Boken RFC822 header")
 	}
 
@@ -69,7 +69,7 @@ func TestPuzzle(t *testing.T) {
 		if err := afero.WriteFile(fs, "1/mkpuzzle", []byte("bleat"), 0755); err != nil {
 			t.Error(err)
 		}
-		p := NewFsPuzzle(fs, 1)
+		p := NewFsPuzzlePoints(fs, 1)
 		if _, ok := p.(FsCommandPuzzle); !ok {
 			t.Error("We didn't get an FsCommandPuzzle")
 		}
@@ -82,15 +82,15 @@ func TestPuzzle(t *testing.T) {
 func TestFsPuzzle(t *testing.T) {
 	catFs := NewRecursiveBasePathFs(NewRecursiveBasePathFs(afero.NewOsFs(), "testdata"), "static")
 
-	if _, err := NewFsPuzzle(catFs, 1).Puzzle(); err != nil {
+	if _, err := NewFsPuzzlePoints(catFs, 1).Puzzle(); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := NewFsPuzzle(catFs, 2).Puzzle(); err != nil {
+	if _, err := NewFsPuzzlePoints(catFs, 2).Puzzle(); err != nil {
 		t.Error(err)
 	}
 
-	mkpuzzleDir := NewFsPuzzle(catFs, 3)
+	mkpuzzleDir := NewFsPuzzlePoints(catFs, 3)
 	if _, err := mkpuzzleDir.Puzzle(); err != nil {
 		t.Error(err)
 	}
