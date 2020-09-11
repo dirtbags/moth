@@ -1,6 +1,12 @@
-Author: neale
-Summary: Making excellent puzzles
-Answer: moo
+---
+pre:
+    authors: 
+      - neale
+debug:
+    summary: Making excellent puzzles
+answers: 
+    - moo
+---
 
 Making Excellent Puzzles
 ====================

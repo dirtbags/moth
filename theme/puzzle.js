@@ -13,18 +13,26 @@ function prettify(key, val) {
 // devel_addin drops a bunch of development extensions into element e.
 // It will only modify stuff inside e.
 function devel_addin(e) {
-  let h = document.createElement("h2")
-  e.appendChild(h)
-  h.textContent = "Development Options"
+  let h = e.appendChild(document.createElement("h2"))
+  h.textContent = "Developer Output"
 
-  let g = document.createElement("p")
-  e.appendChild(g)
-  g.innerText = "This section will not appear for participants."
+  let log = window.puzzle.Debug.Log || []
+  if (log.length > 0) {
+    e.appendChild(document.createElement("h3")).textContent = "Log"
+    let le = e.appendChild(document.createElement("ul"))
+    for (entry of log) {
+      le.appendChild(document.createElement("li")).textContent = entry
+    }
+  }
+
+  e.appendChild(document.createElement("h3")).textContent = "Puzzle object"
   
   let hobj = JSON.stringify(window.puzzle, prettify, 2)
   let d = e.appendChild(document.createElement("pre"))
   d.classList.add("object")
   d.innerHTML = hobj
+
+  e.appendChild(document.createElement("p")).textContent = "This debugging information will not be available to participants."
 }
 
 // Hash routine used in v3.4 and earlier
