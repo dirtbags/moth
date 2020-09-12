@@ -1,13 +1,8 @@
 Dirtbags Monarch Of The Hill Server
 =====================
 
-Master:
 ![](https://github.com/dirtbags/moth/workflows/Mothd%20Docker%20build/badge.svg?branch=master)
 ![](https://github.com/dirtbags/moth/workflows/moth-devel%20Docker%20build/badge.svg?branch=master)
-
-Devel:
-![](https://github.com/dirtbags/moth/workflows/Mothd%20Docker%20build/badge.svg?branch=devel)
-![](https://github.com/dirtbags/moth/workflows/moth-devel%20Docker%20build/badge.svg?branch=devel)
 
 Monarch Of The Hill (MOTH) is a puzzle server.
 We (the authors) have used it for instructional and contest events called
