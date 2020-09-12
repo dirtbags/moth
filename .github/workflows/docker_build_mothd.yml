@@ -9,4 +9,4 @@ jobs:
       - name: Retrieve code
         uses: actions/checkout@v1
       - name: Build mothd
-        run: docker build -f Dockerfile.moth .
+        run: docker build .
