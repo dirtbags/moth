@@ -17,7 +17,11 @@ import (
 // DistinguishableChars are visually unambiguous glyphs.
 // People with mediocre handwriting could write these down unambiguously,
 // and they can be entered without holding down shift.
-const DistinguishableChars = "234678abcdefhikmnpqrtwxyz="
+const DistinguishableChars = "34678abcdefhikmnpqrtwxy="
+
+// RFC3339Space is a time layout which replaces 'T' with a space.
+// This is also a valid RFC3339 format.
+const RFC3339Space = "2006-01-02 15:04:05Z07:00"
 
 // State defines the current state of a MOTH instance.
 // We use the filesystem for synchronization between threads.
@@ -50,11 +54,11 @@ func NewState(fs afero.Fs) *State {
 // updateEnabled checks a few things to see if this state directory is "enabled".
 func (s *State) updateEnabled() {
 	nextEnabled := true
-	why := "`state/enabled` present, `state/hours` missing"
+	why := "`state/enabled` present, `state/hours.txt` missing"
 
-	if untilFile, err := s.Open("hours"); err == nil {
+	if untilFile, err := s.Open("hours.txt"); err == nil {
 		defer untilFile.Close()
-		why = "`state/hours` present"
+		why = "`state/hours.txt` present"
 
 		scanner := bufio.NewScanner(untilFile)
 		for scanner.Scan() {
@@ -74,10 +78,13 @@ func (s *State) updateEnabled() {
 			case '#':
 				continue
 			default:
-				log.Println("Misformatted line in hours file")
+				log.Println("Misformatted line in hours.txt file")
 			}
 			line = strings.TrimSpace(line)
 			until, err := time.Parse(time.RFC3339, line)
+			if err != nil {
+				until, err = time.Parse(RFC3339Space, line)
+			}
 			if err != nil {
 				log.Println("Suspended: Unparseable until date:", line)
 				continue
@@ -283,7 +290,7 @@ func (s *State) maybeInitialize() {
 
 	// Remove any extant control and state files
 	s.Remove("enabled")
-	s.Remove("hours")
+	s.Remove("hours.txt")
 	s.Remove("points.log")
 	s.Remove("messages.html")
 	s.Remove("mothd.log")
@@ -327,8 +334,8 @@ func (s *State) maybeInitialize() {
 		f.Close()
 	}
 
-	if f, err := s.Create("hours"); err == nil {
-		fmt.Fprintln(f, "# hours: when the contest is enabled")
+	if f, err := s.Create("hours.txt"); err == nil {
+		fmt.Fprintln(f, "# hours.txt: when the contest is enabled")
 		fmt.Fprintln(f, "#")
 		fmt.Fprintln(f, "# Enable:  + timestamp")
 		fmt.Fprintln(f, "# Disable: - timestamp")

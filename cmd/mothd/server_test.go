@@ -24,7 +24,7 @@ func NewTestServer() *MothServer {
 	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
 	go theme.Maintain(TestMaintenanceInterval)
 
-	return NewMothServer(Configuration{Devel: true}, theme, state, puzzles)
+	return NewMothServer(Configuration{}, theme, state, puzzles)
 }
 
 func TestServer(t *testing.T) {
@@ -47,7 +47,7 @@ func TestServer(t *testing.T) {
 
 	es := handler.ExportState()
 	if es.Config.Devel {
-		t.Error("Marked as development server")
+		t.Error("Marked as development server", es.Config)
 	}
 	if len(es.Puzzles) != 1 {
 		t.Error("Puzzle categories wrong length")

@@ -34,7 +34,7 @@ func TestState(t *testing.T) {
 
 	mustExist("initialized")
 	mustExist("enabled")
-	mustExist("hours")
+	mustExist("hours.txt")
 
 	teamIDsBuf, err := afero.ReadFile(s.Fs, "teamids.txt")
 	if err != nil {
@@ -133,7 +133,7 @@ func TestStateDisabled(t *testing.T) {
 		t.Error("Brand new state is disabled")
 	}
 
-	hoursFile, err := s.Create("hours")
+	hoursFile, err := s.Create("hours.txt")
 	if err != nil {
 		t.Error(err)
 	}
@@ -146,7 +146,7 @@ func TestStateDisabled(t *testing.T) {
 		t.Error("Disabling 1970-01-01")
 	}
 
-	fmt.Fprintln(hoursFile, "+ 1970-01-01T01:01:01+05:00")
+	fmt.Fprintln(hoursFile, "+ 1970-01-01 01:01:01+05:00")
 	hoursFile.Sync()
 	s.refresh()
 	if !s.Enabled {
@@ -175,12 +175,12 @@ func TestStateDisabled(t *testing.T) {
 		t.Error("Disabling 1980-01-01")
 	}
 
-	if err := s.Remove("hours"); err != nil {
+	if err := s.Remove("hours.txt"); err != nil {
 		t.Error(err)
 	}
 	s.refresh()
 	if !s.Enabled {
-		t.Error("Removing `hours` disabled event")
+		t.Error("Removing `hours.txt` disabled event")
 	}
 
 	if err := s.Remove("enabled"); err != nil {
