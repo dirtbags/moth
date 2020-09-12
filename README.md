@@ -27,15 +27,15 @@ A few things make MOTH different than other Capture The Flag server projects:
 * All puzzles must be compiled to static content before it can be served up
 * The server does very little: most functionality is in client-side JavaScript
 
-You can read more about why we made these decisions in [philosophy](doc/philosophy.md).
+You can read more about why we made these decisions in [philosophy](docs/philosophy.md).
 
 
 Documentation
 ==========
 
-* [Development](doc/development.md): The development server lets you create and test categories, and compile mothballs.
-* [Getting Started](doc/getting-started.md): This guide will get you started with a production server.
-* [Administration](doc/administration.md): How to set hours, and change setup.
+* [Development](docs/development.md): The development server lets you create and test categories, and compile mothballs.
+* [Getting Started](docs/getting-started.md): This guide will get you started with a production server.
+* [Administration](docs/administration.md): How to set hours, and change setup.
 
 Running a Production Server
 ===========================
