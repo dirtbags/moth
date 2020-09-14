@@ -11,10 +11,17 @@ jobs:
       - name: Retrieve code
         uses: actions/checkout@v1
       - name: Push to GitHub Packages
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v2
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
           repository: dirtbags/moth/moth
+          tag_with_ref: true
+      - name: Push to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          username: neale
+          password: ${{ secrets.DOCKER_TOKEN }}
+          registry: dirtbags/moth
           tag_with_ref: true
