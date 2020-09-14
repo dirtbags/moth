@@ -17,4 +17,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
           repository: dirtbags/moth/moth
-          tag-with-ref: true
+          tag_with_ref: true
