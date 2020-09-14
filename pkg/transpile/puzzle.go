@@ -338,14 +338,18 @@ type FsCommandPuzzle struct {
 	timeout time.Duration
 }
 
-// Puzzle returns a Puzzle struct for the current puzzle.
-func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
+func (fp FsCommandPuzzle) run(args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, fp.command)
+	cmd := exec.CommandContext(ctx, "./"+path.Base(fp.command), args...)
 	cmd.Dir = path.Dir(fp.command)
-	stdout, err := cmd.Output()
+	return cmd.Output()
+}
+
+// Puzzle returns a Puzzle struct for the current puzzle.
+func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
+	stdout, err := fp.run()
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		return Puzzle{}, errors.New(string(exiterr.Stderr))
 	} else if err != nil {
@@ -375,13 +379,8 @@ func (c nopCloser) Close() error {
 // Open returns a newly-opened file.
 // BUG(neale): FsCommandPuzzle.Open() reads everything into memory, and will suck for large files.
 func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, fp.command, "--file", filename)
-	cmd.Dir = path.Dir(fp.command)
-	out, err := cmd.Output()
-	buf := nopCloser{bytes.NewReader(out)}
+	stdout, err := fp.run("--file", filename)
+	buf := nopCloser{bytes.NewReader(stdout)}
 	if err != nil {
 		return buf, err
 	}
@@ -391,18 +390,13 @@ func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
 
 // Answer checks whether the given answer is correct.
 func (fp FsCommandPuzzle) Answer(answer string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, fp.command, "--answer", answer)
-	cmd.Dir = path.Dir(fp.command)
-	out, err := cmd.Output()
+	stdout, err := fp.run("--answer", answer)
 	if err != nil {
 		log.Printf("ERROR: checking answer: %s", err)
 		return false
 	}
 
-	switch strings.TrimSpace(string(out)) {
+	switch strings.TrimSpace(string(stdout)) {
 	case "correct":
 		return true
 	}

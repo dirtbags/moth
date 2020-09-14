@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 )
 
 // Mothball packages a Category up for a production server run.
@@ -36,7 +35,6 @@ func Mothball(c Category) (*bytes.Reader, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.Println(puzzlePath)
 		puzzle, err := c.Puzzle(points)
 		if err != nil {
 			return nil, err

@@ -73,7 +73,6 @@ func (t *T) ParseArgs() (Command, error) {
 	} else {
 		t.fs = t.BaseFs
 	}
-	log.Println(t.Args, t.fs)
 
 	return cmd, nil
 }
@@ -107,7 +106,6 @@ func (t *T) DumpFile() error {
 
 	switch t.filename {
 	case "puzzle.json", "":
-		// BUG(neale): we need a way to tell the transpiler to strip answers
 		p, err := puzzle.Puzzle()
 		if err != nil {
 			return err

@@ -63,6 +63,12 @@ func TestOsFsCategory(t *testing.T) {
 		t.Error("Wrong authors", p.Pre.Authors)
 	}
 
+	if p, err := static.Puzzle(3); err != nil {
+		t.Error(err)
+	} else if len(p.Pre.Authors) != 1 {
+		t.Error("Wrong authors", p.Pre.Authors)
+	}
+
 	generated := NewFsCategory(fs, "generated")
 
 	if inv, err := generated.Inventory(); err != nil {

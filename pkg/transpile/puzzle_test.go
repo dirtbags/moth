@@ -28,6 +28,19 @@ func TestPuzzle(t *testing.T) {
 		if p.Pre.Body != "<p>YAML body</p>\n" {
 			t.Errorf("Body parsed wrong: %#v", p.Pre.Body)
 		}
+
+		f, err := pd.Open("moo.txt")
+		if err != nil {
+			t.Error(err)
+		}
+		defer f.Close()
+		buf := new(bytes.Buffer)
+		if _, err := io.Copy(buf, f); err != nil {
+			t.Error(err)
+		}
+		if buf.String() != "Moo." {
+			t.Error("Attachment wrong: ", buf.String())
+		}
 	}
 
 	{

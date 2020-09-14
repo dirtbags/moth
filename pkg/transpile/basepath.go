@@ -18,11 +18,16 @@ type RecursiveBasePathFs struct {
 
 // NewRecursiveBasePathFs returns a new RecursiveBasePathFs.
 func NewRecursiveBasePathFs(source afero.Fs, path string) *RecursiveBasePathFs {
-	return &RecursiveBasePathFs{
-		Fs:     afero.NewBasePathFs(source, path),
+	ret := &RecursiveBasePathFs{
 		source: source,
 		path:   path,
 	}
+	if path == "" {
+		ret.Fs = source
+	} else {
+		ret.Fs = afero.NewBasePathFs(source, path)
+	}
+	return ret
 }
 
 // RealPath returns the real path to a file, "breaking out" of the RecursiveBasePathFs.

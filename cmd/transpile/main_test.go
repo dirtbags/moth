@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"testing"
 
 	"github.com/dirtbags/moth/pkg/transpile"
@@ -27,21 +26,22 @@ YAML body
 func newTestFs() afero.Fs {
 	fs := afero.NewMemMapFs()
 	afero.WriteFile(fs, "cat0/1/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/1/moo.txt", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/1/moo.txt", []byte("Moo."), 0644)
 	afero.WriteFile(fs, "cat0/2/puzzle.moth", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/3/puzzle.moth", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/4/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/5/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/10/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "unbroken/1/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "unbroken/1/moo.txt", []byte("Moo."), 0644)
 	afero.WriteFile(fs, "unbroken/2/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "unbroken/2/moo.txt", []byte("Moo."), 0644)
 	return fs
 }
 
 func (tp T) Run(args ...string) error {
 	tp.Args = append([]string{"transpile"}, args...)
 	command, err := tp.ParseArgs()
-	log.Println(tp.fs)
 	if err != nil {
 		return err
 	}
@@ -81,12 +81,11 @@ func TestEverything(t *testing.T) {
 		t.Error(err)
 	}
 	if stdout.String() != "Moo." {
-		t.Error("Wrong file pulled")
+		t.Error("Wrong file pulled", stdout.String())
 	}
 
 	stdout.Reset()
-	if err := tp.Run("mothball", "-dir=cat0"); err != nil {
-		t.Log(tp.BaseFs)
+	if err := tp.Run("mothball", "-dir=unbroken"); err != nil {
 		t.Log(tp.fs)
 		t.Error(err)
 	}

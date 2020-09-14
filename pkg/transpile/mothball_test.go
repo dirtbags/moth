@@ -3,18 +3,32 @@ package transpile
 import (
 	"archive/zip"
 	"io/ioutil"
+	"os"
+	"path"
+	"runtime"
 	"testing"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/afero/zipfs"
 )
 
-func TestMothballs(t *testing.T) {
+func TestMothballsMemFs(t *testing.T) {
+	static := NewFsCategory(newTestFs(), "cat1")
+	if _, err := Mothball(static); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestMothballsOsFs(t *testing.T) {
+	_, testfn, _, _ := runtime.Caller(0)
+	os.Chdir(path.Dir(testfn))
+
 	fs := NewRecursiveBasePathFs(afero.NewOsFs(), "testdata")
 	static := NewFsCategory(fs, "static")
 	mb, err := Mothball(static)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	mbr, err := zip.NewReader(mb, int64(mb.Len()))
