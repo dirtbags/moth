@@ -3,6 +3,7 @@ package transpile
 import (
 	"log"
 	"sort"
+	"strings"
 
 	"github.com/spf13/afero"
 )
@@ -20,6 +21,9 @@ func FsInventory(fs afero.Fs) (Inventory, error) {
 
 	inv := make(Inventory)
 	for _, ent := range dirEnts {
+		if strings.HasPrefix(ent.Name(), ".") {
+			continue
+		}
 		if ent.IsDir() {
 			name := ent.Name()
 			c := NewFsCategory(fs, name)

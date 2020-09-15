@@ -1,7 +1,12 @@
 #! /bin/sh
 
-case $1 in
-    "")
+fail () {
+    echo "ERROR: $*" 1>&2
+    exit 1
+}
+
+case $1:$2 in
+    puzzle:)
         cat <<'EOT'
 {
     "Answers": ["answer"],
@@ -12,34 +17,23 @@ case $1 in
 }
 EOT
         ;;
-    -file|--file)
-        case $2 in
-            moo.txt)
-                echo "Moo."
-                ;;
-            *)
-                echo "ERROR: no such file: $1" 1>&2
-                exit 1
-                ;;
-        esac
+    file:moo.txt)
+        echo "Moo."
         ;;
-    -answer|--answer)
-        case $2 in
-            moo)
-                echo "correct"
-                ;;
-            error)
-                echo "error" 1>&2
-                exit 1
-                ;;
-            *)
-                echo "incorrect"
-                ;;
-        esac
+    file:*)
+        fail "no such file: $1"
+        ;;
+    answer:moo)
+        echo "correct"
+        ;;
+    answer:error)
+        fail "you requested an error"
+        ;;
+    answer:*)
+        echo "incorrect"
         ;;
     *)
-        echo "ERROR: don't know what to do with $1" 1>&2
-        exit 1
+        fail "What is $1"
         ;;
 esac
     

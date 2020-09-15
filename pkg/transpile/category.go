@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -120,13 +121,19 @@ type FsCommandCategory struct {
 	timeout time.Duration
 }
 
-// Inventory returns a list of point values for this category.
-func (c FsCommandCategory) Inventory() ([]int, error) {
+func (c FsCommandCategory) run(command string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, c.command, "inventory")
-	stdout, err := cmd.Output()
+	cmdargs := append([]string{command}, args...)
+	cmd := exec.CommandContext(ctx, "./"+path.Base(c.command), cmdargs...)
+	cmd.Dir = path.Dir(c.command)
+	return cmd.Output()
+}
+
+// Inventory returns a list of point values for this category.
+func (c FsCommandCategory) Inventory() ([]int, error) {
+	stdout, err := c.run("inventory")
 	if err != nil {
 		return nil, err
 	}
@@ -143,11 +150,7 @@ func (c FsCommandCategory) Inventory() ([]int, error) {
 func (c FsCommandCategory) Puzzle(points int) (Puzzle, error) {
 	var p Puzzle
 
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, c.command, "puzzle", strconv.Itoa(points))
-	stdout, err := cmd.Output()
+	stdout, err := c.run("puzzle", strconv.Itoa(points))
 	if err != nil {
 		return p, err
 	}
@@ -163,21 +166,13 @@ func (c FsCommandCategory) Puzzle(points int) (Puzzle, error) {
 
 // Open returns an io.ReadCloser for the given filename.
 func (c FsCommandCategory) Open(points int, filename string) (ReadSeekCloser, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, c.command, "file", strconv.Itoa(points), filename)
-	stdout, err := cmd.Output()
+	stdout, err := c.run("file", strconv.Itoa(points), filename)
 	return nopCloser{bytes.NewReader(stdout)}, err
 }
 
 // Answer checks whether an answer is correct.
 func (c FsCommandCategory) Answer(points int, answer string) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, c.command, "answer", strconv.Itoa(points), answer)
-	stdout, err := cmd.Output()
+	stdout, err := c.run("answer", strconv.Itoa(points), answer)
 	if err != nil {
 		log.Printf("ERROR: Answering %d points: %s", points, err)
 		return false
