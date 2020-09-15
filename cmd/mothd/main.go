@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"mime"
+	"os"
 	"time"
 
 	"github.com/spf13/afero"
@@ -44,7 +46,21 @@ func main() {
 		"/",
 		"Base URL of this instance",
 	)
+	seed := flag.String(
+		"seed",
+		"",
+		"Random seed to use, overrides $SEED",
+	)
 	flag.Parse()
+
+	// Set random seed
+	if *seed == "" {
+		*seed = os.Getenv("SEED")
+	}
+	if *seed == "" {
+		*seed = fmt.Sprintf("%d%d", os.Getpid(), time.Now().Unix())
+	}
+	os.Setenv("SEED", *seed)
 
 	osfs := afero.NewOsFs()
 	theme := NewTheme(afero.NewBasePathFs(osfs, *themePath))

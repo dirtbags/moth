@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/spf13/afero"
 )
 
 const TestParticipantID = "shipox"
@@ -121,5 +123,41 @@ func TestHttpd(t *testing.T) {
 		t.Error(r.Result())
 	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"Error awarding points: Points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())
+	}
+}
+
+func TestDevelMemHttpd(t *testing.T) {
+	srv := NewTestServer()
+
+	{
+		hs := NewHTTPServer("/", srv)
+
+		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 404 {
+			t.Error("Should have gotten a 404 for mothballer in prod mode")
+		}
+	}
+
+	{
+		srv.Config.Devel = true
+		hs := NewHTTPServer("/", srv)
+
+		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 500 {
+			t.Log(r.Body.String())
+			t.Log(r.Result())
+			t.Error("Should have given us an internal server error, since category is a mothball")
+		}
+	}
+}
+
+func TestDevelFsHttps(t *testing.T) {
+	fs := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
+	transpilerProvider := NewTranspilerProvider(fs)
+	srv := NewMothServer(Configuration{Devel: true}, NewTestTheme(), NewTestState(), transpilerProvider)
+	hs := NewHTTPServer("/", srv)
+
+	if r := hs.TestRequest("/mothballer/cat0.mb", nil); r.Result().StatusCode != 200 {
+		t.Log(r.Body.String())
+		t.Log(r.Result())
+		t.Error("Didn't get a Mothball")
 	}
 }

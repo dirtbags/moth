@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -170,6 +171,11 @@ func (m *Mothballs) refresh() {
 			log.Println("Removing category:", categoryName)
 		}
 	}
+}
+
+// Mothball just returns an error
+func (m *Mothballs) Mothball(cat string) (*bytes.Reader, error) {
+	return nil, fmt.Errorf("Can't repackage a compiled mothball")
 }
 
 // Maintain performs housekeeping for Mothballs.

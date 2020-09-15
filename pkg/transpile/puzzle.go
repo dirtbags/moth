@@ -92,6 +92,26 @@ type StaticAttachment struct {
 	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
 }
 
+// UnmarshalYAML allows a StaticAttachment to be specified as a single string.
+// The way the yaml library works is weird.
+func (sa *StaticAttachment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	if err := unmarshal(&sa.Filename); err == nil {
+		sa.FilesystemPath = sa.Filename
+		return nil
+	}
+
+	parts := new(struct {
+		Filename       string
+		FilesystemPath string
+	})
+	if err := unmarshal(parts); err != nil {
+		return err
+	}
+	sa.Filename = parts.Filename
+	sa.FilesystemPath = parts.FilesystemPath
+	return nil
+}
+
 // ReadSeekCloser provides io.Reader, io.Seeker, and io.Closer.
 type ReadSeekCloser interface {
 	io.Reader
@@ -307,8 +327,16 @@ func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
 			p.Debug.Summary = val[0]
 		case "hint":
 			p.Debug.Hints = val
+		case "solution":
+			p.Debug.Hints = val
 		case "ksa":
 			p.Post.KSAs = val
+		case "objective":
+			p.Post.Objective = val[0]
+		case "success.acceptable":
+			p.Post.Success.Acceptable = val[0]
+		case "success.mastery":
+			p.Post.Success.Mastery = val[0]
 		default:
 			return p, fmt.Errorf("Unknown header field: %s", key)
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -41,6 +42,7 @@ type PuzzleProvider interface {
 	Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error)
 	Inventory() []Category
 	CheckAnswer(cat string, points int, answer string) (bool, error)
+	Mothball(cat string) (*bytes.Reader, error)
 	Maintainer
 }
 
@@ -228,4 +230,17 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	}
 
 	return &export
+}
+
+// Mothball generates a mothball for the given category.
+func (mh *MothRequestHandler) Mothball(cat string) (r *bytes.Reader, err error) {
+	if !mh.Config.Devel {
+		return nil, fmt.Errorf("Cannot mothball in production mode")
+	}
+	for _, provider := range mh.PuzzleProviders {
+		if r, err = provider.Mothball(cat); err == nil {
+			return r, nil
+		}
+	}
+	return nil, err
 }

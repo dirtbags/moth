@@ -13,7 +13,7 @@ pre:
     - Buster
     - DW
   attachments:
-    - filename: moo.txt
+    - moo.txt
 ---
 YAML body
 `)

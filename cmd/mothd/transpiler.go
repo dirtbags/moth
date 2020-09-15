@@ -69,6 +69,12 @@ func (p TranspilerProvider) CheckAnswer(cat string, points int, answer string) (
 	return c.Answer(points, answer), nil
 }
 
+// Mothball packages up a category into a mothball.
+func (p TranspilerProvider) Mothball(cat string) (*bytes.Reader, error) {
+	c := transpile.NewFsCategory(p.fs, cat)
+	return transpile.Mothball(c)
+}
+
 // Maintain performs housekeeping.
 func (p TranspilerProvider) Maintain(updateInterval time.Duration) {
 	// Nothing to do here.
