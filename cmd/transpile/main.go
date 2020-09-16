@@ -32,17 +32,21 @@ func nothing() error {
 	return nil
 }
 
+func usage(w io.Writer) {
+	fmt.Fprintln(w, "Usage: transpile COMMAND [flags]")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, " mothball: Compile a mothball")
+	fmt.Fprintln(w, " inventory: Show category inventory")
+	fmt.Fprintln(w, " open: Open a file for a puzzle")
+	fmt.Fprintln(w, " answer: Check correctness of an answer")
+}
+
 // ParseArgs parses arguments and runs the appropriate action.
 func (t *T) ParseArgs() (Command, error) {
 	var cmd Command
 
 	if len(t.Args) == 1 {
-		fmt.Fprintln(t.Stderr, "Usage: transpile COMMAND [flags]")
-		fmt.Fprintln(t.Stderr, "")
-		fmt.Fprintln(t.Stderr, " mothball: Compile a mothball")
-		fmt.Fprintln(t.Stderr, " inventory: Show category inventory")
-		fmt.Fprintln(t.Stderr, " open: Open a file for a puzzle")
-		fmt.Fprintln(t.Stderr, " answer: Check correctness of an answer")
+		usage(t.Stderr)
 		return nothing, nil
 	}
 
@@ -60,7 +64,11 @@ func (t *T) ParseArgs() (Command, error) {
 	case "answer":
 		flags.StringVar(&t.answer, "answer", "", "Answer to check")
 		cmd = t.CheckAnswer
+	case "help":
+		usage(t.Stderr)
+		return nothing, nil
 	default:
+		usage(t.Stderr)
 		return nothing, fmt.Errorf("%s is not a valid command", t.Args[1])
 	}
 
@@ -69,6 +77,7 @@ func (t *T) ParseArgs() (Command, error) {
 		return nothing, err
 	}
 	if *directory != "" {
+		log.Println(*directory)
 		t.fs = afero.NewBasePathFs(t.BaseFs, *directory)
 	} else {
 		t.fs = t.BaseFs
@@ -101,6 +110,7 @@ func (t *T) PrintInventory() error {
 }
 
 // DumpFile writes a file to the writer.
+// BUG(neale): The "open" and "answer" actions don't work on categories with an "mkcategory" executable.
 func (t *T) DumpFile() error {
 	puzzle := transpile.NewFsPuzzle(t.fs)
 
@@ -160,6 +170,7 @@ func main() {
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Args:   os.Args,
+		BaseFs: afero.NewOsFs(),
 	}
 	cmd, err := t.ParseArgs()
 	if err != nil {

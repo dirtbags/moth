@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os/exec"
 	"path"
@@ -134,7 +135,9 @@ func (c FsCommandCategory) run(command string, args ...string) ([]byte, error) {
 // Inventory returns a list of point values for this category.
 func (c FsCommandCategory) Inventory() ([]int, error) {
 	stdout, err := c.run("inventory")
-	if err != nil {
+	if exerr, ok := err.(*exec.ExitError); ok {
+		return nil, fmt.Errorf("inventory: %s: %s", err, string(exerr.Stderr))
+	} else if err != nil {
 		return nil, err
 	}
 
