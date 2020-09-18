@@ -49,6 +49,6 @@ jobs:
         with:
           target: moth
           file: build/package/Containerfile
-          tags: 
-            - dirtbags/moth-devel:latest
-            - docker.pkg.github.com/dirtbags/moth/moth-devel:latest
+          tags: |
+            dirtbags/moth-devel:latest
+            docker.pkg.github.com/dirtbags/moth/moth-devel:latest
