@@ -194,7 +194,7 @@ func TestStateDisabled(t *testing.T) {
 	s.Remove("initialized")
 	s.refresh()
 	if !s.Enabled {
-		t.Error("Re-initalizing didn't start event")
+		t.Error("Re-initializing didn't start event")
 	}
 }
 

@@ -106,7 +106,7 @@ func (pc ProviderCommand) CheckAnswer(cat string, points int, answer string) (bo
 
 	stdout, err := cmd.Output()
 	if ee, ok := err.(*exec.ExitError); ok {
-		log.Printf("%s: %s", pc.Path, string(ee.Stderr))
+		log.Printf("WARNING: %s: %s", pc.Path, string(ee.Stderr))
 		return false, err
 	} else if err != nil {
 		return false, err
@@ -114,9 +114,7 @@ func (pc ProviderCommand) CheckAnswer(cat string, points int, answer string) (bo
 	result := strings.TrimSpace(string(stdout))
 
 	if result != "correct" {
-		if result == "" {
-			result = "Nothing written to stdout"
-		}
+		log.Printf("WARNING: %s: Nothing written to stdout", pc.Path)
 		return false, nil
 	}
 

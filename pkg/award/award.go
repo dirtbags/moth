@@ -79,29 +79,28 @@ func (a T) UnmarshalJSON(b []byte) error {
 	dec.UseNumber() // Don't use floats
 
 	// All this to make sure we get `[`
-	if t, err := dec.Token(); err != nil {
+	t, err := dec.Token()
+	if err != nil {
 		return err
-	} else {
-		switch token := t.(type) {
-		case json.Delim:
-			if token.String() != "[" {
-				return &json.UnmarshalTypeError{
-					Value:  token.String(),
-					Type:   reflect.TypeOf(a),
-					Offset: 0,
-				}
-			}
-		default:
+	}
+	switch token := t.(type) {
+	case json.Delim:
+		if token.String() != "[" {
 			return &json.UnmarshalTypeError{
-				Value:  fmt.Sprintf("%v", t),
+				Value:  token.String(),
 				Type:   reflect.TypeOf(a),
 				Offset: 0,
 			}
 		}
+	default:
+		return &json.UnmarshalTypeError{
+			Value:  fmt.Sprintf("%v", t),
+			Type:   reflect.TypeOf(a),
+			Offset: 0,
+		}
 	}
 
 	var num json.Number
-	var err error
 	if err := dec.Decode(&num); err != nil {
 		return err
 	}
@@ -122,24 +121,24 @@ func (a T) UnmarshalJSON(b []byte) error {
 	}
 
 	// All this to make sure we get `]`
-	if t, err := dec.Token(); err != nil {
+	t, err = dec.Token()
+	if err != nil {
 		return err
-	} else {
-		switch token := t.(type) {
-		case json.Delim:
-			if token.String() != "]" {
-				return &json.UnmarshalTypeError{
-					Value:  token.String(),
-					Type:   reflect.TypeOf(a),
-					Offset: 0,
-				}
-			}
-		default:
+	}
+	switch token := t.(type) {
+	case json.Delim:
+		if token.String() != "]" {
 			return &json.UnmarshalTypeError{
-				Value:  fmt.Sprintf("%v", t),
+				Value:  token.String(),
 				Type:   reflect.TypeOf(a),
 				Offset: 0,
 			}
+		}
+	default:
+		return &json.UnmarshalTypeError{
+			Value:  fmt.Sprintf("%v", t),
+			Type:   reflect.TypeOf(a),
+			Offset: 0,
 		}
 	}
 
