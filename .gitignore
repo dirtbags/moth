@@ -1,8 +1,5 @@
 *~
 *#
-*.pyc
-*.o
 .idea
-./bin/
-puzzles
+/vendor/
 __debug_bin
