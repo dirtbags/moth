@@ -32,23 +32,11 @@ jobs:
       - name: Retrieve code
         uses: actions/checkout@v2
 
-      - name: Get current branch
+      - name: Gitlab variables
         id: vars
-        run: |
-          echo "GITHUB_REF: $GITHUB_REF"
-          case $GITHUB_REF in
-            refs/tags/*)
-              TAGS=latest,${GITHUB_REF#refs/tags/}
-              ;;
-            refs/heads/master)
-              TAGS=latest
-              ;;
-          esac
-          echo "tags: $TAGS"
-          echo "::set-output name=tags::$TAGS"
+        run: build/ci/gitlab-vars
 
       - name: Login to GitHub Packages Docker Registry
-        if: steps.vars.tags != ''
         uses: docker/login-action@v1
         with:
           registry: docker.pkg.github.com
@@ -56,7 +44,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to DockerHub
-        if: steps.vars.tags != ''
         uses: docker/login-action@v1
         with:
           username: neale
@@ -67,15 +54,14 @@ jobs:
         with:
           target: moth
           file: build/package/Containerfile
-          tags: |
-            dirtbags/moth:latest
-            docker.pkg.github.com/dirtbags/moth/moth:latest
+          push: ${{ steps.vars.outputs.tags != '' }}
+          tags: ${{ steps.vars.outputs.moth-tags }}
 
       - name: Build and push moth-devel image
         uses: docker/build-push-action@v2
         with:
           target: moth
           file: build/package/Containerfile
-          tags: |
+          tags: ${{ steps.vars.outputs.devel-tags }}
             dirtbags/moth-devel:latest
             docker.pkg.github.com/dirtbags/moth/moth-devel:latest
