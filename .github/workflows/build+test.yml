@@ -5,7 +5,7 @@ on:
     branches:
       - v3
       - devel
-      - master
+      - main
     tags:
       - 'v*.*.*'
 
