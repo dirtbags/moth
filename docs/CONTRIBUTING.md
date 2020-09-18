@@ -16,7 +16,7 @@ We use the [Feature Branch Workflow](https://www.atlassian.com/git/tutorials/com
 Pull requests are the best way to propose changes to the codebase. 
 We actively welcome your pull requests:
 
-1. Fork the repo. Optionally create a branch from `master`.
+1. Fork the repo. Optionally create a branch from `main`.
 2. If you've changed code, modify tests that fail on the old code, and pass on the new code.
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes.
