@@ -40,9 +40,9 @@ jobs:
         with:
           target: moth
           file: build/package/Containerfile
-          tags: 
-            - dirtbags/moth:latest
-            - docker.pkg.github.com/dirtbags/moth/moth:latest
+          tags: |
+            dirtbags/moth:latest
+            docker.pkg.github.com/dirtbags/moth/moth:latest
 
       - name: Build and push moth-devel image
         uses: docker/build-push-action@v2
