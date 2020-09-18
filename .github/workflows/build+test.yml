@@ -54,8 +54,7 @@ jobs:
         with:
           target: moth
           file: build/package/Containerfile
-          push: ${{ steps.vars.outputs.tags != '' }}
-          tags: ${{ steps.vars.outputs.moth-tags }}
+          tags: |
             dirtbags/moth:${{ steps.vars.outputs.tag }}
             docker.pkg.github.com/dirtbags/moth/moth:${{ steps.vars.outputs.tag }}
 
