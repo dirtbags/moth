@@ -53,4 +53,4 @@ Inside the container, you need the following paths:
 Contributing to MOTH
 ==================
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md)
+Please read our [contributing guide](docs/CONTRIBUTING.md).
