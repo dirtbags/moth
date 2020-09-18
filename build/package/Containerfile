@@ -1,0 +1,37 @@
+FROM golang:1.13 AS builder
+COPY go.* /src/
+COPY pkg /src/pkg/
+COPY cmd /src/cmd/
+COPY theme /target/theme/
+COPY example-puzzles /target/puzzles/
+COPY LICENSE.md /target/
+WORKDIR /src/
+RUN CGO_ENABLED=0 GOOS=linux go install -i -a -ldflags '-extldflags "-static"' ./...
+
+# I can't put these in /target/bin: doing so would cause the devel server to overwrite Ubuntu's /bin
+RUN mkdir -p /target/bin/
+RUN cp /go/bin/* /target/
+
+##########
+
+FROM builder AS tester
+RUN go test ./...
+
+##########
+
+FROM scratch AS moth
+COPY --from=builder /target /
+ENTRYPOINT [ "/mothd" ]
+
+##########
+
+FROM ubuntu AS moth-devel
+RUN apt-get -y update && apt-get -y install \
+    build-essential \
+    bsdgames \
+    figlet toilet \
+    python3 \
+    python3-pil \
+    lua5.3
+COPY --from=builder /bin/* /
+CMD [ "/mothd", "-puzzles", "/puzzles" ]

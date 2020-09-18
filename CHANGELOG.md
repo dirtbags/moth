@@ -4,7 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v4.0.0] - Unreleased
+### Changed
+- Major rewrite/refactor of `mothd`
+  - Clear separation of roles: State, Puzzles, and Theme
+    - Sqlite, Redis, or S3 should fit in easily now
+    - Will allow "dynamic" puzzles now, we just need a flag to enable it
+  - Server no longer provides unlocked content
+    - Puzzle URLs are now just `/content/${cat}/${points}/`
+  - Changes to `state` directory
+    - Most files now have a bit of (English) documentation at the beginning
+    - `state/until` is now `state/hours` and can specify multiple begin/end hours
+    - `state/disabled` is now `state/enabled`
+- Mothball structure has changed
+  - Mothballs no longer contain `map.txt`
+  - Mothballs no longer obfuscate content paths
+  - Clients now expect unlocked puzzles to just be `map[string][]int`
+- New `/state` API endpoint
+  - Provides *all* server state: event log, team mapping, messages, configuration
+
+### Added
+- New `transpile` CLI command
+  - Provides `mothball` action to create mothballs
+  - Lets you test a few development server things, if you want
+
+### Deprecated
+
+### Removed
+- Development server is gone now; use `mothd` directly with a flag to transpile on the fly
+
+### Fixed
+
+### Security
+
 ## [Unreleased]
+### Changed
+ - Endpoints `/points.json`, `/puzzles.json`, and `/messages.html` (optional theme file) combine into `/state`
+ - No more `__devel__` category for dev server: this is now `.config.devel` in the `/state` endpoint
+ - Development server no longer serves a static `/` with links: it now redirects you to a randomly-generated seed URL
+ - Default theme modifications to handle all this
+ - Default theme now automatically "logs you in" with Team ID if it's getting state from the devel server
 
 ## [v3.5.1] - 2020-03-16
 ### Fixed

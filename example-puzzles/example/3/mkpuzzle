@@ -1,0 +1,60 @@
+#! /usr/bin/python3
+
+import argparse
+import json
+import os
+import random
+import shutil
+import sys
+
+random.seed(os.getenv("SEED", ""))
+
+words = ["apple", "pear", "peach", "tangerine", "orange", "potato", "carrot", "pea"]
+answer = ' '.join(random.sample(words, 4))
+
+def puzzle():
+    number = random.randint(20, 500)
+    obj = {
+        "Pre": {
+            "Authors": ["neale"],
+            "Body": (
+                "<p>Dynamic puzzles are provided with a JSON-generating <code>mkpuzzles</code> program in the puzzle directory.</p>"
+                "<p>You can write <code>mkpuzzles</code> in any language you like. This puzzle was written in Python 3.</p>"
+                "<p>Here is some salad:<img src='salad.jpg'></p>"
+            ),
+            "Attachments": ["salad.jpg"],
+        },
+        "Answers": [
+            answer,
+        ],
+        "Debug": {
+            "Summary": "Dynamic puzzles",
+            "Hints": [
+                "Check the debug output to get the answer." ,
+            ],
+            "Errors": [],
+            "Log": [
+                "%d is a positive integer" % number,
+            ],
+        }
+    }
+    json.dump(obj, sys.stdout)
+
+def open_file(filename):
+    f = open(filename, "rb")
+    shutil.copyfileobj(f, sys.stdout.buffer)
+
+def check_answer(check):
+    if answer == check:
+        print("correct")
+    else:
+        print("incorrect")
+
+if len(sys.argv) == 1:
+    puzzle()
+elif sys.argv[1] == "file":
+    open_file(sys.argv[2])
+elif sys.argv[1] == "answer":
+    check_answer(sys.argv[2])
+else:
+    raise RuntimeError("Unknown command: %s" % sys.argv[1])

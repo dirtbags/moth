@@ -1,5 +1,6 @@
 // jshint asi:true
 
+var devel = false
 var teamId
 var heartbeatInterval = 40000
 
@@ -24,6 +25,8 @@ function renderNotices(obj) {
 function renderPuzzles(obj) {
   let puzzlesElement = document.createElement('div')
   
+  document.getElementById("login").style.display = "none"
+  
   // Create a sorted list of category names
   let cats = Object.keys(obj)
   cats.sort()
@@ -42,7 +45,7 @@ function renderPuzzles(obj) {
     h.textContent = cat
     
     // Extras if we're running a devel server
-    if (obj.__devel__) {
+    if (devel) {
       let a = document.createElement('a')
       h.insertBefore(a, h.firstChild)
       a.textContent = "⬇️"
@@ -55,8 +58,13 @@ function renderPuzzles(obj) {
     let l = document.createElement('ul')
     pdiv.appendChild(l)
     for (let puzzle of puzzles) {
-      let points = puzzle[0]
-      let id = puzzle[1]
+      let points = puzzle
+      let id = puzzle
+      
+      if (Array.isArray(puzzle)) {
+        points = puzzle[0]
+        id = puzzle[1]
+      }
   
       let i = document.createElement('li')
       l.appendChild(i)
@@ -88,20 +96,26 @@ function renderPuzzles(obj) {
   container.appendChild(puzzlesElement)
 }
 
-
-function heartbeat(teamId, participantId) {
-  let noticesUrl = new URL("notices.html", window.location)
-  fetch(noticesUrl)
-  .then(resp => {
-    if (resp.ok) {
-      resp.text()
-      .then(renderNotices)
-      .catch(err => console.log)
+function renderState(obj) {
+  devel = obj.Config.Devel
+  if (devel) {
+    let params = new URLSearchParams(window.location.search)
+    sessionStorage.id = "1"
+    sessionStorage.pid = "rodney"
+  }
+  if (Object.keys(obj.Puzzles).length > 0) {
+    renderPuzzles(obj.Puzzles)
+    if (obj.Config.Detachable) {
+      fetchAll(obj.Puzzles)
     }
-  })
-  .catch(err => console.log)
-  
-  let url = new URL("puzzles.json", window.location)
+  }
+  renderNotices(obj.Messages)
+}
+
+function heartbeat() {
+  let teamId = sessionStorage.id || ""
+  let participantId = sessionStorage.pid
+  let url = new URL("state", window.location)
   url.searchParams.set("id", teamId)
   if (participantId) {
     url.searchParams.set("pid", participantId)
@@ -112,116 +126,49 @@ function heartbeat(teamId, participantId) {
   .then(resp => {
     if (resp.ok) {
       resp.json()
-      .then(renderPuzzles)
+      .then(renderState)
       .catch(err => {
-        toast("Error fetching recent puzzles. I'll try again in a moment.")
+        toast("Error fetching recent state. I'll try again in a moment.")
         console.log(err)
       })
     }
   })
   .catch(err => {
-    toast("Error fetching recent puzzles. I'll try again in a moment.")
+    toast("Error fetching recent state. I'll try again in a moment.")
     console.log(err)
   })
 }
 
-function showPuzzles(teamId, participantId) {
+function showPuzzles() {
   let spinner = document.createElement("span")
   spinner.classList.add("spinner")
 
-  sessionStorage.setItem("id", teamId)
-  if (participantId) {
-    sessionStorage.setItem("pid", participantId)
-  }
-
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
-  heartbeat(teamId, participantId)
-  setInterval(e => { heartbeat(teamId) }, 40000)
-  drawCacheButton(teamId)
 }
 
-function drawCacheButton(teamId) {
-  let cacher = document.querySelector("#cacheButton")
+async function fetchAll(puzzles) {
+  let teamId = sessionStorage.id
 
-  function updateCacheButton() {
-    let headers = new Headers()
-    headers.append("pragma", "no-cache")
-    headers.append("cache-control", "no-cache")
-    let url = new URL("current_manifest.json", window.location)
-    url.searchParams.set("id", teamId)
-    fetch(url, {method: "HEAD", headers: headers})
-      .then( resp => {
-        if (resp.ok) {
-	  cacher.classList.remove("disabled")
-        } else {
-	  cacher.classList.add("disabled")
-        }
-      })
-      .catch(ex => {
-	  cacher.classList.add("disabled")
-      })
-  }
+  console.log("Caching all currently-open content")
 
-  setInterval (updateCacheButton , 30000)
-  updateCacheButton()
-}
-
-async function fetchAll() {
-  let teamId = sessionStorage.getItem("id")
-  let headers = new Headers()
-  headers.append("pragma", "no-cache")
-  headers.append("cache-control", "no-cache")
-  requests = []
-  let url = new URL("current_manifest.json", window.location)
-  url.searchParams.set("id", teamId)
-
-  toast("Caching all currently-open content")
-  requests.push( fetch(url, {headers: headers})
-   .then( resp => {
-    if (resp.ok) {
-      resp.json()
-       .then(contents => {
-        console.log("Processing manifest")
-        for (let resource of contents) {
-          if (resource == "puzzles.json") {
-            continue
-          }
-          fetch(resource)
-           .then(e => {
-             console.log("Fetched " + resource)
-          })
-        }
-      })
-   }
-  }))
-
-  let resp = await fetch("puzzles.json?id=" + teamId, {headers: headers})
-	
-  if (resp.ok) {
-    let categories = await resp.json()
-    let cat_names = Object.keys(categories)
-    cat_names.sort()
-    for (let cat_name of cat_names) {
-      if (cat_name.startsWith("__")) {
-        // Skip metadata
+  for (let cat in puzzles) {
+    for (let points of puzzles[cat]) {
+      let resp = await fetch(cat + "/" + points + "/")
+      if (! resp.ok) {
         continue
       }
-      let puzzles = categories[cat_name]
-      for (let puzzle of puzzles) {
-	let url = new URL("puzzle.html", window.location)
-	url.searchParams.set("cat", cat_name)
-	url.searchParams.set("points", puzzle[0])
-	url.searchParams.set("pid", puzzle[1])
-        requests.push( fetch(url)
-         .then(e => {
-          console.log("Fetched " + url)
-        }))
+      let obj = await resp.json()
+      for (let file of obj.files) {
+        fetch(cat + "/" + points + "/" + file.name)
+      }
+      for (let file of obj.scripts) {
+        fetch(cat + "/" + points + "/" + file.name)
       }
     }
   }
-  await Promise.all(requests)
-  toast("Done caching content")
+
+  console.log("Done caching content")
 }
 
 function login(e) {
@@ -229,7 +176,7 @@ function login(e) {
   let name = document.querySelector("[name=name]").value
   let teamId = document.querySelector("[name=id]").value
   let pide = document.querySelector("[name=pid]")
-  let participantId = pide?pide.value:""
+  let participantId = pide?pide.value:Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
   
   fetch("register", {
     method: "POST",
@@ -239,12 +186,12 @@ function login(e) {
     if (resp.ok) {
       resp.json()
       .then(obj => {
-        if (obj.status == "success") {
-          toast("Team registered")
-          showPuzzles(teamId, participantId)
-        } else if (obj.data.short == "Already registered") {
-          toast("Logged in with previously-registered team name")
-          showPuzzles(teamId, participantId)
+        if ((obj.status == "success") || (obj.data.short == "Already registered")) {
+          toast("Logged in")
+          sessionStorage.id = teamId
+          sessionStorage.pid = participantId
+          showPuzzles()
+          heartbeat()
         } else {
           toast(obj.data.description)
         }
@@ -265,12 +212,8 @@ function login(e) {
 }
 
 function init() {
-  // Already signed in?
-  let teamId = sessionStorage.getItem("id")
-  let participantId = sessionStorage.getItem("pid")
-  if (teamId) {
-    showPuzzles(teamId, participantId)
-  }
+  heartbeat()
+  setInterval(e => heartbeat(), 40000)
 
   document.getElementById("login").addEventListener("submit", login)
 }

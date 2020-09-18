@@ -18,20 +18,20 @@ function scoreboardInit() {
     }
     
     let element = document.getElementById("rankings")
-    let teamNames = state.teams
-    let pointsLog = state.points
+    let teamNames = state.TeamNames
+    let pointsLog = state.PointsLog
   
     // Every machine that's displaying the scoreboard helpfully stores the last 20 values of
     // points.json for us, in case of catastrophe. Thanks, y'all!
     //
     // We have been doing some variation on this "everybody backs up the server state" trick since 2009.
     // We have needed it 0 times.
-    let pointsHistory = JSON.parse(localStorage.getItem("pointsHistory")) || []
-    if (pointsHistory.length >= 20) {
-      pointsHistory.shift()
+    let stateHistory = JSON.parse(localStorage.getItem("stateHistory")) || []
+    if (stateHistory.length >= 20) {
+      stateHistory.shift()
     }
-    pointsHistory.push(pointsLog)
-    localStorage.setItem("pointsHistory", JSON.stringify(pointsHistory))
+    stateHistory.push(state)
+    localStorage.setItem("stateHistory", JSON.stringify(stateHistory))
   
     let teams = {}
     let highestCategoryScore = {} // map[string]int
@@ -216,7 +216,7 @@ function scoreboardInit() {
   }
   
   function refresh() {
-    fetch("points.json")
+    fetch("state")
     .then(resp => {
       return resp.json()
     })
