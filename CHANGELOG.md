@@ -4,20 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0] - Unreleased
-### Added
-- New `transpile` command to replace some functionality of devel server
-
+## [v4.0.0] - Unreleased
 ### Changed
 - Major rewrite/refactor of `mothd`
-  - There are now providers for State, Puzzles, and Theme. Sqlite, Redis, or S3 should fit in easily.
+  - Clear separation of roles: State, Puzzles, and Theme
+    - Sqlite, Redis, or S3 should fit in easily now
+    - Will allow "dynamic" puzzles now, we just need a flag to enable it
   - Server no longer provides unlocked content
-  - Puzzle URLs are now just `/content/${cat}/${points}/`
-- `state/until` is now `state/hours` and can specify multiple begin/end hours
-- `state/disabled` is now `state/enabled`
-- Mothball structure has changed substantially
+    - Puzzle URLs are now just `/content/${cat}/${points}/`
+  - Changes to `state` directory
+    - Most files now have a bit of (English) documentation at the beginning
+    - `state/until` is now `state/hours` and can specify multiple begin/end hours
+    - `state/disabled` is now `state/enabled`
+- Mothball structure has changed
   - Mothballs no longer contain `map.txt`
+  - Mothballs no longer obfuscate content paths
   - Clients now expect unlocked puzzles to just be `map[string][]int`
+- New `/state` API endpoint
+  - Provides *all* server state: event log, team mapping, messages, configuration
+
+### Added
+- New `transpile` CLI command
+  - Provides `mothball` action to create mothballs
+  - Lets you test a few development server things, if you want
 
 ### Deprecated
 

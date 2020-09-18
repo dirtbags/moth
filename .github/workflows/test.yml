@@ -1,0 +1,16 @@
+name: Tests
+on: [push]
+
+jobs:
+  test-mothd:
+    name: Test mothd
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.13            
+      - name: Retrieve code
+        uses: actions/checkout@v1
+      - name: Test
+        run: go test ./...
