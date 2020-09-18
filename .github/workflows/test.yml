@@ -14,3 +14,47 @@ jobs:
         uses: actions/checkout@v1
       - name: Test
         run: go test ./...
+  publish:
+    name: Publish latest build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve code
+        uses: actions/checkout@v1
+
+      - name: Push latest to GitHub Packages
+        uses: docker/build-push-action@v2
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          target: moth
+          file: build/package/Containerfile
+          registry: docker.pkg.github.com
+          repository: dirtbags/moth/moth:latest
+          
+      - name: Push moth-devel to GitHub Packages
+        uses: docker/build-push-action@v2
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          target: moth-devel
+          file: build/package/Containerfile
+          registry: docker.pkg.github.com
+          repository: dirtbags/moth/moth-devel:latest
+          
+      - name: Push moth to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          username: neale
+          password: ${{ secrets.DOCKER_TOKEN }}
+          target: moth
+          file: build/packages/Containerfile
+          repository: dirtbags/moth:latest
+
+      - name: Push moth-devel to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          username: neale
+          password: ${{ secrets.DOCKER_TOKEN }}
+          target: moth-devel
+          file: build/packages/Containerfile
+          repository: dirtbags/moth-devel:latest
