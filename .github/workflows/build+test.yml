@@ -56,12 +56,14 @@ jobs:
           file: build/package/Containerfile
           push: ${{ steps.vars.outputs.tags != '' }}
           tags: ${{ steps.vars.outputs.moth-tags }}
+            dirtbags/moth:${{ steps.vars.outputs.tag }}
+            docker.pkg.github.com/dirtbags/moth/moth:${{ steps.vars.outputs.tag }}
 
       - name: Build and push moth-devel image
         uses: docker/build-push-action@v2
         with:
           target: moth
           file: build/package/Containerfile
-          tags: ${{ steps.vars.outputs.devel-tags }}
-            dirtbags/moth-devel:latest
-            docker.pkg.github.com/dirtbags/moth/moth-devel:latest
+          tags: |
+            dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
+            docker.pkg.github.com/dirtbags/moth/moth-devel:${{ steps.vars.outputs.tag }}
