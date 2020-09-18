@@ -22,40 +22,33 @@ jobs:
       - name: Retrieve code
         uses: actions/checkout@v1
 
-      - name: Push latest to GitHub Packages
-        uses: docker/build-push-action@v2
+      - name: Login to GitHub Packages Docker Registry
+        uses: docker/login-action@v1
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          target: moth
-          file: build/package/Containerfile
           registry: docker.pkg.github.com
-          repository: dirtbags/moth/moth:latest
-          
-      - name: Push moth-devel to GitHub Packages
-        uses: docker/build-push-action@v2
-        with:
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          target: moth-devel
-          file: build/package/Containerfile
-          registry: docker.pkg.github.com
-          repository: dirtbags/moth/moth-devel:latest
-          
-      - name: Push moth to Docker Hub
-        uses: docker/build-push-action@v2
-        with:
-          username: neale
-          password: ${{ secrets.DOCKER_TOKEN }}
-          target: moth
-          file: build/packages/Containerfile
-          repository: dirtbags/moth:latest
 
-      - name: Push moth-devel to Docker Hub
-        uses: docker/build-push-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
         with:
           username: neale
           password: ${{ secrets.DOCKER_TOKEN }}
-          target: moth-devel
-          file: build/packages/Containerfile
-          repository: dirtbags/moth-devel:latest
+
+      - name: Build and push moth image
+        uses: docker/build-push-action@v2
+        with:
+          target: moth
+          file: build/package/Containerfile
+          tags: 
+            - dirtbags/moth:latest
+            - docker.pkg.github.com/dirtbags/moth/moth:latest
+
+      - name: Build and push moth-devel image
+        uses: docker/build-push-action@v2
+        with:
+          target: moth
+          file: build/package/Containerfile
+          tags: 
+            - dirtbags/moth-devel:latest
+            - docker.pkg.github.com/dirtbags/moth/moth-devel:latest
