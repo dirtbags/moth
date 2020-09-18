@@ -13,10 +13,8 @@ for target in moth moth-devel; do
     $PODMAN build \
         --build-arg http_proxy --build-arg https_proxy --build-arg no_proxy \
         --tag dirtbags/$target \
-        --tag dirtbags/$target:$VERSION \
         --target $target \
         -f build/package/Containerfile .
-    [ "$1" = "-push" ] && docker push dirtbags/$target:$VERSION && docker push dirtbags/$img:latest
 done
 
 exit 0
