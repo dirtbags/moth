@@ -35,6 +35,7 @@ jobs:
       - name: Get current branch
         id: vars
         run: |
+          echo "GITHUB_REF: $GITHUB_REF"
           case $GITHUB_REF in
             refs/tags/*)
               TAGS=latest,${GITHUB_REF#refs/tags/}
@@ -43,6 +44,7 @@ jobs:
               TAGS=latest
               ;;
           esac
+          echo "tags: $TAGS"
           echo "::set-output name=tags::$TAGS"
 
       - name: Login to GitHub Packages Docker Registry
