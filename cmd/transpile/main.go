@@ -68,8 +68,9 @@ func (t *T) ParseArgs() (Command, error) {
 		usage(t.Stderr)
 		return nothing, nil
 	default:
+		fmt.Fprintln(t.Stderr, "ERROR:", t.Args[1], "is not a valid command")
 		usage(t.Stderr)
-		return nothing, fmt.Errorf("%s is not a valid command", t.Args[1])
+		return nothing, fmt.Errorf("Invalid command")
 	}
 
 	flags.SetOutput(t.Stderr)

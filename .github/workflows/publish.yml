@@ -1,7 +1,8 @@
 name: Publish
 on:
-  release:
-    types: [published]
+  push:
+    tags: 
+      -  'v*' # Only versioned tags
 
 jobs:
   publish:
