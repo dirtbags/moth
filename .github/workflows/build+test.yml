@@ -1,5 +1,13 @@
-name: Tests
-on: [push]
+name: Build/Test
+
+on: 
+  push:
+    branches:
+      - v3
+      - devel
+      - master
+    tags:
+      - 'v*.*.*'
 
 jobs:
   test-mothd:
@@ -9,20 +17,36 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.13            
+          go-version: 1.13       
+
       - name: Retrieve code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+
       - name: Test
         run: go test ./...
 
   publish:
-    name: Publish latest build
+    name: Publish container images
     runs-on: ubuntu-latest
     steps:
       - name: Retrieve code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+
+      - name: Get current branch
+        id: vars
+        run: |
+          case $GITHUB_REF in
+            refs/tags/*)
+              TAGS=latest,${GITHUB_REF#refs/tags/}
+              ;;
+            refs/heads/master)
+              TAGS=latest
+              ;;
+          esac
+          echo "::set-output name=tags::$TAGS"
 
       - name: Login to GitHub Packages Docker Registry
+        if: steps.vars.tags != ''
         uses: docker/login-action@v1
         with:
           registry: docker.pkg.github.com
@@ -30,6 +54,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to DockerHub
+        if: steps.vars.tags != ''
         uses: docker/login-action@v1
         with:
           username: neale
