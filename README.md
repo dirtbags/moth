@@ -30,6 +30,14 @@ A few things make MOTH different than other Capture The Flag server projects:
 You can read more about why we made these decisions in [philosophy](docs/philosophy.md).
 
 
+Run in demonstration mode
+===========
+
+    docker run --rm -it -p 8080:8080 dirtbags/moth-devel
+
+Then open http://localhost:8080/ and check out the example puzzles.
+
+
 Documentation
 ==========
 
@@ -37,17 +45,6 @@ Documentation
 * [Getting Started](docs/getting-started.md): This guide will get you started with a production server.
 * [Administration](docs/administration.md): How to set hours, and change setup.
 
-Running a Production Server
-===========================
-
-    docker run --rm -it -p 8080:8080 -v /path/to/moth/state:/state -v /path/to/moth/mothballs:/mothballs:ro dirtbags/moth
-
-You can be more fine-grained about directories, if you like.
-Inside the container, you need the following paths:
-
-* `/state` (rw) Where state is stored. Read [the overview](doc/overview.md) to learn what's what in here.
-* `/mothballs` (ro) Mothballs (puzzle bundles) as provided by the development server.
-* `/theme` (ro) Overrides for the built-in theme.
 
 
 Contributing to MOTH
