@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"log"
 	"net/http"
 	"strconv"
@@ -171,11 +172,12 @@ func (h *HTTPServer) MothballerHandler(mh MothRequestHandler, w http.ResponseWri
 	// parts[0] == "mothballer"
 	filename := parts[1]
 	cat := strings.TrimSuffix(filename, ".mb")
-	mothball, err := mh.Mothball(cat)
-	if err != nil {
+	mb := new(bytes.Buffer)
+	if err := mh.Mothball(cat, mb); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	http.ServeContent(w, req, filename, time.Now(), mothball)
+	mbReader := bytes.NewReader(mb.Bytes())
+	http.ServeContent(w, req, filename, time.Now(), mbReader)
 }

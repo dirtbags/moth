@@ -2,6 +2,7 @@ package transpile
 
 import (
 	"archive/zip"
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path"
@@ -14,7 +15,8 @@ import (
 
 func TestMothballsMemFs(t *testing.T) {
 	static := NewFsCategory(newTestFs(), "cat1")
-	if _, err := Mothball(static); err != nil {
+	mb := new(bytes.Buffer)
+	if err := Mothball(static, mb); err != nil {
 		t.Error(err)
 	}
 }
@@ -25,13 +27,15 @@ func TestMothballsOsFs(t *testing.T) {
 
 	fs := NewRecursiveBasePathFs(afero.NewOsFs(), "testdata")
 	static := NewFsCategory(fs, "static")
-	mb, err := Mothball(static)
+	mb := new(bytes.Buffer)
+	err := Mothball(static, mb)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	mbr, err := zip.NewReader(mb, int64(mb.Len()))
+	mbReader := bytes.NewReader(mb.Bytes())
+	mbr, err := zip.NewReader(mbReader, int64(mb.Len()))
 	if err != nil {
 		t.Error(err)
 	}
@@ -43,7 +47,7 @@ func TestMothballsOsFs(t *testing.T) {
 		defer f.Close()
 		if buf, err := ioutil.ReadAll(f); err != nil {
 			t.Error(err)
-		} else if string(buf) != "" {
+		} else if string(buf) != "1\n2\n3\n" {
 			t.Error("Bad puzzles.txt", string(buf))
 		}
 	}

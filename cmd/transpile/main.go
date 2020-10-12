@@ -16,11 +16,13 @@ import (
 
 // T represents the state of things
 type T struct {
-	Stdout   io.Writer
-	Stderr   io.Writer
-	Args     []string
-	BaseFs   afero.Fs
-	fs       afero.Fs
+	Stdout io.Writer
+	Stderr io.Writer
+	Args   []string
+	BaseFs afero.Fs
+	fs     afero.Fs
+
+	// Arguments
 	filename string
 	answer   string
 }
@@ -51,19 +53,21 @@ func (t *T) ParseArgs() (Command, error) {
 	}
 
 	flags := flag.NewFlagSet(t.Args[1], flag.ContinueOnError)
+	flags.SetOutput(t.Stderr)
 	directory := flags.String("dir", "", "Work directory")
 
 	switch t.Args[1] {
 	case "mothball":
 		cmd = t.DumpMothball
+		flags.StringVar(&t.filename, "out", "", "Path to create mothball (empty for stdout)")
 	case "inventory":
 		cmd = t.PrintInventory
 	case "open":
-		flags.StringVar(&t.filename, "file", "puzzle.json", "Filename to open")
 		cmd = t.DumpFile
+		flags.StringVar(&t.filename, "file", "puzzle.json", "Filename to open")
 	case "answer":
-		flags.StringVar(&t.answer, "answer", "", "Answer to check")
 		cmd = t.CheckAnswer
+		flags.StringVar(&t.answer, "answer", "", "Answer to check")
 	case "help":
 		usage(t.Stderr)
 		return nothing, nil
@@ -73,7 +77,6 @@ func (t *T) ParseArgs() (Command, error) {
 		return nothing, fmt.Errorf("Invalid command")
 	}
 
-	flags.SetOutput(t.Stderr)
 	if err := flags.Parse(t.Args[2:]); err != nil {
 		return nothing, err
 	}
@@ -140,14 +143,24 @@ func (t *T) DumpFile() error {
 	return nil
 }
 
-// DumpMothball writes a mothball to the writer.
+// DumpMothball writes a mothball to the writer, or an output file if specified.
 func (t *T) DumpMothball() error {
+	var w io.Writer
+
 	c := transpile.NewFsCategory(t.fs, "")
-	mb, err := transpile.Mothball(c)
-	if err != nil {
-		return err
+	if t.filename == "" {
+		w = t.Stdout
+	} else {
+		log.Println("Writing to", t.filename, t.fs)
+		outf, err := t.BaseFs.Create(t.filename)
+		if err != nil {
+			return err
+		}
+		defer outf.Close()
+		w = outf
 	}
-	if _, err := io.Copy(t.Stdout, mb); err != nil {
+	log.Println(t.fs)
+	if err := transpile.Mothball(c, w); err != nil {
 		return err
 	}
 	return nil
@@ -165,8 +178,6 @@ func (t *T) CheckAnswer() error {
 }
 
 func main() {
-	// XXX: Convert puzzle.py to standalone thingies
-
 	t := &T{
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,

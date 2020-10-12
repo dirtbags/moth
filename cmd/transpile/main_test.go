@@ -1,8 +1,10 @@
 package main
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"testing"
 
 	"github.com/dirtbags/moth/pkg/transpile"
@@ -83,16 +85,72 @@ func TestEverything(t *testing.T) {
 	if stdout.String() != "Moo." {
 		t.Error("Wrong file pulled", stdout.String())
 	}
+}
+
+func TestMothballs(t *testing.T) {
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	tp := T{
+		Stdout: stdout,
+		Stderr: stderr,
+		BaseFs: newTestFs(),
+	}
 
 	stdout.Reset()
-	if err := tp.Run("mothball", "-dir=unbroken"); err != nil {
-		t.Log(tp.fs)
+	if err := tp.Run("mothball", "-dir=unbroken", "-out=unbroken.mb"); err != nil {
+		t.Error(err)
+		return
+	}
+
+	// afero.WriteFile(tp.BaseFs, "unbroken.mb", []byte("moo"), 0644)
+	fis, err := afero.ReadDir(tp.BaseFs, "/")
+	if err != nil {
 		t.Error(err)
 	}
-	if stdout.Len() < 200 {
-		t.Error("That's way too short to be a mothball")
+	for _, fi := range fis {
+		t.Log(fi.Name())
 	}
-	if stdout.String()[:2] != "PK" {
-		t.Error("This mothball isn't a zip file!")
+
+	mb, err := tp.BaseFs.Open("unbroken.mb")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer mb.Close()
+
+	info, err := mb.Stat()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	zmb, err := zip.NewReader(mb, info.Size())
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	for _, zf := range zmb.File {
+		f, err := zf.Open()
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		defer f.Close()
+		buf, err := ioutil.ReadAll(f)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		switch zf.Name {
+		case "answers.txt":
+			if len(buf) == 0 {
+				t.Error("answers.txt empty")
+			}
+		case "puzzles.txt":
+			if len(buf) == 0 {
+				t.Error("puzzles.txt empty")
+			}
+		}
 	}
 }
