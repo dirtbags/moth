@@ -88,11 +88,6 @@ function submit(e) {
   e.preventDefault()
   let data = new FormData(e.target)
   
-  // Kludge for patterned answers
-  let xAnswer = data.get("xAnswer")
-  if (xAnswer) {
-    data.set("answer", xAnswer)
-  }
   window.data = data
   fetch("answer", {
     method: "POST",
@@ -193,7 +188,6 @@ function answerCheck(e) {
   
   checkAnswer(answer)
   .then (correct => {
-    document.querySelector("[name=xAnswer").value = correct || answer
     if (correct) {
       ok.textContent = "⭕"
       ok.title = "Possibly correct"

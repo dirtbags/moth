@@ -20,9 +20,9 @@ case $1:$2:$3 in
     }
 }
 EOT
-                ;;
-    puzzle:*:)
-        fail "No such puzzle"
+        ;;
+    puzzle:*)
+        fail "No such puzzle: $2"
         ;;
     file:1:moo.txt)
         echo "Moo."

@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -120,6 +121,11 @@ func (pc ProviderCommand) CheckAnswer(cat string, points int, answer string) (bo
 	}
 
 	return true, nil
+}
+
+// Mothball just returns an error
+func (pc ProviderCommand) Mothball(cat string) (*bytes.Reader, error) {
+	return nil, fmt.Errorf("Can't package a command-generated category")
 }
 
 // Maintain does nothing: a command puzzle ProviderCommand has no housekeeping

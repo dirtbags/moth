@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os/exec"
 )
 
 // Mothball packages a Category up for a production server run.
@@ -37,7 +38,7 @@ func Mothball(c Category) (*bytes.Reader, error) {
 		}
 		puzzle, err := c.Puzzle(points)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Puzzle %d: %s", points, err)
 		}
 
 		// Record answers in answers.txt
@@ -45,13 +46,16 @@ func Mothball(c Category) (*bytes.Reader, error) {
 			fmt.Fprintln(answersTxt, points, answer)
 		}
 
-		// Remove all answers from puzzle object
+		// Remove answers and debugging from puzzle object
 		puzzle.Answers = []string{}
+		puzzle.Debug.Errors = []string{}
+		puzzle.Debug.Hints = []string{}
+		puzzle.Debug.Log = []string{}
 
 		// Write out Puzzle object
 		penc := json.NewEncoder(pw)
 		if err := penc.Encode(puzzle); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Puzzle %d: %s", points, err)
 		}
 
 		// Write out all attachments and scripts
@@ -63,11 +67,13 @@ func Mothball(c Category) (*bytes.Reader, error) {
 				return nil, err
 			}
 			ar, err := c.Open(points, att)
-			if err != nil {
-				return nil, err
+			if exerr, ok := err.(*exec.ExitError); ok {
+				return nil, fmt.Errorf("Puzzle %d: %s: %s: %s", points, att, err, string(exerr.Stderr))
+			} else if err != nil {
+				return nil, fmt.Errorf("Puzzle %d: %s: %s", points, att, err)
 			}
 			if _, err := io.Copy(aw, ar); err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Puzzle %d: %s: %s", points, att, err)
 			}
 		}
 	}

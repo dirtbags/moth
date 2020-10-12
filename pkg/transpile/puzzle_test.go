@@ -136,3 +136,35 @@ func TestFsPuzzle(t *testing.T) {
 		t.Error("Error answer marked correct")
 	}
 }
+
+func TestAttachment(t *testing.T) {
+	buf := bytes.NewBufferString(`
+pre:
+  attachments: 
+    - simple
+    - filename: complex
+      filesystempath: backingfile
+`)
+	p, err := yamlHeaderParser(buf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	att := p.Pre.Attachments
+	if len(att) != 2 {
+		t.Error("Wrong number of attachments", att)
+	}
+	if att[0].Filename != "simple" {
+		t.Error("Attachment 0 wrong")
+	}
+	if att[0].Filename != att[0].FilesystemPath {
+		t.Error("Attachment 0 wrong")
+	}
+	if att[1].Filename != "complex" {
+		t.Error("Attachment 1 wrong")
+	}
+	if att[1].FilesystemPath != "backingfile" {
+		t.Error("Attachment 2 wrong")
+	}
+}

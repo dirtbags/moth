@@ -92,6 +92,26 @@ type StaticAttachment struct {
 	FilesystemPath string // Filename in backing FS (URL, mothball, or local FS)
 }
 
+// UnmarshalYAML allows a StaticAttachment to be specified as a single string.
+// The way the yaml library works is weird.
+func (sa *StaticAttachment) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	if err := unmarshal(&sa.Filename); err == nil {
+		sa.FilesystemPath = sa.Filename
+		return nil
+	}
+
+	parts := new(struct {
+		Filename       string
+		FilesystemPath string
+	})
+	if err := unmarshal(parts); err != nil {
+		return err
+	}
+	sa.Filename = parts.Filename
+	sa.FilesystemPath = parts.FilesystemPath
+	return nil
+}
+
 // ReadSeekCloser provides io.Reader, io.Seeker, and io.Closer.
 type ReadSeekCloser interface {
 	io.Reader
@@ -307,8 +327,16 @@ func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
 			p.Debug.Summary = val[0]
 		case "hint":
 			p.Debug.Hints = val
+		case "solution":
+			p.Debug.Hints = val
 		case "ksa":
 			p.Post.KSAs = val
+		case "objective":
+			p.Post.Objective = val[0]
+		case "success.acceptable":
+			p.Post.Success.Acceptable = val[0]
+		case "success.mastery":
+			p.Post.Success.Mastery = val[0]
 		default:
 			return p, fmt.Errorf("Unknown header field: %s", key)
 		}
@@ -338,18 +366,19 @@ type FsCommandPuzzle struct {
 	timeout time.Duration
 }
 
-func (fp FsCommandPuzzle) run(args ...string) ([]byte, error) {
+func (fp FsCommandPuzzle) run(command string, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), fp.timeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "./"+path.Base(fp.command), args...)
+	cmdargs := append([]string{command}, args...)
+	cmd := exec.CommandContext(ctx, "./"+path.Base(fp.command), cmdargs...)
 	cmd.Dir = path.Dir(fp.command)
 	return cmd.Output()
 }
 
 // Puzzle returns a Puzzle struct for the current puzzle.
 func (fp FsCommandPuzzle) Puzzle() (Puzzle, error) {
-	stdout, err := fp.run()
+	stdout, err := fp.run("puzzle")
 	if exiterr, ok := err.(*exec.ExitError); ok {
 		return Puzzle{}, errors.New(string(exiterr.Stderr))
 	} else if err != nil {
@@ -379,7 +408,7 @@ func (c nopCloser) Close() error {
 // Open returns a newly-opened file.
 // BUG(neale): FsCommandPuzzle.Open() reads everything into memory, and will suck for large files.
 func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
-	stdout, err := fp.run("--file", filename)
+	stdout, err := fp.run("file", filename)
 	buf := nopCloser{bytes.NewReader(stdout)}
 	if err != nil {
 		return buf, err
@@ -390,7 +419,7 @@ func (fp FsCommandPuzzle) Open(filename string) (ReadSeekCloser, error) {
 
 // Answer checks whether the given answer is correct.
 func (fp FsCommandPuzzle) Answer(answer string) bool {
-	stdout, err := fp.run("--answer", answer)
+	stdout, err := fp.run("answer", answer)
 	if err != nil {
 		log.Printf("ERROR: checking answer: %s", err)
 		return false

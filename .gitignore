@@ -4,8 +4,5 @@
 *.o
 .idea
 ./bin/
-build/
-cache/
-target/
 puzzles
 __debug_bin

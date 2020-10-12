@@ -93,6 +93,7 @@ input:invalid {
 #devel {
   background-color: #eee;
   color: black;
+  overflow: scroll;
 }
 #devel .string {
   color: #9c27b0;

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dirtbags/moth/pkg/jsend"
 )
@@ -29,6 +30,10 @@ func NewHTTPServer(base string, server *MothServer) *HTTPServer {
 	h.HandleMothFunc("/register", h.RegisterHandler)
 	h.HandleMothFunc("/answer", h.AnswerHandler)
 	h.HandleMothFunc("/content/", h.ContentHandler)
+
+	if server.Config.Devel {
+		h.HandleMothFunc("/mothballer/", h.MothballerHandler)
+	}
 	return h
 }
 
@@ -128,16 +133,16 @@ func (h *HTTPServer) AnswerHandler(mh MothRequestHandler, w http.ResponseWriter,
 
 // ContentHandler returns static content from a given puzzle
 func (h *HTTPServer) ContentHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
-	trimLen := len(h.base) + len("/content/")
-	parts := strings.SplitN(req.URL.Path[trimLen:], "/", 3)
-	if len(parts) < 3 {
-		http.Error(w, "Not Found", http.StatusNotFound)
+	parts := strings.SplitN(req.URL.Path[len(h.base)+1:], "/", 4)
+	if len(parts) < 4 {
+		http.NotFound(w, req)
 		return
 	}
 
-	cat := parts[0]
-	pointsStr := parts[1]
-	filename := parts[2]
+	// parts[0] == "content"
+	cat := parts[1]
+	pointsStr := parts[2]
+	filename := parts[3]
 
 	if filename == "" {
 		filename = "puzzle.json"
@@ -153,4 +158,24 @@ func (h *HTTPServer) ContentHandler(mh MothRequestHandler, w http.ResponseWriter
 	defer mf.Close()
 
 	http.ServeContent(w, req, filename, mtime, mf)
+}
+
+// MothballerHandler returns a mothball
+func (h *HTTPServer) MothballerHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
+	parts := strings.SplitN(req.URL.Path[len(h.base)+1:], "/", 2)
+	if len(parts) < 2 {
+		http.NotFound(w, req)
+		return
+	}
+
+	// parts[0] == "mothballer"
+	filename := parts[1]
+	cat := strings.TrimSuffix(filename, ".mb")
+	mothball, err := mh.Mothball(cat)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.ServeContent(w, req, filename, time.Now(), mothball)
 }
