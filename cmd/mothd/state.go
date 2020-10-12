@@ -325,7 +325,7 @@ func (s *State) maybeInitialize() {
 	if f, err := s.Create("initialized"); err == nil {
 		fmt.Fprintln(f, "initialized: remove to re-initialize the contest.")
 		fmt.Fprintln(f)
-		fmt.Fprintln(f, "This instance was initaliazed at", now)
+		fmt.Fprintln(f, "This instance was initialized at", now)
 		f.Close()
 	}
 
