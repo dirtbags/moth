@@ -97,6 +97,7 @@ function renderPuzzles(obj) {
 }
 
 function renderState(obj) {
+  window.state = obj
   devel = obj.Config.Devel
   if (devel) {
     let params = new URLSearchParams(window.location.search)

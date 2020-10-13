@@ -81,7 +81,6 @@ func (t *T) ParseArgs() (Command, error) {
 		return nothing, err
 	}
 	if *directory != "" {
-		log.Println(*directory)
 		t.fs = afero.NewBasePathFs(t.BaseFs, *directory)
 	} else {
 		t.fs = t.BaseFs
@@ -151,7 +150,7 @@ func (t *T) DumpMothball() error {
 	if t.filename == "" {
 		w = t.Stdout
 	} else {
-		log.Println("Writing to", t.filename, t.fs)
+		log.Println("Writing mothball to", t.filename)
 		outf, err := t.BaseFs.Create(t.filename)
 		if err != nil {
 			return err
@@ -159,7 +158,6 @@ func (t *T) DumpMothball() error {
 		defer outf.Close()
 		w = outf
 	}
-	log.Println(t.fs)
 	if err := transpile.Mothball(c, w); err != nil {
 		return err
 	}

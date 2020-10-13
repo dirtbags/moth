@@ -175,7 +175,8 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	export := StateExport{}
 	export.Config = mh.Config
 
-	teamName, _ := mh.State.TeamName(mh.teamID)
+	teamName, err := mh.State.TeamName(mh.teamID)
+	registered := (err == nil)
 
 	export.Messages = mh.State.Messages()
 	export.TeamNames = map[string]string{"self": teamName}
@@ -204,7 +205,7 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	}
 
 	export.Puzzles = make(map[string][]int)
-	if _, ok := export.TeamNames["self"]; ok {
+	if registered {
 		// We used to hand this out to everyone,
 		// but then we got a bad reputation on some secretive blacklist,
 		// and now the Navy can't register for events.

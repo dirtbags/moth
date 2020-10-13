@@ -51,7 +51,7 @@ func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekClose
 		return nil, time.Time{}, fmt.Errorf("No such category: %s", cat)
 	}
 
-	f, err := zc.Open(fmt.Sprintf("content/%d/%s", points, filename))
+	f, err := zc.Open(fmt.Sprintf("%d/%s", points, filename))
 	if err != nil {
 		return nil, time.Time{}, err
 	}

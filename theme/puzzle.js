@@ -132,7 +132,7 @@ async function loadPuzzle(categoryName, points, puzzleId) {
   document.getElementById("authors").textContent = window.puzzle.Pre.Authors.join(", ")
 
   // If answers are provided, this is the devel server
-  if (window.puzzle.Answers) {
+  if (window.puzzle.Answers.length > 0) {
     devel_addin(document.getElementById("devel"))
   }
   

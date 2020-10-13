@@ -34,6 +34,18 @@ func TestServer(t *testing.T) {
 
 	server := NewTestServer()
 	handler := server.NewHandler(participantID, teamID)
+
+	{
+		es := handler.ExportState()
+		if es.Config.Devel {
+			t.Error("Marked as development server", es.Config)
+		}
+		if len(es.Puzzles) != 0 {
+			t.Log("State", es)
+			t.Error("Unauthenticated state has non-empty puzzles list")
+		}
+	}
+
 	if err := handler.Register(teamName); err != nil {
 		t.Error(err)
 	}
