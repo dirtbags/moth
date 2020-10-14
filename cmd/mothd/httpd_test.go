@@ -66,6 +66,12 @@ func TestHttpd(t *testing.T) {
 		t.Error("Register failed")
 	}
 
+thatt	if r := hs.TestRequest("/register", map[string]string{"name": "GoTeam"}); r.Result().StatusCode != 200 {
+		t.Error(r.Result())
+	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"Team ID has already been registered"}}` {
+		t.Error("Register failed", r.Body.String())
+	}
+
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
 	} else if r.Body.String() != `{"Config":{"Devel":false},"Messages":"messages.html","TeamNames":{"self":"GoTeam"},"PointsLog":[],"Puzzles":{"pategory":[1]}}` {
@@ -107,6 +113,10 @@ func TestHttpd(t *testing.T) {
 	}
 
 	time.Sleep(TestMaintenanceInterval)
+
+	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
+		t.Error(r.Result())
+	}
 
 	state := StateExport{}
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {

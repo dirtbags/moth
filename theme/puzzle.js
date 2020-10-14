@@ -204,8 +204,8 @@ function init() {
   let points = params.get("points")
   let puzzleId = params.get("pid")
   
-  if (categoryName && points && puzzleId) {
-    loadPuzzle(categoryName, points, puzzleId)
+  if (categoryName && points) {
+    loadPuzzle(categoryName, points, puzzleId || points)
   }
 
   let teamId = sessionStorage.getItem("id")

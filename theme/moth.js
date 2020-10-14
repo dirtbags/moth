@@ -59,7 +59,7 @@ function renderPuzzles(obj) {
     pdiv.appendChild(l)
     for (let puzzle of puzzles) {
       let points = puzzle
-      let id = puzzle
+      let id = null
       
       if (Array.isArray(puzzle)) {
         points = puzzle[0]
@@ -80,7 +80,7 @@ function renderPuzzles(obj) {
         let url = new URL("puzzle.html", window.location)
         url.searchParams.set("cat", cat)
         url.searchParams.set("points", points)
-        url.searchParams.set("pid", id)
+        if (id) { url.searchParams.set("pid", id) }
         a.href = url.toString()
       }
     }

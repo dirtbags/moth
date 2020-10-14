@@ -34,6 +34,7 @@ func TestServer(t *testing.T) {
 
 	server := NewTestServer()
 	handler := server.NewHandler(participantID, teamID)
+	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
 
 	{
 		es := handler.ExportState()
@@ -49,6 +50,12 @@ func TestServer(t *testing.T) {
 	if err := handler.Register(teamName); err != nil {
 		t.Error(err)
 	}
+	if err := handler.Register(teamName); err == nil {
+		t.Error("Registering twice should have raised an error")
+	} else if err != ErrAlreadyRegistered {
+		t.Error("Wrong error for duplicate registration:", err)
+	}
+
 	if r, _, err := handler.ThemeOpen("/index.html"); err != nil {
 		t.Error(err)
 	} else if contents, err := ioutil.ReadAll(r); err != nil {
@@ -89,12 +96,12 @@ func TestServer(t *testing.T) {
 		r.Close()
 	}
 
-	if r, _, err := handler.PuzzlesOpen("pategory", 2, "puzzles.json"); err == nil {
+	if r, _, err := handler.PuzzlesOpen("pategory", 2, "puzzle.json"); err == nil {
 		t.Error("Opening locked puzzle shouldn't work")
 		r.Close()
 	}
 
-	if r, _, err := handler.PuzzlesOpen("pategory", 20, "puzzles.json"); err == nil {
+	if r, _, err := handler.PuzzlesOpen("pategory", 20, "puzzle.json"); err == nil {
 		t.Error("Opening non-existent puzzle shouldn't work")
 		r.Close()
 	}
@@ -108,6 +115,22 @@ func TestServer(t *testing.T) {
 	es = handler.ExportState()
 	if len(es.PointsLog) != 1 {
 		t.Error("I didn't get my points!")
+	}
+	if len(es.Puzzles["pategory"]) != 2 {
+		t.Error("The next puzzle didn't unlock!")
+	} else if es.Puzzles["pategory"][1] != 2 {
+		t.Error("The 2-point puzzle should have unlocked!")
+	}
+
+	if r, _, err := handler.PuzzlesOpen("pategory", 2, "puzzle.json"); err != nil {
+		t.Error("Opening unlocked puzzle should work")
+	} else {
+		r.Close()
+	}
+	if r, _, err := anonHandler.PuzzlesOpen("pategory", 2, "puzzle.json"); err != nil {
+		t.Error("Opening unlocked puzzle anonymously should work")
+	} else {
+		r.Close()
 	}
 
 	// BUG(neale): We aren't currently testing the various ways to disable the server

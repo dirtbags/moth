@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -22,6 +23,9 @@ const DistinguishableChars = "34678abcdefhikmnpqrtwxy="
 // RFC3339Space is a time layout which replaces 'T' with a space.
 // This is also a valid RFC3339 format.
 const RFC3339Space = "2006-01-02 15:04:05Z07:00"
+
+// ErrAlreadyRegistered means a team cannot be registered because it was registered previously.
+var ErrAlreadyRegistered = errors.New("Team ID has already been registered")
 
 // State defines the current state of a MOTH instance.
 // We use the filesystem for synchronization between threads.
@@ -127,7 +131,7 @@ func (s *State) TeamName(teamID string) (string, error) {
 }
 
 // SetTeamName writes out team name.
-// This can only be done once.
+// This can only be done once per team.
 func (s *State) SetTeamName(teamID, teamName string) error {
 	idsFile, err := s.Open("teamids.txt")
 	if err != nil {
@@ -149,7 +153,7 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	teamFilename := filepath.Join("teams", teamID)
 	teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_EXCL, 0644)
 	if os.IsExist(err) {
-		return fmt.Errorf("Team ID is already registered")
+		return ErrAlreadyRegistered
 	} else if err != nil {
 		return err
 	}

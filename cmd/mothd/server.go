@@ -107,7 +107,7 @@ type MothRequestHandler struct {
 // PuzzlesOpen opens a file associated with a puzzle.
 // BUG(neale): Multiple providers with the same category name are not detected or handled well.
 func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (r ReadSeekCloser, ts time.Time, err error) {
-	export := mh.ExportState()
+	export := mh.exportStateIfRegistered(true)
 	found := false
 	for _, p := range export.Puzzles[cat] {
 		if p == points {
@@ -115,7 +115,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 		}
 	}
 	if !found {
-		return nil, time.Time{}, fmt.Errorf("Category not found")
+		return nil, time.Time{}, fmt.Errorf("Puzzle does not exist or is locked")
 	}
 
 	// Try every provider until someone doesn't return an error
@@ -172,11 +172,15 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 // the anonymized team name for this teamID has the special value "self".
 // If not, the puzzles list is empty.
 func (mh *MothRequestHandler) ExportState() *StateExport {
+	return mh.exportStateIfRegistered(false)
+}
+
+func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExport {
 	export := StateExport{}
 	export.Config = mh.Config
 
 	teamName, err := mh.State.TeamName(mh.teamID)
-	registered := (err == nil)
+	registered := override || (err == nil)
 
 	export.Messages = mh.State.Messages()
 	export.TeamNames = map[string]string{"self": teamName}
@@ -209,7 +213,6 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 		// We used to hand this out to everyone,
 		// but then we got a bad reputation on some secretive blacklist,
 		// and now the Navy can't register for events.
-
 		for _, provider := range mh.PuzzleProviders {
 			for _, category := range provider.Inventory() {
 				// Append sentry (end of puzzles)
