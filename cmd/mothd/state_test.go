@@ -55,11 +55,17 @@ func TestState(t *testing.T) {
 		t.Errorf("Setting bad team ID didn't raise an error")
 	}
 
-	if err := s.SetTeamName(teamID, "My Team"); err != nil {
-		t.Errorf("Setting team name: %v", err)
+	teamName := "My Team"
+	if err := s.SetTeamName(teamID, teamName); err != nil {
+		t.Errorf("Setting team name: %w", err)
 	}
 	if err := s.SetTeamName(teamID, "wat"); err == nil {
 		t.Errorf("Registering team a second time didn't fail")
+	}
+	if name, err := s.TeamName(teamID); err != nil {
+		t.Error(err)
+	} else if name != teamName {
+		t.Error("Incorrect team name:", name)
 	}
 
 	category := "poot"

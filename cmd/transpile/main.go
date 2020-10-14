@@ -147,9 +147,13 @@ func (t *T) DumpMothball() error {
 	var w io.Writer
 
 	c := transpile.NewFsCategory(t.fs, "")
-	if t.filename == "" {
+
+	removeOnError := false
+	switch t.filename {
+	case "", "-":
 		w = t.Stdout
-	} else {
+	default:
+		removeOnError = true
 		log.Println("Writing mothball to", t.filename)
 		outf, err := t.BaseFs.Create(t.filename)
 		if err != nil {
@@ -159,6 +163,9 @@ func (t *T) DumpMothball() error {
 		w = outf
 	}
 	if err := transpile.Mothball(c, w); err != nil {
+		if removeOnError {
+			t.BaseFs.Remove(t.filename)
+		}
 		return err
 	}
 	return nil

@@ -110,6 +110,12 @@ func (h *HTTPServer) StateHandler(mh MothRequestHandler, w http.ResponseWriter, 
 // RegisterHandler handles attempts to register a team
 func (h *HTTPServer) RegisterHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
 	teamName := req.FormValue("name")
+	teamName = strings.TrimSpace(teamName)
+	if teamName == "" {
+		jsend.Sendf(w, jsend.Fail, "empty name", "Team name may not be empty")
+		return
+	}
+
 	if err := mh.Register(teamName); err == ErrAlreadyRegistered {
 		jsend.Sendf(w, jsend.Success, "already registered", "Team ID has already been registered")
 	} else if err != nil {

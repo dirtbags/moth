@@ -151,14 +151,16 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	}
 
 	teamFilename := filepath.Join("teams", teamID)
-	teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_EXCL, 0644)
+	teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 	if os.IsExist(err) {
 		return ErrAlreadyRegistered
 	} else if err != nil {
 		return err
 	}
 	defer teamFile.Close()
+	log.Println("Setting team name to:", teamName, teamFilename, teamFile)
 	fmt.Fprintln(teamFile, teamName)
+	teamFile.Close()
 	return nil
 }
 
