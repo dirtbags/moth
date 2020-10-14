@@ -4,13 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v4.0.0-rc2] - Unreleased
+## [v4.0.0] - 2020-10-14
 ### Fixed
 - Multiple bugs preventing production server from working properly
 - CI builds should be working now
 - Team registration now correctly writes names to files
 - Anonymized team names now only computed once per team
 - Don't output "self" team for unauthenticated state exports
+
+### Added
+- Documented the HTTP API
+- Added a drawing of how things fit together
 
 ## [v4.0-rc1] - 2020-10-13
 ### Changed
