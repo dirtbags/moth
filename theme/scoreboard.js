@@ -13,6 +13,8 @@ function scoreboardInit() {
   ]
   
   function update(state) {
+    window.state = state
+    
     for (let rotate of document.querySelectorAll(".rotate")) {
       rotate.appendChild(rotate.firstElementChild)
     }

@@ -13,12 +13,12 @@ var testFiles = []struct {
 }{
 	{"puzzles.txt", "1\n3\n2\n"},
 	{"answers.txt", "1 answer123\n1 answer456\n2 wat\n"},
-	{"content/1/puzzle.json", `{"name": "moo"}`},
-	{"content/1/moo.txt", `moo`},
-	{"content/2/puzzle.json", `{}`},
-	{"content/2/moo.txt", `moo`},
-	{"content/3/puzzle.json", `{}`},
-	{"content/3/moo.txt", `moo`},
+	{"1/puzzle.json", `{"name": "moo"}`},
+	{"1/moo.txt", `moo`},
+	{"2/puzzle.json", `{}`},
+	{"2/moo.txt", `moo`},
+	{"3/puzzle.json", `{}`},
+	{"3/moo.txt", `moo`},
 }
 
 func (m *Mothballs) createMothball(cat string) {

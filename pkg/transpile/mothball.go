@@ -10,23 +10,16 @@ import (
 )
 
 // Mothball packages a Category up for a production server run.
-func Mothball(c Category) (*bytes.Reader, error) {
-	buf := new(bytes.Buffer)
-	zf := zip.NewWriter(buf)
+func Mothball(c Category, w io.Writer) error {
+	zf := zip.NewWriter(w)
 
 	inv, err := c.Inventory()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	puzzlesTxt, err := zf.Create("puzzles.txt")
-	if err != nil {
-		return nil, err
-	}
-	answersTxt, err := zf.Create("answers.txt")
-	if err != nil {
-		return nil, err
-	}
+	puzzlesTxt := new(bytes.Buffer)
+	answersTxt := new(bytes.Buffer)
 
 	for _, points := range inv {
 		fmt.Fprintln(puzzlesTxt, points)
@@ -34,11 +27,11 @@ func Mothball(c Category) (*bytes.Reader, error) {
 		puzzlePath := fmt.Sprintf("%d/puzzle.json", points)
 		pw, err := zf.Create(puzzlePath)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		puzzle, err := c.Puzzle(points)
 		if err != nil {
-			return nil, fmt.Errorf("Puzzle %d: %s", points, err)
+			return fmt.Errorf("Puzzle %d: %s", points, err)
 		}
 
 		// Record answers in answers.txt
@@ -55,7 +48,7 @@ func Mothball(c Category) (*bytes.Reader, error) {
 		// Write out Puzzle object
 		penc := json.NewEncoder(pw)
 		if err := penc.Encode(puzzle); err != nil {
-			return nil, fmt.Errorf("Puzzle %d: %s", points, err)
+			return fmt.Errorf("Puzzle %d: %s", points, err)
 		}
 
 		// Write out all attachments and scripts
@@ -64,20 +57,33 @@ func Mothball(c Category) (*bytes.Reader, error) {
 			attPath := fmt.Sprintf("%d/%s", points, att)
 			aw, err := zf.Create(attPath)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			ar, err := c.Open(points, att)
 			if exerr, ok := err.(*exec.ExitError); ok {
-				return nil, fmt.Errorf("Puzzle %d: %s: %s: %s", points, att, err, string(exerr.Stderr))
+				return fmt.Errorf("Puzzle %d: %s: %s: %s", points, att, err, string(exerr.Stderr))
 			} else if err != nil {
-				return nil, fmt.Errorf("Puzzle %d: %s: %s", points, att, err)
+				return fmt.Errorf("Puzzle %d: %s: %s", points, att, err)
 			}
 			if _, err := io.Copy(aw, ar); err != nil {
-				return nil, fmt.Errorf("Puzzle %d: %s: %s", points, att, err)
+				return fmt.Errorf("Puzzle %d: %s: %s", points, att, err)
 			}
 		}
 	}
+
+	pf, err := zf.Create("puzzles.txt")
+	if err != nil {
+		return err
+	}
+	puzzlesTxt.WriteTo(pf)
+
+	af, err := zf.Create("answers.txt")
+	if err != nil {
+		return err
+	}
+	answersTxt.WriteTo(af)
+
 	zf.Close()
 
-	return bytes.NewReader(buf.Bytes()), nil
+	return nil
 }

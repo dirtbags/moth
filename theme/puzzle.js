@@ -132,7 +132,7 @@ async function loadPuzzle(categoryName, points, puzzleId) {
   document.getElementById("authors").textContent = window.puzzle.Pre.Authors.join(", ")
 
   // If answers are provided, this is the devel server
-  if (window.puzzle.Answers) {
+  if (window.puzzle.Answers.length > 0) {
     devel_addin(document.getElementById("devel"))
   }
   
@@ -204,8 +204,8 @@ function init() {
   let points = params.get("points")
   let puzzleId = params.get("pid")
   
-  if (categoryName && points && puzzleId) {
-    loadPuzzle(categoryName, points, puzzleId)
+  if (categoryName && points) {
+    loadPuzzle(categoryName, points, puzzleId || points)
   }
 
   let teamId = sessionStorage.getItem("id")

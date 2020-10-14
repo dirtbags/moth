@@ -70,9 +70,9 @@ func (p TranspilerProvider) CheckAnswer(cat string, points int, answer string) (
 }
 
 // Mothball packages up a category into a mothball.
-func (p TranspilerProvider) Mothball(cat string) (*bytes.Reader, error) {
+func (p TranspilerProvider) Mothball(cat string, w io.Writer) error {
 	c := transpile.NewFsCategory(p.fs, cat)
-	return transpile.Mothball(c)
+	return transpile.Mothball(c, w)
 }
 
 // Maintain performs housekeeping.

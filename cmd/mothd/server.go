@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strconv"
@@ -42,7 +41,7 @@ type PuzzleProvider interface {
 	Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error)
 	Inventory() []Category
 	CheckAnswer(cat string, points int, answer string) (bool, error)
-	Mothball(cat string) (*bytes.Reader, error)
+	Mothball(cat string, w io.Writer) error
 	Maintainer
 }
 
@@ -108,7 +107,7 @@ type MothRequestHandler struct {
 // PuzzlesOpen opens a file associated with a puzzle.
 // BUG(neale): Multiple providers with the same category name are not detected or handled well.
 func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (r ReadSeekCloser, ts time.Time, err error) {
-	export := mh.ExportState()
+	export := mh.exportStateIfRegistered(true)
 	found := false
 	for _, p := range export.Puzzles[cat] {
 		if p == points {
@@ -116,7 +115,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 		}
 	}
 	if !found {
-		return nil, time.Time{}, fmt.Errorf("Category not found")
+		return nil, time.Time{}, fmt.Errorf("Puzzle does not exist or is locked")
 	}
 
 	// Try every provider until someone doesn't return an error
@@ -173,27 +172,37 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 // the anonymized team name for this teamID has the special value "self".
 // If not, the puzzles list is empty.
 func (mh *MothRequestHandler) ExportState() *StateExport {
+	return mh.exportStateIfRegistered(false)
+}
+
+func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExport {
 	export := StateExport{}
 	export.Config = mh.Config
 
-	teamName, _ := mh.State.TeamName(mh.teamID)
+	teamName, err := mh.State.TeamName(mh.teamID)
+	registered := override || (err == nil)
 
 	export.Messages = mh.State.Messages()
-	export.TeamNames = map[string]string{"self": teamName}
+	export.TeamNames = make(map[string]string)
 
 	// Anonymize team IDs in points log, and write out team names
 	pointsLog := mh.State.PointsLog()
-	exportIDs := map[string]string{mh.teamID: "self"}
-	maxSolved := map[string]int{}
+	exportIDs := make(map[string]string)
+	maxSolved := make(map[string]int)
 	export.PointsLog = make(award.List, len(pointsLog))
+
+	if registered {
+		export.TeamNames["self"] = teamName
+		exportIDs[mh.teamID] = "self"
+	}
 	for logno, awd := range pointsLog {
 		if id, ok := exportIDs[awd.TeamID]; ok {
 			awd.TeamID = id
 		} else {
 			exportID := strconv.Itoa(logno)
 			name, _ := mh.State.TeamName(awd.TeamID)
+			exportIDs[awd.TeamID] = exportID
 			awd.TeamID = exportID
-			exportIDs[awd.TeamID] = awd.TeamID
 			export.TeamNames[exportID] = name
 		}
 		export.PointsLog[logno] = awd
@@ -205,11 +214,10 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	}
 
 	export.Puzzles = make(map[string][]int)
-	if _, ok := export.TeamNames["self"]; ok {
+	if registered {
 		// We used to hand this out to everyone,
 		// but then we got a bad reputation on some secretive blacklist,
 		// and now the Navy can't register for events.
-
 		for _, provider := range mh.PuzzleProviders {
 			for _, category := range provider.Inventory() {
 				// Append sentry (end of puzzles)
@@ -233,14 +241,16 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 }
 
 // Mothball generates a mothball for the given category.
-func (mh *MothRequestHandler) Mothball(cat string) (r *bytes.Reader, err error) {
+func (mh *MothRequestHandler) Mothball(cat string, w io.Writer) error {
+	var err error
+
 	if !mh.Config.Devel {
-		return nil, fmt.Errorf("Cannot mothball in production mode")
+		return fmt.Errorf("Cannot mothball in production mode")
 	}
 	for _, provider := range mh.PuzzleProviders {
-		if r, err = provider.Mothball(cat); err == nil {
-			return r, nil
+		if err = provider.Mothball(cat, w); err == nil {
+			return nil
 		}
 	}
-	return nil, err
+	return err
 }

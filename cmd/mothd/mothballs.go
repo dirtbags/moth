@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -52,7 +51,7 @@ func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekClose
 		return nil, time.Time{}, fmt.Errorf("No such category: %s", cat)
 	}
 
-	f, err := zc.Open(fmt.Sprintf("content/%d/%s", points, filename))
+	f, err := zc.Open(fmt.Sprintf("%d/%s", points, filename))
 	if err != nil {
 		return nil, time.Time{}, err
 	}
@@ -174,8 +173,8 @@ func (m *Mothballs) refresh() {
 }
 
 // Mothball just returns an error
-func (m *Mothballs) Mothball(cat string) (*bytes.Reader, error) {
-	return nil, fmt.Errorf("Can't repackage a compiled mothball")
+func (m *Mothballs) Mothball(cat string, w io.Writer) error {
+	return fmt.Errorf("Refusing to repackage a compiled mothball")
 }
 
 // Maintain performs housekeeping for Mothballs.
