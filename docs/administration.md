@@ -70,7 +70,7 @@ Adjusting scores
 ------------------
 
     rm /srv/moth/state/enabled # Suspend scoring
-    nano /srv/moth/state/points.log
+    nano /srv/moth/state/points.log  # Replace nano with your preferred editor
     touch /srv/moth/state/enabled # Resume scoring
 
 We don't warn participants before we do this:
@@ -78,10 +78,8 @@ any points scored while scoring is suspended are queued up and processed as soon
 
 It's very important to suspend scoring before mucking around with the points log.
 The maintenance loop assumes it is the only thing writing to this file,
-and any edits you make could blow aware points scored.
+and any edits you make will remove points scored while you were editing.
 
-No, I don't use nano.
-None of us use nano.
 
 
 Changing a team name
