@@ -64,24 +64,26 @@ func TestServer(t *testing.T) {
 		t.Error("index.html wrong contents", contents)
 	}
 
-	es := handler.ExportState()
-	if es.Config.Devel {
-		t.Error("Marked as development server", es.Config)
-	}
-	if len(es.Puzzles) != 1 {
-		t.Error("Puzzle categories wrong length")
-	}
-	if es.Messages != "messages.html" {
-		t.Error("Messages has wrong contents")
-	}
-	if len(es.PointsLog) != 0 {
-		t.Error("Points log not empty")
-	}
-	if len(es.TeamNames) != 1 {
-		t.Error("Wrong number of team names")
-	}
-	if es.TeamNames["self"] != teamName {
-		t.Error("TeamNames['self'] wrong")
+	{
+		es := handler.ExportState()
+		if es.Config.Devel {
+			t.Error("Marked as development server", es.Config)
+		}
+		if len(es.Puzzles) != 1 {
+			t.Error("Puzzle categories wrong length")
+		}
+		if es.Messages != "messages.html" {
+			t.Error("Messages has wrong contents")
+		}
+		if len(es.PointsLog) != 0 {
+			t.Error("Points log not empty")
+		}
+		if len(es.TeamNames) != 1 {
+			t.Error("Wrong number of team names")
+		}
+		if es.TeamNames["self"] != teamName {
+			t.Error("TeamNames['self'] wrong")
+		}
 	}
 
 	if r, _, err := handler.PuzzlesOpen("pategory", 1, "moo.txt"); err != nil {
@@ -112,14 +114,16 @@ func TestServer(t *testing.T) {
 
 	time.Sleep(TestMaintenanceInterval)
 
-	es = handler.ExportState()
-	if len(es.PointsLog) != 1 {
-		t.Error("I didn't get my points!")
-	}
-	if len(es.Puzzles["pategory"]) != 2 {
-		t.Error("The next puzzle didn't unlock!")
-	} else if es.Puzzles["pategory"][1] != 2 {
-		t.Error("The 2-point puzzle should have unlocked!")
+	{
+		es := handler.ExportState()
+		if len(es.PointsLog) != 1 {
+			t.Error("I didn't get my points!")
+		}
+		if len(es.Puzzles["pategory"]) != 2 {
+			t.Error("The next puzzle didn't unlock!")
+		} else if es.Puzzles["pategory"][1] != 2 {
+			t.Error("The 2-point puzzle should have unlocked!")
+		}
 	}
 
 	if r, _, err := handler.PuzzlesOpen("pategory", 2, "puzzle.json"); err != nil {
@@ -138,20 +142,25 @@ func TestServer(t *testing.T) {
 	}
 
 	time.Sleep(TestMaintenanceInterval)
-	es = anonHandler.ExportState()
-	if len(es.TeamNames) != 2 {
-		t.Error("Anonymous TeamNames is wrong:", es.TeamNames)
-	}
-	if len(es.PointsLog) != 2 {
-		t.Error("Points log wrong length")
-	}
-	if es.PointsLog[1].TeamID != "0" {
-		t.Error("Second point log didn't anonymize team ID correctly:", es.PointsLog[1])
+
+	{
+		es := anonHandler.ExportState()
+		if len(es.TeamNames) != 1 {
+			t.Error("Anonymous TeamNames is wrong:", es.TeamNames)
+		}
+		if len(es.PointsLog) != 2 {
+			t.Error("Points log wrong length")
+		}
+		if es.PointsLog[1].TeamID != "0" {
+			t.Error("Second point log didn't anonymize team ID correctly:", es.PointsLog[1])
+		}
 	}
 
-	es = handler.ExportState()
-	if len(es.TeamNames) != 1 {
-		t.Error("TeamNames is wrong:", es.TeamNames)
+	{
+		es := handler.ExportState()
+		if len(es.TeamNames) != 1 {
+			t.Error("TeamNames is wrong:", es.TeamNames)
+		}
 	}
 
 	// BUG(neale): We aren't currently testing the various ways to disable the server

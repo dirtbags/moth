@@ -183,13 +183,18 @@ func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExpor
 	registered := override || (err == nil)
 
 	export.Messages = mh.State.Messages()
-	export.TeamNames = map[string]string{"self": teamName}
+inin	export.TeamNames = make(map[string]string)
 
 	// Anonymize team IDs in points log, and write out team names
 	pointsLog := mh.State.PointsLog()
-	exportIDs := map[string]string{mh.teamID: "self"}
-	maxSolved := map[string]int{}
+	exportIDs := make(map[string]string)
+	maxSolved := make(map[string]int)
 	export.PointsLog = make(award.List, len(pointsLog))
+
+	if registered {
+		export.TeamNames["self"] = teamName
+		exportIDs[mh.teamID] = "self"
+	}
 	for logno, awd := range pointsLog {
 		if id, ok := exportIDs[awd.TeamID]; ok {
 			awd.TeamID = id
