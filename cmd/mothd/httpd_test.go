@@ -50,7 +50,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"Config":{"Devel":false},"Messages":"messages.html","TeamNames":{"self":""},"PointsLog":[],"Puzzles":{}}` {
+	} else if r.Body.String() != `{"Config":{"Devel":false},"Messages":"messages.html","TeamNames":{},"PointsLog":[],"Puzzles":{}}` {
 		t.Error("Unexpected state", r.Body.String())
 	}
 

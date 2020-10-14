@@ -183,7 +183,7 @@ func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExpor
 	registered := override || (err == nil)
 
 	export.Messages = mh.State.Messages()
-inin	export.TeamNames = make(map[string]string)
+	export.TeamNames = make(map[string]string)
 
 	// Anonymize team IDs in points log, and write out team names
 	pointsLog := mh.State.PointsLog()
