@@ -196,7 +196,7 @@ func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExpor
 		} else {
 			exportID := strconv.Itoa(logno)
 			name, _ := mh.State.TeamName(awd.TeamID)
-			exportIDs[awd.TeamID] = awd.TeamID
+			exportIDs[awd.TeamID] = exportID
 			awd.TeamID = exportID
 			export.TeamNames[exportID] = name
 		}

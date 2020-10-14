@@ -142,6 +142,12 @@ func TestServer(t *testing.T) {
 	if len(es.TeamNames) != 2 {
 		t.Error("Anonymous TeamNames is wrong:", es.TeamNames)
 	}
+	if len(es.PointsLog) != 2 {
+		t.Error("Points log wrong length")
+	}
+	if es.PointsLog[1].TeamID != "0" {
+		t.Error("Second point log didn't anonymize team ID correctly:", es.PointsLog[1])
+	}
 
 	es = handler.ExportState()
 	if len(es.TeamNames) != 1 {
