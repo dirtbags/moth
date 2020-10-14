@@ -89,6 +89,10 @@ func TestState(t *testing.T) {
 		t.Error("Duplicate points award didn't fail")
 	}
 
+	if err := s.AwardPoints(teamID, category, points+1); err != nil {
+		t.Error("Awarding more points:", err)
+	}
+
 	pl = s.PointsLog()
 	if len(pl) != 1 {
 		t.Errorf("After awarding points, points log has length %d", len(pl))
@@ -104,7 +108,7 @@ func TestState(t *testing.T) {
 		t.Error(err)
 	}
 	s.refresh()
-	if len(s.PointsLog()) != 1 {
+	if len(s.PointsLog()) != 2 {
 		t.Error("Intentional parse error screws up all parsing")
 	}
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiple bugs preventing production server from working properly
 - CI builds should be working now
 - Team registration now correctly writes names to files
+- Anonymized team names now only computed once per team
 
 ## [v4.0-rc1] - 2020-10-13
 ### Changed

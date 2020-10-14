@@ -133,5 +133,20 @@ func TestServer(t *testing.T) {
 		r.Close()
 	}
 
+	if err := handler.CheckAnswer("pategory", 2, "wat"); err != nil {
+		t.Error("Right answer marked wrong:", err)
+	}
+
+	time.Sleep(TestMaintenanceInterval)
+	es = anonHandler.ExportState()
+	if len(es.TeamNames) != 2 {
+		t.Error("Anonymous TeamNames is wrong:", es.TeamNames)
+	}
+
+	es = handler.ExportState()
+	if len(es.TeamNames) != 1 {
+		t.Error("TeamNames is wrong:", es.TeamNames)
+	}
+
 	// BUG(neale): We aren't currently testing the various ways to disable the server
 }
