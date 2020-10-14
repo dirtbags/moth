@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v4.0.0] - Unreleased
+## [v4.0.0-rc2] - Unreleased
+### Fixed
+- Multiple bugs preventing production server from working properly
+
+## [v4.0-rc1] - 2020-10-13
 ### Changed
 - Major rewrite/refactor of `mothd`
   - Clear separation of roles: State, Puzzles, and Theme
@@ -36,14 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Security
-
-## [Unreleased]
-### Changed
- - Endpoints `/points.json`, `/puzzles.json`, and `/messages.html` (optional theme file) combine into `/state`
- - No more `__devel__` category for dev server: this is now `.config.devel` in the `/state` endpoint
- - Development server no longer serves a static `/` with links: it now redirects you to a randomly-generated seed URL
- - Default theme modifications to handle all this
- - Default theme now automatically "logs you in" with Team ID if it's getting state from the devel server
 
 ## [v3.5.1] - 2020-03-16
 ### Fixed
