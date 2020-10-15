@@ -54,6 +54,17 @@ Each line has six fields minimum:
 
 Fields after `points` contain extra fields associated with the event. 
 
+### Event types
+
+These may change in the future.
+
+* init: startup of server
+* disabled: points accumulation disabled
+* enabled: points accumulation re-enabled
+* load: puzzle load
+* wrong: wrong answer submitted
+* correct: correct answer submitted
+
 ### Example
 
 ```

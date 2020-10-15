@@ -24,25 +24,25 @@ Returns the current MOTH event state as a JSON object.
 
 #### Return
 
-```json
+```js
 {
     "Config": {
-        "Devel": false # true means this is a development server
+        "Devel": false // true means this is a development server
     },
     "Messages: "HTML to be rendered as broadcast messages",
     "TeamNames": {
-        "self": "Requesting team name", # Only if regestered team id is a provided
+        "self": "Requesting team name", // Only if regestered team id is a provided
         "0": "Team 1 Name",
-        "1": "Team 2 Name",
-        ...
+        "1": "Team 2 Name"
+        // ...
     },
-    "PointsLog": {
-        [1602679698, "0", "category", 1], # epochTime, teamID, category, points
-        ...
-    },
+    "PointsLog": [
+        [1602679698, "0", "category", 1] // epochTime, teamID, category, points
+        // ...
+    ],
     "Puzzles": {
-        "category": [1, 2, 3, 6], # list of unlocked puzzles for category
-        ...
+        "category": [1, 2, 3, 6] // list of unlocked puzzles for category
+        // ...
     }
 }
 ```
@@ -239,34 +239,34 @@ Content-Length: 397
 
 The special file `puzzle.json` describes a puzzle. It is a JSON object with the following fields:
 
-```json
+```js
 {
-  "Pre": { # Things which appear before the puzzle is solved
-    "Authors": ["Neale Pickett"], # List of puzzle authors, usually rendered as a footnote
-    "Attachments": ["tiger.jpg"],  # List of files attached to the puzzle
-    "Scripts": [],  # List of scripts which should be included in the HTML render of the puzzle
-    "Body": "<p>Can you find the hidden text?</p><p><img src=\"tiger.jpg\" alt=\"Grr\" /></p>\n", # HTML puzzle body
-    "AnswerPattern": "", # Regular expression to include in HTML input tag for validation
-    "AnswerHashes": [ # List of SHA265 hashes of correct answers, for client-side answer checking
+  "Pre": { // Things which appear before the puzzle is solved
+    "Authors": ["Neale Pickett"], // List of puzzle authors, usually rendered as a footnote
+    "Attachments": ["tiger.jpg"],  // List of files attached to the puzzle
+    "Scripts": [],  // List of scripts which should be included in the HTML render of the puzzle
+    "Body": "<p>Can you find the hidden text?</p><p><img src=\"tiger.jpg\" alt=\"Grr\" /></p>\n", // HTML puzzle body
+    "AnswerPattern": "", // Regular expression to include in HTML input tag for validation
+    "AnswerHashes": [ // List of SHA265 hashes of correct answers, for client-side answer checking
       "f91b1fe875cdf9e969e5bccd3e259adec5a987dcafcbc9ca8da62e341a7f29c6"
     ]
   },
-  "Post": { # Things reveal after the puzzle is solved
-    "Objective": "Learn to examine images for hidden text", # Learning objective
-    "Success": { # Measures of learning success
+  "Post": { // Things reveal after the puzzle is solved
+    "Objective": "Learn to examine images for hidden text", // Learning objective
+    "Success": { // Measures of learning success
       "Acceptable": "Visually examine image to find hidden text",
       "Mastery": "Visually examine image to find hidden text"
     },
-    "KSAs": null # Knowledge, Skills, and Abilities covered by this puzzle
+    "KSAs": null // Knowledge, Skills, and Abilities covered by this puzzle
   },
-  "Debug": { # Debugging output used in development: all fields are emptied when making mothballs
-    "Log": [], # Debug message log
-    "Errors": [], # Errors encountered generating this puzzzle
-    "Hints": [ # Hints for instructional assistants to provide to participants
+  "Debug": { // Debugging output used in development: all fields are emptied when making mothballs
+    "Log": [], // Debug message log
+    "Errors": [], // Errors encountered generating this puzzzle
+    "Hints": [ // Hints for instructional assistants to provide to participants
         "Zoom in to the image and examine all sections carefully"
     ], 
-    "Summary": "text in image" # Summary of this puzzle, to help identify it in an overview of puzzles
+    "Summary": "text in image" // Summary of this puzzle, to help identify it in an overview of puzzles
   },
-  "Answers": ["sandwich"] # List of answers: empty in production
+  "Answers": ["sandwich"] // List of answers: empty in production
 }
 ```

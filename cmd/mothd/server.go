@@ -128,7 +128,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 
 	// Log puzzle.json loads
 	if path == "puzzle.json" {
-		mh.State.LogEvent("load", "", "", "", 0)
+		mh.State.LogEvent("load", mh.participantID, mh.teamID, cat, points)
 	}
 
 	return
@@ -149,7 +149,7 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		return fmt.Errorf("Incorrect answer")
 	}
 
-	mh.State.LogEvent("corrrect", mh.participantID, mh.teamID, cat, points)
+	mh.State.LogEvent("correct", mh.participantID, mh.teamID, cat, points)
 
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
 		return fmt.Errorf("Error awarding points: %s", err)
