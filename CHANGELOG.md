@@ -5,9 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [v4.1.0-pre] - Unreleased
+### Fixed
+- Clear Debug.summary field when making mothballs
+
 ### Added
 - More log events
 - [Log channels document](docs/logs.md)
+- More detailed [API documntation](docs/api.md)
 
 ## [v4.0.0] - 2020-10-14
 ### Fixed

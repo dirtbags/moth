@@ -44,6 +44,7 @@ func Mothball(c Category, w io.Writer) error {
 		puzzle.Debug.Errors = []string{}
 		puzzle.Debug.Hints = []string{}
 		puzzle.Debug.Log = []string{}
+		puzzle.Debug.Summary = ""
 
 		// Write out Puzzle object
 		penc := json.NewEncoder(pw)
