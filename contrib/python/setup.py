@@ -19,7 +19,7 @@ setup(
         "pillow": ["Pillow>=5.4.1"],
         "full": ["scapy>=2.5.2", "Pillow>=5.4.1"],
     },
-    test_requires = [
+    tests_require = [
         "coverage==4.5.3", 
         "flake8==3.7.7", 
         "frosted==1.4.1",
