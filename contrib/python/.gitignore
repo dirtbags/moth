@@ -2,3 +2,6 @@ build/
 dist/
 moth.egg-info
 __pycache__/
+.coverage
+.eggs/
+.tox/

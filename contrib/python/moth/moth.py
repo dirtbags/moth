@@ -1,38 +1,41 @@
-#!/usr/bin/python3
+"""Basic library for building Python-based MOTH puzzles/categories"""
 
-import argparse
 import contextlib
 import copy
-import glob
 import hashlib
 import html
 import io
 import importlib.machinery
+import json
 import logging
 import os
+import pathlib
 import random
+import shutil
 import string
 import sys
 import tempfile
-import shlex
-import yaml
-
-from . import mistune
-
-messageChars = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+import types
 
 LOGGER = logging.getLogger(__name__)
+SEED = os.getenv("SEED", "0")
 
-def djb2hash(str):
-    h = 5381
-    for c in str.encode("utf-8"):
-        h = ((h * 33) + c) & 0xffffffff
-    return h
+
+def sha256hash(buf):
+    """Calculate a SHA256 hash
+
+    :param buf: A bytes object containg the data to hash
+    :returns: SHA256 hash digest as a hex string
+    """
+    return hashlib.sha256(buf.encode("utf-8")).hexdigest()
+
 
 @contextlib.contextmanager
 def pushd(newdir):
+    """Context manager for limiting context to individual puzzles/categories"""
+    newdir = str(newdir)
     curdir = os.getcwd()
-    LOGGER.debug("Attempting to chdir from %s to %s" % (curdir, newdir))
+    LOGGER.debug("Attempting to chdir from %s to %s", curdir, newdir)
     os.chdir(newdir)
 
     # Force a copy of the old path, instead of just a reference
@@ -50,24 +53,28 @@ def pushd(newdir):
                 to_remove.append(module)
 
         for module in to_remove:
-            del(sys.modules[module])
+            del sys.modules[module]
 
         sys.path = old_path
-        LOGGER.debug("Changing directory back from %s to %s" % (newdir, curdir))
+        LOGGER.debug("Changing directory back from %s to %s",
+                     newdir, curdir)
         os.chdir(curdir)
 
 
 def loadmod(name, path):
-    abspath = os.path.abspath(path)
+    """Load a specified puzzle module
+
+    :param name: Name to load the module as
+    :param path: Path of the module to load
+    """
+    abspath = str(path.resolve())
     loader = importlib.machinery.SourceFileLoader(name, abspath)
-    return loader.load_module()
+    mod = types.ModuleType(loader.name)
+    return loader.exec_module(mod)
 
 
-# Get a big list of clean words for our answer file.
-ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
-                                                     'answer_words.txt'))]
+class PuzzleFile:  # pylint: disable=too-few-public-methods
 
-class PuzzleFile:
     """A file associated with a puzzle.
 
     path: The path to the original input file. May be None (when this is created from a file handle
@@ -84,7 +91,9 @@ class PuzzleFile:
         self.name = name
         self.visible = visible
 
+
 class PuzzleSuccess(dict):
+
     """Puzzle success objectives
 
     :param acceptable: Learning outcome from acceptable knowledge of the subject matter
@@ -94,7 +103,7 @@ class PuzzleSuccess(dict):
     valid_fields = ["acceptable", "mastery"]
 
     def __init__(self, **kwargs):
-        super(PuzzleSuccess, self).__init__()
+        super().__init__()
         for key in self.valid_fields:
             self[key] = None
         for key, value in kwargs.items():
@@ -104,16 +113,25 @@ class PuzzleSuccess(dict):
     def __getattr__(self, attr):
         if attr in self.valid_fields:
             return self[attr]
-        raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+        raise AttributeError(
+            "'%s' object has no attribute '%s'" % (type(self).__name__, attr))
 
     def __setattr__(self, attr, value):
         if attr in self.valid_fields:
             self[attr] = value
         else:
-            raise AttributeError("'%s' object has no attribute '%s'" % (type(self).__name__, attr))
+            raise AttributeError(
+                "'%s' object has no attribute '%s'" % (type(self).__name__, attr))
 
 
-class Puzzle:
+class Puzzle:  # pylint: disable=too-many-instance-attributes
+
+    """A MOTH Puzzle.
+    :param category_seed: A byte string to use as a seed for random numbers for this puzzle.
+                          It is combined with the puzzle points.
+    :param points: The point value of the puzzle.
+    """
+
     def __init__(self, category_seed, points):
         """A MOTH Puzzle.
 
@@ -124,157 +142,58 @@ class Puzzle:
 
         super().__init__()
 
-        self.points = points
+        self._source_format = "py"
+
+        self.markup = None
+
+        self.points = points or 0
         self.summary = None
         self.authors = []
         self.answers = []
         self.scripts = []
         self.pattern = None
-        self.hint = None
+        self.hints = []
         self.files = {}
         self.body = io.StringIO()
 
         # NIST NICE objective content
         self.objective = None  # Text describing the expected learning outcome from solving this puzzle, *why* are you solving this puzzle
-        self.success = PuzzleSuccess()  # Text describing criteria for different levels of success, e.g. {"Acceptable": "Did OK", "Mastery": "Did even better"}
+        self.success = PuzzleSuccess()   # Text describing criteria for different levels of success, e.g. {"Acceptable": "Did OK", "Mastery": "Did even better"}
         self.solution = None  # Text describing how to solve the puzzle
         self.ksas = []  # A list of references to related NICE KSAs (e.g. K0058, . . .)
 
         self.logs = []
-        self.randseed = category_seed * self.points
+        self.randseed = "%s %d" % (category_seed, self.points)
         self.rand = random.Random(self.randseed)
 
+    def set_markup(self, markup):
+        """Set the markup function to convert body to HTML.
+
+        Normally this would be something like mistune.markdown.
+        """
+        self.markup = markup
+
+    def open(self, filename):
+        """Return a local file stream
+
+        :param filename: A string representing the "name" of the puzzle file
+        :returns: A file-like object
+        """
+        return self.files[filename].stream
+
     def log(self, *vals):
-        """Add a new log message to this puzzle."""
+        """Add a new log message to this puzzle.
+
+        :param *vals: One or more str-able objects representing a log entry
+        """
         msg = ' '.join(str(v) for v in vals)
         self.logs.append(msg)
 
-    def read_stream(self, stream):
-        header = True
-        line = ""
-        if stream.read(3) == "---":
-            header = "yaml"
-        else:
-            header = "moth"
-
-        stream.seek(0)
-
-        if header == "yaml":
-            LOGGER.info("Puzzle is YAML-formatted")
-            self.read_yaml_header(stream)
-        elif header == "moth":
-            LOGGER.info("Puzzle is MOTH-formatted")
-            self.read_moth_header(stream)
-                
-        for line in stream:
-            self.body.write(line)
-
-    def read_yaml_header(self, stream):
-        contents = ""
-        header = False
-        for line in stream:
-            if line.strip() == "---" and header:  # Handle last line
-                break
-            elif line.strip() == "---":  # Handle first line
-                header = True
-                continue
-            else:
-                contents += line
-
-        config = yaml.safe_load(contents)
-        for key, value in config.items():
-            key = key.lower()
-            self.handle_header_key(key, value)
-
-    def read_moth_header(self, stream):
-        for line in stream:
-            line = line.strip()
-            if not line:
-                break
-
-            key, val = line.split(':', 1)
-            key = key.lower()
-            val = val.strip()
-            self.handle_header_key(key, val)
-
-    def handle_header_key(self, key, val):
-        LOGGER.debug("Handling key: %s, value: %s", key, val)
-        if key == 'author':
-            self.authors.append(val)
-        elif key == 'authors':
-            if not isinstance(val, list):
-                raise ValueError("Authors must be a list, got %s, instead" & (type(val),))
-            self.authors = list(val)
-        elif key == 'summary':
-            self.summary = val
-        elif key == 'answer':
-            if not isinstance(val, str):
-                raise ValueError("Answers must be strings, got %s, instead" % (type(val),))
-            self.answers.append(val)
-        elif key == "answers":
-            for answer in val:
-                if not isinstance(answer, str):
-                    raise ValueError("Answers must be strings, got %s, instead" % (type(answer),))
-                self.answers.append(answer)
-        elif key == 'pattern':
-            self.pattern = val
-        elif key == 'hint':
-            self.hint = val
-        elif key == 'name':
-            pass
-        elif key == 'file':
-            parts = shlex.split(val)
-            name = parts[0]
-            hidden = False
-            LOGGER.debug("Attempting to open %s", os.path.abspath(name))
-            stream = open(name, 'rb')
-            try:
-                name = parts[1]
-                hidden = (parts[2].lower() == "hidden")
-            except IndexError:
-                pass
-            self.files[name] = PuzzleFile(stream, name, not hidden)
-        elif key == 'script':
-            stream = open(val, 'rb')
-            # Make sure this shows up in the header block of the HTML output.
-            self.files[val] = PuzzleFile(stream, val, visible=False)
-            self.scripts.append(val)
-        elif key == "objective":
-            self.objective = val
-        elif key == "success":
-            # Force success dictionary keys to be lower-case
-            self.success = dict((x.lower(), y) for x,y in val.items())
-        elif key == "success.acceptable":
-            self.success.acceptable = val
-        elif key == "success.mastery":
-            self.success.mastery = val
-        elif key == "solution":
-            self.solution = val
-        elif key == "ksas":
-            if not isinstance(val, list):
-                raise ValueError("KSAs must be a list, got %s, instead" & (type(val),))
-            self.ksas = val
-        elif key == "ksa":
-            self.ksas.append(val)
-        else:
-            raise ValueError("Unrecognized header field: {}".format(key))
-
-
-    def read_directory(self, path):
-        try:
-            puzzle_mod = loadmod("puzzle", os.path.join(path, "puzzle.py"))
-        except FileNotFoundError:
-            puzzle_mod = None
-
-        with pushd(path):
-            if puzzle_mod:
-                puzzle_mod.make(self)
-            else:
-                with open('puzzle.moth') as f:
-                    self.read_stream(f)
-
     def random_hash(self):
-        """Create a file basename (no extension) with our number generator."""
+        """Create a file basename (no extension) with our number generator.
+
+        :returns: A string containing a pseuedo-random filename
+        """
         return ''.join(self.rand.choice(string.ascii_lowercase) for i in range(8))
 
     def make_temp_file(self, name=None, visible=True):
@@ -284,25 +203,50 @@ class Puzzle:
         :param name: The name of the file for links within the puzzle. If this is None, a name
                      will be generated for you.
         :param visible: Whether or not the file will be visible to the user.
-        :return: A file object for writing
+        :returns: A file object for writing
         """
 
         stream = tempfile.TemporaryFile()
         self.add_stream(stream, name, visible)
         return stream
 
+    def add_script_stream(self, stream, name):
+        """Adds a stream as a script which should appear in the header block of HTML output
+
+        :param stream: A file-like object containing the body of the script
+        :param name: A string containing the name of the script
+        """
+        self.files[name] = PuzzleFile(stream, name, visible=False)
+        self.scripts.append(name)
+
     def add_stream(self, stream, name=None, visible=True):
+        """Add a file-like object to a puzzle
+
+        :param stream: A file-like object containing the "file" contents
+        :param name (optional): The name of the file, if not provided, a random name is generated
+        :param visble (optional): A boolean specifying whether the file should appear in the puzzle's public listing. True by default
+        """
+
         if name is None:
             name = self.random_hash()
         self.files[name] = PuzzleFile(stream, name, visible)
 
     def add_file(self, filename, visible=True):
-        fd = open(filename, 'rb')
+        """Add a file by name to a puzzle
+
+        :param filename: A string containing the name of the file to include
+        :param visble (optional): A boolean specifying whether the file should appear in the puzzle's public listing. True by default
+        """
+
+        fd = open(filename, 'rb')  # pylint: disable=invalid-name
         name = os.path.basename(filename)
         self.add_stream(fd, name=name, visible=visible)
 
     def randword(self):
-        """Return a randomly-chosen word"""
+        """Return a randomly-chosen word
+
+        :returns: A string containing a randomly-chosen word
+        """
 
         return self.rand.choice(ANSWER_WORDS)
 
@@ -324,7 +268,7 @@ class Puzzle:
         ' !"#$%&\'()*+,-./'
         '0123456789:;<=>?'
         '@ABCDEFGHIJKLMNO'
-        'PQRSTUVWXYZ[\]^_'
+        'PQRSTUVWXYZ[\\]^_'
         '`abcdefghijklmno'
         'pqrstuvwxyz{|}~·'
         '················'
@@ -338,21 +282,27 @@ class Puzzle:
     )
 
     def hexdump(self, buf, charset=hexdump_stdch, gap=('�', '⌷')):
+        """Write a hex dump of data to the puzzle body
+
+        :param buf: Buffer of bytes to dump
+        :param charset: Character set to use while dumping hex-equivalents. Default to ASCII
+        :param gap: Length-2 tuple containing character to use to represent unprintable characters
+        """
         hexes, chars = [], []
         out = []
 
-        for b in buf:
+        for buf_byte in buf:
             if len(chars) == 16:
                 out.append((hexes, chars))
                 hexes, chars = [], []
 
-            if b is None:
-                h, c = gap
+            if buf_byte is None:
+                hex_char, char = gap
             else:
-                h = '{:02x}'.format(b)
-                c = charset[b]
-            chars.append(c)
-            hexes.append(h)
+                hex_char = '{:02x}'.format(buf_byte)
+                char = charset[buf_byte]
+            chars.append(char)
+            hexes.append(hex_char)
 
         out.append((hexes, chars))
 
@@ -384,73 +334,168 @@ class Puzzle:
         self.body.write('{:08x}\n'.format(offset))
         self.body.write('</pre>')
 
-    def get_authors(self):
-        return self.authors or [self.author]
-
     def get_body(self):
+        """Get the body of the puzzle
+
+        :return: The body of the puzzle
+        """
         return self.body.getvalue()
 
     def html_body(self):
-        """Format and return the markdown for the puzzle body."""
-        return mistune.markdown(self.get_body(), escape=False)
+        """Format and return the markdown for the puzzle body.
 
-    def package(self, answers=False):
-        """Return a dict packaging of the puzzle."""
+        :return: The rendered body of the puzzle
+        """
 
-        files = [fn for fn,f in self.files.items() if f.visible]
+        body = self.get_body()
+        if self.markup:
+            body = self.markup(body)
+        return body
+
+    def package(self):
+        """Return a dict packaging of the puzzle.
+        :param answers: Whether or not to include answers in the results, defaults to False
+
+        :return: Dict representation of the puzzle
+        """
+
+        attachments = [fn for fn, f in self.files.items()]
         return {
-            'authors': self.get_authors(),
-            'hashes': self.hashes(),
-            'files': files,
-            'scripts': self.scripts,
-            'pattern': self.pattern,
-            'body': self.html_body(),
-            'objective': self.objective,
-            'success': self.success,
-            'solution': self.solution,
-            'ksas': self.ksas,
+            'Pre': {
+                'Authors': self.authors,
+                'Attachments': attachments,
+                'Scripts': self.scripts,
+                'Body': self.html_body(),
+                'AnswerHashes': self.hashes(),
+                'AnswerPattern': self.pattern,
+            },
+            'Post': {
+                'Objective': self.objective,
+                'Success': self.success,
+                'KSAs': self.ksas,
+            },
+            'Debug': {
+                'Log': self.logs,
+                'Hints': self.hints,
+                'Summary': self.summary,
+            },
+            'Answers': self.answers,
         }
 
     def hashes(self):
-        "Return a list of answer hashes"
+        """Return a list of answer hashes
 
-        return [djb2hash(a) for a in self.answers]
+        :return: List of answer hashes
+        """
+
+        return [sha256hash(a) for a in self.answers]
 
 
-class Category:
-    def __init__(self, path, seed):
-        self.path = path
-        self.seed = seed
-        self.catmod = None
+def v3markup(buf):
+    """Get a markdown handler compatible with MOTHv3, using Mistune
 
-        try:
-            self.catmod = loadmod('category', str(os.path.join(str(path), 'category.py')))
-        except FileNotFoundError:
-            self.catmod = None
+    :param buf: A string containing valid Markdown
 
-    def pointvals(self):
-        if self.catmod:
-            with pushd(self.path):
-                pointvals = self.catmod.pointvals()
+    :returns: A string containing rendered Markdown
+    """
+
+    import mistune  # pylint: disable=import-outside-toplevel
+    return mistune.markdown(buf, escape=False)
+
+
+def mkpuzzle(make, args, points=None):
+    """Handle a puzzle request
+
+    :param args: An array of string arguments
+    :param points: The requested point value for a puzzle
+    """
+
+    puzzle = Puzzle(SEED, points)
+    puzzle.markup = v3markup
+    if points:
+        rpuzzle = make(puzzle, points)
+    else:
+        rpuzzle = make(puzzle)
+    if rpuzzle:
+        puzzle = rpuzzle
+
+    if len(args) < 1:
+        raise RuntimeError(
+            "Must provide an action: puzzle, file FILENAME, or answer ANSWER")
+
+    if args[0] == "puzzle":
+        json.dump(puzzle.package(), sys.stdout)
+    elif args[0] == "file":
+        fp = puzzle.open(args[1])  # pylint: disable=invalid-name
+        shutil.copyfileobj(fp, sys.stdout.buffer)
+    elif args[0] == "answer":
+        if args[1] in puzzle.answers:
+            print("correct")
         else:
-            pointvals = []
-            for fpath in glob.glob(str(os.path.join(str(self.path), "[0-9]*"))):
-                pn = os.path.basename(fpath)
-                points = int(pn)
-                pointvals.append(points)
-        return sorted(pointvals)
+            print("wrong")
+    else:
+        raise RuntimeError("Unsupported action: %s" % (args[0],))
 
-    def puzzle(self, points):
-        puzzle = Puzzle(self.seed, points)
-        path = str(os.path.join(str(self.path), str(points)))
-        if self.catmod:
-            with pushd(self.path):
-                self.catmod.make(points, puzzle)
-        else:
-            with pushd(str(self.path)):
-                puzzle.read_directory(path)
-        return puzzle
 
-    def __iter__(self):
-        for points in self.pointvals():
-            yield self.puzzle(points)
+def mkcategory(make, pointvals, args):
+    """Build a category of puzzle
+
+    :param pointvals: a function returning the list of valid point values
+    :param args: An array of string arguments
+    """
+
+    if not pointvals:
+        raise RuntimeError("No pointvals function provided for category mode")
+
+    pointval = 0
+    if len(args) >= 2:
+        pointval = int(args[1])
+        if pointval not in pointvals:
+            raise RuntimeError(
+                "Requested point value is not in this category's pointvals")
+
+    if len(args) < 1:
+        raise RuntimeError(
+            "Must provide an action: inventory, puzzle POINTS, file POINTS FILENAME, or answer POINTS ANSWER")
+
+    if args[0] == "inventory":
+        json.dump(sorted(pointvals), sys.stdout)
+    elif args[0] in ("puzzle", "file", "answer"):
+        mkpuzzle(make, [args[0]] + args[2:], pointval)
+    else:
+        raise RuntimeError("Unsupported action: %s" % (args[0],))
+
+
+def main(make, pointvals=None):
+    """main: Guess what to do based on how we were invoked.
+
+    For transpiled puzzles, this will do the right thing.
+    Uses the MOTHv3 devel-server API:
+
+    Puzzle API:
+
+        make(puzzle, None)
+            Accepts a Puzzle object, and fills it in. The second value is always None.
+
+    Category API:
+
+        make(puzzle, points)
+            Accepts a Puzzle object, and fills it in. points contains the number of points we are looking at.
+
+    """
+
+    random.seed(os.getenv("SEED", "0"))
+
+    myself = pathlib.Path(sys.argv[0])
+    if myself.name == "mkpuzzle":
+        mkpuzzle(make, sys.argv[1:])
+    elif myself.name == "mkcategory":
+        mkcategory(make, pointvals, sys.argv[1:])
+    else:
+        raise NotImplementedError(
+            "Can't auto-detect action for executable named %s" % (myself.name,))
+
+
+# Words for generating answers.
+ANSWER_WORDS = [w.strip() for w in open(os.path.join(os.path.dirname(__file__),
+                                                     'answer_words.txt'))]
