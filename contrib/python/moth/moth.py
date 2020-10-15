@@ -16,6 +16,7 @@ import string
 import sys
 import tempfile
 import types
+import warnings
 
 LOGGER = logging.getLogger(__name__)
 SEED = os.getenv("SEED", "0")
@@ -165,6 +166,31 @@ class Puzzle:  # pylint: disable=too-many-instance-attributes
         self.logs = []
         self.randseed = "%s %d" % (category_seed, self.points)
         self.rand = random.Random(self.randseed)
+
+    @property
+    def author(self):
+        """Retrieve the first author
+
+        This function is retained for backwards-compatibility with legacy puzzles which use the .author field
+
+        :returns: The first author in the .authors field, if one exists
+        """
+        warnings.warn("This author field has been deprecated. Please use authors instead", DeprecationWarning)
+        if len(self.authors) > 0:
+            return self.authors[0]
+
+        return None
+
+    @author.setter
+    def author(self, new_author):
+        """Set the author
+
+        This function is retained for backwards-compatibility with legacy puzzles which use the .author field
+
+        :param new_author: The new author
+        """
+
+        self.authors = [new_author]
 
     def set_markup(self, markup):
         """Set the markup function to convert body to HTML.

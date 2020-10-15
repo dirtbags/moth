@@ -4,13 +4,14 @@ import tempfile
 import unittest
 
 import moth
+from moth.moth import sha256hash
 
 class TestMoth(unittest.TestCase):
 
-    def test_djb2hash(self):
+    def test_sha256hash(self):
         input_data = "test"
-        expected = 2090756197
-        self.assertEqual(moth.djb2hash(input_data), expected)
+        expected = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+        self.assertEqual(sha256hash(input_data), expected)
 
     def test_log(self):
         puzzle = moth.Puzzle(12345, 1)
@@ -83,36 +84,6 @@ class TestMoth(unittest.TestCase):
             self.assertEqual(puzzle.files[os.path.basename(tf.name)].stream.read(), data)
             self.assertEqual(puzzle.files[os.path.basename(tf.name)].visible, True)
 
-    def test_invalid_header(self):
-        puzzle = moth.Puzzle(12345, 1)
-        stream = """author: foo
-                 answer: 10
-                 baz: stuff
-
-
-                 Some body
-                 """
-
-        with io.StringIO(stream) as buff:
-            with self.assertRaisesRegex(ValueError, "Unrecognized header field: baz"):
-                puzzle.read_stream(buff)
-
-    def test_known_headers_moth(self):
-        puzzle = moth.Puzzle(12345, 1)
-        stream = """author: foo
-                 answer: the answer is answer
-                 summary: read the puzzle
-                 pattern: a matching pattern
-                 hint: This is a helpful hint
-                 name: No idea what this is for
-
-                 Some body
-                 """
-
-        with io.StringIO(stream) as buff:
-            puzzle.read_stream(buff)
-            pkg = puzzle.package()
-
     def test_hexdump(self):
         puzzle = moth.Puzzle(12345, 1)
         test_data = [0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
@@ -128,19 +99,13 @@ class TestMoth(unittest.TestCase):
         test_data = [1 for x in range(4*16)]
         puzzle.hexdump(test_data)
 
-    def test_category(self):
-        category = moth.Category("./test/category_test", 1)
-        self.assertIsNotNone(category.catmod)
-
-        puzzles = list(category)
-
     def test_authors_legacy(self):
         puzzle = moth.Puzzle(12345, 1)
         puzzle.author = "foo"
 
-        self.assertEqual(puzzle.get_authors(), ["foo"])
+        self.assertEqual(puzzle.authors, ["foo"])
 
     def test_authors(self):
         puzzle = moth.Puzzle(12345, 1)
 
-        self.assertEqual(puzzle.get_authors(), [])
+        self.assertEqual(puzzle.authors, [])
