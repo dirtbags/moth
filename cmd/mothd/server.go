@@ -58,7 +58,7 @@ type StateProvider interface {
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
 	AwardPoints(teamID string, cat string, points int) error
-	LogEvent(msg string)
+	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
 	Maintainer
 }
 
@@ -126,6 +126,11 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 		}
 	}
 
+	// Log puzzle.json loads
+	if path == "puzzle.json" {
+		mh.State.LogEvent("load", "", "", "", 0)
+	}
+
 	return
 }
 
@@ -140,11 +145,11 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		}
 	}
 	if !correct {
+		mh.State.LogEvent("wrong", mh.participantID, mh.teamID, cat, points)
 		return fmt.Errorf("Incorrect answer")
 	}
 
-	msg := fmt.Sprintf("GOOD %s %s %s %d", mh.participantID, mh.teamID, cat, points)
-	mh.State.LogEvent(msg)
+	mh.State.LogEvent("corrrect", mh.participantID, mh.teamID, cat, points)
 
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
 		return fmt.Errorf("Error awarding points: %s", err)

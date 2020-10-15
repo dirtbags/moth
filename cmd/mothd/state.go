@@ -113,6 +113,11 @@ func (s *State) updateEnabled() {
 	if nextEnabled != s.Enabled {
 		s.Enabled = nextEnabled
 		log.Printf("Setting enabled=%v: %s", s.Enabled, why)
+		if s.Enabled {
+			s.LogEvent("enabled", "", "", "", 0, why)
+		} else {
+			s.LogEvent("disabled", "", "", "", 0, why)
+		}
 	}
 }
 
@@ -308,6 +313,7 @@ func (s *State) maybeInitialize() {
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
 	}
+	s.LogEvent("init", "", "", "", 0)
 
 	// Make sure various subdirectories exist
 	s.Mkdir("points.tmp", 0755)
@@ -351,7 +357,7 @@ func (s *State) maybeInitialize() {
 		fmt.Fprintln(f, "# Times in the future are ignored.")
 		fmt.Fprintln(f)
 		fmt.Fprintln(f, "+", now)
-		fmt.Fprintln(f, "- 3019-10-31T00:00:00Z")
+		fmt.Fprintln(f, "- 2519-10-31T00:00:00Z")
 		f.Close()
 	}
 
@@ -365,8 +371,28 @@ func (s *State) maybeInitialize() {
 	}
 }
 
-// LogEvent writes msg to the event log
-func (s *State) LogEvent(msg string) {
+func logstr(s string) string {
+	if s == "" {
+		return "-"
+	}
+	return s
+}
+
+// LogEvent writes to the event log
+func (s *State) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
+	event = strings.ReplaceAll(event, " ", "-")
+
+	msg := fmt.Sprintf(
+		"%s %s %s %s %d",
+		logstr(event),
+		logstr(participantID),
+		logstr(teamID),
+		logstr(cat),
+		points,
+	)
+	for _, x := range extra {
+		msg = msg + " " + strings.ReplaceAll(x, " ", "-")
+	}
 	s.eventStream <- msg
 }
 

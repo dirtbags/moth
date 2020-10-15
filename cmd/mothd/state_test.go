@@ -124,14 +124,17 @@ func TestState(t *testing.T) {
 
 func TestStateEvents(t *testing.T) {
 	s := NewTestState()
-	s.LogEvent("moo")
-	s.LogEvent("moo 2")
+	s.LogEvent("moo", "", "", "", 0)
+	s.LogEvent("moo 2", "", "", "", 0)
 
-	if msg := <-s.eventStream; msg != "moo" {
-		t.Error("Wrong message from event stream", msg)
+	if msg := <-s.eventStream; msg != "init - - - 0" {
+		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; msg != "moo 2" {
-		t.Error("Formatted event is wrong:", msg)
+	if msg := <-s.eventStream; msg != "moo - - - 0" {
+		t.Error("Wrong message from event stream:", msg)
+	}
+	if msg := <-s.eventStream; msg != "moo-2 - - - 0" {
+		t.Error("Wrong message from event stream:", msg)
 	}
 }
 
@@ -230,7 +233,7 @@ func TestStateMaintainer(t *testing.T) {
 		t.Error("Team ID too short:", teamID)
 	}
 
-	s.LogEvent("Hello!")
+	s.LogEvent("Hello!", "", "", "", 0)
 
 	if len(s.PointsLog()) != 0 {
 		t.Error("Points log is not empty")
@@ -255,7 +258,10 @@ func TestStateMaintainer(t *testing.T) {
 	eventLog, err := afero.ReadFile(s.Fs, "event.log")
 	if err != nil {
 		t.Error(err)
-	} else if len(eventLog) != 18 {
-		t.Error("Wrong event log length:", len(eventLog))
+	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 3 {
+		t.Log("Events:", events)
+		t.Error("Wrong event log length:", len(events))
+	} else if events[2] != "" {
+		t.Error("Event log didn't end with newline")
 	}
 }
