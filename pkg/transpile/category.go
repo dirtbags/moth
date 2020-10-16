@@ -9,11 +9,15 @@ import (
 	"os/exec"
 	"path"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/spf13/afero"
 )
+
+// InventoryResponse is what's handed back when we ask for an inventory.
+type InventoryResponse struct {
+	Puzzles []int
+}
 
 // Category defines the functionality required to be a puzzle category.
 type Category interface {
@@ -141,12 +145,12 @@ func (c FsCommandCategory) Inventory() ([]int, error) {
 		return nil, err
 	}
 
-	ret := make([]int, 0)
-	if err := json.Unmarshal(stdout, &ret); err != nil {
+	inv := InventoryResponse{}
+	if err := json.Unmarshal(stdout, &inv); err != nil {
 		return nil, err
 	}
 
-	return ret, nil
+	return inv.Puzzles, nil
 }
 
 // Puzzle returns a Puzzle structure for the given point value.
@@ -181,10 +185,11 @@ func (c FsCommandCategory) Answer(points int, answer string) bool {
 		return false
 	}
 
-	switch strings.TrimSpace(string(stdout)) {
-	case "correct":
-		return true
+	ans := AnswerResponse{}
+	if err := json.Unmarshal(stdout, &ans); err != nil {
+		log.Printf("ERROR: Answering %d points: %s", points, err)
+		return false
 	}
 
-	return false
+	return ans.Correct
 }

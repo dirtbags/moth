@@ -185,7 +185,7 @@ func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExpor
 	export.Config = mh.Config
 
 	teamName, err := mh.State.TeamName(mh.teamID)
-	registered := override || (err == nil)
+	registered := override || mh.Config.Devel || (err == nil)
 
 	export.Messages = mh.State.Messages()
 	export.TeamNames = make(map[string]string)

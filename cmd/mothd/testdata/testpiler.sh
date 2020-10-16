@@ -26,9 +26,9 @@ EOT
         ;;
     answer:pategory:1)
         if [ "$ANSWER" = "answer" ]; then
-            echo "correct"
+            echo '{"Correct":true}'
         else
-            echo "Sorry, wrong answer."
+            echo '{"Correct":false}'
         fi
         ;;
     answer:pategory:2)

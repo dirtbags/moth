@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Clear Debug.summary field when making mothballs
 
+### Changed
+- Regulated category/puzzle provider API: now everything returns a JSON dictionary (or octet stream for files)
+
 ### Added
 - More log events
 - [Log channels document](docs/logs.md)

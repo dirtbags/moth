@@ -24,16 +24,15 @@ EOT
         fail "no such file: $1"
         ;;
     answer:moo)
-        echo "correct"
+        echo '{"Correct":true}'
         ;;
     answer:error)
         fail "you requested an error"
         ;;
     answer:*)
-        echo "incorrect"
+        echo '{"Correct":false}'
         ;;
     *)
         fail "What is $1"
         ;;
 esac
-    

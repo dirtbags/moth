@@ -27,7 +27,23 @@ func NewTestServer() *MothServer {
 	return NewMothServer(Configuration{}, theme, state, puzzles)
 }
 
-func TestServer(t *testing.T) {
+func TestDevelServer(t *testing.T) {
+	server := NewTestServer()
+	server.Config.Devel = true
+	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
+
+	{
+		es := anonHandler.ExportState()
+		if !es.Config.Devel {
+			t.Error("Not marked as development server")
+		}
+		if len(es.Puzzles) != 1 {
+			t.Error("Wrong puzzles for anonymous state on devel server:", es.Puzzles)
+		}
+	}
+}
+
+func TestProdServer(t *testing.T) {
 	teamName := "OurTeam"
 	participantID := "participantID"
 	teamID := TestTeamID

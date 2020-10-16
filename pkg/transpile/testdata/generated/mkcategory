@@ -7,8 +7,12 @@ fail () {
 
 case $1:$2:$3 in
     inventory::)
-        echo "[1,2,3,"
-        echo "4,5]"
+        cat <<EOT
+{
+    "Puzzles": [1, 2, 3,
+4, 5]
+}
+EOT
         ;;
     puzzle:1:)
         cat <<EOT
@@ -31,10 +35,10 @@ EOT
         fail "No such file: $2"
         ;;
     answer:1:answer1.0)
-        echo "correct"
+        echo -n '{"Correct":true}'
         ;;
     answer:1:*)
-        echo "incorrect"
+        echo '{"Correct":false}'
         ;;
     answer:*:*)
         fail "Fail answer"

@@ -22,6 +22,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// AnswerResponse is handed back when we ask for an answer to be checked.
+type AnswerResponse struct {
+	Correct bool
+}
+
 // Puzzle contains everything about a puzzle that a client would see.
 type Puzzle struct {
 	Pre struct {
@@ -425,9 +430,11 @@ func (fp FsCommandPuzzle) Answer(answer string) bool {
 		return false
 	}
 
-	switch strings.TrimSpace(string(stdout)) {
-	case "correct":
-		return true
+	ans := AnswerResponse{}
+	if err := json.Unmarshal(stdout, &ans); err != nil {
+		log.Printf("ERROR: checking answer: %s", err)
+		return false
 	}
-	return false
+
+	return ans.Correct
 }

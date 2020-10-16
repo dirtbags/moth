@@ -45,12 +45,14 @@ def open_file(filename):
     shutil.copyfileobj(f, sys.stdout.buffer)
 
 def check_answer(check):
-    if answer == check:
-        print("correct")
-    else:
-        print("incorrect")
+    obj = {
+        "Correct": (answer == check)
+    }
+    json.dump(obj, sys.stdout)
 
 if len(sys.argv) == 1:
+    raise RuntimeError("Command not provided")
+elif sys.argv[1] == "puzzle":
     puzzle()
 elif sys.argv[1] == "file":
     open_file(sys.argv[2])

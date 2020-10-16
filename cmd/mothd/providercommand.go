@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dirtbags/moth/pkg/transpile"
 )
 
 // ProviderCommand specifies a command to run for the puzzle API
@@ -111,14 +114,13 @@ func (pc ProviderCommand) CheckAnswer(cat string, points int, answer string) (bo
 	} else if err != nil {
 		return false, err
 	}
-	result := strings.TrimSpace(string(stdout))
 
-	if result != "correct" {
-		log.Printf("WARNING: %s: Nothing written to stdout", pc.Path)
-		return false, nil
+	ans := transpile.AnswerResponse{}
+	if err := json.Unmarshal(stdout, &ans); err != nil {
+		return false, err
 	}
 
-	return true, nil
+	return ans.Correct, nil
 }
 
 // Mothball just returns an error

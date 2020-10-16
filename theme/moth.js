@@ -30,6 +30,9 @@ function renderPuzzles(obj) {
   // Create a sorted list of category names
   let cats = Object.keys(obj)
   cats.sort()
+  if (cats.length == 0) {
+    toast("No categories to serve!")
+  }
   for (let cat of cats) {
     if (cat.startsWith("__")) {
       // Skip metadata
@@ -103,8 +106,8 @@ function renderState(obj) {
     let params = new URLSearchParams(window.location.search)
     sessionStorage.id = "1"
     sessionStorage.pid = "rodney"
-  }
-  if (Object.keys(obj.Puzzles).length > 0) {
+    renderPuzzles(obj.Puzzles)
+  } else if (Object.keys(obj.Puzzles).length > 0) {
     renderPuzzles(obj.Puzzles)
     if (obj.Config.Detachable) {
       fetchAll(obj.Puzzles)
