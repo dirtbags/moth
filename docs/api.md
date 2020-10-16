@@ -230,6 +230,8 @@ so `curl` and `wget` can be used.
 
 JSON object describing a puzzle.
 
+#### JSON Puzzle Object
+
 ```js
 {
   "Pre": { // Things which appear before the puzzle is solved
@@ -336,26 +338,23 @@ Puzzle executables must be named `mkpuzzle`.
 
 ## `mkpuzzle puzzle`
 
-```
-puzzles/category3/1 $ ./mkpuzzle puzzle
-{JSON PUZZLE OBJECT}
-```
+    puzzles/category3/1 $ ./mkpuzzle puzzle
+    {JSON PUZZLE OBJECT}
+
+Also see [JSON Puzzle Object](#json-puzzle-object)
 
 
 ## `mkpuzzle file {filename}`
 
-```
-puzzles/category3/1 $ ./mkpuzzle file attachment.txt
-This is an attachment file! It's just plain text for this example. Many attachments are JPEGs.
-```
+    puzzles/category3/1 $ ./mkpuzzle file attachment.txt
+    This is an attachment file! It's just plain text for this example. Many attachments are JPEGs.
 
 
 ## `mkpuzzle answer {answer}`
 
-```
-puzzles/category3/1 $ ./mkpuzzle answer "cow goes moo"
-{"Correct":false}
-```
+    puzzles/category3/1 $ ./mkpuzzle answer "cow goes moo"
+    {"Correct":false}
+
 
 
 # Category
@@ -367,34 +366,28 @@ Category executables must be called `mkcategory`.
 
 ## `mkcategory inventory`
 
-```
-puzzles/category2 $ ./mkcategory inventory
-{"Inventory": [1, 2, 3, 5, 10, 20, 30, 50, 100]}
-```
+    puzzles/category2 $ ./mkcategory inventory
+    {"Inventory": [1, 2, 3, 5, 10, 20, 30, 50, 100]}
 
 
 ## `mkcategory puzzle {points}`
 
-```
-puzzles/category2 $ ./mkcategory puzzle 1
-{JSON PUZZLE OBJECT}
-```
+    puzzles/category2 $ ./mkcategory puzzle 1
+    {JSON PUZZLE OBJECT}
+
+Also see [JSON Puzzle Object](#json-puzzle-object)
 
 
 ## `mkcategory file {points} {filename}`
 
-```
-puzzles/category2 $ ./mkcategory file 1 attachment.txt
-This is an attachment file's contents!
-```
+    puzzles/category2 $ ./mkcategory file 1 attachment.txt
+    This is an attachment file's contents!
 
 
 ## `mkcategory answer {points} {answer}`
 
-```
-puzzles/category2 $ ./mkcategory answer 1 "cow goes moo"
-{"Correct":false}
-```
+    puzzles/category2 $ ./mkcategory answer 1 "cow goes moo"
+    {"Correct":false}
 
 
 
@@ -412,7 +405,7 @@ This could ostensibly be expanded to call HTTP servers,
 with the four endpoints described here.
 If somebody were to want such a thing.
 
-## Inventory
+## `provider inventory`
 
     $ provider inventory
     {
@@ -420,17 +413,20 @@ If somebody were to want such a thing.
       "category2": [20, 40, 70, 150]
     }
 
-## Puzzle
+## `provider puzzle {category} {points}`
 
     $ provider puzzle category1 20
     {JSON PUZZLE OBJECT}
 
-## Attachment
+Also see [JSON Puzzle Object](#json-puzzle-object)
+
+
+## `provider file {category} {points} {filename}`
 
     $ provider file category1 20 attachment.txt
     This is an attachment! Yay!
 
-##  Answer
+##  `provider answer {category} {points} {answer}`
 
     $ provider answer category1 20 "cow goes moo"
     {"Correct":true}
