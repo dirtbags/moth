@@ -1,28 +1,52 @@
-MOTH API
+Moth APIs
 =======
 
-Data encoding
------
+This document covers the following interfaces:
 
-MOTH runs as an HTTP service,
-accepting standard HTTP `GET` and `POST`.
+* HTTP Endpoints: what the Moth client sends the Moth server
+* Puzzle executable: how the transpiler communicates with executables that provide puzzles
+* Category executable: how the transpiler communicates with executables that provide categories
+* Provider executable: how Moth communicates with things that provide puzzles (like the transpiler)
+
+The Puzzle, Category, and Provider executalbes are all very closely related, since each is a subset of the next.
+
+----
+
+Here's a bad diagram of how this all fits together. I don't know if this is going to help at all. Please submit a merge request with something better.
+
+                 HTTP    provider API           mothball API
+              🡗           🡗                           🡗
+    client - mothd - mothball provider - category1.mb
+
+                         - custom provider
+                                                        category API
+                                                      🡗
+                         - internal transpiler - category2/mkcategory
+
+                                                      - category3/1/puzzle.md
+                                                      - category3/2/mkpuzzle
+                                                       🡔 
+                                                         puzzle API
+
+                                                                      
+
+# HTTP Endpoints
+
+The Moth server accepts
+standard HTTP `GET` and `POST`.
 
 Parameters may be encoded with standard `GET` query parameters
 (like `GET /endpoint?a=1&b=2`),
 or with `POST` as `application/x-www-form-encoded` data.
 
+## `/state`
 
-Endpoints
---------
+Returns the current Moth event state as a JSON object.
 
-### `/state`
-
-Returns the current MOTH event state as a JSON object.
-
-#### Parameters
+### Parameters
 * `id`: team ID (optional)
 
-#### Return
+### Return
 
 ```js
 {
@@ -47,16 +71,16 @@ Returns the current MOTH event state as a JSON object.
 }
 ```
 
-#### Example HTTP transaction
+### Example HTTP transaction
 
-##### Request
+#### Request
 
 ```
 GET /state HTTP/1.0
 
 ```
 
-##### Response
+#### Response
 
 This response has been reflowed for readability:
 an actual on-wire response would not have newlines or indentation.
@@ -92,7 +116,7 @@ Content-Type: application/json
 }
 ```
 
-### `/register`
+## `/register`
 
 Registers a name to a team ID.
 
@@ -102,11 +126,11 @@ to present a "login" page.
 For this reason "this team is already registered"
 does not return an error.
 
-#### Parameters
+### Parameters
 * `id`: team ID
 * `name`: team name
 
-#### Return
+### Return
 
 An object inspired by [JSend](https://github.com/omniti-labs/jsend):
 
@@ -120,9 +144,9 @@ An object inspired by [JSend](https://github.com/omniti-labs/jsend):
 }
 ```
 
-#### Example HTTP transaction
+### Example HTTP transaction
 
-##### Request
+#### Request
 
 ```
 POST /register HTTP/1.0
@@ -132,7 +156,7 @@ Content-Length: 26
 id=b387ca98&name=dirtbags
 ```
 
-##### Repsonse
+#### Repsonse
 
 ```
 HTTP/1.0 200 OK
@@ -143,18 +167,18 @@ Content-Length=86
 ```
 
 
-### `/answer`
+## `/answer`
 
 Submits an answer for points.
 
 If the answer is wrong, no points are awarded 😉
 
-#### Parameters
+### Parameters
 * `id`: team ID
 * `category`: along with `points`, uniquely identifies a puzzle
 * `points`: along with `category`, uniquely identifies a puzzle
 
-#### Return
+### Return
 
 An object inspired by [JSend](https://github.com/omniti-labs/jsend):
 
@@ -168,9 +192,9 @@ An object inspired by [JSend](https://github.com/omniti-labs/jsend):
 }
 ```
 
-#### Example HTTP transaction
+### Example HTTP transaction
 
-##### Request
+#### Request
 
 ```
 POST /answer HTTP/1.0
@@ -180,7 +204,7 @@ Content-Length: 62
 id=b387ca98&category=sequence&points=2&answer=achilles+turnip
 ```
 
-##### Repsonse
+#### Repsonse
 
 ```
 HTTP/1.0 200 OK
@@ -190,54 +214,21 @@ Content-Length=83
 {"status":"fail","data":{"short":"not accepted","description":"Incorrect answer"}}
 ```
 
+## `/content/{category}/{points}/puzzle.json`
 
-### `/content/{category}/{points}/{filename}`
-
-Retrieves static content associated with a puzzle.
-
-Every puzzle provides `puzzle.json`,
-a JSON object containing
-information about the puzzle such as the body 
-and list of attached files. 
+Retrieves the JSON object describing a puzzle.
 
 Parameters are all in the URL for this endpoint,
 so `curl` and `wget` can be used.
 
-#### Parameters
+### Parameters
 * `{category}` (in URL): along with `{points}`, uniquely identifies a puzzle
 * `{points}` (in URL): along with `{category}`, uniquely identifies a puzzle
 * `{filename}` (in URL): filename to retrieve
 
-#### Return
+### Return
 
-Raw file octets,
-with a (hopefully) suitable
-`Content-type` HTTP header field.
-
-#### Example HTTP transaction
-
-##### Request
-
-```
-GET /content/sequence/1/puzzle.json HTTP/1.0
-
-```
-
-##### Repsonse
-
-```
-HTTP/1.0 200 OK
-Content-Type: application/json
-Content-Length: 397
-
-{"Pre":{"Authors":["neale"],"Attachments":[],"Scripts":[],"Body":"\u003cp\u003e1 2 3 4 5 ⬜\u003c/p\u003e\n","AnswerPattern":"","AnswerHashes":["e7f6c011776e8db7cd330b54174fd76f7d0216b612387a5ffcfb81e6f0919683"]},"Post":{"Objective":"","Success":{"Acceptable":"","Mastery":""},"KSAs":null},"Debug":{"Log":[],"Errors":[],"Hints":[],"Summary":"Simple introduction to how this works"},"Answers":[]}
-```
-
-
-`puzzle.json`
--------
-
-The special file `puzzle.json` describes a puzzle. It is a JSON object with the following fields:
+JSON object describing a puzzle.
 
 ```js
 {
@@ -260,7 +251,12 @@ The special file `puzzle.json` describes a puzzle. It is a JSON object with the 
     "KSAs": null // Knowledge, Skills, and Abilities covered by this puzzle
   },
   "Debug": { // Debugging output used in development: all fields are emptied when making mothballs
-    "Log": [], // Debug message log
+    "Log": [ // Debug message log
+      "Input image size: 600x400",
+      "Applying gaussian blur",
+      "Text width 58, left offset 513",
+      "Complete in 0.028s"
+    ],
     "Errors": [], // Errors encountered generating this puzzzle
     "Hints": [ // Hints for instructional assistants to provide to participants
         "Zoom in to the image and examine all sections carefully"
@@ -270,3 +266,171 @@ The special file `puzzle.json` describes a puzzle. It is a JSON object with the 
   "Answers": ["sandwich"] // List of answers: empty in production
 }
 ```
+
+
+### Example HTTP transaction
+
+#### Request
+
+```
+GET /content/sequence/1/puzzle.json HTTP/1.0
+
+```
+
+#### Repsonse
+
+```
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 397
+
+{"Pre":{"Authors":["neale"],"Attachments":[],"Scripts":[],"Body":"\u003cp\u003e1 2 3 4 5 ⬜\u003c/p\u003e\n","AnswerPattern":"","AnswerHashes":["e7f6c011776e8db7cd330b54174fd76f7d0216b612387a5ffcfb81e6f0919683"]},"Post":{"Objective":"","Success":{"Acceptable":"","Mastery":""},"KSAs":null},"Debug":{"Log":[],"Errors":[],"Hints":[],"Summary":"Simple introduction to how this works"},"Answers":[]}
+```
+
+
+## `/content/{category}/{points}/{filename}`
+
+Retrieves static content associated with a puzzle.
+
+Parameters are all in the URL for this endpoint,
+so `curl` and `wget` can be used.
+
+### Parameters
+* `{category}` (in URL): along with `{points}`, uniquely identifies a puzzle
+* `{points}` (in URL): along with `{category}`, uniquely identifies a puzzle
+* `{filename}` (in URL): filename to retrieve
+
+### Return
+
+Raw file octets,
+with a (hopefully) suitable
+`Content-type` HTTP header field.
+
+### Example HTTP transaction
+
+#### Request
+
+```
+GET /content/sequence/1/attachment.txt HTTP/1.0
+
+```
+
+#### Repsonse
+
+```
+HTTP/1.0 200 OK
+Content-Type: text/plain
+Content-Length: 98
+
+This is an attachment file! This is just plain text for the example. Many attachments are JPEGs.
+```
+
+
+# Puzzle
+
+A puzzle contains one question and one or more associated answers.
+Puzzles are not aware of their point value: this is set by the category they are in.
+
+Puzzle executables must be named `mkpuzzle`.
+
+
+## `mkpuzzle puzzle`
+
+```
+puzzles/category3/1 $ ./mkpuzzle puzzle
+{JSON PUZZLE OBJECT}
+```
+
+
+## `mkpuzzle file {filename}`
+
+```
+puzzles/category3/1 $ ./mkpuzzle file attachment.txt
+This is an attachment file! It's just plain text for this example. Many attachments are JPEGs.
+```
+
+
+## `mkpuzzle answer {answer}`
+
+```
+puzzles/category3/1 $ ./mkpuzzle answer "cow goes moo"
+{"Correct":false}
+```
+
+
+# Category
+
+Categories are collections of puzzles.
+Each puzzle has a unique point value, determined by the category.
+
+Category executables must be called `mkcategory`.
+
+## `mkcategory inventory`
+
+```
+puzzles/category2 $ ./mkcategory inventory
+{"Inventory": [1, 2, 3, 5, 10, 20, 30, 50, 100]}
+```
+
+
+## `mkcategory puzzle {points}`
+
+```
+puzzles/category2 $ ./mkcategory puzzle 1
+{JSON PUZZLE OBJECT}
+```
+
+
+## `mkcategory file {points} {filename}`
+
+```
+puzzles/category2 $ ./mkcategory file 1 attachment.txt
+This is an attachment file's contents!
+```
+
+
+## `mkcategory answer {points} {answer}`
+
+```
+puzzles/category2 $ ./mkcategory answer 1 "cow goes moo"
+{"Correct":false}
+```
+
+
+
+# Provider API
+
+This is how Claire gets her dynamic graders.
+
+*Notice: this is not complete in the code base!*
+I'm writing here how it *should* work.
+If anybody wants this,
+please let me know,
+and I'll finish the code.
+
+This could ostensibly be expanded to call HTTP servers,
+with the four endpoints described here.
+If somebody were to want such a thing.
+
+## Inventory
+
+    $ provider inventory
+    {
+      "category1": [1, 2, 3, 4, 5, 10, 20, 30],
+      "category2": [20, 40, 70, 150]
+    }
+
+## Puzzle
+
+    $ provider puzzle category1 20
+    {JSON PUZZLE OBJECT}
+
+## Attachment
+
+    $ provider file category1 20 attachment.txt
+    This is an attachment! Yay!
+
+##  Answer
+
+    $ provider answer category1 20 "cow goes moo"
+    {"Correct":true}
