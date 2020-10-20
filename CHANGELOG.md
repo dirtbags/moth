@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - More log events
 - [Log channels document](docs/logs.md)
 - More detailed [API documntation](docs/api.md)
+- Transpiler warning if `mkpuzzle` exists but is not executable
 
 ## [v4.0.0] - 2020-10-14
 ### Fixed
