@@ -1,5 +1,10 @@
 #! /bin/sh
 
+# This `mkcategory` merges subdirectories of puzzles together,
+# in a dumb way that will break if you have the same point value in two directories.
+# It also makes each puzzle show up a second time, worth 100 points more,
+# to show off what `mkcategory` can do without me having to write more code.
+
 fail () {
     echo "ERROR: $*" 1>&2
     exit 1
