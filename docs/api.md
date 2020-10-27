@@ -367,7 +367,7 @@ Category executables must be called `mkcategory`.
 ## `mkcategory inventory`
 
     puzzles/category2 $ ./mkcategory inventory
-    {"Inventory": [1, 2, 3, 5, 10, 20, 30, 50, 100]}
+    {"Puzzles": [1, 2, 3, 5, 10, 20, 30, 50, 100]}
 
 
 ## `mkcategory puzzle {points}`
