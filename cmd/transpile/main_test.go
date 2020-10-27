@@ -50,7 +50,7 @@ func (tp T) Run(args ...string) error {
 	return command()
 }
 
-func TestEverything(t *testing.T) {
+func TestTranspilerEverything(t *testing.T) {
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	tp := T{
@@ -67,7 +67,7 @@ func TestEverything(t *testing.T) {
 	}
 
 	stdout.Reset()
-	if err := tp.Run("open", "-dir=cat0/1"); err != nil {
+	if err := tp.Run("puzzle", "-dir=cat0/1"); err != nil {
 		t.Error(err)
 	}
 	p := transpile.Puzzle{}
@@ -79,12 +79,21 @@ func TestEverything(t *testing.T) {
 	}
 
 	stdout.Reset()
-	if err := tp.Run("open", "-dir=cat0/1", "-file=moo.txt"); err != nil {
+	if err := tp.Run("file", "-dir=cat0/1", "-file=moo.txt"); err != nil {
 		t.Error(err)
 	}
 	if stdout.String() != "Moo." {
 		t.Error("Wrong file pulled", stdout.String())
 	}
+
+	stdout.Reset()
+	if err := tp.Run("answer", "-dir=cat0/1", "-answer=YAML answer"); err != nil {
+		t.Error(err)
+	}
+	if stdout.String() != `{"Correct":true}` {
+		t.Error("Answer validation failed", stdout.String())
+	}
+
 }
 
 func TestMothballs(t *testing.T) {

@@ -39,7 +39,8 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, " mothball: Compile a mothball")
 	fmt.Fprintln(w, " inventory: Show category inventory")
-	fmt.Fprintln(w, " open: Open a file for a puzzle")
+	fmt.Fprintln(w, " puzzle: Print puzzle JSON")
+	fmt.Fprintln(w, " file: Open a file for a puzzle")
 	fmt.Fprintln(w, " answer: Check correctness of an answer")
 }
 
@@ -62,7 +63,9 @@ func (t *T) ParseArgs() (Command, error) {
 		flags.StringVar(&t.filename, "out", "", "Path to create mothball (empty for stdout)")
 	case "inventory":
 		cmd = t.PrintInventory
-	case "open":
+	case "puzzle":
+		cmd = t.DumpPuzzle
+	case "file":
 		cmd = t.DumpFile
 		flags.StringVar(&t.filename, "file", "puzzle.json", "Filename to open")
 	case "answer":
@@ -112,31 +115,33 @@ func (t *T) PrintInventory() error {
 	return nil
 }
 
+// DumpPuzzle writes a puzzle's JSON to the writer.
+func (t *T) DumpPuzzle() error {
+	puzzle := transpile.NewFsPuzzle(t.fs)
+
+	p, err := puzzle.Puzzle()
+	if err != nil {
+		return err
+	}
+	jp, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	t.Stdout.Write(jp)
+	return nil
+}
+
 // DumpFile writes a file to the writer.
-// BUG(neale): The "open" and "answer" actions don't work on categories with an "mkcategory" executable.
 func (t *T) DumpFile() error {
 	puzzle := transpile.NewFsPuzzle(t.fs)
 
-	switch t.filename {
-	case "puzzle.json", "":
-		p, err := puzzle.Puzzle()
-		if err != nil {
-			return err
-		}
-		jp, err := json.Marshal(p)
-		if err != nil {
-			return err
-		}
-		t.Stdout.Write(jp)
-	default:
-		f, err := puzzle.Open(t.filename)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		if _, err := io.Copy(t.Stdout, f); err != nil {
-			return err
-		}
+	f, err := puzzle.Open(t.filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := io.Copy(t.Stdout, f); err != nil {
+		return err
 	}
 
 	return nil
@@ -174,12 +179,10 @@ func (t *T) DumpMothball() error {
 // CheckAnswer prints whether an answer is correct.
 func (t *T) CheckAnswer() error {
 	c := transpile.NewFsPuzzle(t.fs)
-	if c.Answer(t.answer) {
-		fmt.Fprintln(t.Stdout, "correct")
-	} else {
-		fmt.Fprintln(t.Stdout, "wrong")
-	}
-	return nil
+	log.Print(c.Puzzle())
+	log.Print(t.answer)
+	_, err := fmt.Fprintf(t.Stdout, `{"Correct":%v}`, c.Answer(t.answer))
+	return err
 }
 
 func main() {

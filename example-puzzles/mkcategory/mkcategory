@@ -1,0 +1,33 @@
+#! /bin/sh
+
+fail () {
+    echo "ERROR: $*" 1>&2
+    exit 1
+}
+
+case $1 in
+    inventory)
+        printf '{"Puzzles":['
+        ls  -d */[0-9]* | while read p; do
+            puzzle=${p##*/}
+            printf "%s%d,10%d" "$comma" "$puzzle" "$puzzle"
+            comma=,
+        done
+        printf ']}'
+        ;;
+    puzzle)
+        points=$(($2 % 100))
+        transpile puzzle -dir */$points
+        ;;
+    file)
+        points=$(($2 % 100))
+        transpile file -dir */$points "$3"
+        ;;
+    answer)
+        points=$(($2 % 100))
+        transpile answer -dir */$points -answer="$3"
+        ;;
+    *)
+        fail "What is $1" 1>&2
+        ;;
+esac
