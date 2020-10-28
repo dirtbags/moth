@@ -69,7 +69,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           builder: ${{ steps.buildx.outputs.name }}
-          target: moth
+          target: moth-devel
           file: build/package/Containerfile
           push: true
           tags: |

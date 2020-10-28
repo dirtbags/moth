@@ -169,6 +169,7 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 	if teamName == "" {
 		return fmt.Errorf("Empty team name")
 	}
+	mh.State.LogEvent("register", mh.participantID, mh.teamID, "", 0)
 	return mh.State.SetTeamName(mh.teamID, teamName)
 }
 
