@@ -28,7 +28,7 @@ COPY --from=prodbuild /target /
 ENTRYPOINT [ "/bin/mothd" ]
 
 ##########
-
+# You should use the dirtbags/moth-devel repo's build for this, instead
 FROM ubuntu AS moth-devel
 RUN apt-get -y update && apt-get -y install \
     build-essential \
