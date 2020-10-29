@@ -64,14 +64,3 @@ jobs:
           tags: |
             dirtbags/moth:${{ steps.vars.outputs.tag }}
             ghcr.io/dirtbags/moth:${{ steps.vars.outputs.tag }}
-
-      - name: Build and push moth-devel image
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          target: moth-devel
-          file: build/package/Containerfile
-          push: true
-          tags: |
-            dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
-            ghcr.io/dirtbags/moth-devel:${{ steps.vars.outputs.tag }}
