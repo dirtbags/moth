@@ -175,11 +175,18 @@ func TestFilesystem(t *testing.T) {
 	}
 
 	stdout.Reset()
+	if err := tp.Run("puzzle", "-dir=testdata/cat1/1"); err != nil {
+		t.Error(err)
+	}
+	if !strings.Contains(stdout.String(), "moo") {
+		t.Error("File not pulled from cwd", stdout.String())
+	}
+
+	stdout.Reset()
 	if err := tp.Run("file", "-dir=testdata/cat1/1", "-file=moo.txt"); err != nil {
 		t.Error(err)
 	}
 	if !strings.Contains(stdout.String(), "Moo.") {
 		t.Error("Wrong file pulled", stdout.String())
 	}
-
 }

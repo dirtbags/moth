@@ -7,9 +7,10 @@ fail () {
 
 case $1:$2 in
     puzzle:)
-        cat <<'EOT'
+        read answer < answer.txt
+        cat <<EOT
 {
-    "Answers": ["answer"],
+    "Answers": ["$answer"],
     "Pre": {
         "Authors": ["neale"],
         "Body": "I am a generated puzzle."
