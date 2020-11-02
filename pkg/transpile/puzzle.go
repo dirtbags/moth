@@ -383,7 +383,12 @@ func (fp FsCommandPuzzle) run(command string, args ...string) ([]byte, error) {
 	cmdargs := append([]string{command}, args...)
 	cmd := exec.CommandContext(ctx, "./"+path.Base(fp.command), cmdargs...)
 	cmd.Dir = path.Dir(fp.command)
-	return cmd.Output()
+	out, err := cmd.Output()
+	if err, ok := err.(*exec.ExitError); ok {
+		stderr := strings.TrimSpace(string(err.Stderr))
+		return nil, fmt.Errorf("%s (%s)", stderr, err.String())
+	}
+	return out, err
 }
 
 // Puzzle returns a Puzzle struct for the current puzzle.

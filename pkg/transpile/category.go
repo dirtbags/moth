@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/spf13/afero"
@@ -133,7 +134,12 @@ func (c FsCommandCategory) run(command string, args ...string) ([]byte, error) {
 	cmdargs := append([]string{command}, args...)
 	cmd := exec.CommandContext(ctx, "./"+path.Base(c.command), cmdargs...)
 	cmd.Dir = path.Dir(c.command)
-	return cmd.Output()
+	out, err := cmd.Output()
+	if err, ok := err.(*exec.ExitError); ok {
+		stderr := strings.TrimSpace(string(err.Stderr))
+		return nil, fmt.Errorf("%s (%s)", stderr, err.String())
+	}
+	return out, err
 }
 
 // Inventory returns a list of point values for this category.

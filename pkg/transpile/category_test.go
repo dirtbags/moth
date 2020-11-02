@@ -3,6 +3,8 @@ package transpile
 import (
 	"bytes"
 	"io"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -103,6 +105,23 @@ func TestOsFsCategory(t *testing.T) {
 	if r, err := generated.Open(1, "fail"); err == nil {
 		r.Close()
 		t.Error("File shouldn't exist")
+	}
+
+	if r, err := generated.Open(1, "cow.txt"); err != nil {
+		if e, ok := err.(*exec.ExitError); ok {
+			t.Error(err, string(e.Stderr))
+		} else {
+			t.Error(err)
+		}
+	} else {
+		defer r.Close()
+		buf := new(bytes.Buffer)
+		if _, err := io.Copy(buf, r); err != nil {
+			t.Error(err)
+		}
+		if !strings.Contains(buf.String(), "moo.") {
+			t.Errorf("Wrong body: %#v", buf.String())
+		}
 	}
 
 	if !generated.Answer(1, "answer1.0") {

@@ -32,7 +32,7 @@ EOT
         echo "Moo."
         ;;
     file:*:*)
-        cat "$3" || exit 1
+        fail "No such file: $2"
         ;;
     answer:1:answer1.0)
         echo -n '{"Correct":true}'
