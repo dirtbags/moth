@@ -72,6 +72,15 @@ and any edits you make will remove points scored while you were editing.
 Teams
 =====
 
+Changing a team name
+----------------------
+
+    grep . /srv/moth/state/teams/*  # Show all team IDs and names
+    echo 'exciting new team name' > /srv/moth/state/teams/$teamid
+
+Please remember, you have to replace `$teamid` with the actual team ID that you want to edit.
+
+
 Setting up custom team IDs
 -------------------
 
@@ -85,15 +94,6 @@ You can make it anything you want.
 New instances will initialize this with some hex values.
 
 Remember that team IDs are essentially passwords.
-
-
-Changing a team name
-----------------------
-
-    grep . /srv/moth/state/teams/*  # Show all team IDs and names
-    echo 'exciting new team name' > /srv/moth/state/teams/$teamid
-
-Please remember, you have to replace `$teamid` with the actual team ID that you want to edit.
 
 
 Disabling team registration
