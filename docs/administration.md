@@ -15,18 +15,6 @@ Backing up current state
     curl http://localhost:8080/state > state.json  # Pull anonymized event log and team names (scoreboard)
 
 
-Pausing/resuming scoring
--------------------
-
-    rm /srv/moth/state/enabled     # Pause scoring
-    touch /srv/moth/state/enabled   # Resume scoring
-
-When scoring is paused,
-participants can still submit answers,
-and the system will tell them whether the answer is correct.
-As soon as you unpause,
-all correctly-submitted answers will be scored.
-
 
 Scheduling an automatic pause and resume
 -----------------------------------
@@ -51,20 +39,20 @@ This will reset the following:
 Team tokens stick around, though.
 
 
-Setting up custom team IDs
+Scores
+=======
+
+Pausing/resuming scoring
 -------------------
 
-    echo > /srv/moth/state/teamids.txt  # Teams must be registered manually
-    seq 9999 > /srv/moth/state/teamids.txt  # Allow all 4-digit numbers
+    rm /srv/moth/state/enabled     # Pause scoring
+    touch /srv/moth/state/enabled   # Resume scoring
 
-`teamids.txt` is a list of acceptable team IDs,
-one per line.
-You can make it anything you want.
-
-New instances will initialize this with some hex values.
-
-Remember that team IDs are essentially passwords.
-
+When scoring is paused,
+participants can still submit answers,
+and the system will tell them whether the answer is correct.
+As soon as you unpause,
+all correctly-submitted answers will be scored.
 
 Adjusting scores
 ------------------
@@ -81,6 +69,23 @@ The maintenance loop assumes it is the only thing writing to this file,
 and any edits you make will remove points scored while you were editing.
 
 
+Teams
+=====
+
+Setting up custom team IDs
+-------------------
+
+    echo > /srv/moth/state/teamids.txt  # Teams must be registered manually
+    seq 9999 > /srv/moth/state/teamids.txt  # Allow all 4-digit numbers
+
+`teamids.txt` is a list of acceptable team IDs,
+one per line.
+You can make it anything you want.
+
+New instances will initialize this with some hex values.
+
+Remember that team IDs are essentially passwords.
+
 
 Changing a team name
 ----------------------
@@ -89,6 +94,23 @@ Changing a team name
     echo 'exciting new team name' > /srv/moth/state/teams/$teamid
 
 Please remember, you have to replace `$teamid` with the actual team ID that you want to edit.
+
+
+Disabling team registration
+---------------------
+
+`teamids.txt` contains a list of team IDs accepted for registration.
+If you don't want teams to self-register,
+zero out the list:
+
+    true > /srv/moth/state/teamids.txt
+
+
+Manually registering a team
+------------------
+
+    teamid=e2f8cc14
+    echo "Cool Team Name" > /srv/moth/state/teams/$teamid
 
 
 Dealing with puzzles
