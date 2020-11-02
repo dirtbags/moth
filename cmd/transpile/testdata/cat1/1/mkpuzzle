@@ -1,0 +1,38 @@
+#! /bin/sh
+
+fail () {
+    echo "ERROR: $*" 1>&2
+    exit 1
+}
+
+case $1:$2 in
+    puzzle:)
+        cat <<'EOT'
+{
+    "Answers": ["answer"],
+    "Pre": {
+        "Authors": ["neale"],
+        "Body": "I am a generated puzzle."
+    }
+}
+EOT
+        ;;
+    file:moo.txt)
+        echo "Moo."
+        ;;
+    file:*)
+        cat "$2" || exit 1
+        ;;
+    answer:moo)
+        echo '{"Correct":true}'
+        ;;
+    answer:error)
+        fail "you requested an error"
+        ;;
+    answer:*)
+        echo '{"Correct":false}'
+        ;;
+    *)
+        fail "What is $1"
+        ;;
+esac

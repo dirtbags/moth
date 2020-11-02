@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/dirtbags/moth/pkg/transpile"
@@ -162,4 +163,23 @@ func TestMothballs(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestFilesystem(t *testing.T) {
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	tp := T{
+		Stdout: stdout,
+		Stderr: stderr,
+		BaseFs: afero.NewOsFs(),
+	}
+
+	stdout.Reset()
+	if err := tp.Run("file", "-dir=testdata/cat1/1", "-file=moo.txt"); err != nil {
+		t.Error(err)
+	}
+	if !strings.Contains(stdout.String(), "Moo.") {
+		t.Error("Wrong file pulled", stdout.String())
+	}
+
 }
