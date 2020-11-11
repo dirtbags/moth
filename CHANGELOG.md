@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [v3.6.0] - 2020-11-11
+### Added
+- Backport event logging from v4
+
 ## [v3.5.1] - 2020-03-16
 ### Fixed
 - Support insta-checking for legacy puzzles

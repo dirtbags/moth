@@ -98,6 +98,7 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 		"Team registered",
 		"Your team has been named and you may begin using your team ID!",
 	)
+	ctx.LogEvent("register", req.FormValue("pid"), teamId, "", 0)
 }
 
 func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
@@ -152,6 +153,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 			"Wrong answer",
 			"That is not the correct answer for %s %d.", category, points,
 		)
+		ctx.LogEvent("wrong", req.FormValue("pid"), teamId, category, points)
 		return
 	}
 
@@ -168,6 +170,7 @@ func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {
 		"Points awarded",
 		fmt.Sprintf("%d points for %s!", points, teamId),
 	)
+	ctx.LogEvent("correct", req.FormValue("pid"), teamId, category, points)
 }
 
 func (ctx *Instance) puzzlesHandler(w http.ResponseWriter, req *http.Request) {
@@ -342,7 +345,7 @@ func (ctx *Instance) ServeHTTP(wOrig http.ResponseWriter, r *http.Request) {
 
 	clientIP := r.RemoteAddr
 
-	if (ctx.UseXForwarded) {
+	if ctx.UseXForwarded {
 		forwardedIP := r.Header.Get("X-Forwarded-For")
 		forwardedIP = strings.Split(forwardedIP, ", ")[0]
 

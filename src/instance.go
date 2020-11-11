@@ -25,7 +25,7 @@ type Instance struct {
 	StateDir        string
 	ThemeDir        string
 	AttemptInterval time.Duration
-	UseXForwarded	bool
+	UseXForwarded   bool
 
 	Runtime RuntimeConfig
 
@@ -34,6 +34,8 @@ type Instance struct {
 	update            chan bool
 	jPuzzleList       []byte
 	jPointsLog        []byte
+	eventStream       chan string
+	eventLogWriter    io.WriteCloser
 	nextAttempt       map[string]time.Time
 	nextAttemptMutex  *sync.RWMutex
 	mux               *http.ServeMux
@@ -47,10 +49,17 @@ func (ctx *Instance) Initialize() error {
 	if _, err := os.Stat(ctx.StateDir); err != nil {
 		return err
 	}
+	if f, err := os.OpenFile(ctx.StatePath("events.log"), os.O_RDWR|os.O_CREATE, 0644); err != nil {
+		return err
+	} else {
+		// This stays open for the life of the process
+		ctx.eventLogWriter = f
+	}
 
 	ctx.Base = strings.TrimRight(ctx.Base, "/")
 	ctx.categories = map[string]*Mothball{}
 	ctx.update = make(chan bool, 10)
+	ctx.eventStream = make(chan string, 80)
 	ctx.nextAttempt = map[string]time.Time{}
 	ctx.nextAttemptMutex = new(sync.RWMutex)
 	ctx.mux = http.NewServeMux()
@@ -84,6 +93,7 @@ func (ctx *Instance) MaybeInitialize() {
 	os.Remove(ctx.StatePath("until"))
 	os.Remove(ctx.StatePath("disabled"))
 	os.Remove(ctx.StatePath("points.log"))
+	os.Remove(ctx.StatePath("events.log"))
 
 	os.RemoveAll(ctx.StatePath("points.tmp"))
 	os.RemoveAll(ctx.StatePath("points.new"))
@@ -102,6 +112,9 @@ func (ctx *Instance) MaybeInitialize() {
 		}
 	}
 
+	// Record that we did all this
+	ctx.LogEvent("init", "", "", "", 0)
+
 	// Create initialized file that signals whether we're set up
 	f, err := os.OpenFile(ctx.StatePath("initialized"), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
@@ -111,6 +124,30 @@ func (ctx *Instance) MaybeInitialize() {
 	fmt.Fprintln(f, "Remove this file to reinitialize the contest")
 }
 
+func logstr(s string) string {
+	if s == "" {
+		return "-"
+	}
+	return s
+}
+
+// LogEvent writes to the event log
+func (ctx *Instance) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
+	event = strings.ReplaceAll(event, " ", "-")
+
+	msg := fmt.Sprintf(
+		"%s %s %s %s %d",
+		logstr(event),
+		logstr(participantID),
+		logstr(teamID),
+		logstr(cat),
+		points,
+	)
+	for _, x := range extra {
+		msg = msg + " " + strings.ReplaceAll(x, " ", "-")
+	}
+	ctx.eventStream <- msg
+}
 func pathCleanse(parts []string) string {
 	clean := make([]string, len(parts))
 	for i := range parts {
@@ -155,7 +192,7 @@ func (ctx *Instance) TooFast(teamId string) bool {
 
 func (ctx *Instance) PointsLog(teamId string) AwardList {
 	awardlist := AwardList{}
-	
+
 	fn := ctx.StatePath("points.log")
 
 	f, err := os.Open(fn)
