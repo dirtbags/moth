@@ -204,15 +204,15 @@ func (ctx *Instance) readTeams() {
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func (ctx *Instance) collectPoints() {
-  points := ctx.PointsLog("")
+	points := ctx.PointsLog("")
 
-  pointsFilename := ctx.StatePath("points.log")
-  pointsNewFilename := ctx.StatePath("points.log.new")
-  
-  // Yo, this is delicate.
-  // If we have to return early, we must remove this file.
-  // If the file's written and we move it successfully,
-  // we need to remove all the little points files that built it.
+	pointsFilename := ctx.StatePath("points.log")
+	pointsNewFilename := ctx.StatePath("points.log.new")
+
+	// Yo, this is delicate.
+	// If we have to return early, we must remove this file.
+	// If the file's written and we move it successfully,
+	// we need to remove all the little points files that built it.
 	newPoints, err := os.OpenFile(pointsNewFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 	if err != nil {
 		log.Printf("Can't append to points log: %s", err)
@@ -248,7 +248,7 @@ func (ctx *Instance) collectPoints() {
 		if duplicate {
 			log.Printf("Skipping duplicate points: %s", award.String())
 		} else {
-		  points = append(points, award)
+			points = append(points, award)
 		}
 		removearino = append(removearino, filename)
 	}
@@ -257,21 +257,21 @@ func (ctx *Instance) collectPoints() {
 	for _, point := range points {
 		fmt.Fprintln(newPoints, point.String())
 	}
-	
+
 	newPoints.Close()
-	
+
 	if err := os.Rename(pointsNewFilename, pointsFilename); err != nil {
-	  log.Printf("Unable to move %s to %s: %s", pointsFilename, pointsNewFilename, err)
-	  if err := os.Remove(pointsNewFilename); err != nil {
-	    log.Printf("Also couldn't remove %s: %s", pointsNewFilename, err)
-	  }
-	  return
+		log.Printf("Unable to move %s to %s: %s", pointsFilename, pointsNewFilename, err)
+		if err := os.Remove(pointsNewFilename); err != nil {
+			log.Printf("Also couldn't remove %s: %s", pointsNewFilename, err)
+		}
+		return
 	}
 
 	for _, filename := range removearino {
-  	if err := os.Remove(filename); err != nil {
-  		log.Printf("Unable to remove %s: %s", filename, err)
-  	}
+		if err := os.Remove(filename); err != nil {
+			log.Printf("Unable to remove %s: %s", filename, err)
+		}
 	}
 }
 
@@ -322,10 +322,14 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 			ctx.collectPoints()
 			ctx.generatePuzzleList()
 			ctx.generatePointsLog("")
+		} else {
+			ctx.LogEvent("disabled", "", "", "", 0)
 		}
 		select {
 		case <-ctx.update:
 			// log.Print("Forced update")
+		case msg := <-ctx.eventStream:
+			fmt.Fprintln(ctx.eventLogWriter, msg)
 		case <-time.After(maintenanceInterval):
 			// log.Print("Housekeeping...")
 		}
