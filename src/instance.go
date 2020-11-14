@@ -136,7 +136,8 @@ func (ctx *Instance) LogEvent(event, participantID, teamID, cat string, points i
 	event = strings.ReplaceAll(event, " ", "-")
 
 	msg := fmt.Sprintf(
-		"%s %s %s %s %d",
+		"%d %s %s %s %s %d",
+		time.Now().Unix(),
 		logstr(event),
 		logstr(participantID),
 		logstr(teamID),

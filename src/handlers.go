@@ -98,7 +98,7 @@ func (ctx *Instance) registerHandler(w http.ResponseWriter, req *http.Request) {
 		"Team registered",
 		"Your team has been named and you may begin using your team ID!",
 	)
-	ctx.LogEvent("register", req.FormValue("pid"), teamId, "", 0)
+	ctx.LogEvent("register", req.FormValue("pid"), teamId, "", 0, teamName)
 }
 
 func (ctx *Instance) answerHandler(w http.ResponseWriter, req *http.Request) {

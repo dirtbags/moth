@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [v3.6.1] - 2020-11-13
+### Fixed
+- Timestamps on event log entries
+- Team names logged in event log on registration
+
 ## [v3.6.0] - 2020-11-11
 ### Added
 - Backport event logging from v4
