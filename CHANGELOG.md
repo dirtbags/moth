@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v3.6.2] - 2020-11-17
+### Fixed
+- Removed the "disabled" log, which was getting sent out way too frequently,
+  and caused outages due to poor logic handling event queues
 
 ## [v3.6.1] - 2020-11-13
 ### Fixed
