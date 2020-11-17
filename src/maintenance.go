@@ -322,8 +322,6 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 			ctx.collectPoints()
 			ctx.generatePuzzleList()
 			ctx.generatePointsLog("")
-		} else {
-			ctx.LogEvent("disabled", "", "", "", 0)
 		}
 		select {
 		case <-ctx.update:
