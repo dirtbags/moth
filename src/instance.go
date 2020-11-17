@@ -35,7 +35,6 @@ type Instance struct {
 	jPuzzleList       []byte
 	jPointsLog        []byte
 	eventStream       chan string
-	eventLogWriter    io.WriteCloser
 	nextAttempt       map[string]time.Time
 	nextAttemptMutex  *sync.RWMutex
 	mux               *http.ServeMux
@@ -48,12 +47,6 @@ func (ctx *Instance) Initialize() error {
 	}
 	if _, err := os.Stat(ctx.StateDir); err != nil {
 		return err
-	}
-	if f, err := os.OpenFile(ctx.StatePath("events.log"), os.O_RDWR|os.O_CREATE, 0644); err != nil {
-		return err
-	} else {
-		// This stays open for the life of the process
-		ctx.eventLogWriter = f
 	}
 
 	ctx.Base = strings.TrimRight(ctx.Base, "/")

@@ -73,7 +73,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer ctx.eventLogWriter.Close()
 
 	// Add some MIME extensions
 	// Doing this avoids decompressing a mothball entry twice per request

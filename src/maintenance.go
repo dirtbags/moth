@@ -327,7 +327,13 @@ func (ctx *Instance) Maintenance(maintenanceInterval time.Duration) {
 		case <-ctx.update:
 			// log.Print("Forced update")
 		case msg := <-ctx.eventStream:
-			fmt.Fprintln(ctx.eventLogWriter, msg)
+			// log.Print("Writing events log")
+			func () {
+	 			if eventLogWriter, err := os.OpenFile(ctx.StatePath("events.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
+					defer eventLogWriter.Close()
+					fmt.Fprintln(eventLogWriter, msg)
+				}
+			}()
 		case <-time.After(maintenanceInterval):
 			// log.Print("Housekeeping...")
 		}
