@@ -255,7 +255,7 @@ func TestStateMaintainer(t *testing.T) {
 
 	time.Sleep(updateInterval)
 
-	eventLog, err := afero.ReadFile(s.Fs, "event.log")
+	eventLog, err := afero.ReadFile(s.Fs, "events.log")
 	if err != nil {
 		t.Error(err)
 	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 3 {
