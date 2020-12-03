@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Rename event.log as events.log to maintain consistency with MOTHv3
+- event.log is now events.csv, to make it easier to import to a spreadsheet
+- When in devel mode, any team ID may score points. This allows more interaction with the state directory.
 
 ## [v4.0.2] - 2020-10-29
 ### Added
