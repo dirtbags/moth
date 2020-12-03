@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,9 +38,10 @@ type State struct {
 	// Enabled tracks whether the current State system is processing updates
 	Enabled bool
 
-	refreshNow  chan bool
-	eventStream chan string
-	eventWriter afero.File
+	refreshNow      chan bool
+	eventStream     chan []string
+	eventWriter     *csv.Writer
+	eventWriterFile afero.File
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -47,7 +50,7 @@ func NewState(fs afero.Fs) *State {
 		Fs:          fs,
 		Enabled:     true,
 		refreshNow:  make(chan bool, 5),
-		eventStream: make(chan string, 80),
+		eventStream: make(chan []string, 80),
 	}
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
@@ -100,12 +103,6 @@ func (s *State) updateEnabled() {
 	}
 
 	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
-		dirs, _ := afero.ReadDir(s, ".")
-		for _, dir := range dirs {
-			log.Println(dir.Name())
-		}
-
-		log.Print(s, err)
 		nextEnabled = false
 		why = "`state/enabled` missing"
 	}
@@ -380,34 +377,35 @@ func logstr(s string) string {
 
 // LogEvent writes to the event log
 func (s *State) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
-	event = strings.ReplaceAll(event, " ", "-")
-
-	msg := fmt.Sprintf(
-		"%s %s %s %s %d",
-		logstr(event),
-		logstr(participantID),
-		logstr(teamID),
-		logstr(cat),
-		points,
+	s.eventStream <- append(
+		[]string{
+			strconv.FormatInt(time.Now().Unix(), 10),
+			event,
+			participantID,
+			teamID,
+			cat,
+			strconv.Itoa(points),
+		},
+		extra...,
 	)
-	for _, x := range extra {
-		msg = msg + " " + strings.ReplaceAll(x, " ", "-")
-	}
-	s.eventStream <- msg
 }
 
 func (s *State) reopenEventLog() error {
 	if s.eventWriter != nil {
-		if err := s.eventWriter.Close(); err != nil {
+		s.eventWriter.Flush()
+	}
+	if s.eventWriterFile != nil {
+		if err := s.eventWriterFile.Close(); err != nil {
 			// We're going to soldier on if Close returns error
 			log.Print(err)
 		}
 	}
-	eventWriter, err := s.OpenFile("events.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	eventWriterFile, err := s.OpenFile("events.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
-	s.eventWriter = eventWriter
+	s.eventWriterFile = eventWriterFile
+	s.eventWriter = csv.NewWriter(s.eventWriterFile)
 	return nil
 }
 
@@ -426,8 +424,9 @@ func (s *State) Maintain(updateInterval time.Duration) {
 	for {
 		select {
 		case msg := <-s.eventStream:
-			fmt.Fprintln(s.eventWriter, time.Now().Unix(), msg)
-			s.eventWriter.Sync()
+			s.eventWriter.Write(msg)
+			s.eventWriter.Flush()
+			s.eventWriterFile.Sync()
 		case <-ticker.C:
 			s.refresh()
 		case <-s.refreshNow:

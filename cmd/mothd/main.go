@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"mime"
 	"os"
 	"time"
@@ -53,15 +54,6 @@ func main() {
 	)
 	flag.Parse()
 
-	// Set random seed
-	if *seed == "" {
-		*seed = os.Getenv("SEED")
-	}
-	if *seed == "" {
-		*seed = fmt.Sprintf("%d%d", os.Getpid(), time.Now().Unix())
-	}
-	os.Setenv("SEED", *seed)
-
 	osfs := afero.NewOsFs()
 	theme := NewTheme(afero.NewBasePathFs(osfs, *themePath))
 	state := NewState(afero.NewBasePathFs(osfs, *statePath))
@@ -73,7 +65,18 @@ func main() {
 	if *puzzlePath != "" {
 		provider = NewTranspilerProvider(afero.NewBasePathFs(osfs, *puzzlePath))
 		config.Devel = true
+		log.Println("-=- You are in development mode, champ! -=-")
 	}
+
+	// Set random seed
+	if *seed == "" {
+		*seed = os.Getenv("SEED")
+	}
+	if *seed == "" {
+		*seed = fmt.Sprintf("%d%d", os.Getpid(), time.Now().Unix())
+	}
+	os.Setenv("SEED", *seed)
+	log.Print("SEED=", *seed)
 
 	// Add some MIME extensions
 	// Doing this avoids decompressing a mothball entry twice per request

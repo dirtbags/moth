@@ -127,13 +127,13 @@ func TestStateEvents(t *testing.T) {
 	s.LogEvent("moo", "", "", "", 0)
 	s.LogEvent("moo 2", "", "", "", 0)
 
-	if msg := <-s.eventStream; msg != "init - - - 0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init::::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; msg != "moo - - - 0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo::::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; msg != "moo-2 - - - 0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2::::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
 }
@@ -255,7 +255,7 @@ func TestStateMaintainer(t *testing.T) {
 
 	time.Sleep(updateInterval)
 
-	eventLog, err := afero.ReadFile(s.Fs, "events.log")
+	eventLog, err := afero.ReadFile(s.Fs, "events.csv")
 	if err != nil {
 		t.Error(err)
 	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 3 {
