@@ -271,7 +271,7 @@ func TestDevelState(t *testing.T) {
 	ds := NewDevelState(s)
 	if n, err := ds.TeamName("boog"); err != nil {
 		t.Error("Devel State returned error on team name lookup")
-	} else if n != "Devel Server Team boog" {
+	} else if n != "«devel:boog»" {
 		t.Error("Wrong team name", n)
 	}
 

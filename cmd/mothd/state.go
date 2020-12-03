@@ -451,5 +451,5 @@ func (ds *DevelState) TeamName(teamID string) (string, error) {
 	if name, err := ds.StateProvider.TeamName(teamID); err == nil {
 		return name, nil
 	}
-	return fmt.Sprintf("Devel Server Team %s", teamID), nil
+	return fmt.Sprintf("«devel:%s»", teamID), nil
 }
