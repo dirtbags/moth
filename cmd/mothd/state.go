@@ -160,7 +160,7 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 		return err
 	}
 	defer teamFile.Close()
-	log.Println("Setting team name to:", teamName, teamFilename, teamFile)
+	log.Printf("Setting team name [%s] in file %s", teamName, teamFilename)
 	fmt.Fprintln(teamFile, teamName)
 	teamFile.Close()
 	return nil
@@ -197,6 +197,7 @@ func (s *State) Messages() string {
 }
 
 // AwardPoints gives points to teamID in category.
+// This doesn't attempt to ensure the teamID has been registered.
 // It first checks to make sure these are not duplicate points.
 // This is not a perfect check, you can trigger a race condition here.
 // It's just a courtesy to the user.
@@ -207,11 +208,6 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 		TeamID:   teamID,
 		Category: category,
 		Points:   points,
-	}
-
-	_, err := s.TeamName(teamID)
-	if err != nil {
-		return err
 	}
 
 	for _, e := range s.PointsLog() {
@@ -433,4 +429,27 @@ func (s *State) Maintain(updateInterval time.Duration) {
 			s.refresh()
 		}
 	}
+}
+
+// DevelState is a StateProvider for use by development servers
+type DevelState struct {
+	StateProvider
+}
+
+// NewDevelState returns a new state object that can be used by the development server.
+//
+// This makes it possible to use the server without having to register a team.
+func NewDevelState(sp StateProvider) *DevelState {
+	return &DevelState{sp}
+}
+
+// TeamName returns a valid team name for any teamID
+//
+// If one's registered, it will use it.
+// Otherwise, it returns sprintf("Devel Server Team %s", teamID)
+func (ds *DevelState) TeamName(teamID string) (string, error) {
+	if name, err := ds.StateProvider.TeamName(teamID); err == nil {
+		return name, nil
+	}
+	return fmt.Sprintf("Devel Server Team %s", teamID), nil
 }

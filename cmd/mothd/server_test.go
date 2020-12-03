@@ -124,6 +124,9 @@ func TestProdServer(t *testing.T) {
 		r.Close()
 	}
 
+	if err := anonHandler.CheckAnswer("pategory", 1, "answer123"); err == nil {
+		t.Error("Invalid team ID was able to get points with correct answer")
+	}
 	if err := handler.CheckAnswer("pategory", 1, "answer123"); err != nil {
 		t.Error("Right answer marked wrong", err)
 	}

@@ -56,7 +56,6 @@ func main() {
 
 	osfs := afero.NewOsFs()
 	theme := NewTheme(afero.NewBasePathFs(osfs, *themePath))
-	state := NewState(afero.NewBasePathFs(osfs, *statePath))
 
 	config := Configuration{}
 
@@ -66,6 +65,12 @@ func main() {
 		provider = NewTranspilerProvider(afero.NewBasePathFs(osfs, *puzzlePath))
 		config.Devel = true
 		log.Println("-=- You are in development mode, champ! -=-")
+	}
+
+	var state StateProvider
+	state = NewState(afero.NewBasePathFs(osfs, *statePath))
+	if config.Devel {
+		state = NewDevelState(state)
 	}
 
 	// Set random seed

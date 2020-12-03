@@ -265,3 +265,17 @@ func TestStateMaintainer(t *testing.T) {
 		t.Error("Event log didn't end with newline")
 	}
 }
+
+func TestDevelState(t *testing.T) {
+	s := NewTestState()
+	ds := NewDevelState(s)
+	if n, err := ds.TeamName("boog"); err != nil {
+		t.Error("Devel State returned error on team name lookup")
+	} else if n != "Devel Server Team boog" {
+		t.Error("Wrong team name", n)
+	}
+
+	if err := ds.AwardPoints("blerg", "dog", 82); err != nil {
+		t.Error("Devel State AwardPoints returned an error", err)
+	}
+}
