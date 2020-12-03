@@ -109,9 +109,6 @@ function renderState(obj) {
     renderPuzzles(obj.Puzzles)
   } else if (Object.keys(obj.Puzzles).length > 0) {
     renderPuzzles(obj.Puzzles)
-    if (obj.Config.Detachable) {
-      fetchAll(obj.Puzzles)
-    }
   }
   renderNotices(obj.Messages)
 }
@@ -149,30 +146,6 @@ function showPuzzles() {
 
   document.getElementById("login").style.display = "none"
   document.getElementById("puzzles").appendChild(spinner)
-}
-
-async function fetchAll(puzzles) {
-  let teamId = sessionStorage.id
-
-  console.log("Caching all currently-open content")
-
-  for (let cat in puzzles) {
-    for (let points of puzzles[cat]) {
-      let resp = await fetch(cat + "/" + points + "/")
-      if (! resp.ok) {
-        continue
-      }
-      let obj = await resp.json()
-      for (let file of obj.files) {
-        fetch(cat + "/" + points + "/" + file.name)
-      }
-      for (let file of obj.scripts) {
-        fetch(cat + "/" + points + "/" + file.name)
-      }
-    }
-  }
-
-  console.log("Done caching content")
 }
 
 function login(e) {
