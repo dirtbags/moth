@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/russross/blackfriday/v2"
 	"github.com/spf13/afero"
+	"github.com/yuin/goldmark"
 	"gopkg.in/yaml.v2"
 )
 
@@ -284,9 +284,10 @@ func (fp FsPuzzle) staticPuzzle() (StaticPuzzle, []byte, error) {
 		return static, nil, err
 	}
 
-	body := blackfriday.Run(bodyBuf.Bytes())
+	body := new(bytes.Buffer)
+	goldmark.Convert(bodyBuf.Bytes(), body)
 
-	return static, body, err
+	return static, body.Bytes(), err
 }
 
 func legacyAttachmentParser(val []string) []StaticAttachment {
