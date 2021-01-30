@@ -25,12 +25,12 @@ so you can watch the access log and any error messages.
 
 ### Podman
 
-    podman run --rm -it -p 8080:8080 -v /srv/moth/puzzles:/puzzles:ro dirtbags/moth -puzzles /puzzles
+    podman run --rm -it -p 8080:8080 -v /srv/moth/puzzles:/puzzles:ro dirtbags/moth-devel
 
 
 ### Docker
 
-    docker run --rm -it -p 8080:8080 -v /srv/moth/puzzles:/puzzles:ro dirtbags/moth -puzzles /puzzles
+    docker run --rm -it -p 8080:8080 -v /srv/moth/puzzles:/puzzles:ro dirtbags/moth-devel
 
 ### Native
 
