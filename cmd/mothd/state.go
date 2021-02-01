@@ -438,6 +438,10 @@ type DevelState struct {
 
 // NewDevelState returns a new state object that can be used by the development server.
 //
+// The main thing this provides is the ability to register a team with any team ID.
+// If a team ID is provided that wasn't recognized by the underlying StateProvider,
+// it is associated with a team named "<devel:$ID>".
+//
 // This makes it possible to use the server without having to register a team.
 func NewDevelState(sp StateProvider) *DevelState {
 	return &DevelState{sp}
@@ -446,10 +450,22 @@ func NewDevelState(sp StateProvider) *DevelState {
 // TeamName returns a valid team name for any teamID
 //
 // If one's registered, it will use it.
-// Otherwise, it returns sprintf("Devel Server Team %s", teamID)
+// Otherwise, it returns "<devel:$ID>"
 func (ds *DevelState) TeamName(teamID string) (string, error) {
 	if name, err := ds.StateProvider.TeamName(teamID); err == nil {
 		return name, nil
 	}
 	return fmt.Sprintf("«devel:%s»", teamID), nil
+}
+
+// SetTeamName associates a team name with any teamID
+//
+// If the underlying StateProvider returns any sort of error,
+// this returns ErrAlreadyRegistered,
+// so the user can join a pre-existing team for whatever ID the provide.
+func (ds *DevelState) SetTeamName(teamID, teamName string) error {
+	if err := ds.StateProvider.SetTeamName(teamID, teamName); err != nil {
+		return ErrAlreadyRegistered
+	}
+	return nil
 }

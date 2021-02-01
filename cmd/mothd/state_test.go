@@ -269,6 +269,11 @@ func TestStateMaintainer(t *testing.T) {
 func TestDevelState(t *testing.T) {
 	s := NewTestState()
 	ds := NewDevelState(s)
+	if err := ds.SetTeamName("boog", "The Boog Team"); err != ErrAlreadyRegistered {
+		t.Error("Registering a team that doesn't exist", err)
+	} else if err == nil {
+		t.Error("Registering a team that doesn't exist didn't return ErrAlreadyRegistered")
+	}
 	if n, err := ds.TeamName("boog"); err != nil {
 		t.Error("Devel State returned error on team name lookup")
 	} else if n != "«devel:boog»" {
