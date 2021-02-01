@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - event.log is now events.csv, to make it easier to import to a spreadsheet
 - When in devel mode, any team ID may score points. This allows more interaction with the state directory.
+- When in devel mode, any team ID may be registered.
+  It still works the same way if you register a team in `teamids.txt`,
+  but now you can use anything and it will put you on an already existing team
+  named `<devel:$ID>`.
 
 ## [v4.0.2] - 2020-10-29
 ### Added
