@@ -20,6 +20,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 	"gopkg.in/yaml.v2"
 )
 
@@ -285,7 +286,14 @@ func (fp FsPuzzle) staticPuzzle() (StaticPuzzle, []byte, error) {
 	}
 
 	body := new(bytes.Buffer)
-	goldmark.Convert(bodyBuf.Bytes(), body)
+
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.Table,
+			extension.DefinitionList,
+		),
+	)
+	md.Convert(bodyBuf.Bytes(), body)
 
 	return static, body.Bytes(), err
 }

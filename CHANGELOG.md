@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   It still works the same way if you register a team in `teamids.txt`,
   but now you can use anything and it will put you on an already existing team
   named `<devel:$ID>`.
+- switched from `blackfriday` to `goldmark`, to support CommonMark
 
 ## [v4.0.2] - 2020-10-29
 ### Added

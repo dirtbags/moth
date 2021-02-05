@@ -24,6 +24,21 @@ answer: RFC822 answer
 
 RFC822 body
 `)
+var testMothMarkdown = []byte(`---
+answers:
+  - answer
+pre:
+  authors:
+    - Fred
+---
+
+one | two
+--- | ---
+1 | 2
+
+Term
+:  definition of that term
+`)
 
 func newTestFs() afero.Fs {
 	fs := afero.NewMemMapFs()
@@ -31,7 +46,7 @@ func newTestFs() afero.Fs {
 	afero.WriteFile(fs, "cat0/1/moo.txt", []byte("Moo."), 0644)
 	afero.WriteFile(fs, "cat0/2/puzzle.md", testMothRfc822, 0644)
 	afero.WriteFile(fs, "cat0/3/puzzle.moth", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/4/puzzle.md", testMothYaml, 0644)
+	afero.WriteFile(fs, "cat0/4/puzzle.md", testMothMarkdown, 0644)
 	afero.WriteFile(fs, "cat0/5/puzzle.md", testMothYaml, 0644)
 	afero.WriteFile(fs, "cat0/10/puzzle.md", []byte(`---
 Answers:

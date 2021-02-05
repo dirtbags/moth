@@ -3,6 +3,7 @@ package transpile
 import (
 	"bytes"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -61,6 +62,14 @@ func TestPuzzle(t *testing.T) {
 
 	if _, err := NewFsPuzzlePoints(catFs, 3).Puzzle(); err != nil {
 		t.Error("Legacy `puzzle.moth` file:", err)
+	}
+
+	if puzzle, err := NewFsPuzzlePoints(catFs, 4).Puzzle(); err != nil {
+		t.Error("Markdown test file:", err)
+	} else if !strings.Contains(puzzle.Pre.Body, "<table>") {
+		t.Error("Markdown table extension isn't making tables")
+	} else if !strings.Contains(puzzle.Pre.Body, "<dl>") {
+		t.Error("Markdown dictionary extension isn't making tables")
 	}
 
 	if _, err := NewFsPuzzlePoints(catFs, 99).Puzzle(); err == nil {
