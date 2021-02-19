@@ -108,8 +108,10 @@ func TestFsPuzzle(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, err := NewFsPuzzlePoints(catFs, 2).Puzzle(); err != nil {
+	if puzzle, err := NewFsPuzzlePoints(catFs, 2).Puzzle(); err != nil {
 		t.Error(err)
+	} else if !strings.Contains(puzzle.Pre.Body, "class=\"moo\"") {
+		t.Error("Raw HTML didn't make it through")
 	}
 
 	mkpuzzleDir := NewFsPuzzlePoints(catFs, 3)

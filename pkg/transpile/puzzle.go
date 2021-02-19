@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/afero"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/yaml.v2"
 )
 
@@ -291,6 +292,9 @@ func (fp FsPuzzle) staticPuzzle() (StaticPuzzle, []byte, error) {
 		goldmark.WithExtensions(
 			extension.Table,
 			extension.DefinitionList,
+		),
+		goldmark.WithRendererOptions(
+			html.WithUnsafe(),
 		),
 	)
 	md.Convert(bodyBuf.Bytes(), body)

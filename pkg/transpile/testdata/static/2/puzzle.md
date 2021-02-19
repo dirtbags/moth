@@ -23,3 +23,4 @@ This is a moth file, woo wo!
 * moo
 * squeak
 
+<span class="moo">a span tag</span>
