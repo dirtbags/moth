@@ -32,28 +32,26 @@ type AnswerResponse struct {
 
 // Puzzle contains everything about a puzzle that a client would see.
 type Puzzle struct {
-	Pre struct {
-		Authors       []string
-		Attachments   []string
-		Scripts       []string
-		Body          string
-		AnswerPattern string
-		AnswerHashes  []string
-	}
-	Post struct {
-		Objective string
-		Success   struct {
-			Acceptable string
-			Mastery    string
-		}
-		KSAs []string
-	}
 	Debug struct {
 		Log     []string
 		Errors  []string
 		Hints   []string
 		Summary string
 	}
+	Authors       []string
+	Attachments   []string
+	Scripts       []string
+	Body          string
+	AnswerPattern string
+	AnswerHashes  []string
+	Objective     string
+	KSAs          []string
+	Success       struct {
+		Acceptable string
+		Mastery    string
+	}
+
+	// Answers will be empty in a mothball
 	Answers []string
 }
 
@@ -61,30 +59,26 @@ func (puzzle *Puzzle) computeAnswerHashes() {
 	if len(puzzle.Answers) == 0 {
 		return
 	}
-	puzzle.Pre.AnswerHashes = make([]string, len(puzzle.Answers))
+	puzzle.AnswerHashes = make([]string, len(puzzle.Answers))
 	for i, answer := range puzzle.Answers {
 		sum := sha256.Sum256([]byte(answer))
 		hexsum := fmt.Sprintf("%x", sum)
-		puzzle.Pre.AnswerHashes[i] = hexsum
+		puzzle.AnswerHashes[i] = hexsum
 	}
 }
 
 // StaticPuzzle contains everything a static puzzle might tell us.
 type StaticPuzzle struct {
-	Pre struct {
-		Authors       []string
-		Attachments   []StaticAttachment
-		Scripts       []StaticAttachment
-		AnswerPattern string
+	Authors       []string
+	Attachments   []StaticAttachment
+	Scripts       []StaticAttachment
+	AnswerPattern string
+	Objective     string
+	Success       struct {
+		Acceptable string
+		Mastery    string
 	}
-	Post struct {
-		Objective string
-		Success   struct {
-			Acceptable string
-			Mastery    string
-		}
-		KSAs []string
-	}
+	KSAs  []string
 	Debug struct {
 		Log     []string
 		Errors  []string
@@ -187,7 +181,7 @@ type FsPuzzle struct {
 
 // Puzzle returns a Puzzle struct for the current puzzle.
 func (fp FsPuzzle) Puzzle() (Puzzle, error) {
-	var puzzle Puzzle
+	puzzle := Puzzle{}
 
 	static, body, err := fp.staticPuzzle()
 	if err != nil {
@@ -195,20 +189,21 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 	}
 
 	// Convert to an exportable Puzzle
-	puzzle.Post = static.Post
 	puzzle.Debug = static.Debug
 	puzzle.Answers = static.Answers
-	puzzle.Pre.Authors = static.Pre.Authors
-	puzzle.Pre.Body = string(body)
-	puzzle.Pre.AnswerPattern = static.Pre.AnswerPattern
-	puzzle.Pre.Attachments = make([]string, len(static.Pre.Attachments))
-	for i, attachment := range static.Pre.Attachments {
-		puzzle.Pre.Attachments[i] = attachment.Filename
+	puzzle.Authors = static.Authors
+	puzzle.Body = string(body)
+	puzzle.AnswerPattern = static.AnswerPattern
+	puzzle.Attachments = make([]string, len(static.Attachments))
+	for i, attachment := range static.Attachments {
+		puzzle.Attachments[i] = attachment.Filename
 	}
-	puzzle.Pre.Scripts = make([]string, len(static.Pre.Scripts))
-	for i, script := range static.Pre.Scripts {
-		puzzle.Pre.Scripts[i] = script.Filename
+	puzzle.Scripts = make([]string, len(static.Scripts))
+	for i, script := range static.Scripts {
+		puzzle.Scripts[i] = script.Filename
 	}
+	empty := Puzzle{}
+	puzzle.Debug = empty.Debug
 	puzzle.computeAnswerHashes()
 
 	return puzzle, nil
@@ -223,7 +218,7 @@ func (fp FsPuzzle) Open(name string) (ReadSeekCloser, error) {
 	}
 
 	var fsPath string
-	for _, attachment := range append(static.Pre.Attachments, static.Pre.Scripts...) {
+	for _, attachment := range append(static.Attachments, static.Scripts...) {
 		if attachment.Filename == name {
 			if attachment.FilesystemPath == "" {
 				fsPath = attachment.Filename
@@ -337,13 +332,13 @@ func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
 		key = strings.ToLower(key)
 		switch key {
 		case "author":
-			p.Pre.Authors = val
+			p.Authors = val
 		case "pattern":
-			p.Pre.AnswerPattern = val[0]
+			p.AnswerPattern = val[0]
 		case "script":
-			p.Pre.Scripts = legacyAttachmentParser(val)
+			p.Scripts = legacyAttachmentParser(val)
 		case "file":
-			p.Pre.Attachments = legacyAttachmentParser(val)
+			p.Attachments = legacyAttachmentParser(val)
 		case "answer":
 			p.Answers = val
 		case "summary":
@@ -353,13 +348,13 @@ func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
 		case "solution":
 			p.Debug.Hints = val
 		case "ksa":
-			p.Post.KSAs = val
+			p.KSAs = val
 		case "objective":
-			p.Post.Objective = val[0]
+			p.Objective = val[0]
 		case "success.acceptable":
-			p.Post.Success.Acceptable = val[0]
+			p.Success.Acceptable = val[0]
 		case "success.mastery":
-			p.Post.Success.Mastery = val[0]
+			p.Success.Mastery = val[0]
 		default:
 			return p, fmt.Errorf("Unknown header field: %s", key)
 		}

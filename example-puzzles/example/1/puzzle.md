@@ -1,7 +1,6 @@
 ---
-pre:
-  authors: 
-    - neale
+authors: 
+  - neale
 debug:
   summary: static puzzles
 answers: 

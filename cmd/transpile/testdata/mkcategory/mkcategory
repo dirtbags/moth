@@ -18,10 +18,8 @@ EOT
         cat <<EOT
 {
     "Answers": ["answer1.0"],
-    "Pre": {
-        "Authors": ["author1.0"],
-        "Body": "<h1>moo.</h1>"
-    }
+    "Authors": ["author1.0"],
+    "Body": "<h1>moo.</h1>"
 }
 EOT
         ;;

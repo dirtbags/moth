@@ -15,15 +15,13 @@ answer = ' '.join(random.sample(words, 4))
 def puzzle():
     number = random.randint(20, 500)
     obj = {
-        "Pre": {
-            "Authors": ["neale"],
-            "Body": (
-                "<p>Dynamic puzzles are provided with a JSON-generating <code>mkpuzzles</code> program in the puzzle directory.</p>"
-                "<p>You can write <code>mkpuzzles</code> in any language you like. This puzzle was written in Python 3.</p>"
-                "<p>Here is some salad:<img src='salad.jpg'></p>"
-            ),
-            "Attachments": ["salad.jpg"],
-        },
+        "Authors": ["neale"],
+        "Body": (
+            "<p>Dynamic puzzles are provided with a JSON-generating <code>mkpuzzles</code> program in the puzzle directory.</p>"
+            "<p>You can write <code>mkpuzzles</code> in any language you like. This puzzle was written in Python 3.</p>"
+            "<p>Here is some salad:<img src='salad.jpg'></p>"
+        ),
+        "Attachments": ["salad.jpg"],
         "Answers": [
             answer,
         ],

@@ -15,13 +15,12 @@ import (
 var testMothYaml = []byte(`---
 answers:
   - YAML answer
-pre:
-  authors:
-    - Arthur
-    - Buster
-    - DW
-  attachments:
-    - filename: moo.txt
+authors:
+  - Arthur
+  - Buster
+  - DW
+attachments:
+  - filename: moo.txt
 ---
 YAML body
 `)

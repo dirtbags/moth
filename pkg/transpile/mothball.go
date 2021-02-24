@@ -53,7 +53,7 @@ func Mothball(c Category, w io.Writer) error {
 		}
 
 		// Write out all attachments and scripts
-		attachments := append(puzzle.Pre.Attachments, puzzle.Pre.Scripts...)
+		attachments := append(puzzle.Attachments, puzzle.Scripts...)
 		for _, att := range attachments {
 			attPath := fmt.Sprintf("%d/%s", points, att)
 			aw, err := zf.Create(attPath)

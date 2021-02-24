@@ -1,6 +1,5 @@
 ---
-pre:
-    authors: ["neale"]
+authors: ["neale"]
 answers: ["6"]
 ---
 This category shows off how to use the transpiler from an

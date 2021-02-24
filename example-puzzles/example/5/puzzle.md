@@ -1,10 +1,9 @@
 ---
-pre:
-  authors: 
-    - neale
-  scripts:
-    - filename: helpers.js
-    - filename: draggable.js
+authors: 
+  - neale
+scripts:
+  - filename: helpers.js
+  - filename: draggable.js
 answers:
   - helper
 debug:

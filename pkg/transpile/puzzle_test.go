@@ -23,11 +23,11 @@ func TestPuzzle(t *testing.T) {
 		if (len(p.Answers) == 0) || (p.Answers[0] != "YAML answer") {
 			t.Error("Answers are wrong", p.Answers)
 		}
-		if (len(p.Pre.Authors) != 3) || (p.Pre.Authors[1] != "Buster") {
-			t.Error("Authors are wrong", p.Pre.Authors)
+		if (len(p.Authors) != 3) || (p.Authors[1] != "Buster") {
+			t.Error("Authors are wrong", p.Authors)
 		}
-		if p.Pre.Body != "<p>YAML body</p>\n" {
-			t.Errorf("Body parsed wrong: %#v", p.Pre.Body)
+		if p.Body != "<p>YAML body</p>\n" {
+			t.Errorf("Body parsed wrong: %#v", p.Body)
 		}
 
 		f, err := pd.Open("moo.txt")
@@ -52,11 +52,11 @@ func TestPuzzle(t *testing.T) {
 		if (len(p.Answers) == 0) || (p.Answers[0] != "RFC822 answer") {
 			t.Error("Answers are wrong", p.Answers)
 		}
-		if (len(p.Pre.Authors) != 3) || (p.Pre.Authors[1] != "Arthur") {
-			t.Error("Authors are wrong", p.Pre.Authors)
+		if (len(p.Authors) != 3) || (p.Authors[1] != "Arthur") {
+			t.Error("Authors are wrong", p.Authors)
 		}
-		if p.Pre.Body != "<p>RFC822 body</p>\n" {
-			t.Errorf("Body parsed wrong: %#v", p.Pre.Body)
+		if p.Body != "<p>RFC822 body</p>\n" {
+			t.Errorf("Body parsed wrong: %#v", p.Body)
 		}
 	}
 
@@ -66,9 +66,9 @@ func TestPuzzle(t *testing.T) {
 
 	if puzzle, err := NewFsPuzzlePoints(catFs, 4).Puzzle(); err != nil {
 		t.Error("Markdown test file:", err)
-	} else if !strings.Contains(puzzle.Pre.Body, "<table>") {
+	} else if !strings.Contains(puzzle.Body, "<table>") {
 		t.Error("Markdown table extension isn't making tables")
-	} else if !strings.Contains(puzzle.Pre.Body, "<dl>") {
+	} else if !strings.Contains(puzzle.Body, "<dl>") {
 		t.Error("Markdown dictionary extension isn't making tables")
 	}
 
@@ -110,7 +110,7 @@ func TestFsPuzzle(t *testing.T) {
 
 	if puzzle, err := NewFsPuzzlePoints(catFs, 2).Puzzle(); err != nil {
 		t.Error(err)
-	} else if !strings.Contains(puzzle.Pre.Body, "class=\"moo\"") {
+	} else if !strings.Contains(puzzle.Body, "class=\"moo\"") {
 		t.Error("Raw HTML didn't make it through")
 	}
 
@@ -150,11 +150,10 @@ func TestFsPuzzle(t *testing.T) {
 
 func TestAttachment(t *testing.T) {
 	buf := bytes.NewBufferString(`
-pre:
-  attachments: 
-    - simple
-    - filename: complex
-      filesystempath: backingfile
+attachments: 
+  - simple
+  - filename: complex
+    filesystempath: backingfile
 `)
 	p, err := yamlHeaderParser(buf)
 	if err != nil {
@@ -162,7 +161,7 @@ pre:
 		return
 	}
 
-	att := p.Pre.Attachments
+	att := p.Attachments
 	if len(att) != 2 {
 		t.Error("Wrong number of attachments", att)
 	}

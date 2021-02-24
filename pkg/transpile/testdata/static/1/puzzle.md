@@ -1,7 +1,6 @@
 ---
-pre:
-  authors:
-    - neale
+authors:
+  - neale
 answers:
   - moo
 ---

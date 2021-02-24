@@ -1,11 +1,10 @@
 ---
-pre:
-  authors: 
-    - neale
-  attachments:
-    - filename: salad.jpg
-    - filename: s2.jpg
-      filesystempath: salad2.jpg
+authors: 
+  - neale
+attachments:
+  - filename: salad.jpg
+  - filename: s2.jpg
+    filesystempath: salad2.jpg
 debug:
   summary: Static puzzle resource files
 answers: 

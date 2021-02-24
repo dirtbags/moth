@@ -1,7 +1,6 @@
 ---
-pre:
-    authors: 
-      - neale
+authors: 
+    - neale
 debug:
     summary: Making excellent puzzles
 answers: 

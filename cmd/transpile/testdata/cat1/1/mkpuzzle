@@ -11,10 +11,8 @@ case $1:$2 in
         cat <<EOT
 {
     "Answers": ["$answer"],
-    "Pre": {
-        "Authors": ["neale"],
-        "Body": "I am a generated puzzle."
-    }
+    "Authors": ["neale"],
+    "Body": "I am a generated puzzle."
 }
 EOT
         ;;

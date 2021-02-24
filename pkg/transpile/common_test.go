@@ -7,13 +7,12 @@ import (
 var testMothYaml = []byte(`---
 answers:
   - YAML answer
-pre:
-  authors:
-    - Arthur
-    - Buster
-    - DW
-  attachments:
-    - moo.txt
+authors:
+  - Arthur
+  - Buster
+  - DW
+attachments:
+  - moo.txt
 ---
 YAML body
 `)
@@ -27,9 +26,8 @@ RFC822 body
 var testMothMarkdown = []byte(`---
 answers:
   - answer
-pre:
-  authors:
-    - Fred
+authors:
+  - Fred
 ---
 
 one | two
