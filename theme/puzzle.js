@@ -2,7 +2,6 @@
 
 // prettify adds classes to various types, returning an HTML string.
 function prettify(key, val) {
-  console.log(key, val)
   switch (key) {
     case "Body":
       return '[HTML]'
@@ -62,7 +61,7 @@ async function checkAnswer(answer) {
   answerHashes.push(await sha256Hash(answer))
 
   for (let hash of answerHashes) {
-    for (let correctHash of window.puzzle.Pre.AnswerHashes) {    
+    for (let correctHash of window.puzzle.AnswerHashes) {    
       if (hash == correctHash) {
         return true
       }
@@ -129,7 +128,7 @@ async function loadPuzzle(categoryName, points, puzzleId) {
   window.puzzle = await resp.json()
   
   // Populate authors
-  document.getElementById("authors").textContent = window.puzzle.Pre.Authors.join(", ")
+  document.getElementById("authors").textContent = window.puzzle.Authors.join(", ")
 
   // If answers are provided, this is the devel server
   if (window.puzzle.Answers.length > 0) {
@@ -137,14 +136,14 @@ async function loadPuzzle(categoryName, points, puzzleId) {
   }
   
   // Load scripts
-  for (let script of (window.puzzle.Pre.Scripts || [])) {
+  for (let script of (window.puzzle.Scripts || [])) {
     let st = document.createElement("script")
     document.head.appendChild(st)
     st.src = base + script
   }
   
   // List associated files
-  for (let fn of (window.puzzle.Pre.Attachments || [])) {
+  for (let fn of (window.puzzle.Attachments || [])) {
     let li = document.createElement("li")
     let a = document.createElement("a")
     a.href = base + fn
@@ -154,14 +153,14 @@ async function loadPuzzle(categoryName, points, puzzleId) {
   }
 
   // Prefix `base` to relative URLs in the puzzle body
-  let doc = new DOMParser().parseFromString(window.puzzle.Pre.Body, "text/html")
+  let doc = new DOMParser().parseFromString(window.puzzle.Body, "text/html")
   for (let se of doc.querySelectorAll("[src],[href]")) {
     se.outerHTML = se.outerHTML.replace(/(src|href)="([^/]+)"/i, "$1=\"" + base + "$2\"")
   }
   
   // If a validation pattern was provided, set that
-  if (window.puzzle.Pre.AnswerPattern) {
-    document.querySelector("#answer").pattern = window.puzzle.Pre.AnswerPattern
+  if (window.puzzle.AnswerPattern) {
+    document.querySelector("#answer").pattern = window.puzzle.AnswerPattern
   }
 
   // Replace puzzle children with what's in `doc`
