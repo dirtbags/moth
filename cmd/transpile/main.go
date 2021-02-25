@@ -196,6 +196,7 @@ func (t *T) Markdown() error {
 
 func main() {
 	t := &T{
+		Stdin:  os.Stdin,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Args:   os.Args,
