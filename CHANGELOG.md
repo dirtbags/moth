@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `mtranspile` now has a `markdown` command,
+  so you can use the same markdown formatter in `mkpuzzle`
+
 ### Changed
 - event.log is now events.csv, to make it easier to import to a spreadsheet
 - When in devel mode, any team ID may score points. This allows more interaction with the state directory.
@@ -13,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but now you can use anything and it will put you on an already existing team
   named `<devel:$ID>`.
 - switched from `blackfriday` to `goldmark`, to support CommonMark
+- `transpile` is now `mtranspile`
+- `puzzle.json`no longer has `Pre` and `Post` sections
+- JavaScript code we didn't write is now pulled from a CDN
 
 ## [v4.0.2] - 2020-10-29
 ### Added
