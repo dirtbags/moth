@@ -18,7 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   named `<devel:$ID>`.
 - switched from `blackfriday` to `goldmark`, to support CommonMark
 - `puzzle.json`no longer has `Pre` and `Post` sections
+
+### Removed
 - JavaScript code we didn't write is now pulled from a CDN
+
 
 ## [v4.0.2] - 2020-10-29
 ### Added
