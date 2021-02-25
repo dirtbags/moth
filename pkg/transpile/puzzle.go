@@ -188,10 +188,14 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 		return puzzle, err
 	}
 
+	fmt.Println(static)
+
 	// Convert to an exportable Puzzle
 	puzzle.Debug = static.Debug
 	puzzle.Answers = static.Answers
 	puzzle.Authors = static.Authors
+	puzzle.Objective = static.Objective
+	puzzle.Success = static.Success
 	puzzle.Body = string(body)
 	puzzle.AnswerPattern = static.AnswerPattern
 	puzzle.Attachments = make([]string, len(static.Attachments))
@@ -202,8 +206,6 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 	for i, script := range static.Scripts {
 		puzzle.Scripts[i] = script.Filename
 	}
-	empty := Puzzle{}
-	puzzle.Debug = empty.Debug
 	puzzle.computeAnswerHashes()
 
 	return puzzle, nil

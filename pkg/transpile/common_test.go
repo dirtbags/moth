@@ -11,6 +11,10 @@ authors:
   - Arthur
   - Buster
   - DW
+objective: moo like a cow
+success:
+  acceptable: say moo
+  mastery: say mrr  
 attachments:
   - moo.txt
 ---

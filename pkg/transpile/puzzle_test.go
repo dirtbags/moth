@@ -26,6 +26,15 @@ func TestPuzzle(t *testing.T) {
 		if (len(p.Authors) != 3) || (p.Authors[1] != "Buster") {
 			t.Error("Authors are wrong", p.Authors)
 		}
+		if p.Objective != "moo like a cow" {
+			t.Error("Wrong objective")
+		}
+		if p.Success.Acceptable != "say moo" {
+			t.Error("Wrong Success.Acceptable")
+		}
+		if p.Success.Mastery != "say mrr" {
+			t.Error("Wrong Success.Mastery")
+		}
 		if p.Body != "<p>YAML body</p>\n" {
 			t.Errorf("Body parsed wrong: %#v", p.Body)
 		}
