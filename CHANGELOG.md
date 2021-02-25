@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- `mtranspile` now has a `markdown` command,
+- `transpile` now has a `markdown` command,
   so you can use the same markdown formatter in `mkpuzzle`
 
 ### Changed
@@ -17,7 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but now you can use anything and it will put you on an already existing team
   named `<devel:$ID>`.
 - switched from `blackfriday` to `goldmark`, to support CommonMark
-- `transpile` is now `mtranspile`
 - `puzzle.json`no longer has `Pre` and `Post` sections
 - JavaScript code we didn't write is now pulled from a CDN
 
