@@ -188,8 +188,6 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 		return puzzle, err
 	}
 
-	fmt.Println(static)
-
 	// Convert to an exportable Puzzle
 	puzzle.Debug = static.Debug
 	puzzle.Answers = static.Answers
