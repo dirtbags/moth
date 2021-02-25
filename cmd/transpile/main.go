@@ -16,6 +16,7 @@ import (
 
 // T represents the state of things
 type T struct {
+	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 	Args   []string
@@ -42,6 +43,7 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, " puzzle: Print puzzle JSON")
 	fmt.Fprintln(w, " file: Open a file for a puzzle")
 	fmt.Fprintln(w, " answer: Check correctness of an answer")
+	fmt.Fprintln(w, " markdown: Format stdin with markdown")
 }
 
 // ParseArgs parses arguments and runs the appropriate action.
@@ -71,6 +73,8 @@ func (t *T) ParseArgs() (Command, error) {
 	case "answer":
 		cmd = t.CheckAnswer
 		flags.StringVar(&t.answer, "answer", "", "Answer to check")
+	case "markdown":
+		cmd = t.Markdown
 	case "help":
 		usage(t.Stderr)
 		return nothing, nil
@@ -183,6 +187,11 @@ func (t *T) CheckAnswer() error {
 	log.Print(t.answer)
 	_, err := fmt.Fprintf(t.Stdout, `{"Correct":%v}`, c.Answer(t.answer))
 	return err
+}
+
+// Markdown runs stdin through a Markdown engine
+func (t *T) Markdown() error {
+	return transpile.Markdown(t.Stdin, t.Stdout)
 }
 
 func main() {

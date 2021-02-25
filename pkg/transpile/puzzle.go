@@ -19,9 +19,6 @@ import (
 	"time"
 
 	"github.com/spf13/afero"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/yaml.v2"
 )
 
@@ -281,20 +278,9 @@ func (fp FsPuzzle) staticPuzzle() (StaticPuzzle, []byte, error) {
 		return static, nil, err
 	}
 
-	body := new(bytes.Buffer)
-
-	md := goldmark.New(
-		goldmark.WithExtensions(
-			extension.Table,
-			extension.DefinitionList,
-		),
-		goldmark.WithRendererOptions(
-			html.WithUnsafe(),
-		),
-	)
-	md.Convert(bodyBuf.Bytes(), body)
-
-	return static, body.Bytes(), err
+	html := new(bytes.Buffer)
+	err = Markdown(bodyBuf, html)
+	return static, html.Bytes(), err
 }
 
 func legacyAttachmentParser(val []string) []StaticAttachment {

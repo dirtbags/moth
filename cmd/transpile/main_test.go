@@ -51,9 +51,11 @@ func (tp T) Run(args ...string) error {
 }
 
 func TestTranspilerEverything(t *testing.T) {
+	stdin := new(bytes.Buffer)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	tp := T{
+		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,
 		BaseFs: newTestFs(),
@@ -94,6 +96,15 @@ func TestTranspilerEverything(t *testing.T) {
 		t.Error("Answer validation failed", stdout.String())
 	}
 
+	stdout.Reset()
+	stdin.Reset()
+	stdin.WriteString("text *emphasized* text")
+	if err := tp.Run("markdown"); err != nil {
+		t.Error(err)
+	}
+	if stdout.String() != "<p>text <em>emphasized</em> text</p>\n" {
+		t.Error("Markdown conversion failed", stdout.String())
+	}
 }
 
 func TestMothballs(t *testing.T) {
@@ -165,9 +176,11 @@ func TestMothballs(t *testing.T) {
 }
 
 func TestFilesystem(t *testing.T) {
+	stdin := new(bytes.Buffer)
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	tp := T{
+		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,
 		BaseFs: afero.NewOsFs(),
