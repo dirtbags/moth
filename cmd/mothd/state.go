@@ -179,7 +179,6 @@ func (s *State) PointsLog() award.List {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Println(line)
 		cur, err := award.Parse(line)
 		if err != nil {
 			log.Printf("Skipping malformed award line %s: %s", line, err)
