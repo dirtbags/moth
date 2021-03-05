@@ -13,7 +13,7 @@ func TestTranspiler(t *testing.T) {
 	inv := p.Inventory()
 	if len(inv) != 1 {
 		t.Error("Wrong inventory:", inv)
-	} else if len(inv[0].Puzzles) != 1 {
-		t.Error("Wrong inventory:", inv)
+	} else if len(inv[0].Puzzles) != 2 {
+		t.Error("Wrong puzzles:", inv)
 	}
 }
