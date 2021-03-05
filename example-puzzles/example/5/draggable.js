@@ -22,16 +22,25 @@ function draggableHandleDragOver(e) {
 }
 
 function draggableHandleDragEnter(e) {
-  e.target.classList.add('over')
+  let element = e.target
+  if (!element.classList) {
+    element = element.parentElement
+  }
+  element.classList.add('over')
 }
 
 function draggableHandleDragLeave(e) {
   // this/e.target is previous target element.
-  e.target.classList.remove('over')
+  let element = e.target
+  if (!element.classList) {
+    element = element.parentElement
+  }
+  element.classList.remove('over')
 }
 
 function draggableHandleDrop(e) {
   // this/e.target is current target element.
+  e.preventDefault()
   let tgt = e.target
   let src = document.querySelector("[data-move-id=\"" + e.dataTransfer.getData("text/plain") + "\"]")
 
@@ -59,12 +68,12 @@ function draggableHandleDragEnd(e) {
 
 function sortableInit(event) {
   for (let e of document.querySelectorAll("[draggable]")) {
-    e.addEventListener('dragstart', draggableHandleDragStart, false)
-    e.addEventListener('dragenter', draggableHandleDragEnter, false)
-    e.addEventListener('dragover', draggableHandleDragOver, false)
-    e.addEventListener('dragleave', draggableHandleDragLeave, false)
-    e.addEventListener('drop', draggableHandleDrop, false)
-    e.addEventListener('dragend', draggableHandleDragEnd, false)
+    e.addEventListener('dragstart', draggableHandleDragStart)
+    e.addEventListener('dragenter', draggableHandleDragEnter)
+    e.addEventListener('dragover', draggableHandleDragOver)
+    e.addEventListener('dragleave', draggableHandleDragLeave)
+    e.addEventListener('drop', draggableHandleDrop)
+    e.addEventListener('dragend', draggableHandleDragEnd)
   }
 }
 
