@@ -81,7 +81,7 @@ func TestTranspilerEverything(t *testing.T) {
 	}
 
 	stdout.Reset()
-	if err := tp.Run("file", "-dir=cat0/1", "-file=moo.txt"); err != nil {
+	if err := tp.Run("file", "-dir=cat0/1", "moo.txt"); err != nil {
 		t.Error(err)
 	}
 	if stdout.String() != "Moo." {
@@ -89,7 +89,7 @@ func TestTranspilerEverything(t *testing.T) {
 	}
 
 	stdout.Reset()
-	if err := tp.Run("answer", "-dir=cat0/1", "-answer=YAML answer"); err != nil {
+	if err := tp.Run("answer", "-dir=cat0/1", "YAML answer"); err != nil {
 		t.Error(err)
 	}
 	if stdout.String() != `{"Correct":true}` {
@@ -117,7 +117,7 @@ func TestMothballs(t *testing.T) {
 	}
 
 	stdout.Reset()
-	if err := tp.Run("mothball", "-dir=unbroken", "-out=unbroken.mb"); err != nil {
+	if err := tp.Run("mothball", "-dir=unbroken", "unbroken.mb"); err != nil {
 		t.Error(err)
 		return
 	}
@@ -195,7 +195,7 @@ func TestFilesystem(t *testing.T) {
 	}
 
 	stdout.Reset()
-	if err := tp.Run("file", "-dir=testdata/cat1/1", "-file=moo.txt"); err != nil {
+	if err := tp.Run("file", "-dir=testdata/cat1/1", "moo.txt"); err != nil {
 		t.Error(err)
 	}
 	if !strings.Contains(stdout.String(), "Moo.") {

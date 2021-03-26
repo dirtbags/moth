@@ -22,10 +22,6 @@ type T struct {
 	Args   []string
 	BaseFs afero.Fs
 	fs     afero.Fs
-
-	// Arguments
-	filename string
-	answer   string
 }
 
 // Command is a function invoked by the user
@@ -36,14 +32,21 @@ func nothing() error {
 }
 
 func usage(w io.Writer) {
-	fmt.Fprintln(w, "Usage: transpile COMMAND [flags]")
+	fmt.Fprintln(w, " Usage: transpile mothball [FLAGS] [MOTHBALL]")
+	fmt.Fprintln(w, "        Compile a mothball")
+	fmt.Fprintln(w, " Usage: inventory [FLAGS]")
+	fmt.Fprintln(w, "        Show category inventory")
+	fmt.Fprintln(w, " Usage: puzzle [FLAGS]")
+	fmt.Fprintln(w, "        Print puzzle JSON")
+	fmt.Fprintln(w, " Usage: file [FLAGS] FILENAME")
+	fmt.Fprintln(w, "        Open a file for a puzzle")
+	fmt.Fprintln(w, " Usage: answer [FLAGS] ANSWER")
+	fmt.Fprintln(w, "        Check correctness of an answer")
+	fmt.Fprintln(w, " Usage: markdown [FLAGS]")
+	fmt.Fprintln(w, "        Format stdin with markdown")
 	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, " mothball: Compile a mothball")
-	fmt.Fprintln(w, " inventory: Show category inventory")
-	fmt.Fprintln(w, " puzzle: Print puzzle JSON")
-	fmt.Fprintln(w, " file: Open a file for a puzzle")
-	fmt.Fprintln(w, " answer: Check correctness of an answer")
-	fmt.Fprintln(w, " markdown: Format stdin with markdown")
+	fmt.Fprintln(w, "-dir DIRECTORY")
+	fmt.Fprintln(w, "        Use puzzle in DIRECTORY")
 }
 
 // ParseArgs parses arguments and runs the appropriate action.
@@ -62,17 +65,14 @@ func (t *T) ParseArgs() (Command, error) {
 	switch t.Args[1] {
 	case "mothball":
 		cmd = t.DumpMothball
-		flags.StringVar(&t.filename, "out", "", "Path to create mothball (empty for stdout)")
 	case "inventory":
 		cmd = t.PrintInventory
 	case "puzzle":
 		cmd = t.DumpPuzzle
 	case "file":
 		cmd = t.DumpFile
-		flags.StringVar(&t.filename, "file", "puzzle.json", "Filename to open")
 	case "answer":
 		cmd = t.CheckAnswer
-		flags.StringVar(&t.answer, "answer", "", "Answer to check")
 	case "markdown":
 		cmd = t.Markdown
 	case "help":
@@ -92,6 +92,7 @@ func (t *T) ParseArgs() (Command, error) {
 	} else {
 		t.fs = t.BaseFs
 	}
+	t.Args = flags.Args()
 
 	return cmd, nil
 }
@@ -137,9 +138,14 @@ func (t *T) DumpPuzzle() error {
 
 // DumpFile writes a file to the writer.
 func (t *T) DumpFile() error {
+	filename := "puzzle.json"
+	if len(t.Args) > 0 {
+		filename = t.Args[0]
+	}
+
 	puzzle := transpile.NewFsPuzzle(t.fs)
 
-	f, err := puzzle.Open(t.filename)
+	f, err := puzzle.Open(filename)
 	if err != nil {
 		return err
 	}
@@ -154,26 +160,25 @@ func (t *T) DumpFile() error {
 // DumpMothball writes a mothball to the writer, or an output file if specified.
 func (t *T) DumpMothball() error {
 	var w io.Writer
-
 	c := transpile.NewFsCategory(t.fs, "")
 
-	removeOnError := false
-	switch t.filename {
-	case "", "-":
+	filename := ""
+	if len(t.Args) == 0 {
 		w = t.Stdout
-	default:
-		removeOnError = true
-		log.Println("Writing mothball to", t.filename)
-		outf, err := t.BaseFs.Create(t.filename)
+	} else {
+		filename = t.Args[0]
+		outf, err := t.BaseFs.Create(filename)
 		if err != nil {
 			return err
 		}
 		defer outf.Close()
 		w = outf
+		log.Println("Writing mothball to", filename)
 	}
+
 	if err := transpile.Mothball(c, w); err != nil {
-		if removeOnError {
-			t.BaseFs.Remove(t.filename)
+		if filename != "" {
+			t.BaseFs.Remove(filename)
 		}
 		return err
 	}
@@ -182,10 +187,12 @@ func (t *T) DumpMothball() error {
 
 // CheckAnswer prints whether an answer is correct.
 func (t *T) CheckAnswer() error {
+	answer := ""
+	if len(t.Args) > 0 {
+		answer = t.Args[0]
+	}
 	c := transpile.NewFsPuzzle(t.fs)
-	log.Print(c.Puzzle())
-	log.Print(t.answer)
-	_, err := fmt.Fprintf(t.Stdout, `{"Correct":%v}`, c.Answer(t.answer))
+	_, err := fmt.Fprintf(t.Stdout, `{"Correct":%v}`, c.Answer(answer))
 	return err
 }
 
