@@ -61,10 +61,10 @@ func TestTranspilerEverything(t *testing.T) {
 		BaseFs: newTestFs(),
 	}
 
-	if err := tp.Run("inventory"); err != nil {
+	if err := tp.Run("inventory", "-dir=cat0"); err != nil {
 		t.Error(err)
 	}
-	if stdout.String() != "cat0 1 2 3 4 5 10\nunbroken 1 2\n" {
+	if stdout.String() != "{\"Puzzles\":[1,2,3,4,5,10]}" {
 		t.Errorf("Bad inventory: %#v", stdout.String())
 	}
 

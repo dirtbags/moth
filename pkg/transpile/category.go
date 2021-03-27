@@ -56,7 +56,7 @@ func NewFsCategory(fs afero.Fs, cat string) Category {
 	bfs := NewRecursiveBasePathFs(fs, cat)
 	if info, err := bfs.Stat("mkcategory"); (err == nil) && (info.Mode()&0100 != 0) {
 		if command, err := bfs.RealPath(info.Name()); err != nil {
-			log.Println("Unable to resolve full path to", info.Name(), bfs)
+			log.Println("Unable to resolve full path to", info.Name())
 		} else {
 			return FsCommandCategory{
 				fs:      bfs,

@@ -39,10 +39,13 @@ func (b *RecursiveBasePathFs) RealPath(name string) (path string, err error) {
 	bpath := filepath.Clean(b.path)
 	path = filepath.Clean(filepath.Join(bpath, name))
 
-	if parentRecursiveBasePathFs, ok := b.source.(*RecursiveBasePathFs); ok {
-		return parentRecursiveBasePathFs.RealPath(path)
-	} else if parentRecursiveBasePathFs, ok := b.source.(*afero.BasePathFs); ok {
-		return parentRecursiveBasePathFs.RealPath(path)
+	switch pfs := b.source.(type) {
+	case *RecursiveBasePathFs:
+		return pfs.RealPath(path)
+	case *afero.BasePathFs:
+		return pfs.RealPath(path)
+	case *afero.OsFs:
+		return path, nil
 	}
 
 	if !strings.HasPrefix(path, bpath) {

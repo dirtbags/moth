@@ -99,30 +99,31 @@ func (t *T) ParseArgs() (Command, error) {
 
 // PrintInventory prints a puzzle inventory to stdout
 func (t *T) PrintInventory() error {
-	inv, err := transpile.FsInventory(t.fs)
+	c := transpile.NewFsCategory(t.fs, "")
+
+	inv, err := c.Inventory()
+	if err != nil {
+		return err
+	}
+	sort.Ints(inv)
+	jinv, err := json.Marshal(
+		transpile.InventoryResponse{
+			Puzzles: inv,
+		},
+	)
 	if err != nil {
 		return err
 	}
 
-	cats := make([]string, 0, len(inv))
-	for cat := range inv {
-		cats = append(cats, cat)
-	}
-	sort.Strings(cats)
-	for _, cat := range cats {
-		puzzles := inv[cat]
-		fmt.Fprint(t.Stdout, cat)
-		for _, p := range puzzles {
-			fmt.Fprint(t.Stdout, " ", p)
-		}
-		fmt.Fprintln(t.Stdout)
-	}
+	t.Stdout.Write(jinv)
 	return nil
 }
 
 // DumpPuzzle writes a puzzle's JSON to the writer.
 func (t *T) DumpPuzzle() error {
+	log.Println("Hello!")
 	puzzle := transpile.NewFsPuzzle(t.fs)
+	log.Println("Hello!")
 
 	p, err := puzzle.Puzzle()
 	if err != nil {

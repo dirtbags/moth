@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 ### Changed
 - example/5/draggable.js fix for FireFox to prevent dropping a draggable trying to load a URL
+- `transpile` arguments now work the same way for the transpile binary as they do for mkpuzzle
+- `transpile inventory` does what you expect: inventory of current category, not inventory of all categories
 
-## [v4.1.1] 
+### Fixed
+- `transpile` will now run `mkcategory` and `mkpuzzle` when invoked without `-dir`
+
+
+## [v4.1.1] - 2020-03-02
 ### Removed
 - ppc64le and i386 builds of github, because ppc64le keep failing mysteriously, and we don't need them anyhow.
+
 
 ## [v4.1.0] - 2020-03-02
 ### Added
@@ -50,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - More detailed [API documntation](docs/api.md)
 - Transpiler warning if `mkpuzzle` exists but is not executable
 
+
 ## [v4.0.0] - 2020-10-14
 ### Fixed
 - Multiple bugs preventing production server from working properly
@@ -61,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Documented the HTTP API
 - Added a drawing of how things fit together
+
 
 ## [v4.0-rc1] - 2020-10-13
 ### Changed
@@ -95,13 +104,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+
 ## [v3.5.1] - 2020-03-16
 ### Fixed
 - Support insta-checking for legacy puzzles
 
+
 ## [v3.5.0] - 2020-03-13
 ### Changed
 - We are now using SHA256 instead of djb2hash
+
 ### Added
 - URL parameter to points.json to allow returning only the JSON for a single
   team by its team id (e.g., points.json?id=abc123).
@@ -113,23 +125,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mothballs can now specify `X-Answer-Pattern` header fields, which allow `*`
   at the beginning, end, or both, of an answer. This is `X-` because we
   are hoping to change how this works in the future.
+
 ### Fixed
 - Handle cases where non-legacy puzzles don't have an `author` attribute
 - Handle YAML-formatted file and script lists as expected
 - YAML-formatted example puzzle actually works as expected
 - points.log will now always be sorted chronologically
 
+
 ## [3.4.3] - 2019-11-20
 ### Fixed
 - Made top-scoring teams full-width
+
 
 ## [3.4.2] - 2019-11-18
 ### Fixed
 - Issue with multiple answers in devel server and YAML-format .moth
 
+
 ## [3.4.1] - 2019-11-17
 ### Fixed
 - Scoreboard was double-counting points
+
 
 ## [3.4] - 2019-11-13
 ### Added
@@ -139,5 +156,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Embedded graph in scoreboard
 - Optional tracking of participant IDs
 - New `notices.html` file for sending broadcast messages to players
+
 ### Changed
 - Use native JS URL objects instead of wrangling everything by hand

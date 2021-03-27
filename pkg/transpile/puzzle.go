@@ -134,17 +134,11 @@ type PuzzleProvider interface {
 func NewFsPuzzle(fs afero.Fs) PuzzleProvider {
 	var command string
 
-	if info, err := fs.Stat("mkpuzzle"); !os.IsNotExist(err) {
+	bfs := NewRecursiveBasePathFs(fs, "")
+	if info, err := bfs.Stat("mkpuzzle"); !os.IsNotExist(err) {
 		if (info.Mode() & 0100) != 0 {
-			// Try to get the actual path to the executable
-			if pfs, ok := fs.(*RecursiveBasePathFs); ok {
-				if command, err = pfs.RealPath(info.Name()); err != nil {
-					log.Println("WARN: Unable to resolve full path to", info.Name(), pfs)
-				}
-			} else if pfs, ok := fs.(*afero.BasePathFs); ok {
-				if command, err = pfs.RealPath(info.Name()); err != nil {
-					log.Println("WARN: Unable to resolve full path to", info.Name(), pfs)
-				}
+			if command, err = bfs.RealPath(info.Name()); err != nil {
+				log.Println("WARN: Unable to resolve full path to", info.Name())
 			}
 		} else {
 			log.Println("WARN: mkpuzzle exists, but isn't executable.")
