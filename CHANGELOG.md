@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [v4.2] - 2020-03-26
 ### Changed
 - example/5/draggable.js fix for FireFox to prevent dropping a draggable trying to load a URL
 - `transpile` arguments now work the same way for the transpile binary as they do for mkpuzzle
 - `transpile inventory` does what you expect: inventory of current category, not inventory of all categories
+
+### Removed
+- No longer building a `moth-devel` image,
+  this is now handled by the
+  [moth-devel repository](https://github.com/dirtbags/moth-devel).
 
 ### Fixed
 - `transpile` will now run `mkcategory` and `mkpuzzle` when invoked without `-dir`

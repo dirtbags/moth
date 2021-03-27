@@ -26,20 +26,3 @@ RUN cp /go/bin/* /target/bin/
 FROM scratch AS moth
 COPY --from=prodbuild /target /
 ENTRYPOINT [ "/bin/mothd" ]
-
-##########
-# You should use the dirtbags/moth-devel repo's build for this, instead
-FROM ubuntu AS moth-devel
-RUN apt-get -y update && apt-get -y install \
-    build-essential \
-    bsdgames \
-    figlet toilet \
-    lua5.3 \
-    python3 \
-    python3-pil \
-    python3-scapy \
-    python3-yaml \
-    cowsay
-COPY --from=builder /target /
-COPY --from=builder /go/bin/* /bin/
-CMD [ "/bin/mothd", "-puzzles", "/puzzles" ]
