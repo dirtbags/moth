@@ -121,9 +121,7 @@ func (t *T) PrintInventory() error {
 
 // DumpPuzzle writes a puzzle's JSON to the writer.
 func (t *T) DumpPuzzle() error {
-	log.Println("Hello!")
 	puzzle := transpile.NewFsPuzzle(t.fs)
-	log.Println("Hello!")
 
 	p, err := puzzle.Puzzle()
 	if err != nil {
