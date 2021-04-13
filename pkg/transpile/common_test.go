@@ -17,6 +17,9 @@ success:
   mastery: say mrr  
 attachments:
   - moo.txt
+ksas:
+  - a1
+  - b2
 ---
 YAML body
 `)

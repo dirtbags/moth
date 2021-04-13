@@ -184,6 +184,7 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 	puzzle.Answers = static.Answers
 	puzzle.Authors = static.Authors
 	puzzle.Objective = static.Objective
+	puzzle.KSAs = static.KSAs
 	puzzle.Success = static.Success
 	puzzle.Body = string(body)
 	puzzle.AnswerPattern = static.AnswerPattern

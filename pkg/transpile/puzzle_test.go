@@ -35,6 +35,12 @@ func TestPuzzle(t *testing.T) {
 		if p.Success.Mastery != "say mrr" {
 			t.Error("Wrong Success.Mastery")
 		}
+		if len(p.KSAs) != 2 {
+			t.Error("KSAs are wrong")
+		}
+		if p.KSAs[0] != "a1" {
+			t.Error("KSAs[0] wrong")
+		}
 		if p.Body != "<p>YAML body</p>\n" {
 			t.Errorf("Body parsed wrong: %#v", p.Body)
 		}
