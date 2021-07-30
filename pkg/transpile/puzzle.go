@@ -27,14 +27,19 @@ type AnswerResponse struct {
 	Correct bool
 }
 
+// PuzzleDebug is the full suite of debug fields in a puzzle
+
+type PuzzleDebug struct {
+	Log     []string
+	Errors  []string
+	Hints   []string
+	Notes   string
+	Summary string
+}
+
 // Puzzle contains everything about a puzzle that a client would see.
 type Puzzle struct {
-	Debug struct {
-		Log     []string
-		Errors  []string
-		Hints   []string
-		Summary string
-	}
+	Debug         PuzzleDebug
 	Authors       []string
 	Attachments   []string
 	Scripts       []string
@@ -75,13 +80,8 @@ type StaticPuzzle struct {
 		Acceptable string
 		Mastery    string
 	}
-	KSAs  []string
-	Debug struct {
-		Log     []string
-		Errors  []string
-		Hints   []string
-		Summary string
-	}
+	KSAs    []string
+	Debug   PuzzleDebug
 	Answers []string
 }
 
