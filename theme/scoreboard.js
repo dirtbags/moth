@@ -125,6 +125,10 @@ function scoreboardInit() {
     for (let team of winners) {
       let row = document.createElement("div")
       let ncat = 0
+
+      let teamPoints=document.createElement("span")
+      teamPoints.classList.add("teampoints")
+
       for (let category in highestCategoryScore) {
         let catHigh = highestCategoryScore[category]
         let catTeam = team.categoryScore[category] || 0
@@ -138,9 +142,11 @@ function scoreboardInit() {
         bar.textContent = category + ": " + catTeam
         bar.title = bar.textContent
   
-        row.appendChild(bar)
+        teamPoints.appendChild(bar)
         ncat += 1
       }
+
+      row.appendChild(teamPoints)
   
       let te = document.createElement("span")
       te.classList.add("teamname")

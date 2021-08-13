@@ -78,7 +78,34 @@ input:invalid {
 	opacity: 0.8;
 	position: absolute;
 	right: 0.2em;
+	background-color: #292929;
+	background-blend-mode: darken;
+	padding: 0em 0.2em;
+	border-top-left-radius: 0.5em;
+	border-bottom-left-radius: 0.5em;
+	margin:0em;
+	height: 1.5em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition-property: max-width;
+	transition-duration: 2s;
+	transition-delay: 0s;
 }
+
+#rankings span.teamname:hover {
+	max-width: 100%;
+}
+
+#rankings span.teampoints {
+	font-size:100%;
+	height:1.2em;
+	margin:0em;
+	padding:0em;
+	width:99%;
+}
+
+
 #rankings div * {white-space: nowrap;}
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
 .cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
@@ -88,6 +115,74 @@ input:invalid {
 .cat5, .cat13, .cat21 {background-color: #e31a1c; color: white;}
 .cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
 .cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}
+
+
+/* Responsive design */
+/* Defaults */
+        #rankings span.teampoints {
+                max-width:89%;
+        }
+        #rankings span.teamname {
+                max-width:10%;
+        }
+
+
+/* Monitors with large enough screens to do side by side */
+@media only screen and (min-width: 170em) {
+	#chart, #rankings {
+		width: 49%;
+		display:inline-block;
+		vertical-align:middle;
+	}
+
+}
+
+/* Monitor
+@media only screen and (max-width: 130em) {
+        #chart, #rankings {
+                width: 49%;
+                display:inline-block;
+		vertical-align: middle;
+        }
+
+	#rankings span.teampoints {
+		max-width:89%;
+	}
+	#rankings span.teamname {
+		max-width:10%;
+	}
+}
+
+/* Laptop size screen */
+@media only screen and (max-width: 100em) {
+	#rankings span.teampoints {
+		max-width:84%;
+	}
+	#rankings span.teamname {
+		max-width:15%;
+	}
+}
+
+/* Roughly Tablet size */
+@media only screen and (max-width: 70em) {
+	#rankings span.teampoints {
+		max-width:79%;
+	}
+	#rankings span.teamname {
+		max-width:20%;
+	}
+}
+
+/* Small screens phone size */
+@media only screen and (max-width: 40em) {
+	#rankings span.teampoints {
+		max-width:65%;
+	}
+	#rankings span.teamname {
+		max-width:34%;
+	}
+}
+
 
 
 #devel {
