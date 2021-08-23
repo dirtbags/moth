@@ -2,15 +2,38 @@
 <html>
   <head>
     <title>Scoreboard</title>
-    <link rel="stylesheet" href="basic.css">
+    <link rel="stylesheet" href="scoreboard-base.css">
+    <link rel="stylesheet" href="gibson.css">
     <meta name="viewport" content="width=device-width">
   </head>
   <body class="wide">
     <h4 id="location"></h4>
+    <ul id="settings">
+      <em class="btn">Settings</em>
+      <li>
+        <ul>Ranking Format
+          <li><input type="radio" id="rankingStandard" name="rankingPerspective" value="standard" checked /> <label for="rankingStandard">Standard</label></li>
+          <li><input type="radio" id="rankingCategory" name="rankingPerspective" value="category" /> <label for="rankingCategory">Category</label></li>
+          <li><input type="radio" id="rankingTrack" name="rankingPerspective" value="track"/> <label for="rankingTrack">Track (<em>placeholder</em>)</label></li>
+        </ul>
+        <ul>Features
+          <li><input type="checkbox" id="mothLeaderIcons" name="mothLeaderIcons" value="true" /> <label for="mothLeaderIcons">Show Leader icons</label></li>
+          <li><input type="checkbox" id="mothScreenSaver" name="mothScreenSaver" value="true"/> <label for="mothScreenSaver">Moth ScreenSaver</label></li>
+          <ul style="margin-left: 2em;">
+            <li><input type="radio" id="mothScreenSaverBgNone" name="mothScreenSaverBg" value="transparent" /> <label for="mothScreenSaverBgNone">Transparent</label></li>
+            <li><input type="radio" id="mothScreenSaverBgText" name="mothScreenSaverBg" value="svg" checked /> <label for="mothScreenSaverBgText">SVG/Text</label></li>
+            <li><input type="radio" id="mothScreenSaverBgWindow" name="mothScreenSaverBg" value="window" /> <label for="mothScreenSaverBgWindow">Window</label></li>
+            <li><input type="radio" id="mothScreenSaverBgCombined" name="mothScreenSaverBg" value="combined" /> <label for="mothScreenSaverBgCombined">Combined</label></li>
+          </ul>
+        </ul>
+      </li>
+    </ul>
+
     <section class="rotate">
       <div id="chart"></div>
       <div id="rankings"></div>
     </section>
+
     <nav>
       <ul>
         <li><a href="index.html">Puzzles</a></li>
