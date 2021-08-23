@@ -1,0 +1,418 @@
+/* http://paletton.com/#uid=63T0u0k7O9o3ouT6LjHih7ltq4c */
+body {
+  font-family: sans-serif;
+  max-width: 40em;
+	background: #282a33;
+	color: #f6efdc;
+}
+body.wide {
+  max-width: 100%;
+}
+a:any-link {
+	color: #8b969a;
+}
+h1 {
+	background: #5e576b;
+	color: #9e98a8;
+}
+.Fail, .Error, #messages {
+	background: #3a3119;
+	color: #ffcc98;
+}
+.Fail:before {
+	content: "Fail: ";
+}
+.Error:before {
+	content: "Error: ";
+}
+p {
+	margin: 1em 0em;
+}
+form, pre {
+	margin: 1em;
+}
+input, select {
+	padding: 0.6em;
+	margin: 0.2em;
+	max-width: 30em;
+}
+nav {
+  border: solid black 2px;
+}
+nav ul, .category ul {
+  padding: 1em;
+}
+nav li, .category li {
+	display: inline;
+	margin: 1em;
+}
+iframe#body {
+  border: inherit;
+  width: 100%;
+}
+img {
+  max-width: 100%;
+}
+input:invalid {
+  border-color: red;
+}
+#messages {
+  min-height: 3em;
+  border: solid black 2px;
+}
+#rankings {
+	width: 100%;
+	position: relative;
+}
+
+#rankings span {
+	font-size: 75%;
+	display: inline-block;
+	overflow: hidden;
+	height: 1.7em;
+}
+#rankings span.teamname {
+	font-size: inherit;
+	color: white;
+	text-shadow: 0 0 3px black;
+	opacity: 0.8;
+	position: absolute;
+	right: 0.2em;
+	background-color: #292929;
+	background-blend-mode: darken;
+	padding: 0em 0.2em;
+	border-top-left-radius: 0.5em;
+	border-bottom-left-radius: 0.5em;
+        border-bottom: thin solid transparent;
+	margin:0em;
+	height: 1.5em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition-property: max-width;
+	transition-duration: 2s;
+	transition-delay: 0s;
+        text-align:right;
+}
+
+#rankings span.teamname:hover {
+	max-width: 100%;
+}
+
+#rankings span.teampoints {
+	font-size:100%;
+	height:1.2em;
+	margin:0em;
+	padding:0em;
+	width:99%;
+}
+
+#rankings .team {
+  transition-property: all;
+  transition-duration: 1s;
+  transition-delay: 0s;
+}
+
+
+#rankings div * {white-space: nowrap;}
+.cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
+.cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
+.cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
+.cat3, .cat11, .cat19 {background-color: #33a02c; color: white;}
+.cat4, .cat12, .cat20 {background-color: #fb9a99; color: black;}
+.cat5, .cat13, .cat21 {background-color: #e31a1c; color: white;}
+.cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
+.cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}
+
+
+#rankings .teampoints.inv { text-align: center;}
+
+.hidden { visibility: hidden; }
+
+/* Responsive design */
+/* Defaults */
+        #rankings span.teampoints {
+                max-width:89%;
+        }
+        #rankings span.teamname {
+                max-width:10%;
+		min-width:10%;
+        }
+
+
+/* Monitors with large enough screens to do side by side */
+@media only screen and (min-width: 170em) {
+	#chart, #rankings {
+		width: 49%;
+		display:inline-block;
+		vertical-align:middle;
+	}
+
+}
+
+/* Monitor
+@media only screen and (max-width: 130em) {
+        #chart, #rankings {
+                width: 49%;
+                display:inline-block;
+		vertical-align: middle;
+        }
+
+	#rankings span.teampoints {
+		max-width:89%;
+	}
+	#rankings span.teamname {
+		max-width:10%;
+                min-width:10%;
+	}
+}
+
+/* Laptop size screen */
+@media only screen and (max-width: 100em) {
+	#rankings span.teampoints {
+		max-width:84%;
+	}
+	#rankings span.ueamname {
+		max-width:15%;
+                min-width:15%;
+	}
+}
+
+/* Roughly Tablet size */
+@media only screen and (max-width: 70em) {
+	#rankings span.teampoints {
+		max-width:79%;
+	}
+	#rankings span.teamname {
+		max-width:20%;
+                min-width:20%;
+	}
+}
+
+/* Small screens phone size */
+@media only screen and (max-width: 40em) {
+	#rankings span.teampoints {
+		max-width:65%;
+	}
+	#rankings span.teamname {
+		max-width:34%;
+                min-width:34%;
+	}
+}
+
+
+
+#devel {
+  background-color: #eee;
+  color: black;
+  overflow: scroll;
+}
+#devel .string {
+  color: #9c27b0;
+}
+#devel .body {
+  background-color: #ffc107;
+}
+.kvpair {
+  border: solid black 2px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: rotate 1.2s linear infinite;
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+li[draggable]::before {
+  content: "↕";
+  padding: 0.5em;
+  cursor: move;
+}
+li[draggable] {
+  list-style: none;
+}
+
+[draggable].moving {
+  opacity: 0.4;
+}
+
+[draggable].over {
+  border: 1px white dashed;
+}
+
+#cacheButton.disabled {
+  display: none;
+}
+
+#settings {
+  position: fixed;
+  top: 0.5em;
+  right: 1em;
+  opacity: 1;
+  background-blend-mode: darken;
+  margin:0em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  transition-property: all;
+  transition-duration: 1s;
+  transition-delay: 0s;
+  cursor: pointer;
+  z-index:10000;
+  padding-bottom: 1em;
+  list-style: none;
+  border-top-left-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+  padding:0em;
+  border: thin solid transparent;
+}
+
+#settings ul {
+  padding:0em;
+  margin: 0.75em 0em;
+}
+
+#settings ul > li {
+  margin-left: 1em;
+}
+
+#settings .btn {
+  background-color:#33f;
+  padding: 0.5em 0.5em;;
+  vertical-align: middle;
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+  display:inline-block;
+  color: white;
+}
+
+#settings > li {
+  display: none;
+  width: 95%;
+  text-align: left;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
+
+#settings:hover {
+  border: thin solid #66f;
+  background-color: #292929;
+  width: 15em;
+  padding-left: 0.5em;
+  padding-bottom: 1em;
+}
+
+#settings:hover li {
+  display: block;
+}
+
+#settings label {
+  cursor: pointer;
+}
+
+#rankings .category {
+  transition-property: margin, width, offset;
+  transition-duration: 1s;
+  transition-delay: 0s;
+}
+
+#rankHeading {
+  visibility:hidden
+}
+
+.track #rankHeading {
+  visibility:visible;
+}
+
+.leader .icon {
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-origin: padding-box;
+  background-size: contain;
+  padding-left: 1.5em;
+  height: 1em;
+  float: left;
+  display:none;
+}
+
+.fun .leader .icon {
+  display:inline-block !important;
+}
+
+.icon.track-entry-point {
+  background-image: url("scoreboard-assets/entry-point.png");
+}
+
+.icon.track-forensics {
+  background-image: url("scoreboard-assets/forensics.png");
+}
+.icon.track-incident-coordination {
+  background-image: url("scoreboard-assets/incident-coordination.png");
+}
+
+.icon.track-malware {
+  background-image: url("scoreboard-assets/malware.png");
+}
+
+.icon.track-netarch {
+  background-image: url("scoreboard-assets/netarch.png");
+}
+
+.icon.track-ot {
+  background-image: url("scoreboard-assets/ot.png");
+}
+
+/* highlight row on hover so it is easier for users to see */
+#rankings > div {
+  border-bottom: thin solid transparent;
+}
+
+#rankings > div:hover {
+  font-weight: bold;
+/*  border-bottom: thin solid #33f !important;*/
+  background-color: #779 !important;
+}
+
+#screensaver {
+  width:110vw;
+  height:110vh;
+  position:fixed;
+  top:-10em;
+  left:-10em;
+  background-color: rgba(0, 0, 0, 1);
+  background-image:url('luna-moth.svg');
+  background-blend-mode:multiply;
+  background-size: 10em 10em;
+  background-repeat: space;
+  transition-property: all;
+  transition-duration: 5s;
+  transition-delay: 0s;
+}
+
+#screensaverImg {
+  width:10em;
+  position: fixed;
+  top:0em;
+  left:0em;
+}

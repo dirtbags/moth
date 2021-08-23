@@ -1,0 +1,116 @@
+/* Moth ScreenSaver */
+#gibson {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 1000;
+}
+
+/* Transparency is inverted from the clip.  Mostly because it was easier this way, you can still make out the content behind it, and the black moths stick out better */
+#gibson.window {
+  background-color: rgba(160, 160, 250, .2);
+
+  background-image:
+    repeating-linear-gradient(to right, rgba(0, 0, 0, .8), rgba(0, 0, 0, 0) 0.7em, rgba(0, 0, 0, 0) 1.3em, rgba(0, 0, 0, .8) 2em),
+    repeating-linear-gradient(rgba(0, 0, 0, .8), rgba(0, 0, 0, 0) .3em, rgba(0, 0, 0, 0) 3em, rgba(0, 0, 0, .8) 3.3em);
+}
+
+#gibson.svg {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='5em' width='1.5em'><style>text { font: bold 1.5em Verdana, Helvetica, Arial, sans-serif; fill: rgba(255, 255, 255, 0.6); writing-mode: vertical-rl}</style><text x='0' y='0'>5928</text></svg>");
+
+}
+
+#gibson.combined {
+  background-color: rgba(0, 0, 0, .5);
+
+  background-image:
+    repeating-linear-gradient(to right, rgba(0, 0, 0, .8), rgba(0, 0, 0, 0) 0.7em, rgba(0, 0, 0, 0) 1.3em, rgba(0, 0, 0, .8) 2em),
+    repeating-linear-gradient(rgba(0, 0, 0, .8), rgba(0, 0, 0, 0) .3em, rgba(0, 0, 0, 0) 3em, rgba(0, 0, 0, .8) 3.3em),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='5em' width='1.5em'><style>text { font: bold 1.5em Verdana, Helvetica, Arial, sans-serif; fill: rgba(255, 255, 255, 0.6); writing-mode: vertical-rl}</style><text x='0' y='0'>MOTH</text></svg>");
+}
+
+#gibson img.moth {
+  top: 0;
+  right: 100vw;
+  position: absolute;
+  width: 4em;
+  height: auto;
+  z-index:1000;
+}
+
+#gibson img.shadow, #gibson div.shadow {
+  position: absolute;
+  width: 4em;
+  height: 4em;
+  transform: rotate(-45deg);
+}
+
+#gibson div.shadow {
+  background-color: #000;
+/*  background-image: radial-gradient(rgba(0, 0, 0, 0), rgba(255, 255, 255, 0.9) 99%); */
+  -webkit-mask-image: url("luna-moth.png");
+  mask-image: url("luna-moth.png");
+  -webkit-mask-size: 4em;
+  mask-size: 4em;
+}
+
+#gibson div.shadow.LR {
+  transform: rotate(135deg) !important;
+  background-color: #d00;
+}
+
+@media only screen and (min-width: 170em) {
+  #gibson img.moth, #gibson img.shadow {
+    animation-duration: 12s;
+  }
+}
+
+@media only screen and (max-width: 130em) {
+  #gibson img.moth, #gibson img.shadow {
+    animation-duration: 10s;
+  }
+}
+
+@media only screen and (max-width: 100em) {
+  #gibson img.moth, #gibson img.shadow  {
+    animation-duration: 8s;
+  }
+}
+
+@media only screen and (max-width: 70em) {
+  #gibson img.moth, #gibson img.shadow  {
+    animation-duration: 6s;
+  }
+}
+
+@media only screen and (max-width: 40em) {
+  #gibson img.moth, #gibson img.shadow  {
+    animation-duration: 4s;
+  }
+}
+
+@keyframes slideRL {
+  from {
+    left: 100vw;
+    transform: rotate(-45deg);
+  }
+
+  to {
+    left: -5em;
+    transform: rotate(-45deg);
+  }
+}
+
+@keyframes slideLR {
+  from {
+    left: -5em;
+    transform: rotate(135deg);
+  }
+
+  to {
+    left: 100vw;
+    transform: rotate(135deg);
+  }
+}
