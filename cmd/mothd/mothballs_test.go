@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"testing"
 
 	"github.com/spf13/afero"
