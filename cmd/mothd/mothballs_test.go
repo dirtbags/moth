@@ -105,7 +105,6 @@ func TestMothballs(t *testing.T) {
 	}
 
 	goofyText := "bozonics"
-	log.Print("Hey Bozo")
 	//time.Sleep(1 * time.Second) // I don't love this, but we need the mtime to increase, and it's only accurate to 1s
 	m.createMothballWithMoo1("pategory", goofyText)
 	m.refresh()
