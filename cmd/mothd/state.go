@@ -27,7 +27,7 @@ const DistinguishableChars = "34678abcdefhikmnpqrtwxy="
 const RFC3339Space = "2006-01-02 15:04:05Z07:00"
 
 // ErrAlreadyRegistered means a team cannot be registered because it was registered previously.
-var ErrAlreadyRegistered = errors.New("Team ID has already been registered")
+var ErrAlreadyRegistered = errors.New("team ID has already been registered")
 
 // State defines the current state of a MOTH instance.
 // We use the filesystem for synchronization between threads.
@@ -123,9 +123,9 @@ func (s *State) TeamName(teamID string) (string, error) {
 	teamFs := afero.NewBasePathFs(s.Fs, "teams")
 	teamNameBytes, err := afero.ReadFile(teamFs, teamID)
 	if os.IsNotExist(err) {
-		return "", fmt.Errorf("Unregistered team ID: %s", teamID)
+		return "", fmt.Errorf("unregistered team ID: %s", teamID)
 	} else if err != nil {
-		return "", fmt.Errorf("Unregistered team ID: %s (%s)", teamID, err)
+		return "", fmt.Errorf("unregistered team ID: %s (%s)", teamID, err)
 	}
 
 	teamName := strings.TrimSpace(string(teamNameBytes))
@@ -137,7 +137,7 @@ func (s *State) TeamName(teamID string) (string, error) {
 func (s *State) SetTeamName(teamID, teamName string) error {
 	idsFile, err := s.Open("teamids.txt")
 	if err != nil {
-		return fmt.Errorf("Team IDs file does not exist")
+		return fmt.Errorf("team IDs file does not exist")
 	}
 	defer idsFile.Close()
 	found := false
@@ -149,7 +149,7 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 		}
 	}
 	if !found {
-		return fmt.Errorf("Team ID not found in list of valid Team IDs")
+		return fmt.Errorf("team ID not found in list of valid team IDs")
 	}
 
 	teamFilename := filepath.Join("teams", teamID)
@@ -211,7 +211,7 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 
 	for _, e := range s.PointsLog() {
 		if a.Equal(e) {
-			return fmt.Errorf("Points already awarded to this team in this category")
+			return fmt.Errorf("points already awarded to this team in this category")
 		}
 	}
 
@@ -361,13 +361,6 @@ func (s *State) maybeInitialize() {
 	if f, err := s.Create("points.log"); err == nil {
 		f.Close()
 	}
-}
-
-func logstr(s string) string {
-	if s == "" {
-		return "-"
-	}
-	return s
 }
 
 // LogEvent writes to the event log

@@ -117,11 +117,11 @@ func (h *HTTPServer) RegisterHandler(mh MothRequestHandler, w http.ResponseWrite
 	}
 
 	if err := mh.Register(teamName); err == ErrAlreadyRegistered {
-		jsend.Sendf(w, jsend.Success, "already registered", "Team ID has already been registered")
+		jsend.Sendf(w, jsend.Success, "already registered", "team ID has already been registered")
 	} else if err != nil {
 		jsend.Sendf(w, jsend.Fail, "not registered", err.Error())
 	} else {
-		jsend.Sendf(w, jsend.Success, "registered", "Team ID registered")
+		jsend.Sendf(w, jsend.Success, "registered", "team ID registered")
 	}
 }
 

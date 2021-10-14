@@ -115,7 +115,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 		}
 	}
 	if !found {
-		return nil, time.Time{}, fmt.Errorf("Puzzle does not exist or is locked")
+		return nil, time.Time{}, fmt.Errorf("puzzle does not exist or is locked")
 	}
 
 	// Try every provider until someone doesn't return an error
@@ -146,16 +146,16 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 	}
 	if !correct {
 		mh.State.LogEvent("wrong", mh.participantID, mh.teamID, cat, points)
-		return fmt.Errorf("Incorrect answer")
+		return fmt.Errorf("incorrect answer")
 	}
 
 	mh.State.LogEvent("correct", mh.participantID, mh.teamID, cat, points)
 
 	if _, err := mh.State.TeamName(mh.teamID); err != nil {
-		return fmt.Errorf("Invalid team ID")
+		return fmt.Errorf("invalid team ID")
 	}
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
-		return fmt.Errorf("Error awarding points: %s", err)
+		return fmt.Errorf("error awarding points: %s", err)
 	}
 
 	return nil
@@ -170,7 +170,7 @@ func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time,
 func (mh *MothRequestHandler) Register(teamName string) error {
 	// BUG(neale): Register returns an error if a team is already registered; it may make more sense to return success
 	if teamName == "" {
-		return fmt.Errorf("Empty team name")
+		return fmt.Errorf("empty team name")
 	}
 	mh.State.LogEvent("register", mh.participantID, mh.teamID, "", 0)
 	return mh.State.SetTeamName(mh.teamID, teamName)
@@ -254,7 +254,7 @@ func (mh *MothRequestHandler) Mothball(cat string, w io.Writer) error {
 	var err error
 
 	if !mh.Config.Devel {
-		return fmt.Errorf("Cannot mothball in production mode")
+		return fmt.Errorf("cannot mothball in production mode")
 	}
 	for _, provider := range mh.PuzzleProviders {
 		if err = provider.Mothball(cat, w); err == nil {

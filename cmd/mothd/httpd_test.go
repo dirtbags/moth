@@ -18,10 +18,8 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 	vals := url.Values{}
 	vals.Set("pid", TestParticipantID)
 	vals.Set("id", TestTeamID)
-	if args != nil {
-		for k, v := range args {
-			vals.Set(k, v)
-		}
+	for k, v := range args {
+		vals.Set(k, v)
 	}
 
 	recorder := httptest.NewRecorder()
@@ -56,19 +54,19 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/register", map[string]string{"id": "bad team id", "name": "GoTeam"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not registered","description":"Team ID not found in list of valid Team IDs"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not registered","description":"team ID not found in list of valid team IDs"}}` {
 		t.Error("Register bad team ID failed")
 	}
 
 	if r := hs.TestRequest("/register", map[string]string{"name": "GoTeam"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"success","data":{"short":"registered","description":"Team ID registered"}}` {
+	} else if r.Body.String() != `{"status":"success","data":{"short":"registered","description":"team ID registered"}}` {
 		t.Error("Register failed")
 	}
 
 	if r := hs.TestRequest("/register", map[string]string{"name": "GoTeam"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"Team ID has already been registered"}}` {
+	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"team ID has already been registered"}}` {
 		t.Error("Register failed", r.Body.String())
 	}
 
@@ -102,7 +100,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "moo"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"Incorrect answer"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"incorrect answer"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
@@ -131,7 +129,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"Error awarding points: Points already awarded to this team in this category"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"error awarding points: points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 }

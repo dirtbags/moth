@@ -19,6 +19,7 @@ import (
 type zipCategory struct {
 	afero.Fs
 	io.Closer
+	mtime time.Time
 }
 
 // Mothballs provides a collection of active mothball files (puzzle categories)
@@ -48,7 +49,7 @@ func (m *Mothballs) getCat(cat string) (zipCategory, bool) {
 func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekCloser, time.Time, error) {
 	zc, ok := m.getCat(cat)
 	if !ok {
-		return nil, time.Time{}, fmt.Errorf("No such category: %s", cat)
+		return nil, time.Time{}, fmt.Errorf("no such category: %s", cat)
 	}
 
 	f, err := zc.Open(fmt.Sprintf("%d/%s", points, filename))
@@ -91,12 +92,12 @@ func (m *Mothballs) Inventory() []Category {
 func (m *Mothballs) CheckAnswer(cat string, points int, answer string) (bool, error) {
 	zfs, ok := m.getCat(cat)
 	if !ok {
-		return false, fmt.Errorf("No such category: %s", cat)
+		return false, fmt.Errorf("no such category: %s", cat)
 	}
 
 	af, err := zfs.Open("answers.txt")
 	if err != nil {
-		return false, fmt.Errorf("No answers.txt file")
+		return false, fmt.Errorf("no answers.txt file")
 	}
 	defer af.Close()
 
@@ -132,7 +133,18 @@ func (m *Mothballs) refresh() {
 		categoryName := strings.TrimSuffix(filename, ".mb")
 		found[categoryName] = true
 
-		if _, ok := m.categories[categoryName]; !ok {
+		reopen := false
+		if existingMothball, ok := m.categories[categoryName]; !ok {
+			reopen = true
+		} else if si, err := m.Fs.Stat(filename); err != nil {
+			log.Println(err)
+		} else if si.ModTime().After(existingMothball.mtime) {
+			existingMothball.Close()
+			delete(m.categories, categoryName)
+			reopen = true
+		}
+
+		if reopen {
 			f, err := m.Fs.Open(filename)
 			if err != nil {
 				log.Println(err)
@@ -174,7 +186,7 @@ func (m *Mothballs) refresh() {
 
 // Mothball just returns an error
 func (m *Mothballs) Mothball(cat string, w io.Writer) error {
-	return fmt.Errorf("Refusing to repackage a compiled mothball")
+	return fmt.Errorf("refusing to repackage a compiled mothball")
 }
 
 // Maintain performs housekeeping for Mothballs.
