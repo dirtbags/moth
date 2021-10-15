@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Writing a new mothball with the same name is now detected and the new mothball loaded (#172)
 - Regression test for issue where URL path leading directories were ignored (#144)
 
+### Changed
+- Many error messages were changed to start with a lower-case letter, 
+  in order to satisfy a new linter check.
+
 ## [v4.2.2] - 2021-09-30
 ### Added
 - `debug.notes` front matter field
