@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -49,7 +50,7 @@ func Parse(s string) (T, error) {
 	if err != nil {
 		return ret, err
 	} else if n != 4 {
-		return ret, fmt.Errorf("Malformed award string: only parsed %d fields", n)
+		return ret, fmt.Errorf("malformed award string: only parsed %d fields", n)
 	}
 
 	return ret, nil
@@ -58,6 +59,17 @@ func Parse(s string) (T, error) {
 // String returns a log entry string for an award.T.
 func (a T) String() string {
 	return fmt.Sprintf("%d %s %s %d", a.When, a.TeamID, a.Category, a.Points)
+}
+
+// Filename returns a string version of an award suitable for a filesystem
+func (a T) Filename() string {
+	return fmt.Sprintf(
+		"%d-%s-%s-%d.award",
+		a.When,
+		url.PathEscape(a.TeamID),
+		url.PathEscape(a.Category),
+		a.Points,
+	)
 }
 
 // MarshalJSON returns the award event, encoded as a list.

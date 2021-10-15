@@ -122,6 +122,30 @@ func TestState(t *testing.T) {
 
 }
 
+// Out of order points insertion, issue #168
+func TestStateOutOfOrderAward(t *testing.T) {
+	s := NewTestState()
+
+	category := "meow"
+	points := 100
+
+	now := time.Now().Unix()
+	if err := s.awardPointsAtTime(now+20, "AA", category, points); err != nil {
+		t.Error("Awarding points to team ZZ:", err)
+	}
+	if err := s.awardPointsAtTime(now+10, "ZZ", category, points); err != nil {
+		t.Error("Awarding points to team AA:", err)
+	}
+	s.refresh()
+	pl := s.PointsLog()
+	if len(pl) != 2 {
+		t.Error("Wrong length for points log")
+	}
+	if pl[0].TeamID != "ZZ" {
+		t.Error("Out of order points insertion not properly sorted in points log")
+	}
+}
+
 func TestStateEvents(t *testing.T) {
 	s := NewTestState()
 	s.LogEvent("moo", "", "", "", 0)

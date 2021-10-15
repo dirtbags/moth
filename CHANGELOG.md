@@ -6,7 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 ### Fixed
-- 
+- Points awarded while scoring is paused are now correctly sorted (#168)
+- Writing a new mothball with the same name is now detected and the new mothball loaded (#172)
+- Regression test for issue where URL path leading directories were ignored (#144)
 
 ## [v4.2.2] - 2021-09-30
 ### Added

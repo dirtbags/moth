@@ -202,8 +202,12 @@ func (s *State) Messages() string {
 // It's just a courtesy to the user.
 // The update task makes sure we never have duplicate points in the log.
 func (s *State) AwardPoints(teamID, category string, points int) error {
+	return s.awardPointsAtTime(time.Now().Unix(), teamID, category, points)
+}
+
+func (s *State) awardPointsAtTime(when int64, teamID string, category string, points int) error {
 	a := award.T{
-		When:     time.Now().Unix(),
+		When:     when,
 		TeamID:   teamID,
 		Category: category,
 		Points:   points,
@@ -215,7 +219,8 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 		}
 	}
 
-	fn := fmt.Sprintf("%s-%s-%d", teamID, category, points)
+	//fn := fmt.Sprintf("%s-%s-%d", a.TeamID, a.Category, a.Points)
+	fn := a.Filename()
 	tmpfn := filepath.Join("points.tmp", fn)
 	newfn := filepath.Join("points.new", fn)
 
