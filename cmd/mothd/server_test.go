@@ -168,9 +168,8 @@ func TestProdServer(t *testing.T) {
 			t.Error("Anonymous TeamNames is wrong:", es.TeamNames)
 		}
 		if len(es.PointsLog) != 2 {
-			t.Error("Points log wrong length")
-		}
-		if es.PointsLog[1].TeamID != "0" {
+			t.Errorf("Points log wrong length: got %d, wanted 2", len(es.PointsLog))
+		} else if es.PointsLog[1].TeamID != "0" {
 			t.Error("Second point log didn't anonymize team ID correctly:", es.PointsLog[1])
 		}
 	}
