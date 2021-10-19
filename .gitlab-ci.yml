@@ -18,4 +18,12 @@ push:
     - if: $CI_COMMIT_TAG
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
-    - ./ci.sh push
+    - >
+      docker buildx
+      --file build/package/Containerfile
+      --tag ghcr.io/dirtbags/moth:${CI_COMMIT_REF_SLUG} 
+      build 
+      .
+    - >
+      docker push
+      ghcr.io/dirtbags/moth:${CI_COMMIT_REF_SLUG}
