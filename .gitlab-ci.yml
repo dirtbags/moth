@@ -20,7 +20,7 @@ push:
     - if: $CI_COMMIT_TAG
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
-    - echo "$DOCKER_AUTH_CONFIG" > !~.docker/config.json
+    - echo "$DOCKER_AUTH_CONFIG" > ~/.docker/config.json
     - >
       docker build 
       --tag ghcr.io/dirtbags/moth:$CI_COMMIT_REF_SLUG
