@@ -25,3 +25,5 @@ push:
       --tag ghcr.io/dirtbags/moth:$CI_COMMIT_REF_SLUG
       --file build/package/Containerfile
       .
+  tags:
+    docker
