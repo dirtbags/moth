@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Many error messages were changed to start with a lower-case letter, 
   in order to satisfy a new linter check.
+- CI/CD moved to our Cyber Fire Gitlab instance
 
 ## [v4.2.2] - 2021-09-30
 ### Added

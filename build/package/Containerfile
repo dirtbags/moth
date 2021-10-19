@@ -7,7 +7,7 @@ COPY example-puzzles /target/puzzles/
 COPY LICENSE.md /target/
 RUN mkdir -p /target/state
 WORKDIR /src/
-RUN CGO_ENABLED=0 GOOS=linux go install -i -a -ldflags '-extldflags "-static"' ./...
+RUN CGO_ENABLED=0 GOOS=linux go install -a -ldflags '-extldflags "-static"' ./...
 # I can't use /target/bin: doing so would cause the devel server to overwrite Ubuntu's /bin
 
 ##########
