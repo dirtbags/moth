@@ -3,9 +3,8 @@
 set -e
 
 ACTION=$1
-BASE=$2
-if [ -z "$ACTION" ] || [ -z "$BASE" ]; then
-    echo "Usage: $0 ACTION BASE"
+if [ -z "$ACTION" ]; then
+    echo "Usage: $0 ACTION"
     exit 1
 fi
 
