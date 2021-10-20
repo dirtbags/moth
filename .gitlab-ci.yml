@@ -19,7 +19,7 @@ push:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
     - mkdir ~/.docker
-    - echo "$DOCKER_AUTH_CONFIG" > ~/.docker/config.json
+    - echo "$DOCKER_AUTH_CONFIG" | tee ~/.docker/config.json | md5sum
     - sh build/ci/ci.sh publish
     - >
       docker build 
