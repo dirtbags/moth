@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [v4.3.3] - 2021-10-20
 ### Fixed
 - Points awarded while scoring is paused are now correctly sorted (#168)
 - Writing a new mothball with the same name is now detected and the new mothball loaded (#172)
@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Many error messages were changed to start with a lower-case letter, 
   in order to satisfy a new linter check.
 - CI/CD moved to our Cyber Fire Gitlab instance
+- I attempted to have the build thingy automatically build moth:v4 and moth:v4.3 and moth:v4.3.3 images, 
+  but I can't test it without tagging a release. 
+  So v4.3.4 might come out very soon after this ;)
 
 ## [v4.2.2] - 2021-09-30
 ### Added
