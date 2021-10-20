@@ -35,9 +35,9 @@ case $ACTION in
     publish)
         run docker build \
             --file build/package/Containerfile \
-            $(tags) \
+            $(tags --destination) \
             .
-        run docker push $(tags --destination)
+        run docker push $(tags)
     ;;
 *)
     echo "Unknown action: $1" 1>&2
