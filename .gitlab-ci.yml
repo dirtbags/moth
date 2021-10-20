@@ -20,6 +20,7 @@ push:
   script:
     - mkdir ~/.docker
     - echo "$DOCKER_AUTH_CONFIG" > ~/.docker/config.json
+    - sh build/ci/ci.sh publish
     - >
       docker build 
       --tag ghcr.io/dirtbags/moth:$CI_COMMIT_REF_SLUG
