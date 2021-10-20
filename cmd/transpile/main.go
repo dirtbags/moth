@@ -81,7 +81,7 @@ func (t *T) ParseArgs() (Command, error) {
 	default:
 		fmt.Fprintln(t.Stderr, "ERROR:", t.Args[1], "is not a valid command")
 		usage(t.Stderr)
-		return nothing, fmt.Errorf("Invalid command")
+		return nothing, fmt.Errorf("invalid command")
 	}
 
 	if err := flags.Parse(t.Args[2:]); err != nil {
