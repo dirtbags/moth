@@ -11,6 +11,9 @@ import (
 const TestMaintenanceInterval = time.Millisecond * 1
 const TestTeamID = "teamID"
 
+// NewTestServer creates a new MothServer with NewTestMothballs and some initial state.
+//
+// See function definition for details.
 func NewTestServer() *MothServer {
 	puzzles := NewTestMothballs()
 	go puzzles.Maintain(TestMaintenanceInterval)

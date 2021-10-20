@@ -92,22 +92,29 @@ func (m *Mothballs) Inventory() []Category {
 func (m *Mothballs) CheckAnswer(cat string, points int, answer string) (bool, error) {
 	zfs, ok := m.getCat(cat)
 	if !ok {
+		log.Println("There's no such category")
 		return false, fmt.Errorf("no such category: %s", cat)
 	}
 
+	log.Println("Opening answers.txt")
 	af, err := zfs.Open("answers.txt")
 	if err != nil {
+		log.Println("I did not find an answer")
 		return false, fmt.Errorf("no answers.txt file")
 	}
 	defer af.Close()
 
+	log.Println("I'm going to start looking for an answer")
 	needle := fmt.Sprintf("%d %s", points, answer)
 	scanner := bufio.NewScanner(af)
 	for scanner.Scan() {
+		log.Println("testing equality between", scanner.Text(), needle)
 		if scanner.Text() == needle {
 			return true, nil
 		}
 	}
+
+	log.Println("I did not find the answer", answer)
 
 	return false, nil
 }

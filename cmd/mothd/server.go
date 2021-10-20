@@ -68,6 +68,9 @@ type Maintainer interface {
 	// It will only be called once, when execution begins.
 	// It's okay to just exit if there's no maintenance to be done.
 	Maintain(updateInterval time.Duration)
+
+	// refresh is a shortcut used internally for testing
+	refresh()
 }
 
 // MothServer gathers together the providers that make up a MOTH server.

@@ -10,7 +10,7 @@ test:
       - main
       - merge_requests
   script:
-    - go test ./...
+    - go test -race ./...
 
 push:
   stage: push

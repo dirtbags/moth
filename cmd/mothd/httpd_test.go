@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/spf13/afero"
 )
@@ -33,7 +35,8 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 }
 
 func TestHttpd(t *testing.T) {
-	hs := NewHTTPServer("/", NewTestServer())
+	server := NewTestServer()
+	hs := NewHTTPServer("/", server)
 
 	if r := hs.TestRequest("/", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -106,11 +109,26 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
+	} else if strings.Contains(r.Body.String(), "incorrect answer") {
+		// Pernicious intermittent bug
+		t.Error("Incorrect answer that was actually correct")
+		for _, provider := range server.PuzzleProviders {
+			if mb, ok := provider.(*Mothballs); !ok {
+				t.Error("Provider is not a mothball")
+			} else {
+				cat, _ := mb.getCat("pategory")
+				f, _ := cat.Open("answers.txt")
+				defer f.Close()
+				answersBytes, _ := ioutil.ReadAll(f)
+				t.Errorf("Correct answers: %v", string(answersBytes))
+			}
+		}
+		t.Error("Wrong answer")
 	} else if r.Body.String() != `{"status":"success","data":{"short":"accepted","description":"1 points awarded in pategory"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.State.refresh()
 
 	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -122,13 +140,37 @@ func TestHttpd(t *testing.T) {
 	} else if err := json.Unmarshal(r.Body.Bytes(), &state); err != nil {
 		t.Error(err)
 	} else if len(state.PointsLog) != 1 {
-		t.Error("Points log wrong length")
+		switch v := server.State.(type) {
+		case *State:
+			log.Print(v)
+		}
+
+		t.Errorf("Points log wrong length. Wanted 1, got %v", state.PointsLog)
 	} else if len(state.Puzzles["pategory"]) != 2 {
 		t.Error("Didn't unlock next puzzle")
 	}
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
+	} else if strings.Contains(r.Body.String(), "incorrect answer") {
+		// Pernicious intermittent bug
+		t.Error("Incorrect answer that was actually correct")
+		for _, provider := range server.PuzzleProviders {
+			if mb, ok := provider.(*Mothballs); !ok {
+				t.Error("Provider is not a mothball")
+			} else {
+				if cat, ok := mb.getCat("pategory"); !ok {
+					t.Error("opening pategory failed")
+				} else if f, err := cat.Open("answers.txt"); err != nil {
+					t.Error("opening answers.txt", err)
+				} else {
+					defer f.Close()
+					answersBytes, _ := ioutil.ReadAll(f)
+					t.Errorf("Correct answers: %#v len %d", string(answersBytes), len(answersBytes))
+				}
+			}
+		}
+		t.Error("Wrong answer")
 	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"error awarding points: points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
