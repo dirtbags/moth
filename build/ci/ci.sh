@@ -35,7 +35,7 @@ case $ACTION in
     publish)
         run docker build \
             --file build/package/Containerfile \
-            $(tags --destination) \
+            $(tags --tag) \
             .
         run docker push $(tags)
     ;;
