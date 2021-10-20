@@ -2,7 +2,7 @@
 
 set -e
 
-images="ghcr.io/dirtbags/moth"
+images="ghcr.io/dirtbags/moth dirtbags/moth"
 
 ACTION=$1
 if [ -z "$ACTION" ]; then
