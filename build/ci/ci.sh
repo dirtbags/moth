@@ -40,7 +40,7 @@ case $ACTION in
             $(tags --tag) \
             .
         for image in $images; do
-            run docker image push -a $image
+            run docker image push --all-tags $image
         done
     ;;
 *)
