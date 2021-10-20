@@ -5,10 +5,6 @@ stages:
 test:
   stage: test
   image: golang:1.17
-  only:
-    refs:
-      - main
-      - merge_requests
   script:
     - go test -race ./...
 
