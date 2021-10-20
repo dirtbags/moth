@@ -17,6 +17,11 @@ fail () {
     exit 1
 }
 
+run () {
+    printf "\033[32m%\033[0m $*\n" 1>&2
+    "$@"
+}
+
 tags () {
     pfx=$1
     for base in ghcr.io/dirtbags/moth dirtbags/moth; do
@@ -28,11 +33,11 @@ tags () {
 
 case $ACTION in
     publish)
-        docker build \
+        run docker build \
             --file build/package/Containerfile \
             $(tags) \
             .
-        docker push $(tags --destination)
+        run docker push $(tags --destination)
     ;;
 *)
     echo "Unknown action: $1" 1>&2
