@@ -2,6 +2,8 @@
 
 set -e
 
+images="ghcr.io/dirtbags/moth dirtbags/moth"
+
 ACTION=$1
 if [ -z "$ACTION" ]; then
     echo "Usage: $0 ACTION"
@@ -24,7 +26,7 @@ run () {
 
 tags () {
     pfx=$1
-    for base in ghcr.io/dirtbags/moth dirtbags/moth; do
+    for base in $images; do
         echo $pfx $base:${CI_COMMIT_REF_SLUG}
         echo $pfx $base:${CI_COMMIT_REF_SLUG%.*}
         echo $pfx $base:${CI_COMMIT_REF_SLUG%.*.*}
@@ -37,7 +39,9 @@ case $ACTION in
             --file build/package/Containerfile \
             $(tags --tag) \
             .
-        run docker push $(tags)
+        for image in $images; do
+            run docker image push -a $image
+        done
     ;;
 *)
     echo "Unknown action: $1" 1>&2
