@@ -30,7 +30,8 @@ case $ACTION in
     publish)
         docker build \
             --file build/package/Containerfile \
-            $(tags)
+            $(tags) \
+            .
         docker push $(tags --destination)
     ;;
 *)
