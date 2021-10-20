@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] - 2021-10-20
+### Added
+- Images deploying to docker hub too. We're now at capacity for our Docker Hub team.
+
 ## [v4.4.4] - 2021-10-20
 ### Changed
 - Trying to get CI push of built images. I expect this to fail, too. But in a way that can help me debug the issue.
