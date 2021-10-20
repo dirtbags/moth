@@ -39,8 +39,8 @@ case $ACTION in
             --file build/package/Containerfile \
             $(tags --tag) \
             .
-        for image in $images; do
-            run docker image push --all-tags $image
+        tags | while read image; do
+            run docker push $image
         done
     ;;
 *)
