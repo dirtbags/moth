@@ -50,7 +50,7 @@ Each line has six fields minimum:
 | `timestamp` | `event` | `participantID` | `teamID` | `category` | `points` | `extra`... |
 | --- | --- | --- | --- | --- | --- | --- |
 | int | string | string | string | string | int | string... |
-| Unix epoch | Event type | Team's unique ID| Participant's (hopefully) unique ID | Name of category, if any | Points awarded, if any | Additional fields, if any |
+| Unix epoch | Event type | Participant's (hopefully) unique ID | Team's unique ID | Name of category, if any | Points awarded, if any | Additional fields, if any |
 
 Fields after `points` contain extra fields associated with the event. 
 
