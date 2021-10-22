@@ -41,10 +41,12 @@ Each line has four fields:
 1602702913 2255 sequence 16
 ```
 
-`events.log` format
+`events.csv` format
 ----------------------
 
-The events log is a space-separated file.
+The events log is a comma-separated variable (CSV) file.
+It ought to import into any spreadsheet program painlessly.
+
 Each line has six fields minimum:
 
 | `timestamp` | `event` | `participantID` | `teamID` | `category` | `points` | `extra`... |
@@ -61,6 +63,7 @@ These may change in the future.
 * init: startup of server
 * disabled: points accumulation disabled
 * enabled: points accumulation re-enabled
+* register: team registration
 * load: puzzle load
 * wrong: wrong answer submitted
 * correct: correct answer submitted
@@ -68,14 +71,14 @@ These may change in the future.
 ### Example
 
 ```
-1602716345 init - - - - 0
-1602716349 load 2255 player5 sequence 1
-1602716450 load 4824 player3 sequence 1
-1602716359 correct 2255 player5 sequence 1
-1602716423 wrong 4824 player3 sequence 1
-1602716428 correct 4824 player3 sequence 1
-1602716530 correct 4824 player3 sequence 1
-1602716546 abduction 4824 player3 - 0 alien FM1490
+1602716345,init,-,-,-,-,0
+1602716349,load,2255,player5,sequence,1
+1602716450,load,4824,player3,sequence,1
+1602716359,correct,2255,player5,sequence,1
+1602716423,wrong,4824,player3,sequence,1
+1602716428,correct,4824,player3,sequence,1
+1602716530,correct,4824,player3,sequence,1
+1602716546,abduction,4824,player3,-,0,alien,FM1490
 ```
 
 The final entry is a made-up "alien abduction" entry,
