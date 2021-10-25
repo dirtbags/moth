@@ -168,6 +168,7 @@ func (m *Mothballs) refresh() {
 			m.categories[categoryName] = zipCategory{
 				Fs:     zipfs.New(zrc),
 				Closer: f,
+				mtime:  fi.ModTime(),
 			}
 
 			log.Println("Adding category:", categoryName)
