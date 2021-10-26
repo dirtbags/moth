@@ -62,6 +62,7 @@ func TestState(t *testing.T) {
 	if err := s.SetTeamName(teamID, "wat"); err == nil {
 		t.Errorf("Registering team a second time didn't fail")
 	}
+	s.refresh()
 	if name, err := s.TeamName(teamID); err != nil {
 		t.Error(err)
 	} else if name != teamName {
@@ -73,9 +74,6 @@ func TestState(t *testing.T) {
 	if err := s.AwardPoints(teamID, category, points); err != nil {
 		t.Error(err)
 	}
-	if err := s.AwardPoints(teamID, category, points); err != nil {
-		t.Error("Two awards before refresh:", err)
-	}
 	// Flex duplicate detection with different timestamp
 	if f, err := s.Create("points.new/moo"); err != nil {
 		t.Error("Creating duplicate points file:", err)
@@ -83,24 +81,34 @@ func TestState(t *testing.T) {
 		fmt.Fprintln(f, time.Now().Unix()+1, teamID, category, points)
 		f.Close()
 	}
+
+	s.AwardPoints(teamID, category, points)
 	s.refresh()
+	pl = s.PointsLog()
+	if len(pl) != 1 {
+		for i, award := range pl {
+			t.Logf("pl[%d] == %s", i, award.String())
+		}
+		t.Errorf("After awarding duplicate points, points log has length %d", len(pl))
+	} else if (pl[0].TeamID != teamID) || (pl[0].Category != category) || (pl[0].Points != points) {
+		t.Errorf("Incorrect logged award %v", pl)
+	}
 
 	if err := s.AwardPoints(teamID, category, points); err == nil {
-		t.Error("Duplicate points award didn't fail")
+		t.Error("Duplicate points award after refresh didn't fail")
 	}
 
 	if err := s.AwardPoints(teamID, category, points+1); err != nil {
 		t.Error("Awarding more points:", err)
 	}
 
-	pl = s.PointsLog()
-	if len(pl) != 1 {
-		t.Errorf("After awarding points, points log has length %d", len(pl))
-	} else if (pl[0].TeamID != teamID) || (pl[0].Category != category) || (pl[0].Points != points) {
-		t.Errorf("Incorrect logged award %v", pl)
+	s.refresh()
+	if len(s.PointsLog()) != 2 {
+		t.Errorf("There should be two awards")
 	}
 
 	afero.WriteFile(s, "points.log", []byte("intentional parse error\n"), 0644)
+	s.refresh()
 	if len(s.PointsLog()) != 0 {
 		t.Errorf("Intentional parse error breaks pointslog")
 	}
@@ -108,7 +116,8 @@ func TestState(t *testing.T) {
 		t.Error(err)
 	}
 	s.refresh()
-	if len(s.PointsLog()) != 2 {
+	if len(s.PointsLog()) != 1 {
+		t.Log(s.PointsLog())
 		t.Error("Intentional parse error screws up all parsing")
 	}
 

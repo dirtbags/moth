@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dirtbags/moth/pkg/award"
@@ -42,6 +43,12 @@ type State struct {
 	eventStream     chan []string
 	eventWriter     *csv.Writer
 	eventWriterFile afero.File
+
+	// Caches, so we're not hammering NFS with metadata operations
+	teamNames map[string]string
+	pointsLog award.List
+	messages  string
+	lock      sync.RWMutex
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -51,6 +58,8 @@ func NewState(fs afero.Fs) *State {
 		Enabled:     true,
 		refreshNow:  make(chan bool, 5),
 		eventStream: make(chan []string, 80),
+
+		teamNames: make(map[string]string),
 	}
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
@@ -120,16 +129,13 @@ func (s *State) updateEnabled() {
 
 // TeamName returns team name given a team ID.
 func (s *State) TeamName(teamID string) (string, error) {
-	teamFs := afero.NewBasePathFs(s.Fs, "teams")
-	teamNameBytes, err := afero.ReadFile(teamFs, teamID)
-	if os.IsNotExist(err) {
+	s.lock.RLock()
+	name, ok := s.teamNames[teamID]
+	s.lock.RUnlock()
+	if !ok {
 		return "", fmt.Errorf("unregistered team ID: %s", teamID)
-	} else if err != nil {
-		return "", fmt.Errorf("unregistered team ID: %s (%s)", teamID, err)
 	}
-
-	teamName := strings.TrimSpace(string(teamNameBytes))
-	return teamName, nil
+	return name, nil
 }
 
 // SetTeamName writes out team name.
@@ -163,36 +169,26 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	log.Printf("Setting team name [%s] in file %s", teamName, teamFilename)
 	fmt.Fprintln(teamFile, teamName)
 	teamFile.Close()
+
+	s.refreshNow <- true
+
 	return nil
 }
 
 // PointsLog retrieves the current points log.
 func (s *State) PointsLog() award.List {
-	f, err := s.Open("points.log")
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	defer f.Close()
-
-	pointsLog := make(award.List, 0, 200)
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cur, err := award.Parse(line)
-		if err != nil {
-			log.Printf("Skipping malformed award line %s: %s", line, err)
-			continue
-		}
-		pointsLog = append(pointsLog, cur)
-	}
-	return pointsLog
+	s.lock.RLock()
+	ret := make(award.List, len(s.pointsLog))
+	copy(ret, s.pointsLog)
+	s.lock.RUnlock()
+	return ret
 }
 
 // Messages retrieves the current messages.
 func (s *State) Messages() string {
-	bMessages, _ := afero.ReadFile(s, "messages.html")
-	return string(bMessages)
+	s.lock.RLock() // It's not clear to me that this actually needs to happen
+	defer s.lock.RUnlock()
+	return s.messages
 }
 
 // AwardPoints gives points to teamID in category.
@@ -260,12 +256,14 @@ func (s *State) collectPoints() {
 		}
 
 		duplicate := false
-		for _, e := range s.PointsLog() {
+		s.lock.RLock()
+		for _, e := range s.pointsLog {
 			if awd.Equal(e) {
 				duplicate = true
 				break
 			}
 		}
+		s.lock.RUnlock()
 
 		if duplicate {
 			log.Print("Skipping duplicate points: ", awd.String())
@@ -279,6 +277,11 @@ func (s *State) collectPoints() {
 			}
 			fmt.Fprintln(logf, awd.String())
 			logf.Close()
+
+			// Stick this on the cache too
+			s.lock.Lock()
+			s.pointsLog = append(s.pointsLog, awd)
+			s.lock.Unlock()
 		}
 
 		if err := s.Remove(filename); err != nil {
@@ -402,12 +405,64 @@ func (s *State) reopenEventLog() error {
 	return nil
 }
 
+func (s *State) updateCaches() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if f, err := s.Open("points.log"); err != nil {
+		log.Println(err)
+	} else {
+		defer f.Close()
+
+		pointsLog := make(award.List, 0, 200)
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := scanner.Text()
+			cur, err := award.Parse(line)
+			if err != nil {
+				log.Printf("Skipping malformed award line %s: %s", line, err)
+				continue
+			}
+			pointsLog = append(pointsLog, cur)
+		}
+		s.pointsLog = pointsLog
+	}
+
+	{
+		// The compiler recognizes this as an optimization case
+		for k := range s.teamNames {
+			delete(s.teamNames, k)
+		}
+
+		teamsFs := afero.NewBasePathFs(s.Fs, "teams")
+		if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
+			log.Printf("Reading team ids: %v", err)
+		} else {
+			for _, dirent := range dirents {
+				teamID := dirent.Name()
+				if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
+					log.Printf("Reading team %s: %v", teamID, err)
+				} else {
+					teamName := strings.TrimSpace(string(teamNameBytes))
+					s.teamNames[teamID] = teamName
+				}
+			}
+		}
+
+	}
+
+	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
+		s.messages = string(bMessages)
+	}
+}
+
 func (s *State) refresh() {
 	s.maybeInitialize()
 	s.updateEnabled()
 	if s.Enabled {
 		s.collectPoints()
 	}
+	s.updateCaches()
 }
 
 // Maintain performs housekeeping on a State struct.

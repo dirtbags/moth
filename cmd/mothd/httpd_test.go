@@ -70,6 +70,8 @@ func TestHttpd(t *testing.T) {
 		t.Error("Register failed", r.Body.String())
 	}
 
+	time.Sleep(TestMaintenanceInterval)
+
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
 	} else if r.Body.String() != `{"Config":{"Devel":false},"Messages":"messages.html","TeamNames":{"self":"GoTeam"},"PointsLog":[],"Puzzles":{"pategory":[1]}}` {
