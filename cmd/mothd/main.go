@@ -6,6 +6,7 @@ import (
 	"log"
 	"mime"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/spf13/afero"
@@ -52,6 +53,25 @@ func main() {
 		"",
 		"Random seed to use, overrides $SEED",
 	)
+
+	stateEngine := flag.String(
+		"state-engine",
+		"legacy",
+		"Specifiy a state engine",
+	)
+
+	redis_url := flag.String(
+		"redis-url",
+		"",
+		"URL for Redis state instance",
+	)
+
+	redis_db := flag.Uint64(
+		"redis-db",
+		^uint64(0),
+		"Database number for Redis state instance",
+	)
+
 	flag.Parse()
 
 	osfs := afero.NewOsFs()
@@ -68,7 +88,34 @@ func main() {
 	}
 
 	var state StateProvider
-	state = NewState(afero.NewBasePathFs(osfs, *statePath))
+
+	switch engine := *stateEngine; engine {
+	case "redis":
+		redis_url_parsed := *redis_url
+		if redis_url_parsed == "" {
+			redis_url_parsed = os.Getenv("REDIS_URL")
+			if redis_url_parsed == "" {
+				log.Fatal("Redis mode was selected, but --redis-url or REDIS_URL were not set")
+			}
+		}
+
+		redis_db_parsed := *redis_db
+		if redis_db_parsed == ^uint64(0) {
+			redis_db_parsed_inner, err := strconv.ParseUint(os.Getenv("REDIS_DB"), 10, 64)
+			redis_db_parsed = redis_db_parsed_inner
+
+			if err != nil {
+				log.Fatal("Redis mode was selected, but --redis-db or REDIS_DB were not set")
+			}
+		}
+
+		state = NewRedisState(redis_url_parsed, int(redis_db_parsed))
+	default:
+	case "legacy":
+		state = NewState(afero.NewBasePathFs(osfs, *statePath))
+	}
+
+
 	if config.Devel {
 		state = NewDevelState(state)
 	}
