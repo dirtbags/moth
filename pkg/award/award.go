@@ -23,6 +23,16 @@ type T struct {
 // List is a collection of award events.
 type List []T
 
+type Award interface {
+	When()	int64
+	TeamID()	string
+	Category()	string
+	Points()	int
+
+	MarshalJSON() ([]byte, error)
+	UnMarshalJSON(b []byte) error
+}
+
 // Len returns the length of the awards list.
 func (awards List) Len() int {
 	return len(awards)

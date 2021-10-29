@@ -72,6 +72,12 @@ func main() {
 		"Database number for Redis state instance",
 	)
 
+	redis_instance_id := flag.String(
+		"redis-instance-id",
+		"",
+		"Unique (per-cluster) instance ID",
+	)
+
 	flag.Parse()
 
 	osfs := afero.NewOsFs()
@@ -105,11 +111,19 @@ func main() {
 			redis_db_parsed = redis_db_parsed_inner
 
 			if err != nil {
-				log.Fatal("Redis mode was selected, but --redis-db or REDIS_DB were not set")
+				redis_db_parsed = 0
 			}
 		}
 
-		state = NewRedisState(redis_url_parsed, int(redis_db_parsed))
+		redis_instance_id_parsed := *redis_instance_id
+		if redis_instance_id_parsed == "" {
+			redis_instance_id_parsed = os.Getenv("REDIS_INSTANCE_ID")
+			if redis_instance_id_parsed == "" {
+				log.Fatal("Redis mode was selected, but --redis-instance-id or REDIS_INSTANCE_ID were not set")
+			}
+		}
+
+		state = NewRedisState(redis_url_parsed, int(redis_db_parsed), redis_instance_id_parsed)
 	default:
 	case "legacy":
 		state = NewState(afero.NewBasePathFs(osfs, *statePath))
