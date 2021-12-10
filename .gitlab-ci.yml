@@ -10,6 +10,7 @@ test:
       - main
       - merge_requests
   script:
+    - go get github.com/go-redis/redis/v8
     - go test ./...
 
 push:

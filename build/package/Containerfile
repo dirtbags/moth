@@ -14,6 +14,7 @@ RUN CGO_ENABLED=0 GOOS=linux go install -a -ldflags '-extldflags "-static"' ./..
 ##########
 
 FROM builder AS tester
+RUN go get github.com/go-redis/redis/v8
 RUN go test ./...
 
 ##########

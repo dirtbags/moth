@@ -185,7 +185,7 @@ func (s *RedisState) AwardPoints(teamID, category string, points int) error {
 	}
 	awardTime := time.Now().Unix()
 
-	point_string := fmt.Sprintf("%s %s %s", teamID, category, points)
+	point_string := fmt.Sprintf("%s %s %d", teamID, category, points)
 
 	new_member := redis.Z{
 		Score: float64(awardTime),
