@@ -131,9 +131,16 @@ func (s *RedisState) SetTeamName(teamID, teamName string) error {
 		return fmt.Errorf("team ID: (%s) not found in list of valid team IDs", teamID)
 	}
 
-	success, err := s.redis_client.HSetNX(s.ctx,  s.formatRedisKey(REDIS_KEY_TEAM_IDS), teamID, teamName).Result()
+	exists, err := s.redis_client.HExists(s.ctx, s.formatRedisKey(REDIS_KEY_TEAMS), teamID).Result()
+
+	if exists {
+		return nil
+	}
+
+	success, err := s.redis_client.HSetNX(s.ctx,  s.formatRedisKey(REDIS_KEY_TEAMS), teamID, teamName).Result()
 
 	if err != nil {
+		fmt.Println(err)
 		return fmt.Errorf("Unexpected error while setting team ID: %s and team Name: %s", teamID, teamName)
 	}
 
@@ -148,12 +155,13 @@ func (s *RedisState) SetTeamName(teamID, teamName string) error {
 // PointsLog retrieves the current points log.
 func (s *RedisState) PointsLog() award.List {
 	redis_args := &redis.ZRangeBy{
-		Min: "0",
-		Max: "-1",
+		Min: "-inf",
+		Max: "+inf",
 	}
 	scores, err := s.redis_client.ZRangeByScoreWithScores(s.ctx, s.formatRedisKey(REDIS_KEY_POINT_LOG), redis_args).Result()
 
 	if err != nil {
+		fmt.Println("Encountered an error processing points")
 		return make(award.List, 0)
 	}
 	

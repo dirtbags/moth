@@ -97,6 +97,7 @@ func main() {
 
 	switch engine := *stateEngine; engine {
 	case "redis":
+		log.Println("Moth is running with Redis")
 		redis_url_parsed := *redis_url
 		if redis_url_parsed == "" {
 			redis_url_parsed = os.Getenv("REDIS_URL")
@@ -126,6 +127,7 @@ func main() {
 		state = NewRedisState(redis_url_parsed, int(redis_db_parsed), redis_instance_id_parsed)
 	default:
 	case "legacy":
+	    log.Println("Moth is running with the legacy state engine")
 		state = NewState(afero.NewBasePathFs(osfs, *statePath))
 	}
 
