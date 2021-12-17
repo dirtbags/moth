@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 	"github.com/go-redis/redis/v8"
@@ -165,7 +167,7 @@ func (s *RedisState) PointsLog() award.List {
 		return make(award.List, 0)
 	}
 	
-	point_log := make(award.List, len(scores))
+	var point_log award.List
 	
 	for _, item := range scores {
 		point_entry := award.T{}
@@ -177,8 +179,10 @@ func (s *RedisState) PointsLog() award.List {
 
 		if err != nil {
 			// Do nothing
+			fmt.Println("Encountered an error while extracting fields from ", point_string)
 		} else if n != 3 {
 			// Wrong number of fields, do nothing
+			fmt.Println("Point entry is malformed, ", point_string)
 		} else {
 			point_log = append(point_log, point_entry)
 		}
@@ -212,37 +216,8 @@ func (s *RedisState) AwardPoints(teamID, category string, points int) error {
 }
 
 // LogEvent writes to the event log
-func (s *RedisState) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
-	/*
-	new_event := RedisEventEntry {
-		When: time.Now().Unix(),
-		Event: event,
-		ParticipantID: participantID,
-		TeamID: teamID,
-		Category: cat,
-		Points: points,
-		Extra: extra,
-	}
-
-	message, _ := new_event.MarshalJSON()
-	*/
-
-	/*
-	redis_args := redis.XAddArgs {
-		Stream: s.redisKeyEventLog(),
-		Values: map[string]interface{}{
-			"When": time.Now().Unix(),
-			"Event": event,
-			"ParticipantID": participantID,
-			"TeamID": teamID,
-			"Category": cat,
-			"Points": points,
-			"Extra": extra,
-		},
-	}
-
-	s.redis_client.XAdd(s.ctx, &redis_args)
-	*/
+func (s *RedisState) LogEvent(event string, participantID string, teamID string, cat string, points int, extra ...string) {
+	extra_data, _ := json.Marshal(extra)
 
 	s.eventStream <- 
 		map[string]interface{}{
@@ -251,8 +226,8 @@ func (s *RedisState) LogEvent(event, participantID, teamID, cat string, points i
 			"ParticipantID": participantID,
 			"TeamID": teamID,
 			"Category": cat,
-			"Points": points,
-			"Extra": extra,
+			"Points": strconv.Itoa(points),
+			"Extra": extra_data,
 		}
 }
 
@@ -262,7 +237,12 @@ func (s *RedisState) writeEvent(event map[string]interface{}) {
 		Values: event,
 	}
 
-	s.redis_client.XAdd(s.ctx, &redis_args)
+	_, err := s.redis_client.XAdd(s.ctx, &redis_args).Result()
+
+	if err != nil {
+		fmt.Println("Error when processing event stream")
+		fmt.Println(err)
+	}
 }
 
 

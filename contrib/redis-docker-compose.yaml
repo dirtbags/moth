@@ -1,0 +1,17 @@
+version: "3.4"
+services:
+  moth:
+    image: moth:test
+    volumes:
+      - C:\Users\Donaldson8\Desktop\dev\moth-test:/mothballs:ro
+    ports:
+      - 8080:8080
+    command: ["-state-engine", "redis"]
+    environment:
+      REDIS_URL: redis:6379
+      REDIS_INSTANCE_ID: foobar
+    depends_on:
+      - redis
+  redis:
+    image: redis:6.2-alpine
+
