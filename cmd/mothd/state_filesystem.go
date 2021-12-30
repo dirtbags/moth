@@ -191,6 +191,18 @@ func (s *State) Messages() string {
 	return s.messages
 }
 
+// SetMessages sets the current message
+func (s *State) SetMessages(message string) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	err := afero.WriteFile(s, "messages.html", []byte(message), 0600)
+
+	s.refreshNow <- true
+
+	return err
+}
+
 // AwardPoints gives points to teamID in category.
 // This doesn't attempt to ensure the teamID has been registered.
 // It first checks to make sure these are not duplicate points.
