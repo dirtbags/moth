@@ -58,26 +58,26 @@ type StateProvider interface {
 
 	PointsLog() award.List  // GET /admin/state/points
 	AwardPoints(teamID string, cat string, points int) error  // POST /admin/state/points
-	// AwardPoints(teamID string, cat string, points int, when int64) error  // POST /admin/state/points
-	// Points(teamID string, cat string, points int) bool  // Check if point entry exists  // HEAD /admin/state/points/<teamID>/<cat>/<points>
-	// Points(teamID string, cat string, points int, when int64) bool  // Check if point entry exists  // HEAD /admin/state/points/<teamID>/<cat>/<points>/<when>
-	// RemovePoints(teamID string, cat string, points int) error  // DELETE /admin/state/points/<teamID>/<cat>/<points>
-	// RemovePoints(teamID string, cat string, points int, when int64) error  // DELETE /admin/state/points/<teamID>/<cat>/<points>/<when>
-	// SetPoints(award.List) error  // PUT /admin/state/points
+	AwardPointsAtTime(teamID string, cat string, points int, when int64) error  // POST /admin/state/points
+	PointExists(teamID string, cat string, points int) bool  // Check if point entry exists  // HEAD /admin/state/points/<teamID>/<cat>/<points>
+	PointExistsAtTime(teamID string, cat string, points int, when int64) bool  // Check if point entry exists  // HEAD /admin/state/points/<teamID>/<cat>/<points>/<when>
+	RemovePoints(teamID string, cat string, points int) error  // DELETE /admin/state/points/<teamID>/<cat>/<points>
+	RemovePointsAtTime(teamID string, cat string, points int, when int64) error  // DELETE /admin/state/points/<teamID>/<cat>/<points>/<when>
+	SetPoints(award.List) error  // PUT /admin/state/points
 
 	
-	// TeamIDs() []string  // GET /admin/state/team_ids
-	// SetTeamIDs([] string) error  // PUT /admin/state/team_ids
-    // AddTeamID(teamID string) error  // POST /admin/state/team_ids/<teamID>
-	// RemoveTeamID(teamID string) error  // DELETE /admin/state/team_ids/<teamID>
-	// TeamID(teamID string) bool  // HEAD /admin/state/team_ids/<teamID>	
+	TeamIDs() ([]string, error)  // GET /admin/state/team_ids
+	SetTeamIDs([] string) error  // PUT /admin/state/team_ids
+    AddTeamID(teamID string) error  // POST /admin/state/team_ids/<teamID>
+	RemoveTeamID(teamID string) error  // DELETE /admin/state/team_ids/<teamID>
+	TeamIDExists(teamID string) (bool, error)  // HEAD /admin/state/team_ids/<teamID>	
 
-	// TeamNames() (map[string]string, error)  // GET /admin/state/teams
-	// SetTeamNames(map[string]string) error  // PUT /admin/state/teams
+	TeamNames() map[string]string  // GET /admin/state/teams
+	SetTeamNames(map[string]string) error  // PUT /admin/state/teams
 	TeamName(teamID string) (string, error)  // GET /admin/state/teams/id/<teamID>
-	// TeamIDFromName(teamName string) (string, error)  // GET /admin/state/teams/name/<teamName>
+	TeamIDFromName(teamName string) (string, error)  // GET /admin/state/teams/name/<teamName>
 	SetTeamName(teamID, teamName string) error  // POST /admin/state/teams/id/<teamID>/<teamName>
-	// DeleteTeamName(teamID string) error  // DELETE /admin/state/teams/id/<teamID>, /admin/state/teams/name/<teamName>
+	DeleteTeamName(teamID string) error  // DELETE /admin/state/teams/id/<teamID>, /admin/state/teams/name/<teamName>
 	
 	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
 	Maintainer

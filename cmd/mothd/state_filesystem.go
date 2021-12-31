@@ -48,7 +48,13 @@ type State struct {
 	teamNames map[string]string
 	pointsLog award.List
 	messages  string
-	lock      sync.RWMutex
+	teamIDLock		sync.RWMutex
+	teamIDFileLock	sync.RWMutex
+	teamNameLock	sync.RWMutex
+	teamNameFileLock	sync.RWMutex
+	pointsLock	sync.RWMutex
+	pointsLogFileLock	sync.RWMutex  // Sometimes, we need to fiddle with the file, while leaving the internal state alone
+	messageFileLock	sync.RWMutex
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -127,33 +133,167 @@ func (s *State) updateEnabled() {
 	}
 }
 
+/* ****************** Team ID functions ****************** */
+
+func (s *State) TeamIDs() ([]string, error) {
+	var teamIDs []string
+
+	s.teamIDFileLock.RLock()
+	defer s.teamIDFileLock.RUnlock()
+
+	idsFile, err := s.Open("teamids.txt")
+	if err != nil {
+		return teamIDs, fmt.Errorf("team IDs file does not exist")
+	}
+	defer idsFile.Close()
+
+	scanner := bufio.NewScanner(idsFile)
+	for scanner.Scan() {
+		teamIDs = append(teamIDs, scanner.Text())
+	}
+
+	return teamIDs, nil
+}
+
+func (s *State) writeTeamIDs(teamIDs []string) error {
+	s.teamIDFileLock.Lock()
+	defer s.teamIDFileLock.Unlock()
+
+	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
+		defer f.Close()
+
+		for _, teamID := range teamIDs {
+			fmt.Fprintln(f, string(teamID))
+		}
+	} else {
+		return err
+	}
+
+	return nil
+}
+
+func (s *State) SetTeamIDs(teamIDs []string) error {
+	s.teamIDLock.Lock()
+	defer s.teamIDLock.Unlock()
+
+	return s.writeTeamIDs(teamIDs)
+}
+
+func (s *State) AddTeamID(newTeamID string) error {
+	s.teamIDLock.Lock()
+	defer s.teamIDLock.Unlock()
+
+	teamIDs, err := s.TeamIDs()
+
+	if err != nil {
+		return err
+	}
+
+	for _, teamID := range teamIDs {
+		if newTeamID == teamID {
+			return fmt.Errorf("Team ID already exists")
+		}
+	}
+
+	teamIDs = append(teamIDs, newTeamID)
+
+	return s.writeTeamIDs(teamIDs)
+}
+
+func (s *State) RemoveTeamID(removeTeamID string) error {
+	s.teamIDLock.Lock()
+	defer s.teamIDLock.Unlock()
+
+	teamIDs, err := s.TeamIDs()
+
+	if err != nil {
+		return err
+	}
+
+	for _, teamID := range teamIDs {
+		if removeTeamID != teamID {
+			teamIDs = append(teamIDs, teamID)
+		}
+	}
+
+	return s.writeTeamIDs(teamIDs)
+}
+
+func (s *State) TeamIDExists(teamID string) (bool, error) {
+	s.teamIDLock.RLock()
+	defer s.teamIDLock.RUnlock()
+
+	teamIDs, err := s.TeamIDs()
+
+	if err != nil {
+		return false, err
+	}
+
+	for _, candidateTeamID := range teamIDs {
+		if teamID == candidateTeamID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+/* ********************* Team Name functions ********* */
+
 // TeamName returns team name given a team ID.
 func (s *State) TeamName(teamID string) (string, error) {
-	s.lock.RLock()
+	s.teamNameLock.RLock()
+	defer s.teamNameLock.RUnlock()
+
 	name, ok := s.teamNames[teamID]
-	s.lock.RUnlock()
+
 	if !ok {
 		return "", fmt.Errorf("unregistered team ID: %s", teamID)
 	}
 	return name, nil
 }
 
+func (s *State) TeamNames() map[string]string {
+	var teamNames map[string]string
+
+	s.teamNameFileLock.RLock()
+	defer s.teamNameFileLock.RUnlock()
+
+	teamsFs := afero.NewBasePathFs(s.Fs, "teams")
+	if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
+		log.Printf("Reading team ids: %v", err)
+	} else {
+		for _, dirent := range dirents {
+			teamID := dirent.Name()
+			if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
+				log.Printf("Reading team %s: %v", teamID, err)
+			} else {
+				teamName := strings.TrimSpace(string(teamNameBytes))
+				teamNames[teamID] = teamName
+			}
+		}
+	}
+
+	return teamNames
+}
+
 // SetTeamName writes out team name.
 // This can only be done once per team.
 func (s *State) SetTeamName(teamID, teamName string) error {
-	idsFile, err := s.Open("teamids.txt")
+	teamIDs, err := s.TeamIDs()
+
 	if err != nil {
-		return fmt.Errorf("team IDs file does not exist")
+		return err
 	}
-	defer idsFile.Close()
+
 	found := false
-	scanner := bufio.NewScanner(idsFile)
-	for scanner.Scan() {
-		if scanner.Text() == teamID {
+	for _, validTeamID := range teamIDs {
+		if validTeamID == teamID {
 			found = true
 			break
 		}
 	}
+
 	if !found {
 		return fmt.Errorf("team ID not found in list of valid team IDs")
 	}
@@ -175,32 +315,69 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	return nil
 }
 
-// PointsLog retrieves the current points log.
-func (s *State) PointsLog() award.List {
-	s.lock.RLock()
-	ret := make(award.List, len(s.pointsLog))
-	copy(ret, s.pointsLog)
-	s.lock.RUnlock()
-	return ret
+func (s *State) SetTeamNames(teams map[string]string) error {
+	return s.writeTeamNames(teams)
 }
 
-// Messages retrieves the current messages.
-func (s *State) Messages() string {
-	s.lock.RLock() // It's not clear to me that this actually needs to happen
-	defer s.lock.RUnlock()
-	return s.messages
+func (s *State) TeamIDFromName(teamName string) (string, error) {
+	for name, id := range s.TeamNames() {
+		if name == teamName {
+			return id, nil
+		}
+	}
+
+	return "", fmt.Errorf("team name not found")
 }
 
-// SetMessages sets the current message
-func (s *State) SetMessages(message string) error {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+func (s *State) DeleteTeamName(teamID string) error {
+	newTeams := s.TeamNames()
 
-	err := afero.WriteFile(s, "messages.html", []byte(message), 0600)
+	_, ok := newTeams[teamID];
+    if ok {
+        delete(newTeams, teamID)
+    } else {
+		return fmt.Errorf("team not found")
+	}
+	
+	return s.writeTeamNames(newTeams)
+}
+
+func (s *State) writeTeamNames(teams map[string]string) error {
+	s.teamNameFileLock.Lock()
+	defer s.teamNameFileLock.Unlock()
+
+	s.RemoveAll("teams")
+	s.Mkdir("teams", 0755)
+
+	// Write out all of the new team names
+	for teamID, teamName := range teams {
+		teamFilename := filepath.Join("teams", teamID)
+		teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
+
+		if err != nil {
+			return err
+		}
+		defer teamFile.Close()
+
+		log.Printf("Setting team name [%s] in file %s", teamName, teamFilename)
+		fmt.Fprintln(teamFile, teamName)
+		teamFile.Close()
+	}
 
 	s.refreshNow <- true
 
-	return err
+	return nil
+}
+
+/* **************** Point log functions ************ */
+
+// PointsLog retrieves the current points log.
+func (s *State) PointsLog() award.List {
+	s.pointsLock.RLock()
+	ret := make(award.List, len(s.pointsLog))
+	copy(ret, s.pointsLog)
+	s.pointsLock.RUnlock()
+	return ret
 }
 
 // AwardPoints gives points to teamID in category.
@@ -211,6 +388,10 @@ func (s *State) SetMessages(message string) error {
 // The update task makes sure we never have duplicate points in the log.
 func (s *State) AwardPoints(teamID, category string, points int) error {
 	return s.awardPointsAtTime(time.Now().Unix(), teamID, category, points)
+}
+
+func (s *State) AwardPointsAtTime(teamID, category string, points int, when int64) error {
+	return s.awardPointsAtTime(when, teamID, category, points)
 }
 
 func (s *State) awardPointsAtTime(when int64, teamID string, category string, points int) error {
@@ -246,6 +427,119 @@ func (s *State) awardPointsAtTime(when int64, teamID string, category string, po
 	return nil
 }
 
+func (s *State) PointExists(teamID string, cat string, points int) bool {
+	for _, pointEntry := range s.pointsLog {
+		if (pointEntry.TeamID == teamID) && (pointEntry.Category == cat) && (pointEntry.Points == points) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *State) PointExistsAtTime(teamID string, cat string, points int, when int64) bool {
+	for _, pointEntry := range s.pointsLog {
+		if (pointEntry.TeamID == teamID) && (pointEntry.Category == cat) && (pointEntry.Points == points) && (pointEntry.When == when) {
+			return true
+		}
+
+		if (pointEntry.When > when) {  // Since the points log is sorted, we can bail out earlier, if we see that current points are from later than our event
+			return false
+		}
+	}
+
+	return false
+}
+
+func (s *State) flushPointsLog(newPoints award.List) error {
+	s.pointsLogFileLock.Lock()
+	defer s.pointsLogFileLock.Unlock()
+
+	logf, err := s.OpenFile("points.log", os.O_CREATE|os.O_WRONLY, 0644)
+	defer logf.Close()
+
+	if err != nil {
+		return fmt.Errorf("Can't write to points log: ", err)
+	}
+	for _, pointEntry := range newPoints {
+		fmt.Fprintln(logf, pointEntry.String())
+	}
+	
+	return nil
+}
+
+func (s *State) RemovePoints(teamID string, cat string, points int) error {
+	s.pointsLock.Lock()
+	defer s.pointsLock.Unlock()
+
+	var newPoints award.List
+	removed := false
+
+	for _, pointEntry := range s.pointsLog {
+		if (pointEntry.TeamID == teamID) && (pointEntry.Category == cat) && (pointEntry.Points == points) {
+			removed = true
+		} else {
+			newPoints = append(newPoints, pointEntry)
+		}
+	}
+
+	if (! removed) {
+		return fmt.Errorf("Unable to find matching point entry")
+	}
+
+	err := s.flushPointsLog(newPoints)
+
+	if err != nil {
+		return err
+	}
+
+	s.refreshNow <- true
+
+	return nil
+}
+
+func (s *State) RemovePointsAtTime(teamID string, cat string, points int, when int64) error {
+	s.pointsLock.Lock()
+	defer s.pointsLock.Unlock()
+
+	var newPoints award.List
+	removed := false
+
+	for _, pointEntry := range s.pointsLog {
+		if (pointEntry.TeamID == teamID) && (pointEntry.Category == cat) && (pointEntry.Points == points) && (pointEntry.When == when) {
+			removed = true
+		} else {
+			newPoints = append(newPoints, pointEntry)
+		}
+	}
+
+	if (! removed) {
+		return fmt.Errorf("Unable to find matching point entry")
+	}
+
+	err := s.flushPointsLog(newPoints)
+
+	if err != nil {
+		return err
+	}
+
+	s.refreshNow <- true
+
+	return nil
+}
+
+func (s *State) SetPoints(newPoints award.List) error {
+	err := s.flushPointsLog(newPoints)
+
+	if err != nil {
+		return err
+	}
+
+	s.refreshNow <- true
+
+	return nil
+}
+
 // collectPoints gathers up files in points.new/ and appends their contents to points.log,
 // removing each points.new/ file as it goes.
 func (s *State) collectPoints() {
@@ -268,20 +562,23 @@ func (s *State) collectPoints() {
 		}
 
 		duplicate := false
-		s.lock.RLock()
+		s.pointsLock.RLock()
 		for _, e := range s.pointsLog {
 			if awd.Equal(e) {
 				duplicate = true
 				break
 			}
 		}
-		s.lock.RUnlock()
+		s.pointsLock.RUnlock()
 
 		if duplicate {
 			log.Print("Skipping duplicate points: ", awd.String())
 		} else {
 			log.Print("Award: ", awd.String())
 
+			s.pointsLogFileLock.Lock()
+			defer s.pointsLogFileLock.Unlock()
+			
 			logf, err := s.OpenFile("points.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Print("Can't append to points log: ", err)
@@ -291,9 +588,9 @@ func (s *State) collectPoints() {
 			logf.Close()
 
 			// Stick this on the cache too
-			s.lock.Lock()
+			s.pointsLock.Lock()
+			defer s.pointsLock.Unlock()
 			s.pointsLog = append(s.pointsLog, awd)
-			s.lock.Unlock()
 		}
 
 		if err := s.Remove(filename); err != nil {
@@ -302,24 +599,57 @@ func (s *State) collectPoints() {
 	}
 }
 
+/* ******************* Message functions *********** */
+
+// Messages retrieves the current messages.
+func (s *State) Messages() string {
+	return s.messages
+}
+
+// SetMessages sets the current message
+func (s *State) SetMessages(message string) error {
+	s.messageFileLock.Lock()
+	defer s.messageFileLock.Unlock()
+
+	err := afero.WriteFile(s, "messages.html", []byte(message), 0600)
+
+	s.refreshNow <- true
+
+	return err
+}
+
+/* ***************** Other utilitity functions ******* */
+
 func (s *State) maybeInitialize() {
 	// Are we supposed to re-initialize?
 	if _, err := s.Stat("initialized"); !os.IsNotExist(err) {
 		return
 	}
 
+	
 	now := time.Now().UTC().Format(time.RFC3339)
 	log.Print("initialized file missing, re-initializing")
 
 	// Remove any extant control and state files
 	s.Remove("enabled")
 	s.Remove("hours.txt")
+
+	s.pointsLogFileLock.Lock()
 	s.Remove("points.log")
+	s.pointsLogFileLock.Unlock()
+
+	s.messageFileLock.Lock()
 	s.Remove("messages.html")
+	s.messageFileLock.Unlock()
+
 	s.Remove("mothd.log")
 	s.RemoveAll("points.tmp")
 	s.RemoveAll("points.new")
+
+	s.teamNameFileLock.Lock()
 	s.RemoveAll("teams")
+	s.Mkdir("teams", 0755)
+	s.teamNameFileLock.Unlock()
 
 	// Open log file
 	if err := s.reopenEventLog(); err != nil {
@@ -330,20 +660,18 @@ func (s *State) maybeInitialize() {
 	// Make sure various subdirectories exist
 	s.Mkdir("points.tmp", 0755)
 	s.Mkdir("points.new", 0755)
-	s.Mkdir("teams", 0755)
 
 	// Preseed available team ids if file doesn't exist
-	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
-		id := make([]byte, 8)
-		for i := 0; i < 100; i++ {
-			for i := range id {
-				char := rand.Intn(len(DistinguishableChars))
-				id[i] = DistinguishableChars[char]
-			}
-			fmt.Fprintln(f, string(id))
+	var teamIDs []string
+	id := make([]byte, 8)
+	for i := 0; i < 100; i++ {
+		for i := range id {
+			char := rand.Intn(len(DistinguishableChars))
+			id[i] = DistinguishableChars[char]
 		}
-		f.Close()
+		teamIDs = append(teamIDs, string(id))
 	}
+	s.SetTeamIDs(teamIDs)
 
 	// Create some files
 	if f, err := s.Create("initialized"); err == nil {
@@ -373,10 +701,12 @@ func (s *State) maybeInitialize() {
 		f.Close()
 	}
 
+	s.messageFileLock.Lock()
 	if f, err := s.Create("messages.html"); err == nil {
 		fmt.Fprintln(f, "<!-- messages.html: put client broadcast messages here. -->")
 		f.Close()
 	}
+	s.messageFileLock.Unlock()
 
 	if f, err := s.Create("points.log"); err == nil {
 		f.Close()
@@ -418,8 +748,11 @@ func (s *State) reopenEventLog() error {
 }
 
 func (s *State) updateCaches() {
-	s.lock.Lock()
-	defer s.lock.Unlock()
+	s.pointsLock.RLock()
+	defer s.pointsLock.RUnlock()
+
+	s.pointsLogFileLock.RLock()
+	defer s.pointsLogFileLock.RUnlock()
 
 	if f, err := s.Open("points.log"); err != nil {
 		log.Println(err)
@@ -437,31 +770,27 @@ func (s *State) updateCaches() {
 			}
 			pointsLog = append(pointsLog, cur)
 		}
+		
+
 		s.pointsLog = pointsLog
 	}
 
-	{
+	{		
+		s.teamNameLock.Lock()
+		defer s.teamNameLock.Unlock()
+
 		// The compiler recognizes this as an optimization case
 		for k := range s.teamNames {
 			delete(s.teamNames, k)
 		}
 
-		teamsFs := afero.NewBasePathFs(s.Fs, "teams")
-		if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
-			log.Printf("Reading team ids: %v", err)
-		} else {
-			for _, dirent := range dirents {
-				teamID := dirent.Name()
-				if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
-					log.Printf("Reading team %s: %v", teamID, err)
-				} else {
-					teamName := strings.TrimSpace(string(teamNameBytes))
-					s.teamNames[teamID] = teamName
-				}
-			}
+		for teamID, teamName := range s.TeamNames() {
+			s.teamNames[teamID] = teamName
 		}
-
 	}
+
+	s.messageFileLock.RLock()
+	defer s.messageFileLock.RUnlock()
 
 	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
 		s.messages = string(bMessages)
