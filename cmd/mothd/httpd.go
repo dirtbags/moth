@@ -125,6 +125,22 @@ func (h *HTTPServer) RegisterHandler(mh MothRequestHandler, w http.ResponseWrite
 	}
 }
 
+// AssignParticipantHandler handles attempts to associate a participant with a team
+func (h *HTTPServer) AssignParticipantHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
+	if mh.participantID == "" {
+		jsend.Sendf(w, jsend.Fail, "empty name", "Participant ID may not be empty")
+		return
+	}
+
+	if err := mh.AssignParticipant(); err != ErrAlreadyRegistered {
+		jsend.Sendf(w, jsend.Success, "already assigned", "participant and team have already been associated")
+	} else if err != nil {
+		jsend.Sendf(w, jsend.Fail, "unable to associate participant and team", err.Error())
+	} else {
+		jsend.Sendf(w, jsend.Success, "assigned", "participant and team have been associated")
+	}
+}
+
 // AnswerHandler checks answer correctness and awards points
 func (h *HTTPServer) AnswerHandler(mh MothRequestHandler, w http.ResponseWriter, req *http.Request) {
 	cat := req.FormValue("cat")

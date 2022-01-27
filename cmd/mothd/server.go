@@ -57,6 +57,7 @@ type StateProvider interface {
 	PointsLog() award.List
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
+	AssignParticipant(participantID string, teamID string) error
 	AwardPoints(teamID string, cat string, points int) error
 	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
 	Maintainer
@@ -174,6 +175,20 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 	}
 	mh.State.LogEvent("register", mh.participantID, mh.teamID, "", 0)
 	return mh.State.SetTeamName(mh.teamID, teamName)
+}
+
+// AssignParticipant associates a participant with a team
+func (mh *MothRequestHandler) AssignParticipant() error {
+	if mh.participantID == "" {
+		return fmt.Errorf("empty participant ID")
+	}
+
+	if mh.teamID == "" {
+		return fmt.Errorf("empty participant ID")
+	}
+
+	mh.State.LogEvent("assign", mh.participantID, mh.teamID, "", 0)
+	return mh.State.AssignParticipant(mh.participantID, mh.teamID)
 }
 
 // ExportState anonymizes team IDs and returns StateExport.

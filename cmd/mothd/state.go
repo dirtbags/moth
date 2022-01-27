@@ -46,6 +46,7 @@ type State struct {
 
 	// Caches, so we're not hammering NFS with metadata operations
 	teamNames map[string]string
+	participantTeams map[string]string
 	pointsLog award.List
 	messages  string
 	lock      sync.RWMutex
@@ -60,6 +61,7 @@ func NewState(fs afero.Fs) *State {
 		eventStream: make(chan []string, 80),
 
 		teamNames: make(map[string]string),
+		participantTeams: make(map[string]string),
 	}
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
@@ -169,6 +171,48 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	log.Printf("Setting team name [%s] in file %s", teamName, teamFilename)
 	fmt.Fprintln(teamFile, teamName)
 	teamFile.Close()
+
+	s.refreshNow <- true
+
+	return nil
+}
+
+// AssignParticipant associated a participant with a team
+// A participant can only be associated with one team at a time
+func (s *State) AssignParticipant(participantID string, teamID string) error {
+	idsFile, err := s.Open("participantids.txt")
+	if err != nil {
+		return fmt.Errorf("participant IDs file does not exist")
+	}
+	defer idsFile.Close()
+	found := false
+	scanner := bufio.NewScanner(idsFile)
+	for scanner.Scan() {
+		if scanner.Text() == participantID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("participant ID not found in list of valid participant IDs")
+	}
+
+	_, err = s.TeamName(teamID)
+
+	if (err != nil) {
+		return fmt.Errorf("Provided team does not exist, or is not registered")
+	}
+
+	teamParticipantFilename := filepath.Join("participants", participantID)
+	teamParticipantFile, err := s.Fs.OpenFile(teamParticipantFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
+	if os.IsExist(err) {
+		return ErrAlreadyRegistered
+	} else if err != nil {
+		return err
+	}
+	defer teamParticipantFile.Close()
+	log.Printf("Adding participant [%s] to team [%s]", participantID, teamID)
+	fmt.Fprintln(teamParticipantFile, teamID)
 
 	s.refreshNow <- true
 
@@ -308,6 +352,7 @@ func (s *State) maybeInitialize() {
 	s.RemoveAll("points.tmp")
 	s.RemoveAll("points.new")
 	s.RemoveAll("teams")
+	s.RemoveAll("participants")
 
 	// Open log file
 	if err := s.reopenEventLog(); err != nil {
@@ -319,10 +364,24 @@ func (s *State) maybeInitialize() {
 	s.Mkdir("points.tmp", 0755)
 	s.Mkdir("points.new", 0755)
 	s.Mkdir("teams", 0755)
+	s.Mkdir("participants", 0755)
 
 	// Preseed available team ids if file doesn't exist
 	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
 		id := make([]byte, 8)
+		for i := 0; i < 100; i++ {
+			for i := range id {
+				char := rand.Intn(len(DistinguishableChars))
+				id[i] = DistinguishableChars[char]
+			}
+			fmt.Fprintln(f, string(id))
+		}
+		f.Close()
+	}
+
+	// Preseed available participants if file doesn't exist
+	if f, err := s.OpenFile("participantids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
+		id := make([]byte, 16)
 		for i := 0; i < 100; i++ {
 			for i := range id {
 				char := rand.Intn(len(DistinguishableChars))
@@ -449,6 +508,28 @@ func (s *State) updateCaches() {
 			}
 		}
 
+	}
+
+	{
+		// Update participant records
+		for k := range s.participantTeams {
+			delete(s.participantTeams, k)
+		}
+
+		participantsFs := afero.NewBasePathFs(s.Fs, "participants")
+		if dirents, err := afero.ReadDir(participantsFs, "."); err != nil {
+			log.Printf("Reading participant ids: %v", err)
+		} else {
+			for _, dirent := range dirents {
+				participantID := dirent.Name()
+				if participantTeamBytes, err := afero.ReadFile(participantsFs, participantID); err != nil {
+					log.Printf("Reading participant %s: %v", participantID, err)
+				} else {
+					teamID := strings.TrimSpace(string(participantTeamBytes))
+					s.participantTeams[participantID] = teamID
+				}
+			}
+		}
 	}
 
 	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
