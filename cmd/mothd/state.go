@@ -177,6 +177,18 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	return nil
 }
 
+func (s *State) ParticipantTeam(participantID string) (string, error) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	teamID, ok := s.participantTeams[participantID]
+	
+	if !ok {
+		return "", fmt.Errorf("participant (%s) has not registered with a team", participantID)
+	}
+
+	return teamID, nil
+}
+
 // AssignParticipant associated a participant with a team
 // A participant can only be associated with one team at a time
 func (s *State) AssignParticipant(participantID string, teamID string) error {
@@ -235,14 +247,18 @@ func (s *State) Messages() string {
 	return s.messages
 }
 
-// AwardPoints gives points to teamID in category.
+// AwardPoints gives points to the team of participantID in category.
 // This doesn't attempt to ensure the teamID has been registered.
 // It first checks to make sure these are not duplicate points.
 // This is not a perfect check, you can trigger a race condition here.
 // It's just a courtesy to the user.
 // The update task makes sure we never have duplicate points in the log.
-func (s *State) AwardPoints(teamID, category string, points int) error {
-	return s.awardPointsAtTime(time.Now().Unix(), teamID, category, points)
+func (s *State) AwardPoints(participantID, category string, points int) error {
+	if teamID, err := s.ParticipantTeam(participantID); err != nil {
+		return err
+	} else {
+		return s.awardPointsAtTime(time.Now().Unix(), teamID, category, points)
+	}
 }
 
 func (s *State) awardPointsAtTime(when int64, teamID string, category string, points int) error {

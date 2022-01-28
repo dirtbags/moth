@@ -57,8 +57,9 @@ type StateProvider interface {
 	PointsLog() award.List
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
+	ParticipantTeam(participantID string) (string, error)
 	AssignParticipant(participantID string, teamID string) error
-	AwardPoints(teamID string, cat string, points int) error
+	AwardPoints(participantID string, cat string, points int) error
 	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
 	Maintainer
 }
@@ -155,7 +156,12 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 	if _, err := mh.State.TeamName(mh.teamID); err != nil {
 		return fmt.Errorf("invalid team ID")
 	}
-	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
+
+	if _, err := mh.State.ParticipantTeam(mh.participantID); err != nil {
+		return fmt.Errorf("invalid participant ID")
+	}
+
+	if err := mh.State.AwardPoints(mh.participantID, cat, points); err != nil {
 		return fmt.Errorf("error awarding points: %s", err)
 	}
 
