@@ -35,6 +35,7 @@ func TestState(t *testing.T) {
 	mustExist("initialized")
 	mustExist("enabled")
 	mustExist("hours.txt")
+	mustExist("participantids.txt")
 
 	teamIDsBuf, err := afero.ReadFile(s.Fs, "teamids.txt")
 	if err != nil {
@@ -69,9 +70,53 @@ func TestState(t *testing.T) {
 		t.Error("Incorrect team name:", name)
 	}
 
+	// Participant ID tests
+
+	participantIDsBuf, err := afero.ReadFile(s.Fs, "participantids.txt")
+	if err != nil {
+		t.Errorf("Reading participantids.txt: %v", err)
+	}
+
+	participantIDs := bytes.Split(participantIDsBuf, []byte("\n"))
+	if (len(participantIDs) != 101) || (len(participantIDs[100]) > 0) {
+		t.Errorf("There weren't 100 participantIDs, there were %d", len(participantIDs))
+	}
+	participantID := string(participantIDs[0])
+
+	if _, err := s.ParticipantTeam(participantID); err == nil {
+		t.Errorf("Bad participant ID lookup didn't return error")
+	}
+
+	if err := s.AssignParticipant("bad participant ID", "bad team ID"); err == nil {
+		t.Errorf("Assigning bad participant ID didn't raise an error")
+	}
+
+	if err := s.AssignParticipant(participantID, "bad team ID"); err == nil {
+		t.Errorf("Assigning participant to bad team ID didn't raise an error")
+	}
+
+	if err := s.AssignParticipant("bad participant ID", teamID); err == nil {
+		t.Errorf("Assigning bad participant ID to valid team ID didn't raise an error")
+	}
+
+	if err:= s.AssignParticipant(participantID, teamID); err != nil {
+		t.Errorf("Error assigning participant to team: %s -> %s", participantID, teamID)
+	}
+	if err:= s.AssignParticipant(participantID, teamID); err == nil {
+		t.Errorf("Assigning participant to team a second time should fail")
+	}
+	s.refresh()
+	if id, err := s.ParticipantTeam(participantID); err != nil {
+		t.Error(err)
+	} else if id != teamID {
+		t.Error("Incorrect team ID:", id)
+	}
+
+
+	// Award tests
 	category := "poot"
 	points := 3928
-	if err := s.AwardPoints(teamID, category, points); err != nil {
+	if err := s.AwardPoints(participantID, category, points); err != nil {
 		t.Error(err)
 	}
 	// Flex duplicate detection with different timestamp
@@ -82,7 +127,7 @@ func TestState(t *testing.T) {
 		f.Close()
 	}
 
-	s.AwardPoints(teamID, category, points)
+	s.AwardPoints(participantID, category, points)
 	s.refresh()
 	pl = s.PointsLog()
 	if len(pl) != 1 {
@@ -94,11 +139,11 @@ func TestState(t *testing.T) {
 		t.Errorf("Incorrect logged award %v", pl)
 	}
 
-	if err := s.AwardPoints(teamID, category, points); err == nil {
+	if err := s.AwardPoints(participantID, category, points); err == nil {
 		t.Error("Duplicate points award after refresh didn't fail")
 	}
 
-	if err := s.AwardPoints(teamID, category, points+1); err != nil {
+	if err := s.AwardPoints(participantID, category, points+1); err != nil {
 		t.Error("Awarding more points:", err)
 	}
 
@@ -112,7 +157,7 @@ func TestState(t *testing.T) {
 	if len(s.PointsLog()) != 0 {
 		t.Errorf("Intentional parse error breaks pointslog")
 	}
-	if err := s.AwardPoints(teamID, category, points); err != nil {
+	if err := s.AwardPoints(participantID, category, points); err != nil {
 		t.Error(err)
 	}
 	s.refresh()

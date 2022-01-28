@@ -69,6 +69,26 @@ func TestHttpd(t *testing.T) {
 	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"team ID has already been registered"}}` {
 		t.Error("Register failed", r.Body.String())
 	}
+	
+	// Test participant assignment
+
+	if r := hs.TestRequest("/assign", map[string]string{"pid": "badParticipantID"}); r.Result().StatusCode != 200 {
+		t.Error(r.Result())
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"unable to associate participant and team","description":"participant ID not found in list of valid participant IDs"}}` {
+		t.Error("Assignment failed", r.Body.String())
+	}
+
+	if r := hs.TestRequest("/assign", map[string]string{"id": "bad team id", "pid": "participantID"}); r.Result().StatusCode != 200 {
+		t.Error(r.Result())
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"unable to associate participant and team","description":"Provided team does not exist, or is not registered"}}` {
+		t.Error("Assignment failed", r.Body.String())
+	}
+
+	if r := hs.TestRequest("/assign", map[string]string{"id": "teamID", "pid": "participantID"}); r.Result().StatusCode != 200 {
+		t.Error(r.Result())
+	} else if r.Body.String() != `{"status":"success","data":{"short":"assigned","description":"participant and team have been associated"}}` {
+		t.Error("Assignment failed", r.Body.String())
+	}
 
 	time.Sleep(TestMaintenanceInterval)
 
@@ -100,13 +120,19 @@ func TestHttpd(t *testing.T) {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "moo"}); r.Result().StatusCode != 200 {
+	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123", "pid": "bad participant ID"}); r.Result().StatusCode != 200 {
+		t.Error(r.Result())
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"invalid participant ID"}}` {
+		t.Error("Unexpected body", r.Body.String())
+	}
+
+	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "moo", "pid": "participantID"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
 	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"incorrect answer"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
+	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123", "pid": "participantID"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
 	} else if r.Body.String() != `{"status":"success","data":{"short":"accepted","description":"1 points awarded in pategory"}}` {
 		t.Error("Unexpected body", r.Body.String())
@@ -129,7 +155,7 @@ func TestHttpd(t *testing.T) {
 		t.Error("Didn't unlock next puzzle")
 	}
 
-	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
+	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123", "pid": "participantID"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
 	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"error awarding points: points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())

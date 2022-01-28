@@ -17,6 +17,7 @@ func NewTestServer() *MothServer {
 
 	state := NewTestState()
 	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
+	afero.WriteFile(state, "participantids.txt", []byte("participantID\n"), 0644)
 	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
 	go state.Maintain(TestMaintenanceInterval)
 
@@ -71,6 +72,16 @@ func TestProdServer(t *testing.T) {
 	} else if err != ErrAlreadyRegistered {
 		t.Error("Wrong error for duplicate registration:", err)
 	}
+
+	if err := handler.AssignParticipant(); err != nil {
+		t.Error(err)
+	}
+	if err := handler.AssignParticipant(); err == nil {
+		t.Error("Assigning a participant twice should have raised an error")
+	} else if err != ErrAlreadyRegistered {
+		t.Error("Wrong error for duplicate registration:", err)
+	}
+	
 
 	if r, _, err := handler.ThemeOpen("/index.html"); err != nil {
 		t.Error(err)
@@ -128,7 +139,7 @@ func TestProdServer(t *testing.T) {
 	}
 
 	if err := anonHandler.CheckAnswer("pategory", 1, "answer123"); err == nil {
-		t.Error("Invalid team ID was able to get points with correct answer")
+		t.Error("Invalid participant ID was able to get points with correct answer")
 	}
 	if err := handler.CheckAnswer("pategory", 1, "answer123"); err != nil {
 		t.Error("Right answer marked wrong", err)
