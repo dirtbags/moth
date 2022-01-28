@@ -29,6 +29,7 @@ func NewHTTPServer(base string, server *MothServer) *HTTPServer {
 	h.HandleMothFunc("/", h.ThemeHandler)
 	h.HandleMothFunc("/state", h.StateHandler)
 	h.HandleMothFunc("/register", h.RegisterHandler)
+	h.HandleMothFunc("/assign", h.AssignParticipantHandler)
 	h.HandleMothFunc("/answer", h.AnswerHandler)
 	h.HandleMothFunc("/content/", h.ContentHandler)
 
@@ -132,7 +133,7 @@ func (h *HTTPServer) AssignParticipantHandler(mh MothRequestHandler, w http.Resp
 		return
 	}
 
-	if err := mh.AssignParticipant(); err != ErrAlreadyRegistered {
+	if err := mh.AssignParticipant(); err == ErrAlreadyRegistered {
 		jsend.Sendf(w, jsend.Success, "already assigned", "participant and team have already been associated")
 	} else if err != nil {
 		jsend.Sendf(w, jsend.Fail, "unable to associate participant and team", err.Error())

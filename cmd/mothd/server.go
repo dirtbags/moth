@@ -139,6 +139,17 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 // CheckAnswer returns an error if answer is not a correct answer for puzzle points in category cat
 func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
 	correct := false
+
+	teamID, err := mh.State.ParticipantTeam(mh.participantID)
+	
+	if err != nil {
+		return fmt.Errorf("invalid participant ID")
+	}
+
+	if _, err := mh.State.TeamName(teamID); err != nil {
+		return fmt.Errorf("invalid team ID")
+	}
+
 	for _, provider := range mh.PuzzleProviders {
 		if ok, err := provider.CheckAnswer(cat, points, answer); err != nil {
 			return err
@@ -146,20 +157,13 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 			correct = true
 		}
 	}
+
 	if !correct {
-		mh.State.LogEvent("wrong", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent("wrong", mh.participantID, teamID, cat, points)
 		return fmt.Errorf("incorrect answer")
 	}
 
-	mh.State.LogEvent("correct", mh.participantID, mh.teamID, cat, points)
-
-	if _, err := mh.State.TeamName(mh.teamID); err != nil {
-		return fmt.Errorf("invalid team ID")
-	}
-
-	if _, err := mh.State.ParticipantTeam(mh.participantID); err != nil {
-		return fmt.Errorf("invalid participant ID")
-	}
+	mh.State.LogEvent("correct", mh.participantID, teamID, cat, points)
 
 	if err := mh.State.AwardPoints(mh.participantID, cat, points); err != nil {
 		return fmt.Errorf("error awarding points: %s", err)
@@ -190,7 +194,7 @@ func (mh *MothRequestHandler) AssignParticipant() error {
 	}
 
 	if mh.teamID == "" {
-		return fmt.Errorf("empty participant ID")
+		return fmt.Errorf("empty team ID")
 	}
 
 	mh.State.LogEvent("assign", mh.participantID, mh.teamID, "", 0)

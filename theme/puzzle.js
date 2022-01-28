@@ -207,9 +207,14 @@ function init() {
     loadPuzzle(categoryName, points, puzzleId || points)
   }
 
-  let teamId = sessionStorage.getItem("id")
+  /*let teamId = sessionStorage.getItem("id")
   if (teamId) {
     document.querySelector("input[name=id]").value = teamId
+  }*/
+
+  let participantId = sessionStorage.getItem("pid")
+  if (participantId) {
+    document.querySelector("input[name=pid]").value = participantId
   }
   
   if (document.querySelector("#answer")) {

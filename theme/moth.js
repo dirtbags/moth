@@ -155,37 +155,74 @@ function login(e) {
   let pide = document.querySelector("[name=pid]")
   let participantId = pide?pide.value:Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
   
-  fetch("register", {
-    method: "POST",
-    body: new FormData(e.target),
-  })
-  .then(resp => {
-    if (resp.ok) {
-      resp.json()
-      .then(obj => {
-        if ((obj.status == "success") || (obj.data.short == "Already registered")) {
-          toast("Logged in")
-          sessionStorage.id = teamId
-          sessionStorage.pid = participantId
-          showPuzzles()
-          heartbeat()
-        } else {
-          toast(obj.data.description)
-        }
-      })
-      .catch(err => {
-        toast("Oops, the server has lost its mind. You probably need to tell someone so they can fix it.")
-        console.log(err, resp)
-      })
-    } else {
-      toast("Oops, something's wrong with the server. Try again in a few seconds.")
-      console.log(resp)
-    }
-  })
-  .catch(err => {
-    toast("Oops, something went wrong. Try again in a few seconds.")
-    console.log(err)
-  })
+  if (participantId != "") {
+    fetch("assign", {
+      method: "POST",
+      body: new FormData(e.target),
+    })
+    .then(resp => {
+      if (resp.ok) {
+        resp.json()
+        .then(obj => {
+          if ((obj.status == "success") || (obj.data.short == "already assigned")) {
+            toast("Logged in")
+            sessionStorage.id = teamId
+            sessionStorage.pid = participantId
+            showPuzzles()
+            heartbeat()
+          } else {
+            toast(obj.data.description)
+          }
+        })
+        .catch(err => {
+          toast("Oops, the server has lost its mind. You probably need to tell someone so they can fix it.")
+          console.log(err, resp)
+        })
+      } else {
+        toast("Oops, something's wrong with the server. Try again in a few seconds.")
+        console.log(resp)
+      }
+    })
+    .catch(err => {
+      toast("Oops, something went wrong. Try again in a few seconds.")
+      console.log(err)
+    })
+  } else {
+    toast("Participant ID may not be empty")
+  }
+
+  if (teamId != "") {
+    fetch("register", {
+      method: "POST",
+      body: new FormData(e.target),
+    })
+    .then(resp => {
+      if (resp.ok) {
+        resp.json()
+        .then(obj => {
+          if ((obj.status == "success") || (obj.data.short == "Already registered")) {
+            toast("Team registered")
+            
+          } else {
+            toast(obj.data.description)
+          }
+        })
+        .catch(err => {
+          toast("Oops, the server has lost its mind. You probably need to tell someone so they can fix it.")
+          console.log(err, resp)
+        })
+      } else {
+        toast("Oops, something's wrong with the server. Try again in a few seconds.")
+        console.log(resp)
+      }
+    })
+    .catch(err => {
+      toast("Oops, something went wrong. Try again in a few seconds.")
+      console.log(err)
+    })
+  } else {
+    toast("Team ID must be provided")
+  }
 }
 
 function init() {

@@ -183,6 +183,7 @@ func (s *State) ParticipantTeam(participantID string) (string, error) {
 	teamID, ok := s.participantTeams[participantID]
 	
 	if !ok {
+		fmt.Println("Could not find participant")
 		return "", fmt.Errorf("participant (%s) has not registered with a team", participantID)
 	}
 
