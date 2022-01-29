@@ -73,6 +73,8 @@ func TestProdServer(t *testing.T) {
 		t.Error("Wrong error for duplicate registration:", err)
 	}
 
+	time.Sleep(10 * time.Millisecond)
+
 	if err := handler.AssignParticipant(); err != nil {
 		t.Error(err)
 	}
