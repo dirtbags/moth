@@ -141,6 +141,13 @@ func (s *State) TeamName(teamID string) (string, error) {
 // SetTeamName writes out team name.
 // This can only be done once per team.
 func (s *State) SetTeamName(teamID, teamName string) error {
+	s.lock.RLock()
+	_, ok := s.teamNames[teamID]
+	s.lock.RUnlock()
+	if ok {
+		return ErrAlreadyRegistered
+	}
+
 	idsFile, err := s.Open("teamids.txt")
 	if err != nil {
 		return fmt.Errorf("team IDs file does not exist")
