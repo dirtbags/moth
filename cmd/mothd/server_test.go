@@ -13,11 +13,13 @@ const TestTeamID = "teamID"
 
 func NewTestServer() *MothServer {
 	puzzles := NewTestMothballs()
+	puzzles.refresh()
 	go puzzles.Maintain(TestMaintenanceInterval)
 
 	state := NewTestState()
 	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
 	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
+	state.refresh()
 	go state.Maintain(TestMaintenanceInterval)
 
 	theme := NewTestTheme()
