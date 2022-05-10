@@ -5,13 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"sort"
 
+	"github.com/dirtbags/moth/pkg/namesubfs"
 	"github.com/dirtbags/moth/pkg/transpile"
-
-	"github.com/spf13/afero"
 )
 
 // T represents the state of things
@@ -20,8 +20,8 @@ type T struct {
 	Stdout io.Writer
 	Stderr io.Writer
 	Args   []string
-	BaseFs afero.Fs
-	fs     afero.Fs
+	BaseFs fs.FS
+	fs     fs.FS
 }
 
 // Command is a function invoked by the user
@@ -88,7 +88,7 @@ func (t *T) ParseArgs() (Command, error) {
 		return nothing, err
 	}
 	if *directory != "" {
-		t.fs = afero.NewBasePathFs(t.BaseFs, *directory)
+		t.fs = namesubfs.Sub(t.BaseFs, *directory)
 	} else {
 		t.fs = t.BaseFs
 	}
@@ -121,7 +121,10 @@ func (t *T) PrintInventory() error {
 
 // DumpPuzzle writes a puzzle's JSON to the writer.
 func (t *T) DumpPuzzle() error {
-	puzzle := transpile.NewFsPuzzle(t.fs)
+	puzzle, err := transpile.NewFsPuzzle(t.fs)
+	if err != nil {
+		return err
+	}
 
 	p, err := puzzle.Puzzle()
 	if err != nil {
@@ -142,7 +145,10 @@ func (t *T) DumpFile() error {
 		filename = t.Args[0]
 	}
 
-	puzzle := transpile.NewFsPuzzle(t.fs)
+	puzzle, err := transpile.NewFsPuzzle(t.fs)
+	if err != nil {
+		return err
+	}
 
 	f, err := puzzle.Open(filename)
 	if err != nil {
@@ -166,7 +172,7 @@ func (t *T) DumpMothball() error {
 		w = t.Stdout
 	} else {
 		filename = t.Args[0]
-		outf, err := t.BaseFs.Create(filename)
+		outf, err := os.Create(filename)
 		if err != nil {
 			return err
 		}
@@ -177,7 +183,7 @@ func (t *T) DumpMothball() error {
 
 	if err := transpile.Mothball(c, w); err != nil {
 		if filename != "" {
-			t.BaseFs.Remove(filename)
+			os.Remove(filename)
 		}
 		return err
 	}
@@ -190,8 +196,11 @@ func (t *T) CheckAnswer() error {
 	if len(t.Args) > 0 {
 		answer = t.Args[0]
 	}
-	c := transpile.NewFsPuzzle(t.fs)
-	_, err := fmt.Fprintf(t.Stdout, `{"Correct":%v}`, c.Answer(answer))
+	c, err := transpile.NewFsPuzzle(t.fs)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(t.Stdout, `{"Correct":%v}`, c.Answer(answer))
 	return err
 }
 
@@ -206,7 +215,7 @@ func main() {
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 		Args:   os.Args,
-		BaseFs: afero.NewOsFs(),
+		BaseFs: os.DirFS(""),
 	}
 	cmd, err := t.ParseArgs()
 	if err != nil {

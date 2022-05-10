@@ -1,26 +1,27 @@
 package main
 
 import (
+	"io"
+	"os"
+	"path"
 	"time"
-
-	"github.com/spf13/afero"
 )
 
 // Theme defines a filesystem-backed ThemeProvider.
 type Theme struct {
-	afero.Fs
+	basedir string
 }
 
 // NewTheme returns a new Theme, backed by Fs.
-func NewTheme(fs afero.Fs) *Theme {
+func NewTheme(basedir string) *Theme {
 	return &Theme{
-		Fs: fs,
+		basedir: basedir,
 	}
 }
 
 // Open returns a new opened file.
-func (t *Theme) Open(name string) (ReadSeekCloser, time.Time, error) {
-	f, err := t.Fs.Open(name)
+func (t *Theme) Open(name string) (io.ReadSeekCloser, time.Time, error) {
+	f, err := os.Open(path.Join(t.basedir, name))
 	if err != nil {
 		return nil, time.Time{}, err
 	}

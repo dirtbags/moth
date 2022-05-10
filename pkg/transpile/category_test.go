@@ -3,11 +3,10 @@ package transpile
 import (
 	"bytes"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
 func TestFsCategory(t *testing.T) {
@@ -33,7 +32,9 @@ func TestFsCategory(t *testing.T) {
 		t.Error("Incorrect answer accepted as correct")
 	}
 
-	if r, err := c.Open(1, "moo.txt"); err != nil {
+	if p, err := c.Puzzle(1); err != nil {
+		t.Error(err)
+	} else if r, err := p.Open("moo.txt"); err != nil {
 		t.Log(c.Puzzle(1))
 		t.Error(err)
 	} else {
@@ -54,8 +55,8 @@ func TestFsCategory(t *testing.T) {
 }
 
 func TestOsFsCategory(t *testing.T) {
-	fs := NewRecursiveBasePathFs(afero.NewOsFs(), "testdata")
-	static := NewFsCategory(fs, "static")
+	fsys := os.DirFS("testdata")
+	static := NewFsCategory(fsys, "static")
 
 	if p, err := static.Puzzle(1); err != nil {
 		t.Error(err)
@@ -71,7 +72,7 @@ func TestOsFsCategory(t *testing.T) {
 		t.Error("Wrong authors", p.Authors)
 	}
 
-	generated := NewFsCategory(fs, "generated")
+	generated := NewFsCategory(fsys, "generated")
 
 	if inv, err := generated.Inventory(); err != nil {
 		t.Error(err)

@@ -3,36 +3,35 @@ package main
 import (
 	"archive/zip"
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/spf13/afero"
-	"github.com/spf13/afero/zipfs"
 )
 
 type zipCategory struct {
-	afero.Fs
+	zip.Reader
 	io.Closer
 	mtime time.Time
 }
 
 // Mothballs provides a collection of active mothball files (puzzle categories)
 type Mothballs struct {
-	afero.Fs
+	fs.FS
 	categories   map[string]zipCategory
 	categoryLock *sync.RWMutex
 }
 
 // NewMothballs returns a new Mothballs structure backed by the provided directory
-func NewMothballs(fs afero.Fs) *Mothballs {
+func NewMothballs(fsys fs.FS) *Mothballs {
 	return &Mothballs{
-		Fs:           fs,
+		FS:           fsys,
 		categories:   make(map[string]zipCategory),
 		categoryLock: new(sync.RWMutex),
 	}
@@ -45,8 +44,8 @@ func (m *Mothballs) getCat(cat string) (zipCategory, bool) {
 	return ret, ok
 }
 
-// Open returns a ReadSeekCloser corresponding to the filename in a puzzle's category and points
-func (m *Mothballs) Open(cat string, points int, filename string) (ReadSeekCloser, time.Time, error) {
+// Open returns an fs.File corresponding to the filename in a puzzle's category and points
+func (m *Mothballs) Open(cat string, points int, filename string) (fs.File, time.Time, error) {
 	zc, ok := m.getCat(cat)
 	if !ok {
 		return nil, time.Time{}, fmt.Errorf("no such category: %s", cat)
@@ -112,6 +111,41 @@ func (m *Mothballs) CheckAnswer(cat string, points int, answer string) (bool, er
 	return false, nil
 }
 
+func (m *Mothballs) newZipCategory(f fs.File) (zipCategory, error) {
+	var zrc *zip.Reader
+	var err error
+	var closer io.ReadCloser = f
+	var zipCat zipCategory
+
+	fi, err := f.Stat()
+	if err != nil {
+		return zipCat, err
+	}
+	zipCat.mtime = fi.ModTime()
+
+	switch r := f.(type) {
+	case io.ReaderAt:
+		zrc, err = zip.NewReader(r, fi.Size())
+	default:
+		log.Println("Does not implement io.ReaderAt, buffering in RAM:", r)
+		buf := new(bytes.Buffer)
+		size, err := io.Copy(buf, f)
+		if err != nil {
+			return zipCat, err
+		}
+		f.Close()
+		reader := bytes.NewReader(buf.Bytes())
+		zrc, err = zip.NewReader(reader, size)
+		closer = io.NopCloser(reader)
+	}
+	if err != nil {
+		return zipCat, err
+	}
+	zipCat.Reader = *zrc
+	zipCat.Closer = closer
+	return zipCat, nil
+}
+
 // refresh refreshes internal state.
 // It looks for changes to the directory listing, and caches any new mothballs.
 func (m *Mothballs) refresh() {
@@ -119,7 +153,7 @@ func (m *Mothballs) refresh() {
 	defer m.categoryLock.Unlock()
 
 	// Any new categories?
-	files, err := afero.ReadDir(m.Fs, "/")
+	files, err := fs.ReadDir(m.FS, "/")
 	if err != nil {
 		log.Println("Error listing mothballs:", err)
 		return
@@ -136,7 +170,7 @@ func (m *Mothballs) refresh() {
 		reopen := false
 		if existingMothball, ok := m.categories[categoryName]; !ok {
 			reopen = true
-		} else if si, err := m.Fs.Stat(filename); err != nil {
+		} else if si, err := fs.Stat(m.FS, filename); err != nil {
 			log.Println(err)
 		} else if si.ModTime().After(existingMothball.mtime) {
 			existingMothball.Close()
@@ -145,33 +179,14 @@ func (m *Mothballs) refresh() {
 		}
 
 		if reopen {
-			f, err := m.Fs.Open(filename)
-			if err != nil {
+			if f, err := m.FS.Open(filename); err != nil {
 				log.Println(err)
-				continue
-			}
-
-			fi, err := f.Stat()
-			if err != nil {
-				f.Close()
+			} else if zipCat, err := m.newZipCategory(f); err != nil {
 				log.Println(err)
-				continue
+			} else {
+				m.categories[categoryName] = zipCat
+				log.Println("Adding category:", categoryName)
 			}
-
-			zrc, err := zip.NewReader(f, fi.Size())
-			if err != nil {
-				f.Close()
-				log.Println(err)
-				continue
-			}
-
-			m.categories[categoryName] = zipCategory{
-				Fs:     zipfs.New(zrc),
-				Closer: f,
-				mtime:  fi.ModTime(),
-			}
-
-			log.Println("Adding category:", categoryName)
 		}
 	}
 

@@ -2,33 +2,53 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
-
-	"github.com/spf13/afero"
 )
 
 const TestMaintenanceInterval = time.Millisecond * 1
 const TestTeamID = "teamID"
 
-func NewTestServer() *MothServer {
+type TestMothServer struct {
+	*MothServer
+	stateDir string
+}
+
+func NewTestServer() (*TestMothServer, error) {
 	puzzles := NewTestMothballs()
 	go puzzles.Maintain(TestMaintenanceInterval)
 
-	state := NewTestState()
-	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
-	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
+	stateDir, err := ioutil.TempDir("", "state")
+	if err != nil {
+		return nil, err
+	}
+	state := NewState(stateDir)
+	os.WriteFile(state.path("teamids.txt"), []byte("teamID\n"), 0644)
+	os.WriteFile(state.path("messages.html"), []byte("messages.html"), 0644)
 	go state.Maintain(TestMaintenanceInterval)
 
-	theme := NewTestTheme()
-	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
+	theme := NewTheme("testdata/theme")
 	go theme.Maintain(TestMaintenanceInterval)
 
-	return NewMothServer(Configuration{}, theme, state, puzzles)
+	return &TestMothServer{
+		MothServer: NewMothServer(Configuration{}, theme, state, puzzles),
+		stateDir:   stateDir,
+	}, nil
+}
+
+func (m *TestMothServer) cleanup() {
+	if m.stateDir != "" {
+		os.RemoveAll(m.stateDir)
+	}
 }
 
 func TestDevelServer(t *testing.T) {
-	server := NewTestServer()
+	server, err := NewTestServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.cleanup()
 	server.Config.Devel = true
 	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
 
@@ -48,7 +68,11 @@ func TestProdServer(t *testing.T) {
 	participantID := "participantID"
 	teamID := TestTeamID
 
-	server := NewTestServer()
+	server, err := NewTestServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.cleanup()
 	handler := server.NewHandler(participantID, teamID)
 	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
 

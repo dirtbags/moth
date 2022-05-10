@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"os/exec"
 	"path"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dirtbags/moth/pkg/namesubfs"
 	"github.com/spf13/afero"
 )
 
@@ -28,41 +30,20 @@ type Category interface {
 	// Puzzle provides a Puzzle structure for the given point value.
 	Puzzle(points int) (Puzzle, error)
 
-	// Open returns an io.ReadCloser for the given filename.
-	Open(points int, filename string) (ReadSeekCloser, error)
-
 	// Answer returns whether the given answer is correct.
 	Answer(points int, answer string) bool
-}
-
-// NopReadCloser provides an io.ReadCloser which does nothing.
-type NopReadCloser struct {
-}
-
-// Read satisfies io.Reader.
-func (n NopReadCloser) Read(b []byte) (int, error) {
-	return 0, nil
-}
-
-// Close satisfies io.Closer.
-func (n NopReadCloser) Close() error {
-	return nil
 }
 
 // NewFsCategory returns a Category based on which files are present.
 // If 'mkcategory' is present and executable, an FsCommandCategory is returned.
 // Otherwise, FsCategory is returned.
-func NewFsCategory(fs afero.Fs, cat string) Category {
-	bfs := NewRecursiveBasePathFs(fs, cat)
-	if info, err := bfs.Stat("mkcategory"); (err == nil) && (info.Mode()&0100 != 0) {
-		if command, err := bfs.RealPath(info.Name()); err != nil {
-			log.Println("Unable to resolve full path to", info.Name())
-		} else {
-			return FsCommandCategory{
-				fs:      bfs,
-				command: command,
-				timeout: 2 * time.Second,
-			}
+func NewFsCategory(fsys fs.FS, cat string) Category {
+	bfs := namesubfs.Sub(fsys, cat)
+	if info, err := fs.Stat(bfs, "mkcategory"); (err == nil) && (info.Mode()&0100 != 0) {
+		return FsCommandCategory{
+			fs:      bfs,
+			command: bfs.FullPath(info.Name()),
+			timeout: 2 * time.Second,
 		}
 	}
 	return FsCategory{fs: bfs}
@@ -98,11 +79,6 @@ func (c FsCategory) Inventory() ([]int, error) {
 // Puzzle returns a Puzzle structure for the given point value.
 func (c FsCategory) Puzzle(points int) (Puzzle, error) {
 	return NewFsPuzzlePoints(c.fs, points).Puzzle()
-}
-
-// Open returns an io.ReadCloser for the given filename.
-func (c FsCategory) Open(points int, filename string) (ReadSeekCloser, error) {
-	return NewFsPuzzlePoints(c.fs, points).Open(filename)
 }
 
 // Answer checks whether an answer is correct.
@@ -177,13 +153,7 @@ func (c FsCommandCategory) Puzzle(points int) (Puzzle, error) {
 	return p, nil
 }
 
-// Open returns an io.ReadCloser for the given filename.
-func (c FsCommandCategory) Open(points int, filename string) (ReadSeekCloser, error) {
-	stdout, err := c.run("file", strconv.Itoa(points), filename)
-	return nopCloser{bytes.NewReader(stdout)}, err
-}
-
-// Answer checks whether an answer is correct.
+// Answer checks whether an answer is correct.Open
 func (c FsCommandCategory) Answer(points int, answer string) bool {
 	stdout, err := c.run("answer", strconv.Itoa(points), answer)
 	if err != nil {

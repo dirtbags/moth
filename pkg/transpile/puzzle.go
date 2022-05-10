@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"net/mail"
 	"os"
@@ -18,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/afero"
+	"github.com/dirtbags/moth/pkg/namesubfs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -37,8 +38,8 @@ type PuzzleDebug struct {
 	Summary string
 }
 
-// Puzzle contains everything about a puzzle that a client would see.
-type Puzzle struct {
+// PuzzleMetadata contains everything about a puzzle that a client would see.
+type PuzzleMetadata struct {
 	Debug         PuzzleDebug
 	Authors       []string
 	Attachments   []string
@@ -55,6 +56,9 @@ type Puzzle struct {
 
 	// Answers will be empty in a mothball
 	Answers []string
+}
+
+type Puzzle interface {
 }
 
 func (puzzle *Puzzle) computeAnswerHashes() {
@@ -111,35 +115,27 @@ func (sa *StaticAttachment) UnmarshalYAML(unmarshal func(interface{}) error) err
 	return nil
 }
 
-// ReadSeekCloser provides io.Reader, io.Seeker, and io.Closer.
-type ReadSeekCloser interface {
-	io.Reader
-	io.Seeker
-	io.Closer
-}
-
 // PuzzleProvider establishes the functionality required to provide one puzzle.
 type PuzzleProvider interface {
 	// Puzzle returns a Puzzle struct for the current puzzle.
 	Puzzle() (Puzzle, error)
 
 	// Open returns a newly-opened file.
-	Open(filename string) (ReadSeekCloser, error)
+	Open(filename string) (fs.File, error)
 
 	// Answer returns whether the provided answer is correct.
 	Answer(answer string) bool
 }
 
 // NewFsPuzzle returns a new FsPuzzle.
-func NewFsPuzzle(fs afero.Fs) PuzzleProvider {
+func NewFsPuzzle(fsys fs.FS) (PuzzleProvider, error) {
 	var command string
 
-	bfs := NewRecursiveBasePathFs(fs, "")
-	if info, err := bfs.Stat("mkpuzzle"); !os.IsNotExist(err) {
+	if bfs, err := namesubfs.Sub(fsys, ""); err != nil {
+		return nil, err
+	} else if info, err := fs.Stat(bfs, "mkpuzzle"); !os.IsNotExist(err) {
 		if (info.Mode() & 0100) != 0 {
-			if command, err = bfs.RealPath(info.Name()); err != nil {
-				log.Println("WARN: Unable to resolve full path to", info.Name())
-			}
+			command = bfs.FullName(info.Name())
 		} else {
 			log.Println("WARN: mkpuzzle exists, but isn't executable.")
 		}
@@ -147,26 +143,27 @@ func NewFsPuzzle(fs afero.Fs) PuzzleProvider {
 
 	if command != "" {
 		return FsCommandPuzzle{
-			fs:      fs,
+			fs:      fsys,
 			command: command,
 			timeout: 2 * time.Second,
-		}
+		}, nil
 	}
 
 	return FsPuzzle{
-		fs: fs,
-	}
+		fs: fsys,
+	}, nil
 
 }
 
 // NewFsPuzzlePoints returns a new FsPuzzle for points.
-func NewFsPuzzlePoints(fs afero.Fs, points int) PuzzleProvider {
-	return NewFsPuzzle(NewRecursiveBasePathFs(fs, strconv.Itoa(points)))
+func NewFsPuzzlePoints(fs fs.FS, points int) PuzzleProvider {
+	subfs, _ := namesubfs.Sub(fs, strconv.Itoa(points))
+	return NewFsPuzzle(subfs)
 }
 
 // FsPuzzle is a single puzzle's directory.
 type FsPuzzle struct {
-	fs       afero.Fs
+	fs       fs.FS
 	mkpuzzle bool
 }
 
@@ -360,7 +357,7 @@ func (fp FsPuzzle) Answer(answer string) bool {
 
 // FsCommandPuzzle provides an FsPuzzle backed by running a command.
 type FsCommandPuzzle struct {
-	fs      afero.Fs
+	fs      fs.FS
 	command string
 	timeout time.Duration
 }

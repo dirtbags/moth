@@ -76,7 +76,7 @@ func (f NullReadSeekCloser) Close() error {
 }
 
 // Open passes its arguments to the command with "action=open".
-func (pc ProviderCommand) Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error) {
+func (pc ProviderCommand) Open(cat string, points int, path string) (io.ReadSeekCloser, time.Time, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 

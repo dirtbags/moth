@@ -1,14 +1,12 @@
 package main
 
 import (
+	"os"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
 func TestTranspiler(t *testing.T) {
-	fs := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
-	p := NewTranspilerProvider(fs)
+	p := NewTranspilerProvider(os.DirFS("testdata"))
 
 	inv := p.Inventory()
 	if len(inv) != 1 {

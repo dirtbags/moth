@@ -2,11 +2,12 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"testing"
-
-	"github.com/spf13/afero"
+	"testing/fstest"
+	"time"
 )
 
 type testFileContents struct {
@@ -23,9 +24,27 @@ var testFiles = []testFileContents{
 	{"3/moo.txt", `moo`},
 }
 
-func (m *Mothballs) createMothballWithFiles(cat string, contents []testFileContents) {
-	f, _ := m.Create(fmt.Sprintf("%s.mb", cat))
-	defer f.Close()
+type TestMothballs struct {
+	*Mothballs
+	fsys fstest.MapFS
+	now  time.Time
+}
+
+func NewTestMothballs() TestMothballs {
+	fsys := make(fstest.MapFS)
+	m := TestMothballs{
+		fsys:      fsys,
+		Mothballs: NewMothballs(fsys),
+		now:       time.Now(),
+	}
+	m.createMothball("pategory")
+	m.refresh()
+
+	return m
+}
+
+func (m *TestMothballs) createMothballWithFiles(cat string, contents []testFileContents) {
+	f := new(bytes.Buffer)
 
 	w := zip.NewWriter(f)
 	defer w.Close()
@@ -38,9 +57,16 @@ func (m *Mothballs) createMothballWithFiles(cat string, contents []testFileConte
 		of, _ := w.Create(file.Name)
 		of.Write([]byte(file.Body))
 	}
+	filename := fmt.Sprintf("%.mb", cat)
+	m.now = m.now.Add(time.Millisecond)
+	m.fsys[filename] = &fstest.MapFile{
+		Data:    f.Bytes(),
+		Mode:    0x644,
+		ModTime: m.now,
+	}
 }
 
-func (m *Mothballs) createMothball(cat string) {
+func (m *TestMothballs) createMothball(cat string) {
 	m.createMothballWithFiles(
 		cat,
 		[]testFileContents{
@@ -49,14 +75,7 @@ func (m *Mothballs) createMothball(cat string) {
 	)
 }
 
-func NewTestMothballs() *Mothballs {
-	m := NewMothballs(new(afero.MemMapFs))
-	m.createMothball("pategory")
-	m.refresh()
-	return m
-}
-
-func TestMothballs(t *testing.T) {
+func TestMothballStuff(t *testing.T) {
 	m := NewTestMothballs()
 	if _, ok := m.categories["pategory"]; !ok {
 		t.Error("Didn't create a new category")
@@ -129,7 +148,7 @@ func TestMothballs(t *testing.T) {
 	}
 
 	m.createMothball("test2")
-	m.Fs.Remove("pategory.mb")
+	delete(m.fsys, "pategory.mb")
 	m.refresh()
 	inv = m.Inventory()
 	if len(inv) != 1 {

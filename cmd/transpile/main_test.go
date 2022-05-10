@@ -5,13 +5,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/dirtbags/moth/pkg/transpile"
-	"github.com/spf13/afero"
+	"github.com/psanford/memfs"
 )
 
 var testMothYaml = []byte(`---
@@ -27,20 +29,20 @@ attachments:
 YAML body
 `)
 
-func newTestFs() afero.Fs {
-	fs := afero.NewMemMapFs()
-	afero.WriteFile(fs, "cat0/1/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/1/moo.txt", []byte("Moo."), 0644)
-	afero.WriteFile(fs, "cat0/2/puzzle.moth", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/3/puzzle.moth", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/4/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/5/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "cat0/10/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "unbroken/1/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "unbroken/1/moo.txt", []byte("Moo."), 0644)
-	afero.WriteFile(fs, "unbroken/2/puzzle.md", testMothYaml, 0644)
-	afero.WriteFile(fs, "unbroken/2/moo.txt", []byte("Moo."), 0644)
-	return fs
+func newTestFs() fs.FS {
+	fsys := memfs.New()
+	fsys.WriteFile("cat0/1/puzzle.md", testMothYaml, 0644)
+	fsys.WriteFile("cat0/1/moo.txt", []byte("Moo."), 0644)
+	fsys.WriteFile("cat0/2/puzzle.moth", testMothYaml, 0644)
+	fsys.WriteFile("cat0/3/puzzle.moth", testMothYaml, 0644)
+	fsys.WriteFile("cat0/4/puzzle.md", testMothYaml, 0644)
+	fsys.WriteFile("cat0/5/puzzle.md", testMothYaml, 0644)
+	fsys.WriteFile("cat0/10/puzzle.md", testMothYaml, 0644)
+	fsys.WriteFile("unbroken/1/puzzle.md", testMothYaml, 0644)
+	fsys.WriteFile("unbroken/1/moo.txt", []byte("Moo."), 0644)
+	fsys.WriteFile("unbroken/2/puzzle.md", testMothYaml, 0644)
+	fsys.WriteFile("unbroken/2/moo.txt", []byte("Moo."), 0644)
+	return fsys
 }
 
 func (tp T) Run(args ...string) error {
@@ -124,8 +126,7 @@ func TestMothballs(t *testing.T) {
 		return
 	}
 
-	// afero.WriteFile(tp.BaseFs, "unbroken.mb", []byte("moo"), 0644)
-	fis, err := afero.ReadDir(tp.BaseFs, "/")
+	fis, err := fs.ReadDir(tp.BaseFs, "/")
 	if err != nil {
 		t.Error(err)
 	}
@@ -140,13 +141,24 @@ func TestMothballs(t *testing.T) {
 	}
 	defer mb.Close()
 
-	info, err := mb.Stat()
-	if err != nil {
-		t.Error(err)
-		return
+	var zmb *zip.Reader
+	switch r := mb.(type) {
+	case io.ReaderAt:
+		info, err := mb.Stat()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		zmb, err = zip.NewReader(r, info.Size())
+	default:
+		t.Log("Doesn't implement ReaderAt, so I'm buffering the whole thing in memory:", r)
+		buf := new(bytes.Buffer)
+		size, err := io.Copy(buf, r)
+		if err != nil {
+			t.Error(err)
+		}
+		zmb, err = zip.NewReader(bytes.NewReader(buf.Bytes()), size)
 	}
-
-	zmb, err := zip.NewReader(mb, info.Size())
 	if err != nil {
 		t.Error(err)
 		return
@@ -185,7 +197,7 @@ func TestFilesystem(t *testing.T) {
 		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,
-		BaseFs: afero.NewOsFs(),
+		BaseFs: os.DirFS(""),
 	}
 
 	stdout.Reset()
@@ -220,7 +232,7 @@ func TestCwd(t *testing.T) {
 		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,
-		BaseFs: afero.NewOsFs(),
+		BaseFs: os.DirFS(""),
 	}
 
 	stdout.Reset()

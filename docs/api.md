@@ -44,7 +44,8 @@ or with `POST` as `application/x-www-form-encoded` data.
 Returns the current Moth event state as a JSON object.
 
 ### Parameters
-* `id`: team ID (optional)
+* `userid`: user ID (optional)
+* `teamid`: team ID (optional)
 
 ### Return
 
@@ -127,8 +128,9 @@ For this reason "this team is already registered"
 does not return an error.
 
 ### Parameters
-* `id`: team ID
-* `name`: team name
+* `userid`: user ID (optional)
+* `teamid`: team ID
+* `teamname`: team name
 
 ### Return
 
@@ -153,7 +155,7 @@ POST /register HTTP/1.0
 Content-Type: application/x-www-form-urlencoded
 Content-Length: 26
 
-id=b387ca98&name=dirtbags
+teamid=b387ca98&teamname=dirtbags
 ```
 
 #### Repsonse
@@ -174,7 +176,8 @@ Submits an answer for points.
 If the answer is wrong, no points are awarded 😉
 
 ### Parameters
-* `id`: team ID
+* `userid`: user ID (optional)
+* `teamid`: team ID
 * `category`: along with `points`, uniquely identifies a puzzle
 * `points`: along with `category`, uniquely identifies a puzzle
 
@@ -222,6 +225,7 @@ Parameters are all in the URL for this endpoint,
 so `curl` and `wget` can be used.
 
 ### Parameters
+* `userid`: user ID (optional)
 * `{category}` (in URL): along with `{points}`, uniquely identifies a puzzle
 * `{points}` (in URL): along with `{category}`, uniquely identifies a puzzle
 * `{filename}` (in URL): filename to retrieve
@@ -298,6 +302,7 @@ Parameters are all in the URL for this endpoint,
 so `curl` and `wget` can be used.
 
 ### Parameters
+* `userid`: user ID (optional)
 * `{category}` (in URL): along with `{points}`, uniquely identifies a puzzle
 * `{points}` (in URL): along with `{category}`, uniquely identifies a puzzle
 * `{filename}` (in URL): filename to retrieve
@@ -326,6 +331,32 @@ Content-Length: 98
 
 This is an attachment file! This is just plain text for the example. Many attachments are JPEGs.
 ```
+
+## `/chat/read`
+
+Reads messages from a chat forum.
+This yields [server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events),
+which allows new messages to be delivered instantly to the client.
+
+### Parameters
+
+* `userid`: user ID
+* `since`: timestamp of oldest message to retrieve
+* `forum`: chat forum to read (can be specified more than once!)
+
+
+## `/chat/say`
+
+Send a message to a chat forum.
+
+### Parameters
+
+* `userid`: user ID
+* `forum`: chat forum to send to
+* `text`: text of message to send
+
+
+## `/chat/
 
 
 # Puzzle

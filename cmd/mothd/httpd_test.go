@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
-
-	"github.com/spf13/afero"
 )
 
 const TestParticipantID = "shipox"
@@ -33,7 +33,12 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 }
 
 func TestHttpd(t *testing.T) {
-	hs := NewHTTPServer("/", NewTestServer())
+	server, err := NewTestServer()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer server.cleanup()
+	hs := NewHTTPServer("/", server.MothServer)
 
 	if r := hs.TestRequest("/", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -137,10 +142,14 @@ func TestHttpd(t *testing.T) {
 }
 
 func TestDevelMemHttpd(t *testing.T) {
-	srv := NewTestServer()
+	srv, err := NewTestServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.cleanup()
 
 	{
-		hs := NewHTTPServer("/", srv)
+		hs := NewHTTPServer("/", srv.MothServer)
 
 		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 404 {
 			t.Error("Should have gotten a 404 for mothballer in prod mode")
@@ -149,7 +158,7 @@ func TestDevelMemHttpd(t *testing.T) {
 
 	{
 		srv.Config.Devel = true
-		hs := NewHTTPServer("/", srv)
+		hs := NewHTTPServer("/", srv.MothServer)
 
 		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 500 {
 			t.Log(r.Body.String())
@@ -160,9 +169,9 @@ func TestDevelMemHttpd(t *testing.T) {
 }
 
 func TestDevelFsHttps(t *testing.T) {
-	fs := afero.NewBasePathFs(afero.NewOsFs(), "testdata")
-	transpilerProvider := NewTranspilerProvider(fs)
-	srv := NewMothServer(Configuration{Devel: true}, NewTestTheme(), NewTestState(), transpilerProvider)
+	fsys := os.DirFS("testdata")
+	transpilerProvider := NewTranspilerProvider(fsys)
+	srv := NewMothServer(Configuration{Devel: true}, NewTheme("testdata/theme"), NewTestState(), transpilerProvider)
 	hs := NewHTTPServer("/", srv)
 
 	if r := hs.TestRequest("/mothballer/cat0.mb", nil); r.Result().StatusCode != 200 {

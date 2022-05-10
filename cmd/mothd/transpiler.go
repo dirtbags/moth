@@ -4,21 +4,21 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"io/fs"
 	"log"
 	"time"
 
 	"github.com/dirtbags/moth/pkg/transpile"
-	"github.com/spf13/afero"
 )
 
 // NewTranspilerProvider returns a new TranspilerProvider.
-func NewTranspilerProvider(fs afero.Fs) TranspilerProvider {
+func NewTranspilerProvider(fs fs.FS) TranspilerProvider {
 	return TranspilerProvider{fs}
 }
 
 // TranspilerProvider provides puzzles generated from source files on disk
 type TranspilerProvider struct {
-	fs afero.Fs
+	fs fs.FS
 }
 
 // Inventory returns a Category list for this provider.

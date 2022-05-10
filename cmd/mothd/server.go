@@ -15,13 +15,6 @@ type Category struct {
 	Puzzles []int
 }
 
-// ReadSeekCloser defines a struct that can read, seek, and close.
-type ReadSeekCloser interface {
-	io.Reader
-	io.Seeker
-	io.Closer
-}
-
 // Configuration stores information about server configuration.
 type Configuration struct {
 	Devel bool
@@ -38,7 +31,7 @@ type StateExport struct {
 
 // PuzzleProvider defines what's required to provide puzzles.
 type PuzzleProvider interface {
-	Open(cat string, points int, path string) (ReadSeekCloser, time.Time, error)
+	Open(cat string, points int, path string) (io.ReadSeekCloser, time.Time, error)
 	Inventory() []Category
 	CheckAnswer(cat string, points int, answer string) (bool, error)
 	Mothball(cat string, w io.Writer) error
@@ -47,7 +40,7 @@ type PuzzleProvider interface {
 
 // ThemeProvider defines what's required to provide a theme.
 type ThemeProvider interface {
-	Open(path string) (ReadSeekCloser, time.Time, error)
+	Open(path string) (io.ReadSeekCloser, time.Time, error)
 	Maintainer
 }
 
@@ -106,7 +99,7 @@ type MothRequestHandler struct {
 
 // PuzzlesOpen opens a file associated with a puzzle.
 // BUG(neale): Multiple providers with the same category name are not detected or handled well.
-func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (r ReadSeekCloser, ts time.Time, err error) {
+func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (r io.ReadSeekCloser, ts time.Time, err error) {
 	export := mh.exportStateIfRegistered(true)
 	found := false
 	for _, p := range export.Puzzles[cat] {
@@ -162,7 +155,7 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 }
 
 // ThemeOpen opens a file from a theme.
-func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time, error) {
+func (mh *MothRequestHandler) ThemeOpen(path string) (io.ReadSeekCloser, time.Time, error) {
 	return mh.Theme.Open(path)
 }
 

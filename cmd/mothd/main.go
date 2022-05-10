@@ -7,8 +7,6 @@ import (
 	"mime"
 	"os"
 	"time"
-
-	"github.com/spf13/afero"
 )
 
 func main() {
@@ -54,21 +52,20 @@ func main() {
 	)
 	flag.Parse()
 
-	osfs := afero.NewOsFs()
-	theme := NewTheme(afero.NewBasePathFs(osfs, *themePath))
+	theme := NewTheme(*themePath)
 
 	config := Configuration{}
 
 	var provider PuzzleProvider
-	provider = NewMothballs(afero.NewBasePathFs(osfs, *mothballPath))
+	provider = NewMothballs(os.DirFS(*mothballPath))
 	if *puzzlePath != "" {
-		provider = NewTranspilerProvider(afero.NewBasePathFs(osfs, *puzzlePath))
+		provider = NewTranspilerProvider(os.DirFS(*puzzlePath))
 		config.Devel = true
 		log.Println("-=- You are in development mode, champ! -=-")
 	}
 
 	var state StateProvider
-	state = NewState(afero.NewBasePathFs(osfs, *statePath))
+	state = NewState(*statePath)
 	if config.Devel {
 		state = NewDevelState(state)
 	}

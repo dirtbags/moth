@@ -2,25 +2,12 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
-func NewTestTheme() *Theme {
-	return NewTheme(new(afero.MemMapFs))
-}
-
 func TestTheme(t *testing.T) {
-	s := NewTestTheme()
-
-	filename := "/index.html"
-	index := "this is the index"
-	afero.WriteFile(s.Fs, filename, []byte(index), 0644)
-	fileInfo, err := s.Fs.Stat(filename)
-	if err != nil {
-		t.Error(err)
-	}
+	s := NewTheme("testdata/theme")
 
 	if f, timestamp, err := s.Open("/index.html"); err != nil {
 		t.Error(err)
@@ -28,7 +15,9 @@ func TestTheme(t *testing.T) {
 		t.Error(err)
 	} else if string(buf) != index {
 		t.Error("Read wrong value from index")
-	} else if !timestamp.Equal(fileInfo.ModTime()) {
+	} else if fi, err := os.Stat("testdata/theme/index.html"); err != nil {
+		t.Error(err)
+	} else if !timestamp.Equal(fi.ModTime()) {
 		t.Error("Timestamp compared wrong")
 	}
 
