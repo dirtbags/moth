@@ -303,6 +303,7 @@ func (s *State) maybeInitialize() {
 	s.Remove("enabled")
 	s.Remove("hours.txt")
 	s.Remove("points.log")
+	s.Remove("events.csv")
 	s.Remove("messages.html")
 	s.Remove("mothd.log")
 	s.RemoveAll("points.tmp")
