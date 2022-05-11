@@ -9,10 +9,14 @@ import (
 
 const TestTeamID = "teamID"
 
+type TestServer struct {
+	*MothServer
+}
+
 // NewTestServer creates a new MothServer with NewTestMothballs and some initial state.
 //
 // See function definition for details.
-func NewTestServer() *MothServer {
+func NewTestServer() TestServer {
 	puzzles := NewTestMothballs()
 	puzzles.refresh()
 
@@ -24,7 +28,14 @@ func NewTestServer() *MothServer {
 	theme := NewTestTheme()
 	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
 
-	return NewMothServer(Configuration{}, theme, state, puzzles)
+	return TestServer{NewMothServer(Configuration{}, theme, state, puzzles)}
+}
+
+func (ts TestServer) refresh() {
+	ts.State.(*State).refresh()
+	for _, pp := range ts.PuzzleProviders {
+		pp.(*Mothballs).refresh()
+	}
 }
 
 func TestDevelServer(t *testing.T) {
@@ -49,7 +60,6 @@ func TestProdServer(t *testing.T) {
 	teamID := TestTeamID
 
 	server := NewTestServer()
-	state := server.State.(*State)
 	handler := server.NewHandler(participantID, teamID)
 	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
 
@@ -81,7 +91,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("index.html wrong contents", contents)
 	}
 
-	state.refresh()
+	server.refresh()
 
 	{
 		es := handler.ExportState()
@@ -134,7 +144,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("Right answer marked wrong", err)
 	}
 
-	state.refresh()
+	server.refresh()
 
 	{
 		es := handler.ExportState()
@@ -163,7 +173,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("Right answer marked wrong:", err)
 	}
 
-	state.refresh()
+	server.refresh()
 
 	{
 		es := anonHandler.ExportState()
