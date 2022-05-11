@@ -33,7 +33,9 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 }
 
 func TestHttpd(t *testing.T) {
-	hs := NewHTTPServer("/", NewTestServer())
+	server := NewTestServer()
+	hs := NewHTTPServer("/", server)
+	stateProvider := server.State.(*State)
 
 	if r := hs.TestRequest("/", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -113,6 +115,7 @@ func TestHttpd(t *testing.T) {
 	}
 
 	time.Sleep(TestMaintenanceInterval)
+	stateProvider.refresh()
 
 	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
