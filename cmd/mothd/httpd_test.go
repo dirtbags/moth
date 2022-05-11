@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -111,21 +109,6 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if strings.Contains(r.Body.String(), "incorrect answer") {
-		// Pernicious intermittent bug
-		t.Error("Incorrect answer that was actually correct")
-		for _, provider := range server.PuzzleProviders {
-			if mb, ok := provider.(*Mothballs); !ok {
-				t.Error("Provider is not a mothball")
-			} else {
-				cat, _ := mb.getCat("pategory")
-				f, _ := cat.Open("answers.txt")
-				defer f.Close()
-				answersBytes, _ := ioutil.ReadAll(f)
-				t.Errorf("Correct answers: %v", string(answersBytes))
-			}
-		}
-		t.Error("Wrong answer")
 	} else if r.Body.String() != `{"status":"success","data":{"short":"accepted","description":"1 points awarded in pategory"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
@@ -154,25 +137,6 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if strings.Contains(r.Body.String(), "incorrect answer") {
-		// Pernicious intermittent bug
-		t.Error("Incorrect answer that was actually correct")
-		for _, provider := range server.PuzzleProviders {
-			if mb, ok := provider.(*Mothballs); !ok {
-				t.Error("Provider is not a mothball")
-			} else {
-				if cat, ok := mb.getCat("pategory"); !ok {
-					t.Error("opening pategory failed")
-				} else if f, err := cat.Open("answers.txt"); err != nil {
-					t.Error("opening answers.txt", err)
-				} else {
-					defer f.Close()
-					answersBytes, _ := ioutil.ReadAll(f)
-					t.Errorf("Correct answers: %#v len %d", string(answersBytes), len(answersBytes))
-				}
-			}
-		}
-		t.Error("Wrong answer")
 	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"error awarding points: points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}

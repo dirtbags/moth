@@ -36,6 +36,7 @@ func (ts TestServer) refresh() {
 	for _, pp := range ts.PuzzleProviders {
 		pp.(*Mothballs).refresh()
 	}
+	ts.Theme.(*Theme).refresh()
 }
 
 func TestDevelServer(t *testing.T) {
