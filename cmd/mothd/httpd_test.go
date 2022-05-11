@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http/httptest"
 	"net/url"
 	"testing"
@@ -125,11 +124,6 @@ func TestHttpd(t *testing.T) {
 	} else if err := json.Unmarshal(r.Body.Bytes(), &state); err != nil {
 		t.Error(err)
 	} else if len(state.PointsLog) != 1 {
-		switch v := server.State.(type) {
-		case *State:
-			log.Print(v)
-		}
-
 		t.Errorf("Points log wrong length. Wanted 1, got %v (length %d)", state.PointsLog, len(state.PointsLog))
 	} else if len(state.Puzzles["pategory"]) != 2 {
 		t.Error("Didn't unlock next puzzle")
