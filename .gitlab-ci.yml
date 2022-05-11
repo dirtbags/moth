@@ -4,13 +4,14 @@ stages:
 
 test:
   stage: test
+
   image: golang:1.18
   only:
     refs:
       - main
       - merge_requests
   script:
-    - go test ./...
+    - go test -race ./...
 
 push:
   stage: push

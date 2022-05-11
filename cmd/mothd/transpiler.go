@@ -79,3 +79,7 @@ func (p TranspilerProvider) Mothball(cat string, w io.Writer) error {
 func (p TranspilerProvider) Maintain(updateInterval time.Duration) {
 	// Nothing to do here.
 }
+
+func (p TranspilerProvider) refresh() {
+	// Nothing to do for a theme
+}

@@ -38,3 +38,7 @@ func (t *Theme) Open(name string) (ReadSeekCloser, time.Time, error) {
 func (t *Theme) Maintain(i time.Duration) {
 	// No periodic tasks for a theme
 }
+
+func (t *Theme) refresh() {
+	// Nothing to do for a theme
+}
