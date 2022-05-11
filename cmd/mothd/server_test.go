@@ -16,11 +16,13 @@ const TestTeamID = "teamID"
 // See function definition for details.
 func NewTestServer() *MothServer {
 	puzzles := NewTestMothballs()
+	puzzles.refresh()
 	go puzzles.Maintain(TestMaintenanceInterval)
 
 	state := NewTestState()
 	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
 	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
+	state.refresh()
 	go state.Maintain(TestMaintenanceInterval)
 
 	theme := NewTestTheme()
@@ -83,13 +85,16 @@ func TestProdServer(t *testing.T) {
 		t.Error("index.html wrong contents", contents)
 	}
 
+	// Wait for refresh to pick everything up
+	time.Sleep(TestMaintenanceInterval)
+
 	{
 		es := handler.ExportState()
 		if es.Config.Devel {
 			t.Error("Marked as development server", es.Config)
 		}
 		if len(es.Puzzles) != 1 {
-			t.Error("Puzzle categories wrong length")
+			t.Error("Puzzle categories wrong length", len(es.Puzzles))
 		}
 		if es.Messages != "messages.html" {
 			t.Error("Messages has wrong contents")

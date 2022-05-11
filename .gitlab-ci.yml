@@ -4,7 +4,12 @@ stages:
 
 test:
   stage: test
-  image: golang:1.17
+
+  image: golang:1.18
+  only:
+    refs:
+      - main
+      - merge_requests
   script:
     - go test -race ./...
 
@@ -15,10 +20,5 @@ push:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
     - mkdir ~/.docker
-    - echo "$DOCKER_AUTH_CONFIG" > ~/.docker/config.json
+    - echo "$DOCKER_AUTH_CONFIG" | tee ~/.docker/config.json | md5sum
     - sh build/ci/ci.sh publish
-    - >
-      docker build 
-      --tag ghcr.io/dirtbags/moth:$CI_COMMIT_REF_SLUG
-      --file build/package/Containerfile
-      .

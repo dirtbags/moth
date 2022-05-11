@@ -37,6 +37,7 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 func TestHttpd(t *testing.T) {
 	server := NewTestServer()
 	hs := NewHTTPServer("/", server)
+	stateProvider := server.State.(*State)
 
 	if r := hs.TestRequest("/", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -72,6 +73,8 @@ func TestHttpd(t *testing.T) {
 	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"team ID has already been registered"}}` {
 		t.Error("Register failed", r.Body.String())
 	}
+
+	time.Sleep(TestMaintenanceInterval)
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -128,7 +131,8 @@ func TestHttpd(t *testing.T) {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	server.State.refresh()
+	time.Sleep(TestMaintenanceInterval)
+	stateProvider.refresh()
 
 	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())

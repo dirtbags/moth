@@ -33,7 +33,7 @@ You can read more about why we made these decisions in [philosophy](docs/philoso
 Run in demonstration mode
 ===========
 
-    docker run --rm -it -p 8080:8080 dirtbags/moth-devel
+    docker run --rm -it -p 8080:8080 ghcr.io/dirtbags/moth-devel
 
 Then open http://localhost:8080/ and check out the example puzzles.
 

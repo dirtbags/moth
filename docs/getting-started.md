@@ -33,11 +33,11 @@ We're going to assume you put everything in `/srv/moth`, like we suggested.
 
 ### Podman
 
-    podman run --name=moth -d -v /srv/moth/mothballs:/mothballs:ro -v /srv/moth/state:/state dirtbags/moth
+    podman run --name=moth -d -v /srv/moth/mothballs:/mothballs:ro -v /srv/moth/state:/state ghcr.io/dirtbags/moth
 
 ### Docker
 
-    docker run --name=moth -d -v /srv/moth/mothballs:/mothballs:ro -v /srv/moth/state:/state dirtbags/moth
+    docker run --name=moth -d -v /srv/moth/mothballs:/mothballs:ro -v /srv/moth/state:/state ghcr.io/dirtbags/moth
 
 ### Native
 

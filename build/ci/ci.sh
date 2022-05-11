@@ -2,7 +2,7 @@
 
 set -e
 
-images="ghcr.io/dirtbags/moth"
+images="ghcr.io/dirtbags/moth dirtbags/moth"
 
 ACTION=$1
 if [ -z "$ACTION" ]; then
@@ -27,9 +27,9 @@ run () {
 tags () {
     pfx=$1
     for base in $images; do
-        echo $pfx $base:${CI_COMMIT_REF_SLUG}
-        echo $pfx $base:${CI_COMMIT_REF_SLUG%.*}
-        echo $pfx $base:${CI_COMMIT_REF_SLUG%.*.*}
+        echo $pfx $base:${CI_COMMIT_REF_NAME}
+        echo $pfx $base:${CI_COMMIT_REF_NAME%.*}
+        echo $pfx $base:${CI_COMMIT_REF_NAME%.*.*}
     done | uniq
 }
 
