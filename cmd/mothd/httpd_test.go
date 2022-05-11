@@ -74,7 +74,7 @@ func TestHttpd(t *testing.T) {
 		t.Error("Register failed", r.Body.String())
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	stateProvider.refresh()
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -131,7 +131,6 @@ func TestHttpd(t *testing.T) {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	time.Sleep(TestMaintenanceInterval)
 	stateProvider.refresh()
 
 	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
@@ -149,7 +148,7 @@ func TestHttpd(t *testing.T) {
 			log.Print(v)
 		}
 
-		t.Errorf("Points log wrong length. Wanted 1, got %v", state.PointsLog)
+		t.Errorf("Points log wrong length. Wanted 1, got %v (length %d)", state.PointsLog, len(state.PointsLog))
 	} else if len(state.Puzzles["pategory"]) != 2 {
 		t.Error("Didn't unlock next puzzle")
 	}
