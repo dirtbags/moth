@@ -45,10 +45,11 @@ type State struct {
 	eventWriterFile afero.File
 
 	// Caches, so we're not hammering NFS with metadata operations
-	teamNames map[string]string
-	pointsLog award.List
-	messages  string
-	lock      sync.RWMutex
+	teamNamesLastChange time.Time
+	teamNames           map[string]string
+	pointsLog           award.List
+	messages            string
+	lock                sync.RWMutex
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -436,27 +437,35 @@ func (s *State) updateCaches() {
 		s.pointsLog = pointsLog
 	}
 
+	// Only do this if the teams directory has a newer mtime; directories with
+	// hundreds of team names can cause NFS I/O storms
 	{
-		// The compiler recognizes this as an optimization case
-		for k := range s.teamNames {
-			delete(s.teamNames, k)
-		}
+		_, ismmfs := s.Fs.(*afero.MemMapFs) // Tests run so quickly that the time check isn't precise enough
+		if fi, err := s.Fs.Stat("teams"); err != nil {
+			log.Printf("Getting modification time of teams directory: %v", err)
+		} else if ismmfs || s.teamNamesLastChange.Before(fi.ModTime()) {
+			s.teamNamesLastChange = fi.ModTime()
 
-		teamsFs := afero.NewBasePathFs(s.Fs, "teams")
-		if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
-			log.Printf("Reading team ids: %v", err)
-		} else {
-			for _, dirent := range dirents {
-				teamID := dirent.Name()
-				if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
-					log.Printf("Reading team %s: %v", teamID, err)
-				} else {
-					teamName := strings.TrimSpace(string(teamNameBytes))
-					s.teamNames[teamID] = teamName
+			// The compiler recognizes this as an optimization case
+			for k := range s.teamNames {
+				delete(s.teamNames, k)
+			}
+
+			teamsFs := afero.NewBasePathFs(s.Fs, "teams")
+			if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
+				log.Printf("Reading team ids: %v", err)
+			} else {
+				for _, dirent := range dirents {
+					teamID := dirent.Name()
+					if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
+						log.Printf("Reading team %s: %v", teamID, err)
+					} else {
+						teamName := strings.TrimSpace(string(teamNameBytes))
+						s.teamNames[teamID] = teamName
+					}
 				}
 			}
 		}
-
 	}
 
 	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
