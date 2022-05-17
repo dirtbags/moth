@@ -147,7 +147,10 @@ func TestStatePointsRemoval(t *testing.T) {
 	points2 := points1 + 1
 
 
-	s.AwardPoints(team, category, points1)
+	if err := s.AwardPoints(team, category, points1); err != nil {
+		t.Logf("Received unexpected error: %s", err)
+		t.Fail()
+	}
 	s.refresh()
 
 	pointsLogLength := len(s.PointsLog())
@@ -156,7 +159,10 @@ func TestStatePointsRemoval(t *testing.T) {
 		t.Fail()
 	}
 
-	s.AwardPoints(team, category, points2)
+	if err := s.AwardPoints(team, category, points2); err != nil {
+		t.Logf("Received unexpected error: %s", err)
+		t.Fail()
+	}
 	s.refresh()
 
 	pointsLogLength = len(s.PointsLog())
@@ -165,7 +171,10 @@ func TestStatePointsRemoval(t *testing.T) {
 		t.Fail()
 	}
 
-	s.RemovePoints(team, category, points1)
+	if err := s.RemovePoints(team, category, points1); err != nil {
+		t.Logf("Received unexpected error: %s", err)
+		t.Fail()
+	}
 	s.refresh()
 
 	pointsLog := s.PointsLog()
@@ -180,7 +189,10 @@ func TestStatePointsRemoval(t *testing.T) {
 		t.Fail()
 	}
 
-	s.RemovePoints(team, category, points1)
+	if err := s.RemovePoints(team, category, points1); err != nil {
+		t.Logf("Received unexpected error: %s", err)
+		t.Fail()
+	}
 	s.refresh()
 
 	pointsLog = s.PointsLog()
@@ -190,7 +202,10 @@ func TestStatePointsRemoval(t *testing.T) {
 		t.Fail()
 	}
 
-	s.RemovePoints(team, category, points2)
+	if err := s.RemovePoints(team, category, points2); err != nil {
+		t.Logf("Received unexpected error: %s", err)
+		t.Fail()
+	}
 	s.refresh()
 
 	pointsLog = s.PointsLog()
@@ -469,19 +484,13 @@ func TestMessage(t *testing.T) {
 
 	message := "foobar"
 
-	retrievedMessage := s.Messages()
-	if (retrievedMessage != "") {
-		t.Logf("Expected empty message, received '%s' instead", retrievedMessage)
-		t.Fail()
-	}
-
 	if err:= s.SetMessages(message); err != nil {
 		t.Error(err)
 	}
 
 	s.refresh()
 
-	retrievedMessage = s.Messages()
+	retrievedMessage := s.Messages()
 
 	if (retrievedMessage != message) {
 		t.Logf("Expected message '%s', received '%s', instead", message, retrievedMessage)
