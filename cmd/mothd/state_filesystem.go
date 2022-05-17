@@ -420,6 +420,8 @@ func (s *State) awardPointsAtTime(when int64, teamID string, category string, po
 }
 
 func (s *State) PointExists(teamID string, cat string, points int) bool {
+	s.pointsLock.RLock()
+	defer s.pointsLock.RUnlock()
 	for _, pointEntry := range s.pointsLog {
 		if (pointEntry.TeamID == teamID) && (pointEntry.Category == cat) && (pointEntry.Points == points) {
 			return true
@@ -430,6 +432,9 @@ func (s *State) PointExists(teamID string, cat string, points int) bool {
 }
 
 func (s *State) PointExistsAtTime(teamID string, cat string, points int, when int64) bool {
+	s.pointsLock.RLock()
+	defer s.pointsLock.RUnlock()
+
 	for _, pointEntry := range s.pointsLog {
 		if (pointEntry.TeamID == teamID) && (pointEntry.Category == cat) && (pointEntry.Points == points) && (pointEntry.When == when) {
 			return true
@@ -745,8 +750,7 @@ func (s *State) reopenEventLog() error {
 }
 
 func (s *State) updateCaches() {
-	s.pointsLock.RLock()
-	defer s.pointsLock.RUnlock()
+	
 
 	// Re-read the points log
 	{
@@ -769,8 +773,9 @@ func (s *State) updateCaches() {
 				}
 				pointsLog = append(pointsLog, cur)
 			}
-
+			s.pointsLock.Lock()
 			s.pointsLog = pointsLog
+			s.pointsLock.Unlock()
 		}
 	}
 
