@@ -89,6 +89,9 @@ type Maintainer interface {
 	// It will only be called once, when execution begins.
 	// It's okay to just exit if there's no maintenance to be done.
 	Maintain(updateInterval time.Duration)
+
+	// refresh is a shortcut used internally for testing
+	refresh()
 }
 
 // MothServer gathers together the providers that make up a MOTH server.
@@ -205,12 +208,15 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	return mh.exportStateIfRegistered(false)
 }
 
-func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExport {
+// Export state, replacing the team ID with "self" if the team is registered.
+//
+// If forceRegistered is true, go ahead and export it anyway
+func (mh *MothRequestHandler) exportStateIfRegistered(forceRegistered bool) *StateExport {
 	export := StateExport{}
 	export.Config = mh.Config
 
 	teamName, err := mh.State.TeamName(mh.teamID)
-	registered := override || mh.Config.Devel || (err == nil)
+	registered := forceRegistered || mh.Config.Devel || (err == nil)
 
 	export.Messages = mh.State.Messages()
 	export.TeamNames = make(map[string]string)

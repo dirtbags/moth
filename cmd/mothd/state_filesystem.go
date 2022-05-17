@@ -55,6 +55,7 @@ type State struct {
 	pointsLock	sync.RWMutex
 	pointsLogFileLock	sync.RWMutex  // Sometimes, we need to fiddle with the file, while leaving the internal state alone
 	messageFileLock	sync.RWMutex
+	teamNamesLastChange time.Time
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -254,34 +255,18 @@ func (s *State) TeamName(teamID string) (string, error) {
 }
 
 func (s *State) TeamNames() map[string]string {
-	var teamNames map[string]string
-
-	s.teamNameFileLock.RLock()
-	defer s.teamNameFileLock.RUnlock()
-
-	teamsFs := afero.NewBasePathFs(s.Fs, "teams")
-	if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
-		log.Printf("Reading team ids: %v", err)
-	} else {
-		for _, dirent := range dirents {
-			teamID := dirent.Name()
-			if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
-				log.Printf("Reading team %s: %v", teamID, err)
-			} else {
-				teamName := strings.TrimSpace(string(teamNameBytes))
-				teamNames[teamID] = teamName
-			}
-		}
-	}
-
-	return teamNames
+	s.teamNameLock.RLock()
+	defer s.teamNameLock.RUnlock()
+	return s.teamNames
 }
 
 // SetTeamName writes out team name.
 // This can only be done once per team.
 func (s *State) SetTeamName(teamID, teamName string) error {
-	teamIDs, err := s.TeamIDs()
+	s.teamNameFileLock.Lock()
+	defer s.teamNameFileLock.Unlock()
 
+	teamIDs, err := s.TeamIDs()
 	if err != nil {
 		return err
 	}
@@ -298,9 +283,17 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 		return fmt.Errorf("team ID not found in list of valid team IDs")
 	}
 
+
+	s.teamNameLock.RLock()
+	_, ok := s.teamNames[teamID]
+	s.teamNameLock.RUnlock()
+	if ok {
+		return ErrAlreadyRegistered
+	}
+
 	teamFilename := filepath.Join("teams", teamID)
 	teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
-	if os.IsExist(err) {
+	if os.IsExist(err) {  // This shouldn't ever hit, since we just checked, but strange things happen
 		return ErrAlreadyRegistered
 	} else if err != nil {
 		return err
@@ -638,6 +631,8 @@ func (s *State) maybeInitialize() {
 	s.Remove("points.log")
 	s.pointsLogFileLock.Unlock()
 
+	s.Remove("events.csv")
+
 	s.messageFileLock.Lock()
 	s.Remove("messages.html")
 	s.messageFileLock.Unlock()
@@ -775,17 +770,39 @@ func (s *State) updateCaches() {
 		s.pointsLog = pointsLog
 	}
 
-	{		
+	// Only do this if the teams directory has a newer mtime; directories with
+	// hundreds of team names can cause NFS I/O storms
+	{
 		s.teamNameLock.Lock()
 		defer s.teamNameLock.Unlock()
+		s.teamNameFileLock.RLock()
+		defer s.teamNameFileLock.RUnlock()
 
-		// The compiler recognizes this as an optimization case
-		for k := range s.teamNames {
-			delete(s.teamNames, k)
-		}
+		_, ismmfs := s.Fs.(*afero.MemMapFs) // Tests run so quickly that the time check isn't precise enough
+		if fi, err := s.Fs.Stat("teams"); err != nil {
+			log.Printf("Getting modification time of teams directory: %v", err)
+		} else if ismmfs || s.teamNamesLastChange.Before(fi.ModTime()) {
+			s.teamNamesLastChange = fi.ModTime()
 
-		for teamID, teamName := range s.TeamNames() {
-			s.teamNames[teamID] = teamName
+			// The compiler recognizes this as an optimization case
+			for k := range s.teamNames {
+				delete(s.teamNames, k)
+			}
+
+			teamsFs := afero.NewBasePathFs(s.Fs, "teams")
+			if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
+				log.Printf("Reading team ids: %v", err)
+			} else {
+				for _, dirent := range dirents {
+					teamID := dirent.Name()
+					if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
+						log.Printf("Reading team %s: %v", teamID, err)
+					} else {
+						teamName := strings.TrimSpace(string(teamNameBytes))
+						s.teamNames[teamID] = teamName
+					}
+				}
+			}
 		}
 	}
 

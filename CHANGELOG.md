@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v4.4.9] - 2022-05-12
+### Changed
+- Added a performance optimization for events with a large number of teams
+  backed by NFS
+
+## [v4.4.8] - 2022-05-10
+### Changed
+- You can now join with a team ID not appearing in `teamids.txt`, 
+  as long as it is registered (in the `teams/` directory)
+
+## [v4.4.7] - 2022-05-10
+### Changed
+- Initializing an instance now truncates `events.csv`
+
 ## [v4.4.6] - 2021-10-26
 ### Added
 - State is now cached in memory, in an attempt to reduce filesystem metadata operations,

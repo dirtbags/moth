@@ -3,28 +3,40 @@ package main
 import (
 	"io/ioutil"
 	"testing"
-	"time"
 
 	"github.com/spf13/afero"
 )
 
-const TestMaintenanceInterval = time.Millisecond * 1
 const TestTeamID = "teamID"
 
-func NewTestServer() *MothServer {
+type TestServer struct {
+	*MothServer
+}
+
+// NewTestServer creates a new MothServer with NewTestMothballs and some initial state.
+//
+// See function definition for details.
+func NewTestServer() TestServer {
 	puzzles := NewTestMothballs()
-	go puzzles.Maintain(TestMaintenanceInterval)
+	puzzles.refresh()
 
 	state := NewTestState()
 	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
 	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
-	go state.Maintain(TestMaintenanceInterval)
+	state.refresh()
 
 	theme := NewTestTheme()
 	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
-	go theme.Maintain(TestMaintenanceInterval)
 
-	return NewMothServer(Configuration{}, theme, state, puzzles)
+	return TestServer{NewMothServer(Configuration{}, theme, state, puzzles)}
+}
+
+func (ts TestServer) refresh() {
+	ts.State.(*State).refresh()
+	for _, pp := range ts.PuzzleProviders {
+		pp.(*Mothballs).refresh()
+	}
+	ts.Theme.(*Theme).refresh()
 }
 
 func TestDevelServer(t *testing.T) {
@@ -80,8 +92,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("index.html wrong contents", contents)
 	}
 
-	// Wait for refresh to pick everything up
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	{
 		es := handler.ExportState()
@@ -134,7 +145,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("Right answer marked wrong", err)
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	{
 		es := handler.ExportState()
@@ -163,7 +174,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("Right answer marked wrong:", err)
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	{
 		es := anonHandler.ExportState()

@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/spf13/afero"
 )
@@ -33,7 +32,8 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 }
 
 func TestHttpd(t *testing.T) {
-	hs := NewHTTPServer("/", NewTestServer())
+	server := NewTestServer()
+	hs := NewHTTPServer("/", server.MothServer)
 
 	if r := hs.TestRequest("/", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -70,7 +70,7 @@ func TestHttpd(t *testing.T) {
 		t.Error("Register failed", r.Body.String())
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -112,7 +112,7 @@ func TestHttpd(t *testing.T) {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -124,7 +124,7 @@ func TestHttpd(t *testing.T) {
 	} else if err := json.Unmarshal(r.Body.Bytes(), &state); err != nil {
 		t.Error(err)
 	} else if len(state.PointsLog) != 1 {
-		t.Error("Points log wrong length")
+		t.Errorf("Points log wrong length. Wanted 1, got %v (length %d)", state.PointsLog, len(state.PointsLog))
 	} else if len(state.Puzzles["pategory"]) != 2 {
 		t.Error("Didn't unlock next puzzle")
 	}
@@ -140,7 +140,7 @@ func TestDevelMemHttpd(t *testing.T) {
 	srv := NewTestServer()
 
 	{
-		hs := NewHTTPServer("/", srv)
+		hs := NewHTTPServer("/", srv.MothServer)
 
 		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 404 {
 			t.Error("Should have gotten a 404 for mothballer in prod mode")
@@ -149,7 +149,7 @@ func TestDevelMemHttpd(t *testing.T) {
 
 	{
 		srv.Config.Devel = true
-		hs := NewHTTPServer("/", srv)
+		hs := NewHTTPServer("/", srv.MothServer)
 
 		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 500 {
 			t.Log(r.Body.String())
