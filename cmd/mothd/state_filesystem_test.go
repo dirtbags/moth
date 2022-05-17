@@ -84,6 +84,12 @@ func TestState(t *testing.T) {
 
 	s.AwardPoints(teamID, category, points)
 	s.refresh()
+
+	if (! s.PointExists(teamID, category, points)) {
+		t.Logf("Unable to find points %s/%d for team %s", category, points, teamID)
+		t.Fail()
+	}
+
 	pl = s.PointsLog()
 	if len(pl) != 1 {
 		for i, award := range pl {
@@ -131,6 +137,153 @@ func TestState(t *testing.T) {
 
 }
 
+func TestStatePointsRemoval(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	team := "team1"
+	category := "meow"
+	points1 := 100
+	points2 := points1 + 1
+
+
+	s.AwardPoints(team, category, points1)
+	s.refresh()
+
+	pointsLogLength := len(s.PointsLog())
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	s.AwardPoints(team, category, points2)
+	s.refresh()
+
+	pointsLogLength = len(s.PointsLog())
+	if pointsLogLength != 2 {
+		t.Logf("Expected 2 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	s.RemovePoints(team, category, points1)
+	s.refresh()
+
+	pointsLog := s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	if ((pointsLog[0].TeamID == team) && (pointsLog[0].Category == category) && (pointsLog[0].Points == points2)) {
+		t.Logf("Found unexpected points log entry: %s", pointsLog[0])
+		t.Fail()
+	}
+
+	s.RemovePoints(team, category, points1)
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	s.RemovePoints(team, category, points2)
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 0 {
+		t.Logf("Expected 0 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+}
+
+func TestStatePointsRemovalAtTime(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	team := "team1"
+	category := "meow"
+	points1 := 100
+	points2 := points1 + 1
+	now := time.Now().Unix()
+	time1 := now
+	time2 := now+10
+
+
+	s.AwardPointsAtTime(team, category, points1, time1)
+	s.refresh()
+
+	pointsLogLength := len(s.PointsLog())
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	pointsLog := s.PointsLog()
+	if ((pointsLog[0].When != time1) || (pointsLog[0].TeamID != team) || (pointsLog[0].Category != category) || (pointsLog[0].Points != points1)) {
+		t.Logf("Received unexpected points entry: %s", pointsLog[0])
+	}
+
+	s.AwardPointsAtTime(team, category, points2, time2)
+	s.refresh()
+
+	pointsLogLength = len(s.PointsLog())
+	if pointsLogLength != 2 {
+		t.Logf("Expected 2 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	// Remove valid points, but at wrong time
+	s.RemovePointsAtTime(team, category, points1, time2)
+	s.refresh()
+
+	pointsLogLength = len(s.PointsLog())
+	if pointsLogLength != 2 {
+		t.Logf("Expected 2 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	s.RemovePointsAtTime(team, category, points1, time1)
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	if ((pointsLog[0].When != time2) || (pointsLog[0].TeamID != team) || (pointsLog[0].Category != category) || (pointsLog[0].Points != points2)) {
+		t.Logf("Found unexpected points log entry: %s", pointsLog[0])
+		t.Fail()
+	}
+
+	s.RemovePointsAtTime(team, category, points1, time1)
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	s.RemovePointsAtTime(team, category, points2, time2)
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 0 {
+		t.Logf("Expected 0 point in the log, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+}
+
 // Out of order points insertion, issue #168
 func TestStateOutOfOrderAward(t *testing.T) {
 	s := NewTestState()
@@ -139,13 +292,24 @@ func TestStateOutOfOrderAward(t *testing.T) {
 	points := 100
 
 	now := time.Now().Unix()
-	if err := s.awardPointsAtTime(now+20, "AA", category, points); err != nil {
+	if err := s.AwardPointsAtTime("AA", category, points, now+20); err != nil {
 		t.Error("Awarding points to team ZZ:", err)
 	}
-	if err := s.awardPointsAtTime(now+10, "ZZ", category, points); err != nil {
+	if err := s.AwardPointsAtTime("ZZ", category, points, now+10); err != nil {
 		t.Error("Awarding points to team AA:", err)
 	}
 	s.refresh()
+
+	if (! s.PointExistsAtTime("AA", category, points, now+20)) {
+		t.Logf("Unable to find points awarded to team AA for %s/%d at %d", category, points, now+20)
+		t.Fail()
+	}
+
+	if (! s.PointExistsAtTime("ZZ", category, points, now+10)) {
+		t.Logf("Unable to find points awarded to team ZZ for %s/%d at %d", category, points, now+10)
+		t.Fail()
+	}
+
 	pl := s.PointsLog()
 	if len(pl) != 2 {
 		t.Error("Wrong length for points log")
@@ -296,6 +460,32 @@ func TestStateMaintainer(t *testing.T) {
 		t.Error("Wrong event log length:", len(events))
 	} else if events[2] != "" {
 		t.Error("Event log didn't end with newline")
+	}
+}
+
+func TestMessage(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	message := "foobar"
+
+	retrievedMessage := s.Messages()
+	if (retrievedMessage != "") {
+		t.Logf("Expected empty message, received '%s' instead", retrievedMessage)
+		t.Fail()
+	}
+
+	if err:= s.SetMessages(message); err != nil {
+		t.Error(err)
+	}
+
+	s.refresh()
+
+	retrievedMessage = s.Messages()
+
+	if (retrievedMessage != message) {
+		t.Logf("Expected message '%s', received '%s', instead", message, retrievedMessage)
+		t.Fail()
 	}
 }
 
