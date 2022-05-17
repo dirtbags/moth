@@ -283,7 +283,6 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 		return fmt.Errorf("team ID not found in list of valid team IDs")
 	}
 
-
 	s.teamNameLock.RLock()
 	_, ok := s.teamNames[teamID]
 	s.teamNameLock.RUnlock()
@@ -452,7 +451,7 @@ func (s *State) flushPointsLog(newPoints award.List) error {
 	defer logf.Close()
 
 	if err != nil {
-		return fmt.Errorf("Can't write to points log: ", err)
+		return fmt.Errorf("Can't write to points log: %s", err)
 	}
 	for _, pointEntry := range newPoints {
 		fmt.Fprintln(logf, pointEntry.String())
@@ -569,21 +568,24 @@ func (s *State) collectPoints() {
 		} else {
 			log.Print("Award: ", awd.String())
 
-			s.pointsLogFileLock.Lock()
-			defer s.pointsLogFileLock.Unlock()
-			
-			logf, err := s.OpenFile("points.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-			if err != nil {
-				log.Print("Can't append to points log: ", err)
-				return
+			{
+				s.pointsLogFileLock.Lock()
+				
+				logf, err := s.OpenFile("points.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+				if err != nil {
+					log.Print("Can't append to points log: ", err)
+					s.pointsLogFileLock.Unlock()
+					return
+				}
+				fmt.Fprintln(logf, awd.String())
+				logf.Close()
+				s.pointsLogFileLock.Unlock()
 			}
-			fmt.Fprintln(logf, awd.String())
-			logf.Close()
 
 			// Stick this on the cache too
 			s.pointsLock.Lock()
-			defer s.pointsLock.Unlock()
 			s.pointsLog = append(s.pointsLog, awd)
+			s.pointsLock.Unlock()
 		}
 
 		if err := s.Remove(filename); err != nil {
@@ -746,28 +748,30 @@ func (s *State) updateCaches() {
 	s.pointsLock.RLock()
 	defer s.pointsLock.RUnlock()
 
-	s.pointsLogFileLock.RLock()
-	defer s.pointsLogFileLock.RUnlock()
+	// Re-read the points log
+	{
+		s.pointsLogFileLock.RLock()
+		defer s.pointsLogFileLock.RUnlock()
 
-	if f, err := s.Open("points.log"); err != nil {
-		log.Println(err)
-	} else {
-		defer f.Close()
+		if f, err := s.Open("points.log"); err != nil {
+			log.Println(err)
+		} else {
+			defer f.Close()
 
-		pointsLog := make(award.List, 0, 200)
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			line := scanner.Text()
-			cur, err := award.Parse(line)
-			if err != nil {
-				log.Printf("Skipping malformed award line %s: %s", line, err)
-				continue
+			pointsLog := make(award.List, 0, 200)
+			scanner := bufio.NewScanner(f)
+			for scanner.Scan() {
+				line := scanner.Text()
+				cur, err := award.Parse(line)
+				if err != nil {
+					log.Printf("Skipping malformed award line %s: %s", line, err)
+					continue
+				}
+				pointsLog = append(pointsLog, cur)
 			}
-			pointsLog = append(pointsLog, cur)
-		}
-		
 
-		s.pointsLog = pointsLog
+			s.pointsLog = pointsLog
+		}
 	}
 
 	// Only do this if the teams directory has a newer mtime; directories with
@@ -806,11 +810,14 @@ func (s *State) updateCaches() {
 		}
 	}
 
-	s.messageFileLock.RLock()
-	defer s.messageFileLock.RUnlock()
+	// Re-read the messages file
+	{
+		s.messageFileLock.RLock()
+		defer s.messageFileLock.RUnlock()
 
-	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
-		s.messages = string(bMessages)
+		if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
+			s.messages = string(bMessages)
+		}
 	}
 }
 
