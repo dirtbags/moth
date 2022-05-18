@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	
+	"github.com/dirtbags/moth/pkg/award"
 	"github.com/spf13/afero"
 )
 
@@ -299,7 +301,60 @@ func TestStatePointsRemovalAtTime(t *testing.T) {
 		t.Logf("Expected 0 point in the log, got %d", pointsLogLength)
 		t.Fail()
 	}
+}
 
+func TestStateSetPoints(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	team := "team1"
+	category := "meow"
+	points := 100
+	time := time.Now().Unix()
+
+
+	// Add points into our log
+	if err := s.AwardPointsAtTime(team, category, points, time); err != nil {
+		t.Logf("Received unexpected error when awarding points: %s", err)
+		t.Fail()
+	}
+	s.refresh()
+
+	pointsLog := s.PointsLog()
+	pointsLogLength := len(pointsLog)
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log after awarding, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	expectedPoints := make(award.List, pointsLogLength)
+	copy( expectedPoints, pointsLog)
+
+	s.SetPoints(make(award.List, 0))
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 0 {
+		t.Logf("Expected 0 point in the log after awarding, got %d", pointsLogLength)
+		t.Fail()
+	}
+
+	if err := s.SetPoints(expectedPoints); err != nil {
+		t.Logf("Received unexpected error when awarding points: %s", err)
+		t.Fail()
+	}
+	s.refresh()
+
+	pointsLog = s.PointsLog()
+	pointsLogLength = len(pointsLog)
+	if pointsLogLength != 1 {
+		t.Logf("Expected 1 point in the log after awarding, got %d", pointsLogLength)
+		t.Fail()
+	} else if (expectedPoints[0] != pointsLog[0]) {
+		t.Logf("Expected first point '%s', received '%s', instead", expectedPoints[0], pointsLog[0])
+		t.Fail()
+	}
 }
 
 // Out of order points insertion, issue #168
