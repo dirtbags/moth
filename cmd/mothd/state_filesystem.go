@@ -161,7 +161,7 @@ func (s *State) writeTeamIDs(teamIDs []string) error {
 	s.teamIDFileLock.Lock()
 	defer s.teamIDFileLock.Unlock()
 
-	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644); err == nil {
+	if f, err := s.OpenFile("teamids.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err == nil {
 		defer f.Close()
 
 		for _, teamID := range teamIDs {
@@ -206,19 +206,21 @@ func (s *State) RemoveTeamID(removeTeamID string) error {
 	s.teamIDLock.Lock()
 	defer s.teamIDLock.Unlock()
 
-	teamIDs, err := s.TeamIDs()
+	var newTeamIDs []string
+
+	oldTeamIDs, err := s.TeamIDs()
 
 	if err != nil {
 		return err
 	}
 
-	for _, teamID := range teamIDs {
+	for _, teamID := range oldTeamIDs {
 		if removeTeamID != teamID {
-			teamIDs = append(teamIDs, teamID)
+			newTeamIDs = append(newTeamIDs, teamID)
 		}
 	}
 
-	return s.writeTeamIDs(teamIDs)
+	return s.writeTeamIDs(newTeamIDs)
 }
 
 func (s *State) TeamIDExists(teamID string) (bool, error) {
