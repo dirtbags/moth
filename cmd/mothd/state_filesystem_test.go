@@ -146,33 +146,34 @@ func TestStatePointsRemoval(t *testing.T) {
 	points1 := 100
 	points2 := points1 + 1
 
-
+	// Add points into our log
 	if err := s.AwardPoints(team, category, points1); err != nil {
-		t.Logf("Received unexpected error: %s", err)
+		t.Logf("Received unexpected error when awarding points: %s", err)
 		t.Fail()
 	}
 	s.refresh()
 
 	pointsLogLength := len(s.PointsLog())
 	if pointsLogLength != 1 {
-		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Logf("Expected 1 point in the log after awarding, got %d", pointsLogLength)
 		t.Fail()
 	}
 
 	if err := s.AwardPoints(team, category, points2); err != nil {
-		t.Logf("Received unexpected error: %s", err)
+		t.Logf("Received unexpected error when awarding points: %s", err)
 		t.Fail()
 	}
 	s.refresh()
 
 	pointsLogLength = len(s.PointsLog())
 	if pointsLogLength != 2 {
-		t.Logf("Expected 2 point in the log, got %d", pointsLogLength)
+		t.Logf("Expected 2 points in the log after awarding, got %d", pointsLogLength)
 		t.Fail()
 	}
 
+	// Remove a point
 	if err := s.RemovePoints(team, category, points1); err != nil {
-		t.Logf("Received unexpected error: %s", err)
+		t.Logf("Received unexpected error when removing points1: %s", err)
 		t.Fail()
 	}
 	s.refresh()
@@ -180,17 +181,18 @@ func TestStatePointsRemoval(t *testing.T) {
 	pointsLog := s.PointsLog()
 	pointsLogLength = len(pointsLog)
 	if pointsLogLength != 1 {
-		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Logf("Expected 1 point in the log after removal, got %d", pointsLogLength)
 		t.Fail()
 	}
 
-	if ((pointsLog[0].TeamID == team) && (pointsLog[0].Category == category) && (pointsLog[0].Points == points2)) {
-		t.Logf("Found unexpected points log entry: %s", pointsLog[0])
+	if ((pointsLog[0].TeamID != team) || (pointsLog[0].Category != category) || (pointsLog[0].Points != points2)) {
+		t.Logf("Found unexpected points log entry after removal: %s", pointsLog[0])
 		t.Fail()
 	}
 
-	if err := s.RemovePoints(team, category, points1); err != nil {
-		t.Logf("Received unexpected error: %s", err)
+	// Remove a duplicate point
+	if err := s.RemovePoints(team, category, points1); err != NoMatchingPointEntry {
+		t.Logf("Expected to receive NoMatchingPointEntry, received error '%s', instead", err)
 		t.Fail()
 	}
 	s.refresh()
@@ -198,12 +200,13 @@ func TestStatePointsRemoval(t *testing.T) {
 	pointsLog = s.PointsLog()
 	pointsLogLength = len(pointsLog)
 	if pointsLogLength != 1 {
-		t.Logf("Expected 1 point in the log, got %d", pointsLogLength)
+		t.Logf("Expected 1 point in the log after duplicate removal, got %d", pointsLogLength)
 		t.Fail()
 	}
 
+	// Remove the second point
 	if err := s.RemovePoints(team, category, points2); err != nil {
-		t.Logf("Received unexpected error: %s", err)
+		t.Logf("Received unexpected error when removing points2: %s", err)
 		t.Fail()
 	}
 	s.refresh()
@@ -211,7 +214,7 @@ func TestStatePointsRemoval(t *testing.T) {
 	pointsLog = s.PointsLog()
 	pointsLogLength = len(pointsLog)
 	if pointsLogLength != 0 {
-		t.Logf("Expected 0 point in the log, got %d", pointsLogLength)
+		t.Logf("Expected 0 point in the log after last removal, got %d", pointsLogLength)
 		t.Fail()
 	}
 }

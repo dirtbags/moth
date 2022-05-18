@@ -29,6 +29,7 @@ const RFC3339Space = "2006-01-02 15:04:05Z07:00"
 
 // ErrAlreadyRegistered means a team cannot be registered because it was registered previously.
 var ErrAlreadyRegistered = errors.New("team ID has already been registered")
+var NoMatchingPointEntry = errors.New("Unable to find matching point entry")
 
 // State defines the current state of a MOTH instance.
 // We use the filesystem for synchronization between threads.
@@ -452,12 +453,13 @@ func (s *State) flushPointsLog(newPoints award.List) error {
 	s.pointsLogFileLock.Lock()
 	defer s.pointsLogFileLock.Unlock()
 
-	logf, err := s.OpenFile("points.log", os.O_CREATE|os.O_WRONLY, 0644)
+	logf, err := s.OpenFile("points.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	defer logf.Close()
 
 	if err != nil {
 		return fmt.Errorf("Can't write to points log: %s", err)
 	}
+	
 	for _, pointEntry := range newPoints {
 		fmt.Fprintln(logf, pointEntry.String())
 	}
@@ -481,7 +483,7 @@ func (s *State) RemovePoints(teamID string, cat string, points int) error {
 	}
 
 	if (! removed) {
-		return fmt.Errorf("Unable to find matching point entry")
+		return NoMatchingPointEntry
 	}
 
 	err := s.flushPointsLog(newPoints)
@@ -511,7 +513,7 @@ func (s *State) RemovePointsAtTime(teamID string, cat string, points int, when i
 	}
 
 	if (! removed) {
-		return fmt.Errorf("Unable to find matching point entry")
+		return NoMatchingPointEntry
 	}
 
 	err := s.flushPointsLog(newPoints)
