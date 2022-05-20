@@ -83,7 +83,6 @@ function renderPuzzles(obj) {
         let url = new URL("puzzle.html", window.location)
         url.searchParams.set("cat", cat)
         url.searchParams.set("points", points)
-        if (id) { url.searchParams.set("pid", id) }
         a.href = url.toString()
       }
     }
@@ -105,7 +104,6 @@ function renderState(obj) {
   if (devel) {
     let params = new URLSearchParams(window.location.search)
     sessionStorage.id = "1"
-    sessionStorage.pid = "rodney"
     renderPuzzles(obj.Puzzles)
   } else if (Object.keys(obj.Puzzles).length > 0) {
     renderPuzzles(obj.Puzzles)
@@ -115,12 +113,8 @@ function renderState(obj) {
 
 function heartbeat() {
   let teamId = sessionStorage.id || ""
-  let participantId = sessionStorage.pid
   let url = new URL("state", window.location)
   url.searchParams.set("id", teamId)
-  if (participantId) {
-    url.searchParams.set("pid", participantId)
-  }
   let fd = new FormData()
   fd.append("id", teamId)
   fetch(url)
@@ -152,8 +146,6 @@ function login(e) {
   e.preventDefault()
   let name = document.querySelector("[name=name]").value
   let teamId = document.querySelector("[name=id]").value
-  let pide = document.querySelector("[name=pid]")
-  let participantId = pide?pide.value:Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
   
   fetch("register", {
     method: "POST",
@@ -166,7 +158,6 @@ function login(e) {
         if ((obj.status == "success") || (obj.data.short == "Already registered")) {
           toast("Logged in")
           sessionStorage.id = teamId
-          sessionStorage.pid = participantId
           showPuzzles()
           heartbeat()
         } else {

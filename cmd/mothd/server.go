@@ -55,11 +55,17 @@ type ThemeProvider interface {
 type StateProvider interface {
 	Messages() string
 	PointsLog() award.List
-	TeamName(teamID string) (string, error)
+	TeamName(teamID string) (Team, error)
 	SetTeamName(teamID, teamName string) error
-	AwardPoints(teamID string, cat string, points int) error
-	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
+	AwardPoints(team Team, cat string, points int) error
+	LogEvent(event, teamID, cat string, points int, extra ...string)
 	Maintainer
+}
+
+// Team defines a team entry
+type Team struct {
+	Name string
+	ID   string
 }
 
 // Maintainer is something that can be maintained.
@@ -92,19 +98,17 @@ func NewMothServer(config Configuration, theme ThemeProvider, state StateProvide
 }
 
 // NewHandler returns a new http.RequestHandler for the provided teamID.
-func (s *MothServer) NewHandler(participantID, teamID string) MothRequestHandler {
+func (s *MothServer) NewHandler(teamID string) MothRequestHandler {
 	return MothRequestHandler{
-		MothServer:    s,
-		participantID: participantID,
-		teamID:        teamID,
+		MothServer: s,
+		teamID:     teamID,
 	}
 }
 
 // MothRequestHandler provides http.RequestHandler for a MothServer.
 type MothRequestHandler struct {
 	*MothServer
-	participantID string
-	teamID        string
+	teamID string
 }
 
 // PuzzlesOpen opens a file associated with a puzzle.
@@ -131,7 +135,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 
 	// Log puzzle.json loads
 	if path == "puzzle.json" {
-		mh.State.LogEvent("load", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent("load", mh.teamID, cat, points)
 	}
 
 	return
@@ -139,6 +143,11 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 
 // CheckAnswer returns an error if answer is not a correct answer for puzzle points in category cat
 func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string) error {
+	team, err := mh.State.TeamName(mh.teamID)
+	if err != nil {
+		return fmt.Errorf("invalid team ID")
+	}
+
 	correct := false
 	for _, provider := range mh.PuzzleProviders {
 		if ok, err := provider.CheckAnswer(cat, points, answer); err != nil {
@@ -148,18 +157,15 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		}
 	}
 	if !correct {
-		mh.State.LogEvent("wrong", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent("wrong", mh.teamID, cat, points)
 		return fmt.Errorf("incorrect answer")
 	}
 
-	mh.State.LogEvent("correct", mh.participantID, mh.teamID, cat, points)
-
-	if _, err := mh.State.TeamName(mh.teamID); err != nil {
-		return fmt.Errorf("invalid team ID")
-	}
-	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
+	if err := mh.State.AwardPoints(team, cat, points); err != nil {
 		return fmt.Errorf("error awarding points: %s", err)
 	}
+
+	mh.State.LogEvent("correct", mh.teamID, cat, points)
 
 	return nil
 }
@@ -175,7 +181,7 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 	if teamName == "" {
 		return fmt.Errorf("empty team name")
 	}
-	mh.State.LogEvent("register", mh.participantID, mh.teamID, "", 0)
+	mh.State.LogEvent("register", mh.teamID, "", 0)
 	return mh.State.SetTeamName(mh.teamID, teamName)
 }
 
@@ -194,7 +200,7 @@ func (mh *MothRequestHandler) exportStateIfRegistered(forceRegistered bool) *Sta
 	export := StateExport{}
 	export.Config = mh.Config
 
-	teamName, err := mh.State.TeamName(mh.teamID)
+	team, err := mh.State.TeamName(mh.teamID)
 	registered := forceRegistered || mh.Config.Devel || (err == nil)
 
 	export.Messages = mh.State.Messages()
@@ -207,7 +213,7 @@ func (mh *MothRequestHandler) exportStateIfRegistered(forceRegistered bool) *Sta
 	export.PointsLog = make(award.List, len(pointsLog))
 
 	if registered {
-		export.TeamNames["self"] = teamName
+		export.TeamNames["self"] = team.Name
 		exportIDs[mh.teamID] = "self"
 	}
 	for logno, awd := range pointsLog {
@@ -215,10 +221,10 @@ func (mh *MothRequestHandler) exportStateIfRegistered(forceRegistered bool) *Sta
 			awd.TeamID = id
 		} else {
 			exportID := strconv.Itoa(logno)
-			name, _ := mh.State.TeamName(awd.TeamID)
+			team, _ := mh.State.TeamName(awd.TeamID)
 			exportIDs[awd.TeamID] = exportID
 			awd.TeamID = exportID
-			export.TeamNames[exportID] = name
+			export.TeamNames[exportID] = team.Name
 		}
 		export.PointsLog[logno] = awd
 

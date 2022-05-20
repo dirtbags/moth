@@ -27,6 +27,10 @@ const DistinguishableChars = "34678abcdefhikmnpqrtwxy="
 // This is also a valid RFC3339 format.
 const RFC3339Space = "2006-01-02 15:04:05Z07:00"
 
+// TeamLinkPrefix is prepended to a Team ID and stored as a team name
+// to handle "linked" team IDs, used for participant ID to team mapping.
+const TeamLinkPrefix = "link>"
+
 // ErrAlreadyRegistered means a team cannot be registered because it was registered previously.
 var ErrAlreadyRegistered = errors.New("team ID has already been registered")
 
@@ -45,11 +49,11 @@ type State struct {
 	eventWriterFile afero.File
 
 	// Caches, so we're not hammering NFS with metadata operations
-	teamNamesLastChange time.Time
-	teamNames           map[string]string
-	pointsLog           award.List
-	messages            string
-	lock                sync.RWMutex
+	teamsLastChange time.Time
+	teams           map[string]Team
+	pointsLog       award.List
+	messages        string
+	lock            sync.RWMutex
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -60,7 +64,7 @@ func NewState(fs afero.Fs) *State {
 		refreshNow:  make(chan bool, 5),
 		eventStream: make(chan []string, 80),
 
-		teamNames: make(map[string]string),
+		teams: make(map[string]Team),
 	}
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
@@ -121,29 +125,33 @@ func (s *State) updateEnabled() {
 		s.Enabled = nextEnabled
 		log.Printf("Setting enabled=%v: %s", s.Enabled, why)
 		if s.Enabled {
-			s.LogEvent("enabled", "", "", "", 0, why)
+			s.LogEvent("enabled", "", "", 0, why)
 		} else {
-			s.LogEvent("disabled", "", "", "", 0, why)
+			s.LogEvent("disabled", "", "", 0, why)
 		}
 	}
 }
 
-// TeamName returns team name given a team ID.
-func (s *State) TeamName(teamID string) (string, error) {
+// TeamName returns a Team given a team ID.
+//
+// The returned team ID will be the dereferenced filename of the team.
+// This allows you to have symbolic links to team IDs,
+// in order to implement participant IDs
+func (s *State) TeamName(teamID string) (Team, error) {
 	s.lock.RLock()
-	name, ok := s.teamNames[teamID]
+	team, ok := s.teams[teamID]
 	s.lock.RUnlock()
 	if !ok {
-		return "", fmt.Errorf("unregistered team ID: %s", teamID)
+		return Team{}, fmt.Errorf("unregistered team ID: %s", teamID)
 	}
-	return name, nil
+	return team, nil
 }
 
 // SetTeamName writes out team name.
 // This can only be done once per team.
 func (s *State) SetTeamName(teamID, teamName string) error {
 	s.lock.RLock()
-	_, ok := s.teamNames[teamID]
+	_, ok := s.teams[teamID]
 	s.lock.RUnlock()
 	if ok {
 		return ErrAlreadyRegistered
@@ -166,6 +174,9 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 		return fmt.Errorf("team ID not found in list of valid team IDs")
 	}
 
+	for strings.HasPrefix(teamName, TeamLinkPrefix) {
+		teamName = teamName[len(TeamLinkPrefix):]
+	}
 	teamFilename := filepath.Join("teams", teamID)
 	teamFile, err := s.Fs.OpenFile(teamFilename, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 	if os.IsExist(err) {
@@ -199,20 +210,20 @@ func (s *State) Messages() string {
 	return s.messages
 }
 
-// AwardPoints gives points to teamID in category.
-// This doesn't attempt to ensure the teamID has been registered.
+// AwardPoints gives points to team in category.
+// This doesn't attempt to ensure the team ID has been registered.
 // It first checks to make sure these are not duplicate points.
 // This is not a perfect check, you can trigger a race condition here.
 // It's just a courtesy to the user.
 // The update task makes sure we never have duplicate points in the log.
-func (s *State) AwardPoints(teamID, category string, points int) error {
-	return s.awardPointsAtTime(time.Now().Unix(), teamID, category, points)
+func (s *State) AwardPoints(team Team, category string, points int) error {
+	return s.awardPointsAtTime(time.Now().Unix(), team, category, points)
 }
 
-func (s *State) awardPointsAtTime(when int64, teamID string, category string, points int) error {
+func (s *State) awardPointsAtTime(when int64, team Team, category string, points int) error {
 	a := award.T{
 		When:     when,
-		TeamID:   teamID,
+		TeamID:   team.ID,
 		Category: category,
 		Points:   points,
 	}
@@ -322,7 +333,7 @@ func (s *State) maybeInitialize() {
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
 	}
-	s.LogEvent("init", "", "", "", 0)
+	s.LogEvent("init", "", "", 0)
 
 	// Make sure various subdirectories exist
 	s.Mkdir("points.tmp", 0755)
@@ -381,12 +392,11 @@ func (s *State) maybeInitialize() {
 }
 
 // LogEvent writes to the event log
-func (s *State) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
+func (s *State) LogEvent(event, teamID, cat string, points int, extra ...string) {
 	s.eventStream <- append(
 		[]string{
 			strconv.FormatInt(time.Now().Unix(), 10),
 			event,
-			participantID,
 			teamID,
 			cat,
 			strconv.Itoa(points),
@@ -443,12 +453,12 @@ func (s *State) updateCaches() {
 		_, ismmfs := s.Fs.(*afero.MemMapFs) // Tests run so quickly that the time check isn't precise enough
 		if fi, err := s.Fs.Stat("teams"); err != nil {
 			log.Printf("Getting modification time of teams directory: %v", err)
-		} else if ismmfs || s.teamNamesLastChange.Before(fi.ModTime()) {
-			s.teamNamesLastChange = fi.ModTime()
+		} else if ismmfs || s.teamsLastChange.Before(fi.ModTime()) {
+			s.teamsLastChange = fi.ModTime()
 
 			// The compiler recognizes this as an optimization case
-			for k := range s.teamNames {
-				delete(s.teamNames, k)
+			for k := range s.teams {
+				delete(s.teams, k)
 			}
 
 			teamsFs := afero.NewBasePathFs(s.Fs, "teams")
@@ -456,13 +466,31 @@ func (s *State) updateCaches() {
 				log.Printf("Reading team ids: %v", err)
 			} else {
 				for _, dirent := range dirents {
-					teamID := dirent.Name()
-					if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
-						log.Printf("Reading team %s: %v", teamID, err)
-					} else {
-						teamName := strings.TrimSpace(string(teamNameBytes))
-						s.teamNames[teamID] = teamName
+					team := Team{
+						Name: "",
+						ID:   dirent.Name(),
 					}
+
+					// Dereference links a few times before giving up
+					for i := 0; i < 2; i++ {
+						teamNameBytes, err := afero.ReadFile(teamsFs, team.ID)
+						if err != nil {
+							log.Printf("Reading team %s: %v", team.ID, err)
+							team.Name = err.Error()
+						}
+
+						team.Name = string(teamNameBytes)
+						if !strings.HasPrefix(team.Name, TeamLinkPrefix) {
+							team.Name = strings.TrimSpace(team.Name)
+							if team.Name == "" {
+								team.Name = "∅" // Empty set
+							}
+							break
+						}
+						team.ID = team.Name[len(TeamLinkPrefix):]
+						team.Name = "[Too Many Links]"
+					}
+					s.teams[team.ID] = team
 				}
 			}
 		}
@@ -520,11 +548,15 @@ func NewDevelState(sp StateProvider) *DevelState {
 //
 // If one's registered, it will use it.
 // Otherwise, it returns "<devel:$ID>"
-func (ds *DevelState) TeamName(teamID string) (string, error) {
-	if name, err := ds.StateProvider.TeamName(teamID); err == nil {
-		return name, nil
+func (ds *DevelState) TeamName(teamID string) (Team, error) {
+	if team, err := ds.StateProvider.TeamName(teamID); err == nil {
+		return team, nil
 	}
-	return fmt.Sprintf("«devel:%s»", teamID), nil
+	team := Team{
+		Name: fmt.Sprintf("«devel:%s»", teamID),
+		ID:   teamID,
+	}
+	return team, nil
 }
 
 // SetTeamName associates a team name with any teamID

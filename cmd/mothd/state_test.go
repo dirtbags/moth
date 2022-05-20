@@ -17,8 +17,16 @@ func NewTestState() *State {
 	return s
 }
 
+func slurp(c chan bool) {
+	for range c {
+		// Nothing
+	}
+}
+
 func TestState(t *testing.T) {
 	s := NewTestState()
+	defer close(s.refreshNow)
+	go slurp(s.refreshNow)
 
 	mustExist := func(path string) {
 		_, err := s.Fs.Stat(path)
@@ -63,15 +71,19 @@ func TestState(t *testing.T) {
 		t.Errorf("Registering team a second time didn't fail")
 	}
 	s.refresh()
-	if name, err := s.TeamName(teamID); err != nil {
+
+	team, err := s.TeamName(teamID)
+	if err != nil {
 		t.Error(err)
-	} else if name != teamName {
-		t.Error("Incorrect team name:", name)
+	} else if teamName != team.Name {
+		t.Errorf("Incorrect team name: %#v != %#v", teamName, team.Name)
+	} else if teamID != team.ID {
+		t.Error("Incorrect team ID", team.ID)
 	}
 
 	category := "poot"
 	points := 3928
-	if err := s.AwardPoints(teamID, category, points); err != nil {
+	if err := s.AwardPoints(team, category, points); err != nil {
 		t.Error(err)
 	}
 	// Flex duplicate detection with different timestamp
@@ -82,7 +94,7 @@ func TestState(t *testing.T) {
 		f.Close()
 	}
 
-	s.AwardPoints(teamID, category, points)
+	s.AwardPoints(team, category, points)
 	s.refresh()
 	pl = s.PointsLog()
 	if len(pl) != 1 {
@@ -94,11 +106,11 @@ func TestState(t *testing.T) {
 		t.Errorf("Incorrect logged award %v", pl)
 	}
 
-	if err := s.AwardPoints(teamID, category, points); err == nil {
+	if err := s.AwardPoints(team, category, points); err == nil {
 		t.Error("Duplicate points award after refresh didn't fail")
 	}
 
-	if err := s.AwardPoints(teamID, category, points+1); err != nil {
+	if err := s.AwardPoints(team, category, points+1); err != nil {
 		t.Error("Awarding more points:", err)
 	}
 
@@ -112,7 +124,7 @@ func TestState(t *testing.T) {
 	if len(s.PointsLog()) != 0 {
 		t.Errorf("Intentional parse error breaks pointslog")
 	}
-	if err := s.AwardPoints(teamID, category, points); err != nil {
+	if err := s.AwardPoints(team, category, points); err != nil {
 		t.Error(err)
 	}
 	s.refresh()
@@ -139,10 +151,10 @@ func TestStateOutOfOrderAward(t *testing.T) {
 	points := 100
 
 	now := time.Now().Unix()
-	if err := s.awardPointsAtTime(now+20, "AA", category, points); err != nil {
+	if err := s.awardPointsAtTime(now+20, Team{ID: "AA"}, category, points); err != nil {
 		t.Error("Awarding points to team ZZ:", err)
 	}
-	if err := s.awardPointsAtTime(now+10, "ZZ", category, points); err != nil {
+	if err := s.awardPointsAtTime(now+10, Team{ID: "ZZ"}, category, points); err != nil {
 		t.Error("Awarding points to team AA:", err)
 	}
 	s.refresh()
@@ -157,16 +169,16 @@ func TestStateOutOfOrderAward(t *testing.T) {
 
 func TestStateEvents(t *testing.T) {
 	s := NewTestState()
-	s.LogEvent("moo", "", "", "", 0)
-	s.LogEvent("moo 2", "", "", "", 0)
+	s.LogEvent("moo", "", "", 0)
+	s.LogEvent("moo 2", "", "", 0)
 
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
 }
@@ -266,7 +278,7 @@ func TestStateMaintainer(t *testing.T) {
 		t.Error("Team ID too short:", teamID)
 	}
 
-	s.LogEvent("Hello!", "", "", "", 0)
+	s.LogEvent("Hello!", "", "", 0)
 
 	if len(s.PointsLog()) != 0 {
 		t.Error("Points log is not empty")
@@ -274,7 +286,7 @@ func TestStateMaintainer(t *testing.T) {
 	if err := s.SetTeamName(teamID, "The Patricks"); err != nil {
 		t.Error(err)
 	}
-	if err := s.AwardPoints(teamID, "pategory", 31337); err != nil {
+	if err := s.AwardPoints(Team{ID: teamID}, "pategory", 31337); err != nil {
 		t.Error(err)
 	}
 	time.Sleep(updateInterval)
@@ -307,13 +319,14 @@ func TestDevelState(t *testing.T) {
 	} else if err == nil {
 		t.Error("Registering a team that doesn't exist didn't return ErrAlreadyRegistered")
 	}
-	if n, err := ds.TeamName("boog"); err != nil {
+	team, err := ds.TeamName("boog")
+	if err != nil {
 		t.Error("Devel State returned error on team name lookup")
-	} else if n != "«devel:boog»" {
-		t.Error("Wrong team name", n)
+	} else if team.Name != "«devel:boog»" {
+		t.Error("Wrong team name", team.Name)
 	}
 
-	if err := ds.AwardPoints("blerg", "dog", 82); err != nil {
+	if err := ds.AwardPoints(team, "dog", 82); err != nil {
 		t.Error("Devel State AwardPoints returned an error", err)
 	}
 }

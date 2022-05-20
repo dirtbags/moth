@@ -15,7 +15,7 @@ func TestIssue156(t *testing.T) {
 	afero.WriteFile(state, "teams/bloop", []byte("bloop: the team"), 0644)
 	state.refresh()
 
-	handler := server.NewHandler("", "bloop")
+	handler := server.NewHandler("bloop")
 	es := handler.ExportState()
 	if _, ok := es.TeamNames["self"]; !ok {
 		t.Fail()

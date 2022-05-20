@@ -11,11 +11,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-const TestParticipantID = "shipox"
-
 func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest.ResponseRecorder {
 	vals := url.Values{}
-	vals.Set("pid", TestParticipantID)
 	vals.Set("id", TestTeamID)
 	for k, v := range args {
 		vals.Set(k, v)
