@@ -627,8 +627,23 @@ func TestStateTeamIDs(t *testing.T) {
 			t.Errorf("Expected to find 0 team ID, found %d (%s), instead", len(teamIDs), teamIDs)
 		} 
 	}
+}
 
-	
+func TestStateDeleteTeamIDList(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	afero.Remove(s, "teamids.txt")
+
+	teamIDs, err := s.TeamIDs()
+
+	if len(teamIDs) != 0 {
+		t.Errorf("Expected to find 0 team IDs, found %d (%s), instead", len(teamIDs), teamIDs)
+	}
+
+	if err == nil {
+		t.Errorf("Did not receive expected error for non-existent teamids.txt")
+	}
 }
 
 func TestStateTeamNames(t *testing.T) {
