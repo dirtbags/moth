@@ -631,6 +631,15 @@ func TestStateTeamIDs(t *testing.T) {
 	
 }
 
+func TestStateTeamNames(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	if teamNames := s.TeamNames(); len(teamNames) != 0 {
+		t.Errorf("Expected to find 0 registered teams, found %d (%s), instead", len(teamNames), teamNames)
+	}
+}
+
 func TestDevelState(t *testing.T) {
 	s := NewTestState()
 	ds := NewDevelState(s)
