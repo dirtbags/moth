@@ -633,7 +633,7 @@ func TestStateDeleteTeamIDList(t *testing.T) {
 	s := NewTestState()
 	s.refresh()
 
-	afero.Remove(s, "teamids.txt")
+	s.Fs.Remove("teamids.txt")
 
 	teamIDs, err := s.TeamIDs()
 
