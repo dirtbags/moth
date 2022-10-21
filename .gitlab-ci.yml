@@ -11,8 +11,14 @@ test:
       - main
       - merge_requests
   script:
-    - go test -race ./...
-
+    - go test -coverprofile=coverage.txt -covermode=atomic -race ./...
+    - go get github.com/boumenot/gocover-cobertura
+    - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 push:
   stage: push
   rules:
