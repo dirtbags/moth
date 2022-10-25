@@ -14,7 +14,8 @@ test:
     - go test -coverprofile=coverage.txt -covermode=atomic -race ./...
     - go get github.com/boumenot/gocover-cobertura
     - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
-  coverage: /^coverage:\s(\d+(?:\.\d+)?%)/
+    - go tool cover -func coverage.txt
+  coverage: \(statements\)(?:\s+)?(\d+(?:\.\d+)?%)
   artifacts:
     reports:
       coverage_report:
