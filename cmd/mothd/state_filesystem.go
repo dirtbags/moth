@@ -315,7 +315,7 @@ func (s *State) SetTeamNames(teams map[string]string) error {
 }
 
 func (s *State) TeamIDFromName(teamName string) (string, error) {
-	for name, id := range s.TeamNames() {
+	for id, name := range s.TeamNames() {
 		if name == teamName {
 			return id, nil
 		}

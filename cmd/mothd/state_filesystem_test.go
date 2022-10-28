@@ -138,6 +138,17 @@ func TestState(t *testing.T) {
 
 }
 
+// Various point-specific tests
+func TestStatePointsEmpty(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	// Points shouldn't exist, right now
+	if exists := s.PointExists("team1", "category", 1); exists {
+		t.Error("Point entry reported to exist, when it shouldn't")
+	}
+}
+
 func TestStatePointsRemoval(t *testing.T) {
 	s := NewTestState()
 	s.refresh()
@@ -235,6 +246,10 @@ func TestStatePointsRemovalAtTime(t *testing.T) {
 		t.Errorf("Received unexpected points entry: %s", pointsLog[0])
 	}
 
+	if exists := s.PointExistsAtTime(team, category, points1, time1); ! exists {
+		t.Error("Expected to find matching result, found none, instead")
+	}
+
 	s.AwardPointsAtTime(team, category, points2, time2)
 	s.refresh()
 
@@ -252,6 +267,17 @@ func TestStatePointsRemovalAtTime(t *testing.T) {
 		t.Errorf("Expected 2 point in the log, got %d", pointsLogLength)
 	}
 
+	// Test that we bail out early, since the point log is sorted
+	if exists := s.PointExistsAtTime(team, category, points2+200, time1-10); ! exists {
+		t.Errorf("Expected to find matching result, found none, instead")
+	}
+
+	// Or if the record just doesn't exist
+	if exists := s.PointExistsAtTime(team, category, points2, time2+10); ! exists {
+		t.Errorf("Expected to find matching result, found none, instead")
+	}
+
+	// Test removing points
 	s.RemovePointsAtTime(team, category, points1, time1)
 	s.refresh()
 
@@ -263,6 +289,10 @@ func TestStatePointsRemovalAtTime(t *testing.T) {
 
 	if ((pointsLog[0].When != time2) || (pointsLog[0].TeamID != team) || (pointsLog[0].Category != category) || (pointsLog[0].Points != points2)) {
 		t.Errorf("Found unexpected points log entry: %s", pointsLog[0])
+	}
+
+	if exists := s.PointExistsAtTime(team, category, points1, time1); exists {
+		t.Error("Expected to find no result, found results, instead")
 	}
 
 	s.RemovePointsAtTime(team, category, points1, time1)
@@ -715,9 +745,145 @@ func TestStateTeamNames(t *testing.T) {
 	s := NewTestState()
 	s.refresh()
 
+	teamID1 := "foo"
+	teamID2 := "bar"
+	teamName1 := "baz"
+	teamName2 := "bat"
+
+	emptyTeams := make(map[string]string)
+	populatedTeams := make(map[string]string)
+	populatedTeams[teamID1] = teamName1
+	populatedTeams[teamID2] = teamName2
+
+	s.AddTeamID(teamID1)
+	s.AddTeamID(teamID2)
+
 	if teamNames := s.TeamNames(); len(teamNames) != 0 {
 		t.Errorf("Expected to find 0 registered teams, found %d (%s), instead", len(teamNames), teamNames)
 	}
+
+	// Try setting team names to an existing list
+	if err := s.SetTeamNames(populatedTeams); err != nil {
+		t.Errorf("Unexpected error when setting team names: %s", err)
+	} else {
+		s.refresh()
+		if teamNames := s.TeamNames(); len(teamNames) != len(populatedTeams) {
+			t.Errorf("Expected to find %d registered teams, found %d (%s), instead", len(populatedTeams), len(teamNames), teamNames)
+		}
+	}
+
+	// Try setting team names to an empty list
+	if err := s.SetTeamNames(emptyTeams); err != nil {
+		t.Errorf("Unexpected error when setting team names: %s", err)
+	} else {
+		s.refresh()
+		if teamNames := s.TeamNames(); len(teamNames) != len(emptyTeams) {
+			t.Errorf("Expected to find %d registered teams, found %d (%s), instead", len(emptyTeams), len(teamNames), teamNames)
+		}
+	}
+
+	// Try adding team names
+	if err := s.SetTeamName(teamID1, teamName1); err != nil {
+		t.Errorf("Unexpected error when adding team name (%s)", err)
+	} else {
+		s.refresh()
+		if teamNames := s.TeamNames(); len(teamNames) != 1 {
+			t.Errorf("Expected to find 1 registered team, found %d (%s), instead", len(teamNames), teamNames)
+		}
+	}
+
+	if err := s.SetTeamName(teamID2, teamName2); err != nil {
+		t.Errorf("Unexpected error when adding team name (%s)", err)
+	} else {
+		s.refresh()
+		if teamNames := s.TeamNames(); len(teamNames) != 2 {
+			t.Errorf("Expected to find 2 registered teams, found %d (%s), instead", len(teamNames), teamNames)
+		}
+	}
+
+	// Try adding a team that already exists
+	if err := s.SetTeamName(teamID2, teamName2); err == nil {
+		t.Error("Expected error when registering team, received nil, instead")
+	}
+	
+	s.refresh()
+	if teamNames := s.TeamNames(); len(teamNames) != 2 {
+		t.Errorf("Expected to find 2 registered teams, found %d (%s), instead", len(teamNames), teamNames)
+	}
+	
+	// Can we look up our team IDs?
+	s.refresh()
+	if teamID, err := s.TeamIDFromName(teamName1); err != nil {
+		t.Errorf("Unexpected error (%s)", err)
+	} else {
+		if teamID != teamID1 {
+			t.Errorf("Expected to retrieve team ID (%s), received (%s), instead", teamID1, teamID)
+		}
+	}
+
+	// And taking them away
+	if err := s.DeleteTeamName(teamID1); err != nil {
+		t.Errorf("Unexpected error when deleting team name (%s)", err)
+	} else {
+		s.refresh()
+		if teamNames := s.TeamNames(); len(teamNames) != 1 {
+			t.Errorf("Expected to find 1 registered team, found %d (%s), instead", len(teamNames), teamNames)
+		}
+	}
+
+	// Try deleting a team that doesn't exist
+	s.refresh()
+	if err := s.DeleteTeamName(teamID1); err == nil {
+		t.Error("Expected to receive error when deleting team, received nil, instead")
+	}
+
+	// And looking up its team ID
+	s.refresh()
+	if teamID, err := s.TeamIDFromName(teamName1); err == nil {
+		t.Error("Expected to receive error, received nil, instead")
+	} else {
+		if teamID != "" {
+			t.Errorf("Expected to retrieve empty team ID, received (%s), instead", teamID)
+		}
+	}
+	
+	s.refresh()
+	if teamNames := s.TeamNames(); len(teamNames) != 1 {
+		t.Errorf("Expected to find 1 registered team, found %d (%s), instead", len(teamNames), teamNames)
+	}
+}
+
+// Test what happens to team name functionality when we have various missing data
+func TestStateTeamNameNoTeamIDs(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	teamID1 := "foo"
+	teamName1 := "bar"
+
+	s.Fs.Remove("teamids.txt")
+
+	if err := s.SetTeamName(teamID1, teamName1); err == nil {
+		t.Error("Expected to receive error when adding team name when teamids.txt doesn't exist, received nil, instead")
+	}
+}
+
+func TestStateUpdateCachesNoPoints(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	// Just exercise this 
+	s.Fs.Remove("points.log")
+	s.updateCaches()
+}
+
+func TestStateUpdateCachesNoTeamsDir(t *testing.T) {
+	s := NewTestState()
+	s.refresh()
+
+	// Just exercise this 
+	s.Fs.Remove("teams")
+	s.updateCaches()
 }
 
 func TestDevelState(t *testing.T) {
