@@ -268,13 +268,13 @@ func TestStatePointsRemovalAtTime(t *testing.T) {
 	}
 
 	// Test that we bail out early, since the point log is sorted
-	if exists := s.PointExistsAtTime(team, category, points2+200, time1-10); ! exists {
-		t.Errorf("Expected to find matching result, found none, instead")
+	if exists := s.PointExistsAtTime(team, category, points2+200, time1-10); exists {
+		t.Errorf("Expected to find no matching result, found something, instead")
 	}
 
 	// Or if the record just doesn't exist
-	if exists := s.PointExistsAtTime(team, category, points2, time2+10); ! exists {
-		t.Errorf("Expected to find matching result, found none, instead")
+	if exists := s.PointExistsAtTime(team, category, points2, time2+10); exists {
+		t.Errorf("Expected to find matching result, found something, instead")
 	}
 
 	// Test removing points
