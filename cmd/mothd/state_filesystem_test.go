@@ -554,6 +554,19 @@ func TestStateTeamIDs(t *testing.T) {
 		}
 	}
 
+	// Check if an ID exists in an empty list
+	if teamIDExists, err := s.TeamIDExists(teamID1); err != nil {
+		t.Errorf("Received unexpected error %s", err)
+	}
+	
+	if teamIDExists {
+		t.Errorf("Expected to receive false, since team ID list should be empty, but received true, instead")
+	}
+
+	if err != nil {
+		t.Errorf("")
+	}
+
 	// Add a team ID
 	if err := s.AddTeamID(teamID1); err != nil {
 		t.Errorf("Received unexpected error %s", err)
@@ -575,6 +588,28 @@ func TestStateTeamIDs(t *testing.T) {
 	// Add another team ID
 	if err := s.AddTeamID(teamID2); err != nil {
 		t.Errorf("Received unexpected error %s", err)
+	}
+	s.refresh()
+
+	if teamIDs, err := s.TeamIDs(); err != nil {
+		t.Errorf("Received unexpected error %s", err)
+	} else {
+		if len(teamIDs) != 2 {
+			t.Errorf("Expected to find 2 team IDs, found %d (%s), instead", len(teamIDs), teamIDs)
+		} else {
+			if exists1, err1 := s.TeamIDExists(teamID1); err1 != nil {
+				t.Errorf("Received unexpected error %s", err)
+			} else {
+				if ! exists1 {
+					t.Errorf("Expected to find team ID '%s', but didn't find it", teamID1)
+				}
+			}
+		}
+	}
+
+	// Add a duplicate team ID
+	if err := s.AddTeamID(teamID2); err == nil {
+		t.Errorf("Expected to raise error, received nil, instead")
 	}
 	s.refresh()
 
