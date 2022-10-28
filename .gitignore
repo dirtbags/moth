@@ -3,3 +3,4 @@
 .idea
 /vendor/
 __debug_bin
+coverage.txt

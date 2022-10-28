@@ -557,13 +557,11 @@ func TestStateTeamIDs(t *testing.T) {
 	// Check if an ID exists in an empty list
 	if teamIDExists, err := s.TeamIDExists(teamID1); err != nil {
 		t.Errorf("Received unexpected error %s", err)
-		
+
 		if teamIDExists {
 			t.Errorf("Expected to receive false, since team ID list should be empty, but received true, instead")
 		}
 	}
-
-	
 
 	// Add a team ID
 	if err := s.AddTeamID(teamID1); err != nil {
@@ -666,6 +664,8 @@ func TestStateDeleteTeamIDList(t *testing.T) {
 	s := NewTestState()
 	s.refresh()
 
+	teamID1 := "foobar"
+
 	s.Fs.Remove("teamids.txt")
 
 	teamIDs, err := s.TeamIDs()
@@ -675,8 +675,40 @@ func TestStateDeleteTeamIDList(t *testing.T) {
 	}
 
 	if err == nil {
-		t.Errorf("Did not receive expected error for non-existent teamids.txt")
+		t.Error("Did not receive expected error for non-existent teamids.txt")
 	}
+
+	if err := s.AddTeamID(teamID1); err == nil {
+		t.Error("Expected to receive error when adding team with no teamids.txt, received nil, instead")
+	}
+
+	if err := s.RemoveTeamID(teamID1); err == nil {
+		t.Error("Expected to receive error when removing team with no teamids.txt, received nil, instead")
+	}
+
+	if _, err := s.TeamIDExists(teamID1); err == nil {
+		t.Error("Expected to receive error when checking team ID with no teamids.txt, received nil, instead")
+	}
+}
+
+func TestStatePermissionError(t *testing.T) {
+	t.Skip("Skipping because of how hard it is to tease out this error state")
+
+	s := NewTestState()
+	s.refresh()
+
+	emptyTeams := make([]string, 0)
+
+	if err := s.writeTeamIDs(emptyTeams); err != nil {
+		t.Errorf("Unexpected error when initializing teamids.txt, %s", err)
+	}
+
+	s.Fs.Chmod("teamids.txt", 0100)
+
+	if err := s.writeTeamIDs(emptyTeams); err == nil {
+		t.Error("Expected to receive error when making a bad write to teamids.txt, received nil, instead")
+	}
+
 }
 
 func TestStateTeamNames(t *testing.T) {
