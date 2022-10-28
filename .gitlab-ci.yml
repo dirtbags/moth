@@ -25,6 +25,7 @@ test:
     paths:
     - coverage.html
     - coverage.txt
+    - coverage.xml
 push:
   stage: push
   rules:
