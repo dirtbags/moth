@@ -557,15 +557,13 @@ func TestStateTeamIDs(t *testing.T) {
 	// Check if an ID exists in an empty list
 	if teamIDExists, err := s.TeamIDExists(teamID1); err != nil {
 		t.Errorf("Received unexpected error %s", err)
-	}
-	
-	if teamIDExists {
-		t.Errorf("Expected to receive false, since team ID list should be empty, but received true, instead")
+		
+		if teamIDExists {
+			t.Errorf("Expected to receive false, since team ID list should be empty, but received true, instead")
+		}
 	}
 
-	if err != nil {
-		t.Errorf("")
-	}
+	
 
 	// Add a team ID
 	if err := s.AddTeamID(teamID1); err != nil {
