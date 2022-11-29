@@ -39,6 +39,7 @@ type State struct {
 	// Enabled tracks whether the current State system is processing updates
 	Enabled bool
 
+	enabledWhy      string
 	refreshNow      chan bool
 	eventStream     chan []string
 	eventWriter     *csv.Writer
@@ -71,11 +72,10 @@ func NewState(fs afero.Fs) *State {
 // updateEnabled checks a few things to see if this state directory is "enabled".
 func (s *State) updateEnabled() {
 	nextEnabled := true
-	why := "`state/enabled` present, `state/hours.txt` missing"
+	why := "state/hours.txt has no timestamps before now"
 
 	if untilFile, err := s.Open("hours.txt"); err == nil {
 		defer untilFile.Close()
-		why = "`state/hours.txt` present"
 
 		scanner := bufio.NewScanner(untilFile)
 		for scanner.Scan() {
@@ -95,35 +95,36 @@ func (s *State) updateEnabled() {
 			case '#':
 				continue
 			default:
-				log.Println("Misformatted line in hours.txt file")
+				log.Println("state/hours.txt has bad line:", line)
 			}
+			line, _, _ = strings.Cut(line, "#") // Remove inline comments
 			line = strings.TrimSpace(line)
-			until, err := time.Parse(time.RFC3339, line)
-			if err != nil {
-				until, err = time.Parse(RFC3339Space, line)
-			}
-			if err != nil {
-				log.Println("Suspended: Unparseable until date:", line)
+			until := time.Time{}
+			if len(line) == 0 {
+				// Let it stay as zero time, so it's always before now
+			} else if until, err = time.Parse(time.RFC3339, line); err == nil {
+				// Great, it was RFC 3339
+			} else if until, err = time.Parse(RFC3339Space, line); err == nil {
+				// Great, it was RFC 3339 with a space instead of a 'T'
+			} else {
+				log.Println("state/hours.txt has bad timestamp:", line)
 				continue
 			}
 			if until.Before(time.Now()) {
 				nextEnabled = thisEnabled
+				why = fmt.Sprint("state/hours.txt most recent timestamp:", line)
 			}
 		}
 	}
 
-	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
-		nextEnabled = false
-		why = "`state/enabled` missing"
-	}
-
-	if nextEnabled != s.Enabled {
+	if (nextEnabled != s.Enabled) || (why != s.enabledWhy) {
 		s.Enabled = nextEnabled
-		log.Printf("Setting enabled=%v: %s", s.Enabled, why)
+		s.enabledWhy = why
+		log.Printf("Setting enabled=%v: %s", s.Enabled, s.enabledWhy)
 		if s.Enabled {
-			s.LogEvent("enabled", "", "", "", 0, why)
+			s.LogEvent("enabled", "", "", "", 0, s.enabledWhy)
 		} else {
-			s.LogEvent("disabled", "", "", "", 0, why)
+			s.LogEvent("disabled", "", "", "", 0, s.enabledWhy)
 		}
 	}
 }
@@ -350,21 +351,19 @@ func (s *State) maybeInitialize() {
 		f.Close()
 	}
 
-	if f, err := s.Create("enabled"); err == nil {
-		fmt.Fprintln(f, "enabled: remove or rename to suspend the contest.")
-		f.Close()
-	}
-
 	if f, err := s.Create("hours.txt"); err == nil {
 		fmt.Fprintln(f, "# hours.txt: when the contest is enabled")
 		fmt.Fprintln(f, "#")
-		fmt.Fprintln(f, "# Enable:  + timestamp")
-		fmt.Fprintln(f, "# Disable: - timestamp")
+		fmt.Fprintln(f, "# Enable:  + [timestamp]")
+		fmt.Fprintln(f, "# Disable: - [timestamp]")
 		fmt.Fprintln(f, "#")
-		fmt.Fprintln(f, "# You can have multiple start/stop times.")
-		fmt.Fprintln(f, "# Whatever time is the most recent, wins.")
-		fmt.Fprintln(f, "# Times in the future are ignored.")
+		fmt.Fprintln(f, "# This file, and all files in this directory, are re-read periodically.")
+		fmt.Fprintln(f, "# Default is enabled.")
+		fmt.Fprintln(f, "# Rules with only '-' or '+' are also allowed.")
+		fmt.Fprintln(f, "# Rules apply from the top down.")
+		fmt.Fprintln(f, "# If you put something in out of order, it's going to be bonkers.")
 		fmt.Fprintln(f)
+		fmt.Fprintln(f, "- 1970-01-01T00:00:00Z")
 		fmt.Fprintln(f, "+", now)
 		fmt.Fprintln(f, "- 2519-10-31T00:00:00Z")
 		f.Close()
