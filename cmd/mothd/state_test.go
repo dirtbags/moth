@@ -41,7 +41,6 @@ func TestState(t *testing.T) {
 	}
 
 	mustExist("initialized")
-	mustExist("enabled")
 	mustExist("hours.txt")
 
 	teamIDsBuf, err := afero.ReadFile(s.Fs, "teamids.txt")
@@ -175,6 +174,9 @@ func TestStateEvents(t *testing.T) {
 	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
+	if msg := <-s.eventStream; !strings.HasPrefix(msg[5], "state/hours.txt") {
+		t.Error("Wrong message from event stream:", msg[5])
+	}
 	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
@@ -196,19 +198,37 @@ func TestStateDisabled(t *testing.T) {
 		t.Error(err)
 	}
 	defer hoursFile.Close()
+	s.refresh()
+	if !s.Enabled {
+		t.Error("Empty hours.txt not enabled")
+	}
 
 	fmt.Fprintln(hoursFile, "- 1970-01-01T01:01:01Z")
 	hoursFile.Sync()
 	s.refresh()
 	if s.Enabled {
-		t.Error("Disabling 1970-01-01")
+		t.Error("1970-01-01")
 	}
 
-	fmt.Fprintln(hoursFile, "+ 1970-01-01 01:01:01+05:00")
+	fmt.Fprintln(hoursFile, "+ 1970-01-02 01:01:01+05:00")
 	hoursFile.Sync()
 	s.refresh()
 	if !s.Enabled {
-		t.Error("Enabling 1970-01-02")
+		t.Error("1970-01-02")
+	}
+
+	fmt.Fprintln(hoursFile, "-")
+	hoursFile.Sync()
+	s.refresh()
+	if s.Enabled {
+		t.Error("bare -")
+	}
+
+	fmt.Fprintln(hoursFile, "+")
+	hoursFile.Sync()
+	s.refresh()
+	if !s.Enabled {
+		t.Error("bare +")
 	}
 
 	fmt.Fprintln(hoursFile, "")
@@ -216,7 +236,7 @@ func TestStateDisabled(t *testing.T) {
 	hoursFile.Sync()
 	s.refresh()
 	if !s.Enabled {
-		t.Error("Comments")
+		t.Error("Comment")
 	}
 
 	fmt.Fprintln(hoursFile, "intentional parse error")
@@ -230,7 +250,7 @@ func TestStateDisabled(t *testing.T) {
 	hoursFile.Sync()
 	s.refresh()
 	if s.Enabled {
-		t.Error("Disabling 1980-01-01")
+		t.Error("1980-01-01")
 	}
 
 	if err := s.Remove("hours.txt"); err != nil {
@@ -239,14 +259,6 @@ func TestStateDisabled(t *testing.T) {
 	s.refresh()
 	if !s.Enabled {
 		t.Error("Removing `hours.txt` disabled event")
-	}
-
-	if err := s.Remove("enabled"); err != nil {
-		t.Error(err)
-	}
-	s.refresh()
-	if s.Enabled {
-		t.Error("Removing `enabled` didn't disable")
 	}
 
 	s.Remove("initialized")
@@ -303,11 +315,11 @@ func TestStateMaintainer(t *testing.T) {
 	eventLog, err := afero.ReadFile(s.Fs, "events.csv")
 	if err != nil {
 		t.Error(err)
-	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 3 {
+	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 4 {
 		t.Log("Events:", events)
 		t.Error("Wrong event log length:", len(events))
-	} else if events[2] != "" {
-		t.Error("Event log didn't end with newline")
+	} else if events[3] != "" {
+		t.Error("Event log didn't end with newline", events)
 	}
 }
 

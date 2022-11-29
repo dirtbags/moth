@@ -1,0 +1,20 @@
+I know you've done some work on this already but I have to get this idea down someplace.
+
+I would like to, as much as possible, not have the same data in two different places. So here are my proposals for doing this in the filesystem backend.
+
+We could implement all of these at the same time, although I don't know why we'd want to
+
+### The obvious way
+* [ ] Make the `teams` directory full of directories again and not files
+* [ ] Move team names to `teams/$id/name`
+* [ ] Define a new file called `teams/$id/map` which contains an ID that this maps to. It will only be followed once.
+* [ ] When writing anything with team id, resolve any maps first
+
+### The clever way
+* [ ] Allow `teams/$id` to be a symbolic link to another team file
+* [ ] When writing anything with team id, resolve any symlinks first
+
+### The easy way
+
+* [ ] Line 2 of a team file, optionally, contains a team id to map to
+* [ ] When writing anything with a team id, resolve any maps
