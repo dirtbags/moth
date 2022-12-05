@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v4.2.1] - 2021-04-13
 ### Fixed
 - Transpiled KSAs no longer dropped
+- Resolve race condition to ensure Javascript dependencies load before "chart" is called
+- Add responsive design elements to Scoreboard to reduce object collision
+
 
 ## [v4.2.0] - 2020-03-26
 ### Changed

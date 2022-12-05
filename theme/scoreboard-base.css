@@ -83,6 +83,7 @@ input:invalid {
 	padding: 0em 0.2em;
 	border-top-left-radius: 0.5em;
 	border-bottom-left-radius: 0.5em;
+        border-bottom: thin solid transparent;
 	margin:0em;
 	height: 1.5em;
 	white-space: nowrap;
@@ -91,6 +92,7 @@ input:invalid {
 	transition-property: max-width;
 	transition-duration: 2s;
 	transition-delay: 0s;
+        text-align:right;
 }
 
 #rankings span.teamname:hover {
@@ -105,6 +107,12 @@ input:invalid {
 	width:99%;
 }
 
+#rankings .team {
+  transition-property: all;
+  transition-duration: 1s;
+  transition-delay: 0s;
+}
+
 
 #rankings div * {white-space: nowrap;}
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
@@ -117,6 +125,10 @@ input:invalid {
 .cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}
 
 
+#rankings .teampoints.inv { text-align: center;}
+
+.hidden { visibility: hidden; }
+
 /* Responsive design */
 /* Defaults */
         #rankings span.teampoints {
@@ -124,6 +136,7 @@ input:invalid {
         }
         #rankings span.teamname {
                 max-width:10%;
+		min-width:10%;
         }
 
 
@@ -150,6 +163,7 @@ input:invalid {
 	}
 	#rankings span.teamname {
 		max-width:10%;
+                min-width:10%;
 	}
 }
 
@@ -158,8 +172,9 @@ input:invalid {
 	#rankings span.teampoints {
 		max-width:84%;
 	}
-	#rankings span.teamname {
+	#rankings span.ueamname {
 		max-width:15%;
+                min-width:15%;
 	}
 }
 
@@ -170,6 +185,7 @@ input:invalid {
 	}
 	#rankings span.teamname {
 		max-width:20%;
+                min-width:20%;
 	}
 }
 
@@ -180,6 +196,7 @@ input:invalid {
 	}
 	#rankings span.teamname {
 		max-width:34%;
+                min-width:34%;
 	}
 }
 
@@ -241,4 +258,161 @@ li[draggable] {
 
 #cacheButton.disabled {
   display: none;
+}
+
+#settings {
+  position: fixed;
+  top: 0.5em;
+  right: 1em;
+  opacity: 1;
+  background-blend-mode: darken;
+  margin:0em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  transition-property: all;
+  transition-duration: 1s;
+  transition-delay: 0s;
+  cursor: pointer;
+  z-index:10000;
+  padding-bottom: 1em;
+  list-style: none;
+  border-top-left-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+  padding:0em;
+  border: thin solid transparent;
+}
+
+#settings ul {
+  padding:0em;
+  margin: 0.75em 0em;
+}
+
+#settings ul > li {
+  margin-left: 1em;
+}
+
+#settings .btn {
+  background-color:#33f;
+  padding: 0.5em 0.5em;;
+  vertical-align: middle;
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+  border-bottom-left-radius: 0.5em;
+  border-bottom-right-radius: 0.5em;
+  display:inline-block;
+  color: white;
+}
+
+#settings > li {
+  display: none;
+  width: 95%;
+  text-align: left;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
+
+#settings:hover {
+  border: thin solid #66f;
+  background-color: #292929;
+  width: 15em;
+  padding-left: 0.5em;
+  padding-bottom: 1em;
+}
+
+#settings:hover li {
+  display: block;
+}
+
+#settings label {
+  cursor: pointer;
+}
+
+#rankings .category {
+  transition-property: margin, width, offset;
+  transition-duration: 1s;
+  transition-delay: 0s;
+}
+
+#rankHeading {
+  visibility:hidden
+}
+
+.track #rankHeading {
+  visibility:visible;
+}
+
+.leader .icon {
+  background-repeat: no-repeat;
+  background-color: transparent;
+  background-origin: padding-box;
+  background-size: contain;
+  padding-left: 1.5em;
+  height: 1em;
+  float: left;
+  display:none;
+}
+
+.fun .leader .icon {
+  display:inline-block !important;
+}
+
+.icon.track-entry-point {
+  background-image: url("scoreboard-assets/entry-point.png");
+}
+
+.icon.track-forensics {
+  background-image: url("scoreboard-assets/forensics.png");
+}
+.icon.track-incident-coordination {
+  background-image: url("scoreboard-assets/incident-coordination.png");
+}
+
+.icon.track-malware {
+  background-image: url("scoreboard-assets/malware.png");
+}
+
+.icon.track-netarch {
+  background-image: url("scoreboard-assets/netarch.png");
+}
+
+.icon.track-ot {
+  background-image: url("scoreboard-assets/ot.png");
+}
+
+/* highlight row on hover so it is easier for users to see */
+#rankings > div {
+  border-bottom: thin solid transparent;
+}
+
+#rankings > div:hover {
+  font-weight: bold;
+/*  border-bottom: thin solid #33f !important;*/
+  background-color: #779 !important;
+}
+
+#screensaver {
+  width:110vw;
+  height:110vh;
+  position:fixed;
+  top:-10em;
+  left:-10em;
+  background-color: rgba(0, 0, 0, 1);
+  background-image:url('luna-moth.svg');
+  background-blend-mode:multiply;
+  background-size: 10em 10em;
+  background-repeat: space;
+  transition-property: all;
+  transition-duration: 5s;
+  transition-delay: 0s;
+}
+
+#screensaverImg {
+  width:10em;
+  position: fixed;
+  top:0em;
+  left:0em;
 }
