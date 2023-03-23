@@ -42,7 +42,7 @@ func (ts TestServer) refresh() {
 func TestDevelServer(t *testing.T) {
 	server := NewTestServer()
 	server.Config.Devel = true
-	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
+	anonHandler := server.NewHandler("badTeamId")
 
 	{
 		es := anonHandler.ExportState()
@@ -57,12 +57,11 @@ func TestDevelServer(t *testing.T) {
 
 func TestProdServer(t *testing.T) {
 	teamName := "OurTeam"
-	participantID := "participantID"
 	teamID := TestTeamID
 
 	server := NewTestServer()
-	handler := server.NewHandler(participantID, teamID)
-	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
+	handler := server.NewHandler(teamID)
+	anonHandler := server.NewHandler("badTeamId")
 
 	{
 		es := handler.ExportState()

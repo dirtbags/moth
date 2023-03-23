@@ -122,9 +122,9 @@ func (s *State) updateEnabled() {
 		s.enabledWhy = why
 		log.Printf("Setting enabled=%v: %s", s.Enabled, s.enabledWhy)
 		if s.Enabled {
-			s.LogEvent("enabled", "", "", "", 0, s.enabledWhy)
+			s.LogEvent("enabled", "", "", 0, s.enabledWhy)
 		} else {
-			s.LogEvent("disabled", "", "", "", 0, s.enabledWhy)
+			s.LogEvent("disabled", "", "", 0, s.enabledWhy)
 		}
 	}
 }
@@ -323,7 +323,7 @@ func (s *State) maybeInitialize() {
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
 	}
-	s.LogEvent("init", "", "", "", 0)
+	s.LogEvent("init", "", "", 0)
 
 	// Make sure various subdirectories exist
 	s.Mkdir("points.tmp", 0755)
@@ -380,12 +380,11 @@ func (s *State) maybeInitialize() {
 }
 
 // LogEvent writes to the event log
-func (s *State) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
+func (s *State) LogEvent(event, teamID, cat string, points int, extra ...string) {
 	s.eventStream <- append(
 		[]string{
 			strconv.FormatInt(time.Now().Unix(), 10),
 			event,
-			participantID,
 			teamID,
 			cat,
 			strconv.Itoa(points),

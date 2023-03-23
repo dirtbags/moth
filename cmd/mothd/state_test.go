@@ -164,19 +164,19 @@ func TestStateOutOfOrderAward(t *testing.T) {
 
 func TestStateEvents(t *testing.T) {
 	s := NewTestState()
-	s.LogEvent("moo", "", "", "", 0)
-	s.LogEvent("moo 2", "", "", "", 0)
+	s.LogEvent("moo", "", "", 0)
+	s.LogEvent("moo 2", "", "", 0)
 
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; !strings.HasPrefix(msg[6], "state/hours.txt") {
-		t.Error("Wrong message from event stream:", msg[6])
+	if msg := <-s.eventStream; !strings.HasPrefix(msg[5], "state/hours.txt") {
+		t.Error("Wrong message from event stream:", msg[5])
 	}
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
 }
@@ -286,7 +286,7 @@ func TestStateMaintainer(t *testing.T) {
 		t.Error("Team ID too short:", teamID)
 	}
 
-	s.LogEvent("Hello!", "", "", "", 0)
+	s.LogEvent("Hello!", "", "", 0)
 
 	if len(s.PointsLog()) != 0 {
 		t.Error("Points log is not empty")

@@ -58,7 +58,7 @@ type StateProvider interface {
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
 	AwardPoints(teamID string, cat string, points int) error
-	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
+	LogEvent(event, teamID, cat string, points int, extra ...string)
 	Maintainer
 }
 
@@ -92,19 +92,17 @@ func NewMothServer(config Configuration, theme ThemeProvider, state StateProvide
 }
 
 // NewHandler returns a new http.RequestHandler for the provided teamID.
-func (s *MothServer) NewHandler(participantID, teamID string) MothRequestHandler {
+func (s *MothServer) NewHandler(teamID string) MothRequestHandler {
 	return MothRequestHandler{
-		MothServer:    s,
-		participantID: participantID,
-		teamID:        teamID,
+		MothServer: s,
+		teamID:     teamID,
 	}
 }
 
 // MothRequestHandler provides http.RequestHandler for a MothServer.
 type MothRequestHandler struct {
 	*MothServer
-	participantID string
-	teamID        string
+	teamID string
 }
 
 // PuzzlesOpen opens a file associated with a puzzle.
@@ -131,7 +129,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 
 	// Log puzzle.json loads
 	if path == "puzzle.json" {
-		mh.State.LogEvent("load", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent("load", mh.teamID, cat, points)
 	}
 
 	return
@@ -148,11 +146,11 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		}
 	}
 	if !correct {
-		mh.State.LogEvent("wrong", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent("wrong", mh.teamID, cat, points)
 		return fmt.Errorf("incorrect answer")
 	}
 
-	mh.State.LogEvent("correct", mh.participantID, mh.teamID, cat, points)
+	mh.State.LogEvent("correct", mh.teamID, cat, points)
 
 	if _, err := mh.State.TeamName(mh.teamID); err != nil {
 		return fmt.Errorf("invalid team ID")
@@ -175,7 +173,7 @@ func (mh *MothRequestHandler) Register(teamName string) error {
 	if teamName == "" {
 		return fmt.Errorf("empty team name")
 	}
-	mh.State.LogEvent("register", mh.participantID, mh.teamID, "", 0)
+	mh.State.LogEvent("register", mh.teamID, "", 0)
 	return mh.State.SetTeamName(mh.teamID, teamName)
 }
 
