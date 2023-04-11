@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/award"
+	"github.com/dirtbags/moth/v4/pkg/award"
 	"github.com/spf13/afero"
 )
 

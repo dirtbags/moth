@@ -9,7 +9,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/dirtbags/moth/pkg/transpile"
+	"github.com/dirtbags/moth/v4/pkg/transpile"
 
 	"github.com/spf13/afero"
 )

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/award"
+	"github.com/dirtbags/moth/v4/pkg/award"
 )
 
 // Category represents a puzzle category.

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/jsend"
+	"github.com/dirtbags/moth/v4/pkg/jsend"
 )
 
 // HTTPServer is a MOTH HTTP server

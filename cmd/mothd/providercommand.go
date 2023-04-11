@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/transpile"
+	"github.com/dirtbags/moth/v4/pkg/transpile"
 )
 
 // ProviderCommand specifies a command to run for the puzzle API

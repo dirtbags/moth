@@ -1,4 +1,4 @@
-module github.com/dirtbags/moth
+module github.com/dirtbags/moth/v4
 
 go 1.13
 
