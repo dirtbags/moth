@@ -8,6 +8,7 @@ Run unit tests:
   only:
     refs:
       - main
+      - tags
       - merge_requests
   script:
     - go test -coverprofile=coverage.txt -covermode=atomic -race ./...
@@ -28,6 +29,7 @@ Generage coverage XML:
   only:
     refs:
       - main
+      - tags
       - merge_requests
   artifacts:
     reports:
