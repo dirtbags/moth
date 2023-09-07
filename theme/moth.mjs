@@ -144,7 +144,7 @@ class Puzzle {
      * Get a resource associated with this puzzle.
      * 
      * @param {String} filename Attachment/Script to retrieve
-     * @returns {Promise<Response>}
+     * @returns {Promise.<Response>}
      */
     Get(filename) {
         return this.server.GetContent(this.Category, this.Points, filename)
@@ -153,13 +153,6 @@ class Puzzle {
 
 /**
  * MOTH instance state.
- * 
- * @property {Object} Config
- * @property {Boolean} Config.Enabled Are points log updates enabled?
- * @property {String} Messages Global broadcast messages, in HTML
- * @property {Object.<String>} TeamNames Mapping from IDs to team names
- * @property {Object.<String,Number[]>} PointsByCategory Map from category name to open puzzle point values
- * @property {Award[]} PointsLog Log of points awarded
  */
 class State {
     /**
@@ -190,7 +183,7 @@ class State {
          */
         this.TeamNames = obj.TeamNames
         /** Map from category name to puzzle point values
-         * @type {Object.<String,Number}
+         * @type {Object.<String,Number>}
          */
         this.PointsByCategory = obj.Puzzles
         /** Log of points awarded
@@ -277,8 +270,8 @@ class Server {
      * If body is set, POST will be used instead of GET
      * 
      * @param {String} path Path to API endpoint
-     * @param {Object<String,String>} body Key/Values to send in POST data
-     * @returns {Promise<Response>} Response
+     * @param {Object.<String,String>} body Key/Values to send in POST data
+     * @returns {Promise.<Response>} Response
      */
     fetch(path, body) {
         let url = new URL(path, this.baseUrl)
@@ -295,8 +288,8 @@ class Server {
      * Send a request to a JSend API endpoint.
      * 
      * @param {String} path Path to API endpoint
-     * @param {Object<String,String>} args Key/Values to send in POST
-     * @returns {Promise<Object>} JSend Data
+     * @param {Object.<String,String>} args Key/Values to send in POST
+     * @returns {Promise.<Object>} JSend Data
      */
     async call(path, args) {
         let resp = await this.fetch(path, args)
@@ -342,7 +335,7 @@ class Server {
      * 
      * @param {String} teamId 
      * @param {String} teamName 
-     * @returns {Promise<String>} Success message from server
+     * @returns {Promise.<String>} Success message from server
      */
     async Register(teamId, teamName) {
         let data = await this.call("/login", {id: teamId, name: teamName})
@@ -361,7 +354,7 @@ class Server {
      * @param {String} category Category of puzzle
      * @param {Number} points Point value of puzzle
      * @param {String} answer Answer to submit
-     * @returns {Promise<Boolean>} Was the answer accepted?
+     * @returns {Promise.<Boolean>} Was the answer accepted?
      */
     async SubmitAnswer(category, points, answer) {
         await this.call("/answer", {category, points, answer})
@@ -374,7 +367,7 @@ class Server {
      * @param {String} category Category of puzzle
      * @param {Number} points Point value of puzzle
      * @param {String} filename
-     * @returns {Promise<Response>}
+     * @returns {Promise.<Response>}
      */
     GetContent(category, points, filename) {
         return this.fetch(`/content/${category}/${points}/${filename}`)
