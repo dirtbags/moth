@@ -20,19 +20,15 @@ async function init() {
     let state = await server.GetState()
 
     doing("Retrieving all puzzles")
-    let puzzles = state.Puzzles()
-    for (let p of puzzles) {
-        await p.Populate().catch(x => {})
-    }
-
-    doing("Filling table")
     let puzzlerowTemplate = document.querySelector("template#puzzlerow")
-    for (let tbody of document.querySelectorAll("tbody")) {
-        for (let puzzle of puzzles) {
+    let puzzles = state.Puzzles()
+    for (let puzzle of puzzles) {
+        await puzzle.Populate().catch(x => {})
+        for (let tbody of document.querySelectorAll("tbody")) {
             let row = puzzlerowTemplate.content.cloneNode(true)
             row.querySelector(".category").textContent = puzzle.Category
             row.querySelector(".points").textContent = puzzle.Points
-            row.querySelector(".ksas").textContent = puzzle.KSAs.join(" ")
+            row.querySelector(".ksas").textContent = (puzzle.KSAs || []).join(" ")
             row.querySelector(".error").textContent = puzzle.Error.Body
             tbody.appendChild(row)
         }

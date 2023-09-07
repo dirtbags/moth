@@ -26,11 +26,14 @@ class Award {
  * A puzzle.
  * 
  * A new Puzzle only knows its category and point value.
- * If you want to populate it with meta-information, you must call Get().
+ * If you want to populate it with meta-information, you must call Populate().
+ * 
+ * Parameters created by Populate are described in the server source code:
+ * {@link https://pkg.go.dev/github.com/dirtbags/moth/v4/pkg/transpile#Puzzle}
+ * 
  */
 class Puzzle {
     /**
-     * 
      * @param {Server} server 
      * @param {String} category 
      * @param {Number} points 
@@ -44,71 +47,22 @@ class Puzzle {
          * @type {Server}
          */
         this.server = server
-        /** Category this puzzle belongs to
-         * @type {String}
-         */
-        this.Category = category
-        /** Point value of this puzzle
-         * @type {Number}
-         */
-        this.Points = points
-    }
+        
+        /** Category this puzzle belongs to */
+        this.Category = String(category)
+        
+        /** Point value of this puzzle */
+        this.Points = Number(points)
 
-    /** Error returned trying to fetch this puzzle */
-    Error = {
-        /** Status code provided by server */
-        Status: 0,
-        /** Status text provided by server */
-        StatusText: "",
-        /** Full text of server error */
-        Body: "",
-    }
-    /** Hashes of answers 
-     * @type {String[]}
-     */
-    AnswerHashes = []
-    /** Pattern that answer should match
-     * @type {String[]}
-     */
-   AnswerPattern = ""
-    /** Accepted answers 
-     * @type {String[]}
-     */
-    Answers = []
-    /** Other files attached to this puzzles 
-     * @type {String[]}
-     */
-    Attachments = []
-    /** This puzzle's authors 
-     * @type {String[]}
-    */
-    Authors = []
-    /** HTML body of this puzzle */
-    Body = ""
-    /** Debugging information */
-    Debug = {
-        Errors: [],
-        Hints: [],
-        Log: [],
-        Notes: "",
-        Summary: "",
-    }
-    /** KSAs met by solving this puzzle 
-     * @type {String[]}
-    */
-    KSAs = []
-    /** Learning objective for this puzzle */
-    Objective = "" 
-    /** ECMAScript scripts needed for this puzzle 
-     * @type {String[]}
-    */
-    Scripts = []
-    /** Criteria for succeeding at this puzzle */
-    Success = {
-        /** Acceptable Minimum criteria for success */
-        Minimum: "",
-        /** Criteria for demonstrating mastery of this puzzle */
-        Mastery: "",
+        /** Error returned trying to fetch this puzzle */
+        this.Error = {
+            /** Status code provided by server */
+            Status: 0,
+            /** Status text provided by server */
+            StatusText: "",
+            /** Full text of server error */
+            Body: "",
+        }
     }
 
     /**
