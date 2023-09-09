@@ -1,5 +1,13 @@
 import * as moth from "./moth.mjs"
 
+/** Stores the current puzzle, globally */
+let puzzle = null
+
+function submit(event) {
+    event.preventDefault()
+    console.log(event)
+}
+
 function puzzleElement(clear=true) {
     let e = document.querySelector("#puzzle")
     if (clear) {
@@ -16,7 +24,7 @@ function error(message) {
 
 async function loadPuzzle(category, points) {
     let server = new moth.Server()
-    let puzzle = server.GetPuzzle(category, points)
+    puzzle = server.GetPuzzle(category, points)
     await puzzle.Populate()
 
     let title = `${category} ${points}`
@@ -49,6 +57,9 @@ function hashchange() {
 }
 
 function init() {
+    for (let e of document.querySelectorAll("form.answer")) {
+        e.addEventListener("submit", submit)
+    }
     window.addEventListener("hashchange", hashchange)
     hashchange()
 }
