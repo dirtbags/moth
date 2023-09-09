@@ -1,29 +1,58 @@
-/* http://paletton.com/#uid=63T0u0k7O9o3ouT6LjHih7ltq4c */
+/*
+ * Colors
+ *
+ * This uses the alpha channel to apply hue tinting to elements, to get a
+ * similar effect in light or dark mode.
+ *
+ * http://paletton.com/#uid=33x0u0klrl-4ON9dhtKtAdqMQ4T
+ */
 body {
-  font-family: sans-serif;
-  max-width: 40em;
-	background: #282a33;
-	color: #f6efdc;
+	background: #010e19;
+  color: #edd488;
 }
-body.wide {
-  max-width: 100%;
+main {
+  background: #000d;
 }
-a:any-link {
-	color: #8b969a;
+h1, h2, h3, h4, h5, h6 {
+  color: #cb2408cc;
 }
 h1 {
-	background: #5e576b;
-	color: #9e98a8;
+  background: #cb240844;
 }
-.Fail, .Error, #messages {
-	background: #3a3119;
-	color: #ffcc98;
+a:any-link {
+	color: #b9cbd8;
 }
-.Fail:before {
-	content: "Fail: ";
+.notification {
+	background: #ac8f3944;
 }
-.Error:before {
-	content: "Error: ";
+.error {
+  background: red;
+  color: white;
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background: #b9cbd8;
+    color: black;
+  }
+  main {
+    background: #fffd;
+  }
+  a:any-link {
+    color: #092b45;
+  }
+}
+
+body {
+  font-family: sans-serif;
+}
+main {
+  max-width: 40em;
+  margin: auto;
+  padding: 1px 3px;
+  border-radius: 5px;
+}
+h1 {
+  padding: 3px;
 }
 p {
 	margin: 1em 0em;
@@ -36,9 +65,11 @@ input, select {
 	margin: 0.2em;
 	max-width: 30em;
 }
-nav {
-  border: solid black 2px;
+.notification, .error {
+  padding: 0 1em;
+  border-radius: 8px;
 }
+
 nav ul, .category ul {
   padding: 1em;
 }
@@ -58,7 +89,6 @@ input:invalid {
 }
 #messages {
   min-height: 3em;
-  border: solid black 2px;
 }
 #rankings {
 	width: 100%;
@@ -91,40 +121,7 @@ input:invalid {
 
 
 #devel {
-  background-color: #eee;
-  color: black;
-  overflow: scroll;
-}
-#devel .string {
-  color: #9c27b0;
-}
-#devel .body {
-  background-color: #ffc107;
-}
-.kvpair {
-  border: solid black 2px;
-}
-
-.spinner {
-  display: inline-block;
-  width: 64px;
-  height: 64px;
-  display: block;
-  width: 46px;
-  height: 46px;
-  margin: 1px;
-  border-radius: 50%;
-  border: 5px solid #fff;
-  border-color: #fff transparent #fff transparent;
-  animation: rotate 1.2s linear infinite;
-}
-@keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  overflow: auto;
 }
 
 li[draggable]::before {

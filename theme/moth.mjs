@@ -326,6 +326,20 @@ class Server {
     GetContent(category, points, filename) {
         return this.fetch(`/content/${category}/${points}/${filename}`)
     }
+
+    /**
+     * Return a Puzzle object.
+     * 
+     * New Puzzle objects only know their category and point value.
+     * See docstrings on the Puzzle object for more information.
+     * 
+     * @param {String} category 
+     * @param {Number} points 
+     * @returns {Puzzle}
+     */
+    GetPuzzle(category, points) {
+        return new Puzzle(this, category, points)
+    }
 }
 
 export {
