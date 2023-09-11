@@ -22,6 +22,17 @@ h1 {
 a:any-link {
 	color: #b9cbd8;
 }
+canvas.wallpaper {
+  position: fixed;
+  display: block;
+  z-index: -1000;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  opacity: 0.3;
+  image-rendering: pixelated;
+}
 .notification {
 	background: #ac8f3944;
 }

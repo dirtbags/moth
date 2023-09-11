@@ -5,118 +5,150 @@ function randint(max) {
 const MILLISECOND = 1
 const SECOND = MILLISECOND * 1000
 
-class Line {
+class Point {
+    constructor(x, y) {
+        this.x = x
+        this.y = y
+    }
+
     /**
-     * @param {CanvasRenderingContext2D} ctx canvas context
-     * @param {Number} hue Hue, in % of one circle [0,tau)
-     * @param {Number} a First point of line
-     * @param {Number} b Second point of line
+     * Add n to this.
+     * 
+     * @param {Point} n What to add to this
+     * @returns {Point}
      */
-    constructor(ctx, hue, a, b) {
-        this.ctx = ctx
+    Add(n) {
+        return new Point(this.x + n.x, this.y + n.y)
+    }
+
+    /**
+     * Subtract n from this.
+     * 
+     * @param {Point} n 
+     * @returns {Point}
+     */
+    Subtract(n) {
+        return new Point(this.x - n.x, this.y - n.y)
+    }
+
+    /**
+     * Add velocity, then bounce point off box defined by points at min and max
+     * @param {Point} velocity
+     * @param {Point} min 
+     * @param {Point} max 
+     * @returns {Point}
+     */
+    Bounce(velocity, min, max) {
+        let p = this.Add(velocity)
+        if (p.x < min.x) {
+            p.x += (min.x - p.x) * 2
+            velocity.x *= -1
+        }
+        if (p.x > max.x) {
+            p.x += (max.x - p.x) * 2
+            velocity.x *= -1
+        }
+        if (p.y < min.y) {
+            p.y += (min.y - p.y) * 2
+            velocity.y *= -1
+        }
+        if (p.y > max.y) {
+            p.y += (max.y - p.y) * 2
+            velocity.y *= -1
+        }
+        return p
+    }
+
+    /**
+     * 
+     * @param {Point} p 
+     * @returns {Boolean}
+     */
+    Equal(p) {
+        return (this.x == p.x) && (this.y == p.y)
+    }
+}
+
+class QixLine {
+    /**
+     * @param {Number} hue 
+     * @param {Point} a 
+     * @param {Point} b 
+     */
+    constructor(hue, a, b) {
         this.hue = hue
         this.a = a
         this.b = b
     }
-
-    bounce(point, v) {
-        let ret = [
-            point[0] + v[0],
-            point[1] + v[1],
-        ]
-        if ((ret[0] > this.ctx.canvas.width) || (ret[0] < 0)) {
-            v[0] *= -1
-            ret[0] += v[0] * 2
-        }
-        if ((ret[1] > this.ctx.canvas.height) || (ret[1] < 0)) {
-            v[1] *= -1
-            ret[1] += v[1] * 2
-        }
-        return ret
-    }
-
-    Add(hue, a, b) {
-        return new Line(
-            this.ctx,
-            (this.hue + hue) % 1.0,
-            this.bounce(this.a, a),
-            this.bounce(this.b, b),
-        )
-    }
-
-    Draw() {
-        this.ctx.save()
-        this.ctx.strokeStyle = `hwb(${this.hue}turn 0% 50%)`
-        this.ctx.beginPath()
-        this.ctx.moveTo(this.a[0], this.a[1])
-        this.ctx.lineTo(this.b[0], this.b[1])
-        this.ctx.stroke()
-        this.ctx.restore()
-    }
 }
 
-class LengoBackground {
-    constructor() {
-        this.canvas = document.createElement("canvas")
-        document.body.insertBefore(this.canvas, document.body.firstChild)
-        this.canvas.style.position = "fixed"
-        this.canvas.style.zIndex = -1000
-        this.canvas.style.opacity = 0.3
-        this.canvas.style.top = 0
-        this.canvas.style.left = 0
-        this.canvas.style.width = "99vw"
-        this.canvas.style.height = "99vh"
-        this.canvas.width = 2000
-        this.canvas.height = 2000
-        this.ctx = this.canvas.getContext("2d")
-        this.ctx.lineWidth = 1
+/**
+ * Draw a line dancing around the screen,
+ * like the video game "qix"
+ */
+class QixBackground {
+    constructor(ctx) {
+        this.ctx = ctx
+        this.min = new Point(0, 0)
+        this.max = new Point(this.ctx.canvas.width, this.ctx.canvas.height)
+        this.box = this.max.Subtract(this.min)
 
-        this.lines = []
-        for (let i = 0; i < 18; i++) {
-            this.lines.push(
-                new Line(this.ctx, 0, [0, 0], [0, 0])
+        this.lines = [
+            new QixLine(
+                0,
+                new Point(randint(this.box.x), randint(this.box.y)),
+                new Point(randint(this.box.x), randint(this.box.y)),
             )
+        ]
+        while (this.lines.length < 18) {
+            this.lines.push(this.lines[0])
         }
-        this.velocities = {
-            hue: 0.001,
-            a: [20 + randint(10), 20 + randint(10)],
-            b: [5 + randint(10), 5 + randint(10)],
-        }
-        this.nextFrame = performance.now()-1
-        this.frameInterval = 100 * MILLISECOND
+        this.velocity = new QixLine(
+            0.001,
+            new Point(1 + randint(this.box.x / 200), 1 + randint(this.box.y / 200)),
+            new Point(1 + randint(this.box.x / 200), 1 + randint(this.box.y / 200)),
+        )
 
-        //addEventListener("resize", e => this.resizeEvent())
-        //this.resizeEvent()
-        //this.animate(this.nextFrame)
-        setInterval(() => this.animate(this.nextFrame+1), SECOND/6)
+        setInterval(() => this.animate(), SECOND/6)
     }
-
 
     /**
      * Animate one frame
-     * 
-     * @param {DOMHighResTimeStamp} timestamp 
      */
-    animate(timestamp) {
-        if (timestamp >= this.nextFrame) {
-            this.lines.shift()
-            let lastLine = this.lines.pop()
-            let nextLine = lastLine.Add(this.velocities.hue, this.velocities.a, this.velocities.b)
-            this.lines.push(lastLine)
-            this.lines.push(nextLine)
+    animate() {
+        this.lines.shift()
+        let lastLine = this.lines[this.lines.length - 1]
+        let nextLine = new QixLine(
+            (lastLine.hue + this.velocity.hue) % 1.0,
+            lastLine.a.Bounce(this.velocity.a, this.min, this.max),
+            lastLine.b.Bounce(this.velocity.b, this.min, this.max),
+        )
 
-            this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
-            for (let line of this.lines) {
-                line.Draw()
-            }
-            this.nextFrame += this.frameInterval
+        this.lines.push(nextLine)
+
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
+        for (let line of this.lines) {
+            this.ctx.save()
+            this.ctx.strokeStyle = `hwb(${line.hue}turn 0% 50%)`
+            this.ctx.beginPath()
+            this.ctx.moveTo(line.a.x, line.a.y)
+            this.ctx.lineTo(line.b.x, line.b.y)
+            this.ctx.stroke()
+            this.ctx.restore()
         }
-        //requestAnimationFrame((ts) => this.animate(ts))
     }
 }
 
 function init() {
-    new LengoBackground()
+    let canvas = document.createElement("canvas")
+    canvas.width = 640
+    canvas.height = 640
+    canvas.classList.add("wallpaper")
+    document.body.insertBefore(canvas, document.body.firstChild)
+
+    let ctx = canvas.getContext("2d")
+
+    new QixBackground(ctx)
 }
 
 if (document.readyState === "loading") {

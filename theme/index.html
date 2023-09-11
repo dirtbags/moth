@@ -4,15 +4,15 @@
     <title>MOTH</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    <link rel="icon" href="luna-moth.svg">
     <link rel="stylesheet" href="basic.css">
-    <script src="moth.js"></script>
-    <link rel="manifest" href="manifest.json">
+    <script src="moth.mjs" type="module"></script>
+    <script src="background.mjs" type="module"></script>
   </head>
   <body>
     <h1 id="title">MOTH</h1>
-    <section>
-      <div id="messages">
-        <div id="notices"></div>
+    <main>
+      <div id="messages notification">
       </div>
 
       <form id="login">
@@ -22,8 +22,7 @@
       </form>
 
       <div id="puzzles"></div>
-
-    </section>
+    </main>
     <nav>
       <ul>
         <li><a href="scoreboard.html">Scoreboard</a></li>
