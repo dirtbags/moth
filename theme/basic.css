@@ -102,6 +102,9 @@ img {
 input:invalid {
   border-color: red;
 }
+.answer_ok {
+  cursor: help;
+}
 #messages {
   min-height: 3em;
 }
