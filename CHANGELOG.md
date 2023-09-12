@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v4.6.0] - unreleased
+### Changed
+- We are now using djb2xor instead of sha256 to hash puzzle answers
+- Lots of work on the built-in theme
+- [moth.mjs](theme/moth.mjs) is now the standard MOTH library for ECMAScript
+
 ## [v4.4.9] - 2022-05-12
 ### Changed
 - Added a performance optimization for events with a large number of teams

@@ -1,4 +1,66 @@
 /**
+ * Hash/digest functions
+ */
+class Hash {
+    /**
+     * Dan Bernstein hash
+     * 
+     * Used until MOTH v3.5
+     * 
+     * @param {String} buf Input
+     * @returns {Number}
+     */
+    static djb2(buf) {
+        let h = 5381
+        for (let c of (new TextEncoder()).encode(buf)) { // Encode as UTF-8 and read in each byte
+            // JavaScript converts everything to a signed 32-bit integer when you do bitwise operations.
+            // So we have to do "unsigned right shift" by zero to get it back to unsigned.
+            h = (((h * 33) + c) & 0xffffffff) >>> 0
+        }
+        return h
+    }
+
+    /**
+     * Dan Bernstein hash with xor improvement
+     * 
+     * @param {String} buf Input
+     * @returns {Number}
+     */
+    static djb2xor(buf) {
+        let h = 5381
+        for (let c of (new TextEncoder()).encode(buf)) {
+            h = h * 33 ^ c
+        }
+        return h
+    }
+  
+    /**
+     * SHA 256
+     * 
+     * Used until MOTH v4.5
+     * 
+     * @param {String} buf Input
+     * @returns {String} hex-encoded digest
+     */
+   static async sha256(buf) {
+    const msgUint8 = new TextEncoder().encode(buf)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return this.hexlify(hashArray);
+  }
+
+  /**
+   * Hex-encode a byte array
+   * 
+   * @param {Number[]} buf Byte array
+   * @returns {String}
+   */
+  static async hexlify(buf) {
+    return buf.map(b => b.toString(16).padStart(2, "0")).join("")   
+  }
+}
+
+/**
  * A point award.
  */
 class Award {
@@ -102,6 +164,23 @@ class Puzzle {
      */
     Get(filename) {
         return this.server.GetContent(this.Category, this.Points, filename)
+    }
+
+    async IsPossiblyCorrect(str) {
+        let userAnswerHashes = [
+            Hash.djb2(str),
+            Hash.djb2xor(str),
+            await Hash.sha256(str),
+        ]
+
+        for (let pah of this.AnswerHashes) {
+            for (let uah of userAnswerHashes) {
+                if (pah == uah) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 }
 
@@ -343,5 +422,6 @@ class Server {
 }
 
 export {
-    Server
+    Hash,
+    Server,
 }

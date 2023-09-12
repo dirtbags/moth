@@ -87,7 +87,7 @@ class QixLine {
  * like the video game "qix"
  */
 class QixBackground {
-    constructor(ctx) {
+    constructor(ctx, frameInterval = SECOND/6) {
         this.ctx = ctx
         this.min = new Point(0, 0)
         this.max = new Point(this.ctx.canvas.width, this.ctx.canvas.height)
@@ -105,17 +105,25 @@ class QixBackground {
         }
         this.velocity = new QixLine(
             0.001,
-            new Point(1 + randint(this.box.x / 200), 1 + randint(this.box.y / 200)),
-            new Point(1 + randint(this.box.x / 200), 1 + randint(this.box.y / 200)),
+            new Point(1 + randint(this.box.x / 100), 1 + randint(this.box.y / 100)),
+            new Point(1 + randint(this.box.x / 100), 1 + randint(this.box.y / 100)),
         )
 
-        setInterval(() => this.animate(), SECOND/6)
+        this.frameInterval = frameInterval
+        this.nextFrame = 0
     }
 
     /**
-     * Animate one frame
+     * Maybe draw a frame
      */
-    animate() {
+    Animate() {
+        let now = performance.now()
+        if (now < this.nextFrame) {
+            // Not today, satan
+            return
+        }
+        this.nextFrame = now + this.frameInterval
+
         this.lines.shift()
         let lastLine = this.lines[this.lines.length - 1]
         let nextLine = new QixLine(
@@ -129,7 +137,7 @@ class QixBackground {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height)
         for (let line of this.lines) {
             this.ctx.save()
-            this.ctx.strokeStyle = `hwb(${line.hue}turn 0% 50%)`
+            this.ctx.strokeStyle = `hwb(${line.hue}turn 0% 0%)`
             this.ctx.beginPath()
             this.ctx.moveTo(line.a.x, line.a.y)
             this.ctx.lineTo(line.b.x, line.b.y)
@@ -148,7 +156,9 @@ function init() {
 
     let ctx = canvas.getContext("2d")
 
-    new QixBackground(ctx)
+    let qix = new QixBackground(ctx)
+    setInterval(() => qix.Animate(), SECOND/6)
+
 }
 
 if (document.readyState === "loading") {

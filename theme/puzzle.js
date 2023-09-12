@@ -19,7 +19,7 @@ function devel_addin(e) {
   if (log.length > 0) {
     e.appendChild(document.createElement("h3")).textContent = "Log"
     let le = e.appendChild(document.createElement("ul"))
-    for (entry of log) {
+    for (let entry of log) {
       le.appendChild(document.createElement("li")).textContent = entry
     }
   }
