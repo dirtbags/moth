@@ -4,6 +4,7 @@ function randint(max) {
 
 const MILLISECOND = 1
 const SECOND = MILLISECOND * 1000
+const FRAMERATE = 24 / SECOND  // Fast enough for this tomfoolery
 
 class Point {
     constructor(x, y) {
@@ -87,7 +88,7 @@ class QixLine {
  * like the video game "qix"
  */
 class QixBackground {
-    constructor(ctx, frameInterval = SECOND/6) {
+    constructor(ctx, frameRate = 6/SECOND) {
         this.ctx = ctx
         this.min = new Point(0, 0)
         this.max = new Point(this.ctx.canvas.width, this.ctx.canvas.height)
@@ -95,7 +96,7 @@ class QixBackground {
 
         this.lines = [
             new QixLine(
-                0,
+                Math.random(),
                 new Point(randint(this.box.x), randint(this.box.y)),
                 new Point(randint(this.box.x), randint(this.box.y)),
             )
@@ -109,7 +110,7 @@ class QixBackground {
             new Point(1 + randint(this.box.x / 100), 1 + randint(this.box.y / 100)),
         )
 
-        this.frameInterval = frameInterval
+        this.frameInterval = MILLISECOND / frameRate
         this.nextFrame = 0
     }
 
@@ -157,8 +158,8 @@ function init() {
     let ctx = canvas.getContext("2d")
 
     let qix = new QixBackground(ctx)
-    setInterval(() => qix.Animate(), SECOND/6)
-
+    // window.requestAnimationFrame is overkill for something this silly
+    setInterval(() => qix.Animate(), MILLISECOND/FRAMERATE)
 }
 
 if (document.readyState === "loading") {

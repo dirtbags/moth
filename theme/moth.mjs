@@ -15,7 +15,7 @@ class Hash {
         for (let c of (new TextEncoder()).encode(buf)) { // Encode as UTF-8 and read in each byte
             // JavaScript converts everything to a signed 32-bit integer when you do bitwise operations.
             // So we have to do "unsigned right shift" by zero to get it back to unsigned.
-            h = (((h * 33) + c) & 0xffffffff) >>> 0
+            h = ((h * 33) + c) >>> 0
         }
         return h
     }
@@ -29,7 +29,7 @@ class Hash {
     static djb2xor(buf) {
         let h = 5381
         for (let c of (new TextEncoder()).encode(buf)) {
-            h = h * 33 ^ c
+            h = ((h * 33) ^ c) >>> 0
         }
         return h
     }
@@ -40,14 +40,14 @@ class Hash {
      * Used until MOTH v4.5
      * 
      * @param {String} buf Input
-     * @returns {String} hex-encoded digest
+     * @returns {Promise.<String>} hex-encoded digest
      */
-   static async sha256(buf) {
-    const msgUint8 = new TextEncoder().encode(buf)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return this.hexlify(hashArray);
-  }
+    static async sha256(buf) {
+        const msgUint8 = new TextEncoder().encode(buf)
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        return this.hexlify(hashArray);
+    }
 
   /**
    * Hex-encode a byte array
@@ -55,8 +55,22 @@ class Hash {
    * @param {Number[]} buf Byte array
    * @returns {String}
    */
-  static async hexlify(buf) {
+  static hexlify(buf) {
     return buf.map(b => b.toString(16).padStart(2, "0")).join("")   
+  }
+
+  /**
+   * Apply every hash to the input buffer.
+   * 
+   * @param {String} buf Input
+   * @returns {Promise.<String[]>}
+   */
+  static async All(buf) {
+    return [
+        String(this.djb2(buf)),
+        String(this.djb2xor(buf)),
+        await this.sha256(buf),
+    ]
   }
 }
 
@@ -166,12 +180,24 @@ class Puzzle {
         return this.server.GetContent(this.Category, this.Points, filename)
     }
 
+    /**
+     * Check if a string is possibly correct.
+     *
+     * The server sends a list of answer hashes with each puzzle: this method
+     * checks to see if any of those hashes match a hash of the string.
+     *
+     * The MOTH development team likes obscure hash functions with a lot of
+     * collisions, which means that a given input may match another possible
+     * string's hash. We do this so that if you run a brute force attack against
+     * the list of hashes, you have to write your own brute force program, and
+     * you still have to pick through a lot of potentially correct answers when
+     * it's done.
+     *
+     * @param {String} str User-submitted possible answer
+     * @returns {Promise.<Boolean>}
+     */
     async IsPossiblyCorrect(str) {
-        let userAnswerHashes = [
-            Hash.djb2(str),
-            Hash.djb2xor(str),
-            await Hash.sha256(str),
-        ]
+        let userAnswerHashes = await Hash.All(str)
 
         for (let pah of this.AnswerHashes) {
             for (let uah of userAnswerHashes) {

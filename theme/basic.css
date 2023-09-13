@@ -74,6 +74,7 @@ p {
 }
 form, pre {
 	margin: 1em;
+  overflow-x: auto;
 }
 input, select {
 	padding: 0.6em;

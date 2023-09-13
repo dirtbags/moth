@@ -95,9 +95,9 @@ async function loadPuzzle(category, points) {
 
     let server = new moth.Server()
     let puzzle = server.GetPuzzle(category, points)
-    console.time("Puzzle load")
+    console.time("Populate")
     await puzzle.Populate()
-    console.timeEnd("Puzzle load")
+    console.timeEnd("Populate")
 
     let title = `${category} ${points}`
     document.querySelector("title").textContent = title
@@ -122,6 +122,8 @@ async function loadPuzzle(category, points) {
         document.getElementById("files").appendChild(li)
     }
 
+    let baseElement = document.head.appendChild(document.createElement("base"))
+    baseElement.href = contentBase
 
     window.app.puzzle = puzzle
     console.info("window.app.puzzle =", window.app.puzzle)
@@ -141,6 +143,11 @@ function init() {
     }
     // There isn't a more graceful way to "unload" scripts attached to the current puzzle
     window.addEventListener("hashchange", () => location.reload())
+
+    // Make all links absolute, because we're going to be changing the base URL
+    for (let e of document.querySelectorAll("[href]")) {
+        e.href = new URL(e.href, location)
+    }
 
     let hashpart = location.hash.split("#")[1] || ""
     let catpoints = hashpart.split(":")
