@@ -1,4 +1,10 @@
+/**
+ * Functionality for puzzle.html (Puzzle display / answer form)
+ */
 import * as moth from "./moth.mjs"
+import * as common from "./common.mjs"
+
+const server = new moth.Server(".")
 
 /**
  * Handle a submit event on a form.
@@ -10,9 +16,22 @@ import * as moth from "./moth.mjs"
  * 
  * @param {Event} event 
  */
-function formSubmitHandler(event) {
+async function formSubmitHandler(event) {
     event.preventDefault()
-    console.log(event)
+    let data = new FormData(event.target)
+    let proposed = data.get("answer")
+    let message
+    
+    console.group("Submit answer")
+    console.info(`Proposed answer: ${proposed}`)
+    try {
+        message = await window.app.puzzle.SubmitAnswer(proposed)
+    }
+    catch (err) {
+        common.Toast(err)
+    }
+    common.Toast(message)
+    console.groupEnd("Submit answer")
 }
 
 /**
@@ -69,10 +88,38 @@ function error(error) {
  * 
  * @param {String} s 
  */
-function setanswer(s) {
+function SetAnswer(s) {
     let e = document.querySelector("#answer")
     e.value = s
     e.dispatchEvent(new Event("input"))
+}
+
+function writeObject(e, obj) {
+    let keys = Object.keys(obj)
+    keys.sort()
+    for (let key of keys) {
+        let val = obj[key]
+        if ((key === "Body") || (!val) || (val.length === 0)) {
+            continue
+        }
+
+        let d = e.appendChild(document.createElement("dt"))
+        d.textContent = key
+
+        let t = e.appendChild(document.createElement("dd"))
+        if (Array.isArray(val)) {
+            let vi = t.appendChild(document.createElement("ul"))
+            vi.multiple = true
+            for (let a of val) {
+                let opt = vi.appendChild(document.createElement("li"))
+                opt.textContent = a
+            }
+        } else if (typeof(val) === "object") {
+            writeObject(t, val)
+        } else {
+            t.textContent = val
+        }
+    }
 }
 
 /**
@@ -93,16 +140,17 @@ async function loadPuzzle(category, points) {
         }
     }    
 
-    let server = new moth.Server()
     let puzzle = server.GetPuzzle(category, points)
     console.time("Populate")
     await puzzle.Populate()
     console.timeEnd("Populate")
 
+    console.info("Tweaking HTML...")
     let title = `${category} ${points}`
     document.querySelector("title").textContent = title
     document.querySelector("#title").textContent = title
     document.querySelector("#authors").textContent = puzzle.Authors.join(", ")
+    document.querySelector("#answer").pattern = window.puzzle.AnswerPattern
     puzzleElement().innerHTML = puzzle.Body
 
     console.info("Adding attached scripts...")
@@ -110,7 +158,7 @@ async function loadPuzzle(category, points) {
         let st = document.createElement("script")
         document.head.appendChild(st)
         st.src = new URL(script, contentBase)
-      }
+    }
 
     console.info("Listing attached files...")
     for (let fn of (puzzle.Attachments || [])) {
@@ -122,6 +170,16 @@ async function loadPuzzle(category, points) {
         document.getElementById("files").appendChild(li)
     }
 
+
+    console.info("Filling debug information...")
+    for (let e of document.querySelectorAll(".debug")) {
+        if (puzzle.Answers.length > 0) {
+            writeObject(e, puzzle)
+        } else {
+            e.classList.add("hidden")
+        }
+    }
+
     let baseElement = document.head.appendChild(document.createElement("base"))
     baseElement.href = contentBase
 
@@ -129,11 +187,13 @@ async function loadPuzzle(category, points) {
     console.info("window.app.puzzle =", window.app.puzzle)
 
     console.groupEnd()
+
+    return puzzle
 }
 
-function init() {
+async function init() {
     window.app = {}
-    window.setanswer = setanswer
+    window.setanswer = (str => SetAnswer(str))
 
     for (let form of document.querySelectorAll("form.answer")) {
         form.addEventListener("submit", formSubmitHandler)
@@ -158,12 +218,7 @@ function init() {
         return
     }
 
-    loadPuzzle(category, points)
-    .catch(err => error(err))
+    window.app.puzzle = await loadPuzzle(category, points)
 }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init)
-} else {
-    init()
-}
+common.WhenDOMLoaded(init)

@@ -208,6 +208,19 @@ class Puzzle {
         }
         return false
     }
+
+    /**
+     * Submit a proposed answer for points.
+     *
+     * The returned promise will fail if anything goes wrong, including the
+     * proposed answer being rejected.
+     *
+     * @param {String} proposed Answer to submit
+     * @returns {Promise.<String>} Success message
+     */
+    SubmitAnswer(proposed) {
+        return this.server.SubmitAnswer(this.Category, this.Points, proposed)
+    }
 }
 
 /**
@@ -228,23 +241,27 @@ class State {
 
         /** Configuration */
         this.Config = {
-            /** Is the server in debug mode?
+            /** Is the server in development mode?
              * @type {Boolean}
              */
-            Debug: obj.Config.Debug,
+            Devel: obj.Config.Devel,
         }
+
         /** Global messages, in HTML
          * @type {String}
          */
         this.Messages = obj.Messages
+
         /** Map from Team ID to Team Name
          * @type {Object.<String,String>}
          */
         this.TeamNames = obj.TeamNames
+
         /** Map from category name to puzzle point values
          * @type {Object.<String,Number>}
          */
         this.PointsByCategory = obj.Puzzles
+
         /** Log of points awarded
          * @type {Award[]}
          */
@@ -276,6 +293,15 @@ class State {
      */
     HasUnsolved(category) {
         return !this.PointsByCategory[category].includes(0)
+    }
+
+    /**
+     * Is the server in development mode?
+     * 
+     * @returns {Boolean}
+     */
+    DevelopmentMode() {
+        return this.Config && this.Config.Devel
     }
 
     /**
@@ -313,10 +339,16 @@ class State {
  * and will send a Team ID with every request, if it can find one.
  */
 class Server {
+    /**
+     * @param {String | URL} baseUrl Base URL to server, for constructing API URLs
+     */
     constructor(baseUrl) {
+        if (!baseUrl) {
+            throw("Must provide baseURL")
+        }
         this.baseUrl = new URL(baseUrl, location)
-        this.teameIdKey = this.baseUrl.toString() + " teamID"
-        this.teamId = localStorage[this.teameIdKey]
+        this.teamIdKey = this.baseUrl.toString() + " teamID"
+        this.TeamId = localStorage[this.teamIdKey]
     }
 
     /**
@@ -326,21 +358,29 @@ class Server {
      * this function throws an error.
      * 
      * This always sends teamId.
-     * If body is set, POST will be used instead of GET
+     * If args is set, POST will be used instead of GET
      * 
      * @param {String} path Path to API endpoint
-     * @param {Object.<String,String>} body Key/Values to send in POST data
+     * @param {Object.<String,String>} args Key/Values to send in POST data
      * @returns {Promise.<Response>} Response
      */
-    fetch(path, body) {
+    fetch(path, args) {
         let url = new URL(path, this.baseUrl)
-        if (this.teamId & (!(body && body.id))) {
-            url.searchParams.set("id", this.teamId)
+        if (this.TeamId & (!(args && args.id))) {
+            url.searchParams.set("id", this.TeamId)
         }
-        return fetch(url, {
-            method: body?"POST":"GET",
-            body,
-        })
+
+        if (args) {
+            let formData = new FormData()
+            for (let k in args) {
+                formData.set(k, args[k])
+            }
+            return fetch(url, {
+                method: "POST",
+                body: formData,
+            })
+        }
+        return fetch(url)
     }
 
     /**
@@ -356,7 +396,7 @@ class Server {
         switch (obj.status) {
             case "success":
                 return obj.data
-            case "failure":
+            case "fail":
                 throw new Error(obj.data.description || obj.data.short || obj.data)
             case "error":
                 throw new Error(obj.message)
@@ -366,19 +406,37 @@ class Server {
     }
 
     /**
+     * Make a new URL for the given resource.
+     * 
+     * @returns {URL}
+     */
+    URL(url) {
+        return new URL(url, this.baseUrl)
+    }
+
+    /**
+     * Are we logged in to the server?
+     * 
+     * @returns {Boolean}
+     */
+    LoggedIn() {
+        return this.TeamId ? true : false
+    }
+
+    /**
      * Forget about any previous Team ID.
      * 
      * This is equivalent to logging out.
      */
     Reset() {
-        localStorage.removeItem(this.teameIdKey)
-        this.teamId = null
+        localStorage.removeItem(this.teamIdKey)
+        this.TeamId = null
     }
 
     /**
      * Fetch current contest state.
      * 
-     * @returns {State}
+     * @returns {Promise.<State>}
      */
     async GetState() {
         let resp = await this.fetch("/state")
@@ -387,37 +445,41 @@ class Server {
     }
 
     /**
-     * Register a team name with a team ID.
-     * 
-     * This is similar to, but not exactly the same as, logging in.
-     * See MOTH documentation for details.
-     * 
+     * Log in to a team.
+     *
+     * This calls the server's registration endpoint; if the call succeds, or
+     * fails with "team already exists", the login is returned as successful. 
+     *
      * @param {String} teamId 
      * @param {String} teamName 
      * @returns {Promise.<String>} Success message from server
      */
-    async Register(teamId, teamName) {
-        let data = await this.call("/login", {id: teamId, name: teamName})
-        this.teamId = teamId
-        this.teamName = teamName
-        localStorage[this.teameIdKey] = teamId
+    async Login(teamId, teamName) {
+        let data = await this.call("/register", {id: teamId, name: teamName})
+        this.TeamId = teamId
+        this.TeamName = teamName
+        localStorage[this.teamIdKey] = teamId
         return data.description || data.short
     }
 
     /**
-     * Submit a puzzle answer for points.
+     * Submit a proposed answer for points.
      *
      * The returned promise will fail if anything goes wrong, including the
-     * answer being rejected.
+     * proposed answer being rejected.
      *
      * @param {String} category Category of puzzle
      * @param {Number} points Point value of puzzle
-     * @param {String} answer Answer to submit
-     * @returns {Promise.<Boolean>} Was the answer accepted?
+     * @param {String} proposed Answer to submit
+     * @returns {Promise.<String>} Success message
      */
-    async SubmitAnswer(category, points, answer) {
-        await this.call("/answer", {category, points, answer})
-        return true
+    async SubmitAnswer(category, points, proposed) {
+        let data = await this.call("/answer", {
+            cat: category, 
+            points, 
+            answer: proposed,
+        })
+        return data.description || data.short
     }
 
     /**

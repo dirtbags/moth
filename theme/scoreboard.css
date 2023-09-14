@@ -1,0 +1,91 @@
+/* GHC displays: 1024x1820 */
+@media screen and (max-aspect-ratio: 4/5) and (min-height: 1600px) {
+  html {
+    font-size: 20pt;
+  }
+}
+
+#chart {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+.logo {
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  font-family: Montserrat, sans-serif;
+  font-weight: 500;
+  border-radius: 10px;
+  font-size: 1.2em;
+}
+.cyber {
+  color: black;
+}
+.fire {
+  color: #d94a1f;
+}
+.announcement.floating {
+  position: fixed;
+  bottom: 0;
+  width: 100hw;
+  max-width: inherit;
+}
+.announcement {
+  background-color: rgba(255,255,255,0.5);
+  color: black;
+  padding: 0.25em;
+  border-radius: 5px;
+  max-width: 20em;
+  text-align: center;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  font-size: 1.3em;
+  flex-wrap: wrap;
+}
+.announcement div {
+  margin: 1em;  
+  max-width: 45vw;
+  text-align: center;
+  
+}
+.qrcode {
+  width: 30vw;
+}
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.examples > div {
+  margin: 0.5em;
+  max-width: 40%;
+}
+
+#rankings {
+	width: 100%;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#rankings span {
+	font-size: 75%;
+	display: inline-block;
+	overflow: hidden;
+	height: 1.7em;
+}
+#rankings span.teamname {
+	font-size: inherit;
+	color: white;
+	text-shadow: 0 0 3px black;
+	opacity: 0.8;
+	position: absolute;
+	right: 0.2em;
+}
+#rankings div * {white-space: nowrap;}
+.cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
+.cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
+.cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
+.cat3, .cat11, .cat19 {background-color: #33a02c; color: white;}
+.cat4, .cat12, .cat20 {background-color: #fb9a99; color: black;}
+.cat5, .cat13, .cat21 {background-color: #e31a1c; color: white;}
+.cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
+.cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}

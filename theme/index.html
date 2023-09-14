@@ -1,32 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>MOTH</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <link rel="icon" href="luna-moth.svg">
     <link rel="stylesheet" href="basic.css">
-    <script src="moth.mjs" type="module"></script>
-    <script src="background.mjs" type="module"></script>
+    <script src="index.mjs" type="module" async></script>
+    <script src="background.mjs" type="module" async></script>
   </head>
   <body>
-    <h1 id="title">MOTH</h1>
+    <h1 class="title">MOTH</h1>
     <main>
-      <div id="messages notification">
+      <div class="messages notification">
       </div>
 
-      <form id="login">
+      <form class="login">
         Team ID: <input name="id"> <br>
         Team name: <input name="name"> <br>
         <input type="submit" value="Sign In">
       </form>
 
-      <div id="puzzles"></div>
+      <div class="puzzles"></div>
+
+      <div class="toasts"></div>
     </main>
     <nav>
       <ul>
-        <li><a href="scoreboard.html">Scoreboard</a></li>
-        <li><a href="logout.html">Sign Out</a></li>
+        <li><a href="scoreboard.html" target="_blank">Scoreboard</a></li>
+        <li><button class="logout">Sign Out</button></li>
       </ul>
     </nav>
   </body>

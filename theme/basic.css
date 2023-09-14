@@ -29,6 +29,15 @@ a:any-link {
   background: red;
   color: white;
 }
+.toast {
+  background: #333;
+  color: #eee;
+  box-shadow: 0px 0px 8px 0px #0b0;
+}
+.debug {
+  background: #ccc;
+  color: black;
+}
 @media (prefers-color-scheme: light) {
   body {
     background: #b9cbd8;
@@ -45,7 +54,8 @@ a:any-link {
 body {
   font-family: sans-serif;
   background-image: url("bg.png");
-  background-size: contain;
+  background-size: cover;
+  background-position: center;
   background-blend-mode: soft-light;
   background-attachment: fixed;
 }
@@ -62,7 +72,7 @@ canvas.wallpaper {
 }
 main {
   max-width: 40em;
-  margin: auto;
+  margin: 1em auto;
   padding: 1px 3px;
   border-radius: 5px;
 }
@@ -85,19 +95,43 @@ input, select {
   padding: 0 1em;
   border-radius: 8px;
 }
+.hidden {
+  display: none;
+}
 
+/** Puzzles list */
+.category {
+  margin: 5px 0;
+  background: #ccc4;
+}
+.category h2 {
+  margin: 0 0.2em;
+}
 nav ul, .category ul {
-  padding: 1em;
+  margin: 0;
+  padding: 0.2em 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 nav li, .category li {
 	display: inline;
-	margin: 1em;
 }
-iframe#body {
-  border: inherit;
-  width: 100%;
+.mothball {
+  float: right;
+  text-decoration: none;
+  border-radius: 5px;
+  background: #ccc;
+  padding: 4px 8px;
+  margin: 5px;
 }
-img {
+
+/** Puzzle content */
+#puzzle {
+  border-bottom: solid;
+  padding: 0 0.5em;
+}
+#puzzle img {
   max-width: 100%;
 }
 input:invalid {
@@ -106,9 +140,8 @@ input:invalid {
 .answer_ok {
   cursor: help;
 }
-#messages {
-  min-height: 3em;
-}
+
+/** Scoreboard */
 #rankings {
 	width: 100%;
 	position: relative;
@@ -138,11 +171,17 @@ input:invalid {
 .cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
 .cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}
 
-
-#devel {
+.debug {
   overflow: auto;
+  padding: 1em;
+  border-radius: 10px;
+  margin: 2em auto;
+}
+.debug dt {
+  font-weight: bold;
 }
 
+/** Draggable items, from the draggable plugin */
 li[draggable]::before {
   content: "↕";
   padding: 0.5em;
@@ -160,6 +199,28 @@ li[draggable] {
   border: 1px white dashed;
 }
 
-#cacheButton.disabled {
-  display: none;
+
+
+
+
+/** Toasts are little pop-up informational messages. */
+ .toasts {
+  position: fixed;
+  z-index: 100;
+  bottom: 10px;
+  left: 10px;
+  text-align: center;
+  width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+}
+.toast {
+  border-radius: 0.5em;
+  padding:  0.2em 2em;
+  animation: fadeIn ease 1s;
+  margin: 2px auto;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }

@@ -2,9 +2,9 @@ function randint(max) {
     return Math.floor(Math.random() * max)
 }
 
-const MILLISECOND = 1
-const SECOND = MILLISECOND * 1000
-const FRAMERATE = 24 / SECOND  // Fast enough for this tomfoolery
+const Millisecond = 1
+const Second = Millisecond * 1000
+const FrameRate = 24 / Second  // Fast enough for this tomfoolery
 
 class Point {
     constructor(x, y) {
@@ -88,7 +88,7 @@ class QixLine {
  * like the video game "qix"
  */
 class QixBackground {
-    constructor(ctx, frameRate = 6/SECOND) {
+    constructor(ctx, frameRate = 6/Second) {
         this.ctx = ctx
         this.min = new Point(0, 0)
         this.max = new Point(this.ctx.canvas.width, this.ctx.canvas.height)
@@ -110,7 +110,7 @@ class QixBackground {
             new Point(1 + randint(this.box.x / 100), 1 + randint(this.box.y / 100)),
         )
 
-        this.frameInterval = MILLISECOND / frameRate
+        this.frameInterval = Millisecond / frameRate
         this.nextFrame = 0
     }
 
@@ -149,6 +149,12 @@ class QixBackground {
 }
 
 function init() {
+    // Don't like the background animation? You can disable it by setting a
+    // property in localStorage and reloading.
+    if (localStorage.disableBackgroundAnimation) {
+        return
+    }
+
     let canvas = document.createElement("canvas")
     canvas.width = 640
     canvas.height = 640
@@ -159,7 +165,7 @@ function init() {
 
     let qix = new QixBackground(ctx)
     // window.requestAnimationFrame is overkill for something this silly
-    setInterval(() => qix.Animate(), MILLISECOND/FRAMERATE)
+    setInterval(() => qix.Animate(), Millisecond/FrameRate)
 }
 
 if (document.readyState === "loading") {

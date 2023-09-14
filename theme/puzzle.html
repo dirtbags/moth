@@ -10,29 +10,25 @@
     <script src="puzzle.mjs" type="module" async></script>
   </head>
   <body>
+    <h1 id="title">[loading]</h1>
     <main>
-      <h1 id="title">[loading]</h1>
-      <section>
-        <div id="puzzle">
-          <p class="notification">
-            Starting script...
-          </p>
-        </div>
+      <section id="puzzle">
+        <p class="notification">
+          Starting script...
+        </p>
+      </section>
+      <section class="meta"></section>
         <ul id="files"></ul>
         <p>Puzzle by <span id="authors">[loading]</span></p>
       </section>
       <form class="answer">
-        Team ID: <input type="text" name="id"> <br>
-        Answer: <input type="text" name="answer" id="answer"> <span class="answer_ok"></span><br>
+        <label for="answer">Answer:</label>
+        <input type="text" name="answer" id="answer"> <span class="answer_ok"></span>
+        <br>
         <input type="submit" value="Submit">
       </form>
     </main>
-    <div id="devel" class="notification"></div>
-    <nav>
-      <ul>
-        <li><a href="index.html">Puzzles</a></li>
-        <li><a href="scoreboard.html">Scoreboard</a></li>
-      </ul>
-    </nav>
+    <div class="debug" class="notification"></div>
+    <div class="toasts"></div>
   </body>
 </html>
