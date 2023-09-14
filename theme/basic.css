@@ -75,6 +75,9 @@ input {
 .category h2 {
   margin: 0 0.2em;
 }
+.category .solved {
+  text-decoration: line-through;
+}
 nav ul, .category ul {
   margin: 0;
   padding: 0.2em 1em;

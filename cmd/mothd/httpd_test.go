@@ -128,7 +128,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"error awarding points: points already awarded to this team in this category"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 }

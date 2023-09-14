@@ -5,12 +5,15 @@ import * as moth from "./moth.mjs"
 import * as common from "./common.mjs"
 
 class App {
-    constructor(basePath=".") {
+    constructor(basePath=".") {        
+        this.configURL = new URL("config.json", location)
+        this.config = {}
+        
         this.server = new moth.Server(basePath)
 
         let uuid = Math.floor(Math.random() * 1000000).toString(16)
         this.fakeRegistration = {
-            TeamId: uuid,
+            TeamID: uuid,
             TeamName: `Team ${uuid}`,
         }
 
@@ -21,8 +24,11 @@ class App {
             e.addEventListener("click", () => this.Logout())
         }
 
-        setInterval(() => this.Update(), common.Minute/3)
-        this.Update()
+        setInterval(() => this.UpdateState(), common.Minute/3)
+        setInterval(() => this.UpdateConfig(), common.Minute* 5)
+
+        this.UpdateConfig()
+        .finally(() => this.UpdateState())
     }
 
     handleLoginSubmit(event) {
@@ -33,14 +39,14 @@ class App {
     /**
      * Attempt to log in to the server.
      * 
-     * @param {String} teamId 
+     * @param {String} teamID 
      * @param {String} teamName 
      */
-    async Login(teamId, teamName) {
+    async Login(teamID, teamName) {
         try {
-            await this.server.Login(teamId, teamName)
-            common.Toast(`Logged in (team id = ${teamId})`)
-            this.Update()
+            await this.server.Login(teamID, teamName)
+            common.Toast(`Logged in (team id = ${teamID})`)
+            this.UpdateState()
         }
         catch (error) {
             common.Toast(error)
@@ -54,11 +60,22 @@ class App {
         try {
             this.server.Reset()
             common.Toast("Logged out")
-            this.Update()
+            this.UpdateState()
         }
         catch (error) {
             common.Toast(error)
         }
+    }
+
+    /**
+     * Update app configuration.
+     *
+     * Configuration can be updated less frequently than state, to reduce server
+     * load, since configuration should (hopefully) change less frequently.
+     */
+    async UpdateConfig() {
+        let resp = await fetch(this.configURL)
+        this.config = await resp.json()
     }
 
     /**
@@ -68,10 +85,16 @@ class App {
      * what's returned. If we're in development mode and not logged in, auto
      * login too.
      */
-    async Update() {
+    async UpdateState() {
         this.state = await this.server.GetState()
         for (let e of document.querySelectorAll(".messages")) {
             e.innerHTML = this.state.Messages
+        }
+
+        // Update elements with data-track-solved
+        for (let e of document.querySelectorAll("[data-track-solved]")) {
+            // Only display if data-track-solved is the same as config.trackSolved
+            e.classList.toggle("hidden", common.Truthy(e.dataset.trackSolved) != this.config.TrackSolved)
         }
 
         for (let e of document.querySelectorAll(".login")) {
@@ -84,7 +107,7 @@ class App {
         if (this.state.DevelopmentMode() && !this.server.LoggedIn()) {
             common.Toast("Automatically logging in to devel server")
             console.info("Logging in with generated Team ID and Team Name", this.fakeRegistration)
-            return this.Login(this.fakeRegistration.TeamId, this.fakeRegistration.TeamName)
+            return this.Login(this.fakeRegistration.TeamID, this.fakeRegistration.TeamName)
         }
     }
 
@@ -133,9 +156,13 @@ class App {
                 a.textContent = puzzle.Points
                 a.href = url
                 a.target = "_blank"
+
+                if (this.config.TrackSolved) {
+                    a.classList.toggle("solved", this.state.IsSolved(puzzle))
+                }
             }
 
-            if (!this.state.HasUnsolved(cat)) {
+            if (!this.state.ContainsUnsolved(cat)) {
                 l.appendChild(document.createElement("li")).textContent = "✿"
             }
             

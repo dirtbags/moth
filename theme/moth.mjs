@@ -130,7 +130,7 @@ class Puzzle {
         /** Point value of this puzzle */
         this.Points = Number(points)
 
-        /** Error returned trying to fetch this puzzle */
+        /** Error returned trying to retrieve this puzzle */
         this.Error = {
             /** Status code provided by server */
             Status: 0,
@@ -265,7 +265,7 @@ class State {
         /** Log of points awarded
          * @type {Award[]}
          */
-        this.PointsLog = obj.PointsLog.map((t,i,c,p) => new Award(t,i,c,p))
+        this.PointsLog = obj.PointsLog.map(entry => new Award(entry[0], entry[1], entry[2], entry[3]))
     }
 
     /**
@@ -283,7 +283,7 @@ class State {
     }
 
     /**
-     * Check whether a category has unsolved puzzles.
+     * Check whether a category contains unsolved puzzles.
      * 
      * The server adds a puzzle with 0 points in every "solved" category,
      * so this just checks whether there is a 0-point puzzle in the category's point list.
@@ -291,7 +291,7 @@ class State {
      * @param {String} category 
      * @returns {Boolean}
      */
-    HasUnsolved(category) {
+    ContainsUnsolved(category) {
         return !this.PointsByCategory[category].includes(0)
     }
 
@@ -330,6 +330,26 @@ class State {
         }
         return ret
     }
+
+    /**
+     * Has this puzzle been solved by this team?
+     * 
+     * @param {Puzzle} puzzle 
+     * @param {String} teamID Team to check, default the logged-in team
+     * @returns {Boolean}
+     */
+    IsSolved(puzzle, teamID="self") {
+        for (let award of this.PointsLog) {
+            if (
+                (award.Category == puzzle.Category)
+                && (award.Points == puzzle.Points)
+                && (award.TeamID == teamID)
+            ) {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 /**
@@ -347,8 +367,8 @@ class Server {
             throw("Must provide baseURL")
         }
         this.baseUrl = new URL(baseUrl, location)
-        this.teamIdKey = this.baseUrl.toString() + " teamID"
-        this.TeamId = localStorage[this.teamIdKey]
+        this.teamIDKey = this.baseUrl.toString() + " teamID"
+        this.TeamID = localStorage[this.teamIDKey]
     }
 
     /**
@@ -357,30 +377,24 @@ class Server {
      * If anything other than a 2xx code is returned,
      * this function throws an error.
      * 
-     * This always sends teamId.
+     * This always sends teamID.
      * If args is set, POST will be used instead of GET
      * 
      * @param {String} path Path to API endpoint
      * @param {Object.<String,String>} args Key/Values to send in POST data
      * @returns {Promise.<Response>} Response
      */
-    fetch(path, args) {
-        let url = new URL(path, this.baseUrl)
-        if (this.TeamId & (!(args && args.id))) {
-            url.searchParams.set("id", this.TeamId)
+    fetch(path, args={}) {
+        let body = new URLSearchParams(args)
+        if (this.TeamID && !body.has("id")) {
+            body.set("id", this.TeamID)
         }
 
-        if (args) {
-            let formData = new FormData()
-            for (let k in args) {
-                formData.set(k, args[k])
-            }
-            return fetch(url, {
-                method: "POST",
-                body: formData,
-            })
-        }
-        return fetch(url)
+        let url = new URL(path, this.baseUrl)
+        return fetch(url, {
+            method: "POST",
+            body,
+        })
     }
 
     /**
@@ -390,7 +404,7 @@ class Server {
      * @param {Object.<String,String>} args Key/Values to send in POST
      * @returns {Promise.<Object>} JSend Data
      */
-    async call(path, args) {
+    async call(path, args={}) {
         let resp = await this.fetch(path, args)
         let obj = await resp.json()
         switch (obj.status) {
@@ -407,7 +421,10 @@ class Server {
 
     /**
      * Make a new URL for the given resource.
-     * 
+     *
+     * The returned URL instance will be absolute, and immune to changes to the
+     * page that would affect relative URLs.
+     *
      * @returns {URL}
      */
     URL(url) {
@@ -420,7 +437,7 @@ class Server {
      * @returns {Boolean}
      */
     LoggedIn() {
-        return this.TeamId ? true : false
+        return this.TeamID ? true : false
     }
 
     /**
@@ -429,8 +446,8 @@ class Server {
      * This is equivalent to logging out.
      */
     Reset() {
-        localStorage.removeItem(this.teamIdKey)
-        this.TeamId = null
+        localStorage.removeItem(this.teamIDKey)
+        this.TeamID = null
     }
 
     /**
@@ -450,15 +467,15 @@ class Server {
      * This calls the server's registration endpoint; if the call succeds, or
      * fails with "team already exists", the login is returned as successful. 
      *
-     * @param {String} teamId 
+     * @param {String} teamID
      * @param {String} teamName 
      * @returns {Promise.<String>} Success message from server
      */
-    async Login(teamId, teamName) {
-        let data = await this.call("/register", {id: teamId, name: teamName})
-        this.TeamId = teamId
+    async Login(teamID, teamName) {
+        let data = await this.call("/register", {id: teamID, name: teamName})
+        this.TeamID = teamID
         this.TeamName = teamName
-        localStorage[this.teamIdKey] = teamId
+        localStorage[this.teamIDKey] = teamID
         return data.description || data.short
     }
 

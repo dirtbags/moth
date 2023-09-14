@@ -26,11 +26,11 @@ async function formSubmitHandler(event) {
     console.info(`Proposed answer: ${proposed}`)
     try {
         message = await window.app.puzzle.SubmitAnswer(proposed)
+        common.Toast(message)
     }
     catch (err) {
         common.Toast(err)
     }
-    common.Toast(message)
     console.groupEnd("Submit answer")
 }
 

@@ -156,7 +156,7 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		return fmt.Errorf("invalid team ID")
 	}
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
-		return fmt.Errorf("error awarding points: %s", err)
+		return err
 	}
 
 	return nil

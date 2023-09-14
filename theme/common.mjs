@@ -34,10 +34,30 @@ function WhenDOMLoaded(cb) {
     }    
 }
 
+/**
+ * Interprets a String as a Boolean.
+ * 
+ * Values like "no" or "disabled" to mean false here.
+ * 
+ * @param {String} s 
+ * @returns {Boolean}
+ */
+function Truthy(s) {
+    switch (s.toLowerCase()) {
+        case "disabled":
+        case "no":
+        case "off":
+        case "false":
+            return false
+    }
+    return true
+}
+
 export {
     Millisecond,
     Second,
     Minute,
     Toast,
     WhenDOMLoaded,
+    Truthy,
 }

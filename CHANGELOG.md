@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - We are now using djb2xor instead of sha256 to hash puzzle answers
 - Lots of work on the built-in theme
 - [moth.mjs](theme/moth.mjs) is now the standard MOTH library for ECMAScript
+- Devel mode no longer accepts an empty team ID
 
 ## [v4.4.9] - 2022-05-12
 ### Changed
