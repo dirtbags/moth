@@ -1,63 +1,12 @@
-/*
- * Colors
- *
- * This uses the alpha channel to apply hue tinting to elements, to get a
- * similar effect in light or dark mode.
- *
- * http://paletton.com/#uid=33x0u0klrl-4ON9dhtKtAdqMQ4T
- */
-body {
-	background: #010e19;
-  color: #edd488;
-}
-main {
-  background: #000d;
-}
-h1, h2, h3, h4, h5, h6 {
-  color: #cb2408cc;
-}
-h1 {
-  background: #cb240844;
-}
-a:any-link {
-	color: #b9cbd8;
-}
-.notification {
-	background: #ac8f3944;
-}
-.error {
-  background: red;
-  color: white;
-}
-.toast {
-  background: #333;
-  color: #eee;
-  box-shadow: 0px 0px 8px 0px #0b0;
-}
-.debug {
-  background: #ccc;
-  color: black;
-}
-@media (prefers-color-scheme: light) {
-  body {
-    background: #b9cbd8;
-    color: black;
-  }
-  main {
-    background: #fffd;
-  }
-  a:any-link {
-    color: #092b45;
-  }
-}
+/* Color palette: http://paletton.com/#uid=33x0u0klrl-4ON9dhtKtAdqMQ4T */
 
 body {
   font-family: sans-serif;
-  background-image: url("bg.png");
+  background: #010e19 url("bg.png") center fixed;
   background-size: cover;
-  background-position: center;
   background-blend-mode: soft-light;
-  background-attachment: fixed;
+  background-color: #010e19;
+  color: #edd488;
 }
 canvas.wallpaper {
   position: fixed;
@@ -75,12 +24,20 @@ main {
   margin: 1em auto;
   padding: 1px 3px;
   border-radius: 5px;
+  background: #000d;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #cb2408cc;
 }
 h1 {
+  background: #cb240844;
   padding: 3px;
 }
 p {
 	margin: 1em 0em;
+}
+a:any-link {
+	color: #b9cbd8;
 }
 form, pre {
 	margin: 1em;
@@ -94,6 +51,13 @@ input, select {
 .notification, .error {
   padding: 0 1em;
   border-radius: 8px;
+}
+.notification {
+	background: #ac8f3944;
+}
+.error {
+  background: red;
+  color: white;
 }
 .hidden {
   display: none;
@@ -176,6 +140,8 @@ input:invalid {
   padding: 1em;
   border-radius: 10px;
   margin: 2em auto;
+  background: #cccc;
+  color: black;
 }
 .debug dt {
   font-weight: bold;
@@ -219,8 +185,30 @@ li[draggable] {
   padding:  0.2em 2em;
   animation: fadeIn ease 1s;
   margin: 2px auto;
+  background: #333;
+  color: #eee;
+  box-shadow: 0px 0px 8px 0px #0b0;
 }
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
+}
+
+@media (prefers-color-scheme: light) {
+  /*
+   * This uses the alpha channel to apply hue tinting to elements, to get a
+   * similar effect in light or dark mode. That means there aren't a whole lot of
+   * things to change between light and dark mode.
+   *
+   */
+ body {
+    background-color: #b9cbd8;
+    color: black;
+  }
+  main {
+    background-color: #fffd;
+  }
+  a:any-link {
+    color: #092b45;
+  }
 }
