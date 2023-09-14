@@ -48,6 +48,10 @@ input, select {
 	margin: 0.2em;
 	max-width: 30em;
 }
+input {
+  background-color: #ccc4;
+  color: inherit;
+}
 .notification, .error {
   padding: 0 1em;
   border-radius: 8px;
@@ -99,7 +103,8 @@ nav li, .category li {
   max-width: 100%;
 }
 input:invalid {
-  border-color: red;
+  background-color: #800;
+  color: white;
 }
 .answer_ok {
   cursor: help;

@@ -150,7 +150,9 @@ async function loadPuzzle(category, points) {
     document.querySelector("title").textContent = title
     document.querySelector("#title").textContent = title
     document.querySelector("#authors").textContent = puzzle.Authors.join(", ")
-    document.querySelector("#answer").pattern = window.puzzle.AnswerPattern
+    if (puzzle.AnswerPattern) {
+        document.querySelector("#answer").pattern = puzzle.AnswerPattern
+    }
     puzzleElement().innerHTML = puzzle.Body
 
     console.info("Adding attached scripts...")
