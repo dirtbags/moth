@@ -21,7 +21,7 @@ class Hash {
     }
 
     /**
-     * Dan Bernstein hash with xor improvement
+     * Dan Bernstein hash with xor
      * 
      * @param {string} buf Input
      * @returns {number}
@@ -49,15 +49,30 @@ class Hash {
         return this.hexlify(hashArray);
     }
 
-  /**
-   * Hex-encode a byte array
-   * 
-   * @param {number[]} buf Byte array
-   * @returns {string}
-   */
-  static hexlify(buf) {
-    return buf.map(b => b.toString(16).padStart(2, "0")).join("")   
-  }
+    /**
+     * SHA 1, but only the first 4 hexits (2 octets).
+     * 
+     * Git uses this technique with 7 hexits (default) as a "short identifier".
+     * 
+     * @param {string} buf Input
+     */
+    static async sha1_slice(buf, end=4) {
+        const msgUint8 = new TextEncoder().encode(buf)
+        const hashBuffer = await crypto.subtle.digest("SHA-1", msgUint8)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        const hexits = this.hexlify(hashArray)
+        return hexits.slice(0, end)
+    }
+
+    /**
+     * Hex-encode a byte array
+     * 
+     * @param {number[]} buf Byte array
+     * @returns {string}
+     */
+    static hexlify(buf) {
+        return buf.map(b => b.toString(16).padStart(2, "0")).join("")   
+    }
 
   /**
    * Apply every hash to the input buffer.
@@ -68,8 +83,8 @@ class Hash {
   static async All(buf) {
     return [
         String(this.djb2(buf)),
-        String(this.djb2xor(buf)),
         await this.sha256(buf),
+        await this.sha1_slice(buf),
     ]
   }
 }
@@ -224,6 +239,111 @@ class Puzzle {
 }
 
 /**
+ * A snapshot of scores.
+ */
+class Scores {
+    constructor() {
+        /** 
+         * Timestamp of this score snapshot
+         * @type number 
+         */
+        this.Timestamp = 0
+
+        /**
+         * All categories present in this snapshot.
+         *
+         * ECMAScript sets preserve order, so iterating over this will yield
+         * categories as they were added to the points log.
+         *
+         * @type {Set.<string>}
+         */
+        this.Categories = new Set()
+
+        /**
+         * All team IDs present in this snapshot
+         * @type {Set.<string>}
+         */
+        this.TeamIDs = new Set()
+
+        /**
+         * Highest score in each category
+         * @type {Object.<string,number>}
+         */
+        this.MaxPoints = {}
+        
+        this.categoryTeamPoints = {}
+    }
+
+    /**
+     * Return a sorted list of category names
+     * 
+     * @returns {string[]}
+     */
+    SortedCategories() {
+        let categories = [...this.Categories]
+        categories.sort((a,b) => a.localeCompare(b, "en", {sensitivity: "base"}))
+        return categories
+    }
+
+    /**
+     * Add an award to a team's score.
+     * 
+     * Updates this.Timestamp to the award's timestamp.
+     * 
+     * @param {Award} award 
+     */
+    Add(award) {
+        this.Timestamp = award.Timestamp
+        this.Categories.add(award.Category)
+        this.TeamIDs.add(award.TeamID)
+
+        let teamPoints = (this.categoryTeamPoints[award.Category] ??= {})
+        let points = (teamPoints[award.TeamID] || 0) + award.Points
+        teamPoints[award.TeamID] = points
+
+        let max = this.MaxPoints[award.Category] || 0
+        this.MaxPoints[award.Category] = Math.max(max, points)
+    }
+
+    /**
+     * Get a team's score within a category.
+     * 
+     * @param {string} category 
+     * @param {string} teamID 
+     * @returns {number}
+     */
+    GetPoints(category, teamID) {
+        let teamPoints = this.categoryTeamPoints[category] || {}
+        return teamPoints[teamID] || 0
+    }
+
+    /**
+     * Calculate a team's score in a category, using the Cyber Fire algorithm.
+     * 
+     *@param {string} category 
+     * @param {string} teamID 
+     */
+    CyFiCategoryScore(category, teamID) {
+        return this.GetPoints(category, teamID) / this.MaxPoints[category]
+    }
+
+    /**
+     * Calculate a team's overall score, using the Cyber Fire algorithm.
+     * 
+     *@param {string} category 
+     * @param {string} teamID 
+     * @returns {number}
+     */
+    CyFiScore(teamID) {
+        let score = 0
+        for (let category of this.Categories) {
+            score += this.CyFiCategoryScore(category, teamID)
+        }
+        return score
+    }
+}
+
+/**
  * MOTH instance state.
  */
 class State {
@@ -352,49 +472,31 @@ class State {
     }
 
     /**
-     * Map from team ID to points.
-     * 
-     * A special "max" property contains the highest number of points in this map.
-     * 
-     * @typedef {Object.<string, number>} TeamPointsDict
-     * @property {Number} max Highest number of points
-     */
-
-    /**
-     * Map from category to PointsDict.
-     *
-     * @typedef {Object.<string, TeamPointsDict>} CategoryTeamPointsDict
-     */
-
-    /**
-     * Score snapshot.
-     * 
-     * @typedef {Object} ScoreSnapshot
-     * @property {number} when Epoch time of this snapshot
-     * @property {CategoryTeamPointsDict} snapshot
-     */
-
-    /**
      * Replay scores.
      *
-     * @yields {ScoreSnapshot} Snapshot at a point in time
+     * MOTH has no notion of who is "winning", we consider this a user interface
+     * decision. There are lots of interesting options: see
+     * [scoring]{@link ../docs/scoring.md} for more.
+     *
+     * @yields {Scores} Snapshot at a point in time
      */
     * ScoreHistory() {
-        /** @type {CategoryTeamPointsDict} */
-        let categoryTeamPoints = {}
+        let scores = new Scores()
         for (let award of this.PointsLog) {
-            let teamPoints = (categoryTeamPoints[award.Category] ??= {})
-            let points = teamPoints[award.TeamID] || 0
-            let max = teamPoints.max || 0
-
-            points += award.Points
-            teamPoints[award.TeamID] = points
-            teamPoints.max = Math.max(points, max)
-
-            /** @type ScoreSnapshot */
-            let snapshot = {when: award.When, snapshot: categoryTeamPoints}
-            yield snapshot
+            scores.Add(award)
+            yield scores
         }
+    }
+
+    /**
+     * Calculate the current scores.
+     * 
+     * @returns {Scores}
+     */
+    CurrentScore() {
+        let scores
+        for (scores of this.ScoreHistory());
+        return scores
     }
 }
 

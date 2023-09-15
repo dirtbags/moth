@@ -118,18 +118,18 @@ input:invalid {
 	width: 100%;
 	position: relative;
 }
-
-#rankings span {
-	font-size: 75%;
-	display: inline-block;
-	overflow: hidden;
-	height: 1.7em;
+#rankings div:nth-child(6n){
+  background-color: #8881;
+}
+#rankings div:nth-child(6n+3) {
+  background-color: #0f01;
 }
 #rankings span.teamname {
+  height: auto;
 	font-size: inherit;
 	color: white;
-	text-shadow: 0 0 3px black;
-	opacity: 0.8;
+  background-color: #000e;
+  border-radius: 3px;
 	position: absolute;
 	right: 0.2em;
 }
