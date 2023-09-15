@@ -131,7 +131,7 @@ function writeObject(e, obj) {
  */
 async function loadPuzzle(category, points) {
     console.groupCollapsed("Loading puzzle:", category, points)
-    let contentBase = new URL(`content/${category}/${points}/`, location)
+    let contentBase = new URL(`content/${category}/${points}/`, common.BaseURL)
     
     // Tell user we're loading
     puzzleElement().appendChild(document.createElement("progress"))
@@ -209,7 +209,7 @@ async function init() {
 
     // Make all links absolute, because we're going to be changing the base URL
     for (let e of document.querySelectorAll("[href]")) {
-        e.href = new URL(e.href, location)
+        e.href = new URL(e.href, common.BaseURL)
     }
 
     let hashpart = location.hash.split("#")[1] || ""

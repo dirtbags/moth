@@ -542,6 +542,7 @@ class Server {
         return fetch(url, {
             method: "POST",
             body,
+            cache: "no-cache",
         })
     }
 

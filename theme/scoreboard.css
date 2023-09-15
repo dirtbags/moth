@@ -47,6 +47,18 @@
   text-align: center;
   
 }
+.location {
+  color: #acf;
+  background-color: #0008;
+  position: fixed;
+  right: 30vw;
+  bottom: 0;
+  padding: 1em;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight:bold;
+  text-decoration: underline;
+}
 .qrcode {
   width: 30vw;
 }
@@ -60,23 +72,34 @@
   max-width: 40%;
 }
 
+/** Scoreboard */
 #rankings {
 	width: 100%;
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.8);
+	position: relative;
+  background-color: #000c;
+}
+#rankings div {
+  height: 1.4rem;
+}
+#rankings div:nth-child(6n){
+  background-color: #ccc1;
+}
+#rankings div:nth-child(6n+3) {
+  background-color: #0f01;
 }
 
 #rankings span {
 	font-size: 75%;
 	display: inline-block;
 	overflow: hidden;
-	height: 1.7em;
+  height: 1.4em;
 }
 #rankings span.teamname {
+  height: auto;
 	font-size: inherit;
 	color: white;
-	text-shadow: 0 0 3px black;
-	opacity: 0.8;
+  background-color: #000e;
+  border-radius: 3px;
 	position: absolute;
 	right: 0.2em;
 }

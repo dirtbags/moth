@@ -5,6 +5,9 @@ const Millisecond = 1
 const Second = Millisecond * 1000
 const Minute = Second * 60
 
+/** URL to the top of this MOTH server */
+const BaseURL = new URL(".", location)
+
 /**
  * Display a transient message to the user.
  * 
@@ -53,11 +56,29 @@ function Truthy(s) {
     return true
 }
 
+
+/**
+ * Fetch the configuration object for this theme.
+ * 
+ * @returns {Promise.<Object>}
+ */
+async function Config() {
+    let resp = await fetch(
+        new URL("config.json", BaseURL), 
+        {
+            cache: "no-cache"
+        },
+    )
+    return resp.json()
+}
+
 export {
     Millisecond,
     Second,
     Minute,
+    BaseURL,
     Toast,
     WhenDOMLoaded,
     Truthy,
+    Config,
 }

@@ -2,8 +2,8 @@ import * as moth from "./moth.mjs"
 import * as common from "./common.mjs"
 
 const server = new moth.Server(".")
-const ReplayDuration = 3 * common.Second
-const MaxFrameRate = 24
+const ReplayDuration = 0.3 * common.Second
+const MaxFrameRate = 60
 /** Don't let any team's score exceed this percentage width */
 const MaxScoreWidth = 95
 
@@ -23,6 +23,12 @@ function sleep(timeout) {
  * The update is animated, because I think that looks cool.
  */
 async function update() {
+  let config = await common.Config()
+  for (let e of document.querySelectorAll(".location")) {
+    e.textContent = common.BaseURL
+    e.classList.toggle("hidden", !config.URLInScoreboard)
+  }
+
   let state = await server.GetState()
   let rankingsElement = document.querySelector("#rankings")
   let logSize = state.PointsLog.length

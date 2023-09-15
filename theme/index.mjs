@@ -6,7 +6,6 @@ import * as common from "./common.mjs"
 
 class App {
     constructor(basePath=".") {        
-        this.configURL = new URL("config.json", location)
         this.config = {}
         
         this.server = new moth.Server(basePath)
@@ -74,8 +73,7 @@ class App {
      * load, since configuration should (hopefully) change less frequently.
      */
     async UpdateConfig() {
-        let resp = await fetch(this.configURL)
-        this.config = await resp.json()
+        this.config = await common.Config()
     }
 
     /**
@@ -150,7 +148,7 @@ class App {
             for (let puzzle of this.state.Puzzles(cat)) {
                 let i = l.appendChild(document.createElement("li"))
 
-                let url = new URL("puzzle.html", window.location)
+                let url = new URL("puzzle.html", common.BaseURL)
                 url.hash = `${puzzle.Category}:${puzzle.Points}`
                 let a = i.appendChild(document.createElement("a"))
                 a.textContent = puzzle.Points
