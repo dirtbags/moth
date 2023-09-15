@@ -10,12 +10,6 @@ class App {
         
         this.server = new moth.Server(basePath)
 
-        let uuid = Math.floor(Math.random() * 1000000).toString(16)
-        this.fakeRegistration = {
-            TeamID: uuid,
-            TeamName: `Team ${uuid}`,
-        }
-
         for (let form of document.querySelectorAll("form.login")) {
             form.addEventListener("submit", event => this.handleLoginSubmit(event))
         }
@@ -103,9 +97,10 @@ class App {
         }
 
         if (this.state.DevelopmentMode() && !this.server.LoggedIn()) {
+            let teamID = Math.floor(Math.random() * 1000000).toString(16)
             common.Toast("Automatically logging in to devel server")
-            console.info("Logging in with generated Team ID and Team Name", this.fakeRegistration)
-            return this.Login(this.fakeRegistration.TeamID, this.fakeRegistration.TeamName)
+            console.info(`Logging in with generated Team ID: ${teamID}`)
+            return this.Login(teamID, `Team ${teamID}`)
         }
     }
 
