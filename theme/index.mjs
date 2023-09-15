@@ -39,8 +39,8 @@ class App {
     /**
      * Attempt to log in to the server.
      * 
-     * @param {String} teamID 
-     * @param {String} teamName 
+     * @param {string} teamID 
+     * @param {string} teamName 
      */
     async Login(teamID, teamName) {
         try {
@@ -114,7 +114,7 @@ class App {
     /**
      * Render a login box.
      * 
-     * This just toggles visibility, there's nothing dynamic in a login box.
+     * Just toggles visibility, there's nothing dynamic in a login box.
      */
     renderLogin(element, visible) {
         element.classList.toggle("hidden", !visible)
@@ -123,7 +123,7 @@ class App {
     /**
      * Render a puzzles box.
      *
-     * This updates the list of open puzzles, and adds mothball download links
+     * Displays the list of open puzzles, and adds mothball download links
      * if the server is in development mode.
      */
     renderPuzzles(element, visible) {
@@ -177,9 +177,4 @@ function init() {
     }
 }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init)
-} else {
-    init()
-}
-  
+common.WhenDOMLoaded(init)

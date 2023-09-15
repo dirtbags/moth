@@ -9,7 +9,7 @@ const server = new moth.Server(".")
 /**
  * Handle a submit event on a form.
  * 
- * This event will be called when the user submits the form,
+ * Called when the user submits the form,
  * either by clicking a "submit" button,
  * or by some other means provided by the browser,
  * like hitting the Enter key.
@@ -22,7 +22,7 @@ async function formSubmitHandler(event) {
     let proposed = data.get("answer")
     let message
     
-    console.group("Submit answer")
+    console.groupCollapsed("Submit answer")
     console.info(`Proposed answer: ${proposed}`)
     try {
         message = await window.app.puzzle.SubmitAnswer(proposed)
@@ -56,7 +56,7 @@ async function answerInputHandler(event) {
 /**
  * Return the puzzle content element, possibly with everything cleared out of it.
  * 
- * @param {Boolean} clear Should the element be cleared of children? Default true.
+ * @param {boolean} clear Should the element be cleared of children? Default true.
  * @returns {Element}
  */
 function puzzleElement(clear=true) {
@@ -69,10 +69,11 @@ function puzzleElement(clear=true) {
 
 /**
  * Display an error in the puzzle area, and also send it to the console.
- * 
- * This makes it so the user can see a bit more about what the problem is.
- * 
- * @param {String} error 
+ *
+ * Errors are rendered in the puzzle area, so the user can see a bit more about
+ * what the problem is.
+ *
+ * @param {string} error 
  */
 function error(error) {
     console.error(error)
@@ -84,9 +85,9 @@ function error(error) {
 /**
  * Set the answer and invoke input handlers.
  * 
- * This makes sure the Circle Of Success gets updated.
+ *  Makes sure the Circle Of Success gets updated.
  * 
- * @param {String} s 
+ * @param {string} s 
  */
 function SetAnswer(s) {
     let e = document.querySelector("#answer")
@@ -125,11 +126,11 @@ function writeObject(e, obj) {
 /**
  * Load the given puzzle.
  * 
- * @param {String} category 
- * @param {Number} points 
+ * @param {string} category 
+ * @param {number} points 
  */
 async function loadPuzzle(category, points) {
-    console.group("Loading puzzle:", category, points)
+    console.groupCollapsed("Loading puzzle:", category, points)
     let contentBase = new URL(`content/${category}/${points}/`, location)
     
     // Tell user we're loading

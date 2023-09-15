@@ -7,8 +7,8 @@ class Hash {
      * 
      * Used until MOTH v3.5
      * 
-     * @param {String} buf Input
-     * @returns {Number}
+     * @param {string} buf Input
+     * @returns {number}
      */
     static djb2(buf) {
         let h = 5381
@@ -23,8 +23,8 @@ class Hash {
     /**
      * Dan Bernstein hash with xor improvement
      * 
-     * @param {String} buf Input
-     * @returns {Number}
+     * @param {string} buf Input
+     * @returns {number}
      */
     static djb2xor(buf) {
         let h = 5381
@@ -39,8 +39,8 @@ class Hash {
      * 
      * Used until MOTH v4.5
      * 
-     * @param {String} buf Input
-     * @returns {Promise.<String>} hex-encoded digest
+     * @param {string} buf Input
+     * @returns {Promise.<string>} hex-encoded digest
      */
     static async sha256(buf) {
         const msgUint8 = new TextEncoder().encode(buf)
@@ -52,8 +52,8 @@ class Hash {
   /**
    * Hex-encode a byte array
    * 
-   * @param {Number[]} buf Byte array
-   * @returns {String}
+   * @param {number[]} buf Byte array
+   * @returns {string}
    */
   static hexlify(buf) {
     return buf.map(b => b.toString(16).padStart(2, "0")).join("")   
@@ -62,8 +62,8 @@ class Hash {
   /**
    * Apply every hash to the input buffer.
    * 
-   * @param {String} buf Input
-   * @returns {Promise.<String[]>}
+   * @param {string} buf Input
+   * @returns {Promise.<string[]>}
    */
   static async All(buf) {
     return [
@@ -80,19 +80,19 @@ class Hash {
 class Award {
     constructor(when, teamid, category, points) {
         /** Unix epoch timestamp for this award 
-         * @type {Number}
+         * @type {number}
         */
         this.When = when
         /** Team ID this award belongs to 
-         * @type {String}
+         * @type {string}
         */
         this.TeamID = teamid
         /** Puzzle category for this award
-         * @type {String}
+         * @type {string}
          */
         this.Category = category
         /** Points value of this award
-         * @type {Number}
+         * @type {number}
          */
         this.Points = points
     }
@@ -111,8 +111,8 @@ class Award {
 class Puzzle {
     /**
      * @param {Server} server 
-     * @param {String} category 
-     * @param {Number} points 
+     * @param {string} category 
+     * @param {number} points 
      */
     constructor (server, category, points) {
         if (points < 1) {
@@ -173,7 +173,7 @@ class Puzzle {
     /**
      * Get a resource associated with this puzzle.
      * 
-     * @param {String} filename Attachment/Script to retrieve
+     * @param {string} filename Attachment/Script to retrieve
      * @returns {Promise.<Response>}
      */
     Get(filename) {
@@ -193,8 +193,8 @@ class Puzzle {
      * you still have to pick through a lot of potentially correct answers when
      * it's done.
      *
-     * @param {String} str User-submitted possible answer
-     * @returns {Promise.<Boolean>}
+     * @param {string} str User-submitted possible answer
+     * @returns {Promise.<boolean>}
      */
     async IsPossiblyCorrect(str) {
         let userAnswerHashes = await Hash.All(str)
@@ -215,8 +215,8 @@ class Puzzle {
      * The returned promise will fail if anything goes wrong, including the
      * proposed answer being rejected.
      *
-     * @param {String} proposed Answer to submit
-     * @returns {Promise.<String>} Success message
+     * @param {string} proposed Answer to submit
+     * @returns {Promise.<string>} Success message
      */
     SubmitAnswer(proposed) {
         return this.server.SubmitAnswer(this.Category, this.Points, proposed)
@@ -242,23 +242,23 @@ class State {
         /** Configuration */
         this.Config = {
             /** Is the server in development mode?
-             * @type {Boolean}
+             * @type {boolean}
              */
             Devel: obj.Config.Devel,
         }
 
         /** Global messages, in HTML
-         * @type {String}
+         * @type {string}
          */
         this.Messages = obj.Messages
 
         /** Map from Team ID to Team Name
-         * @type {Object.<String,String>}
+         * @type {Object.<string,string>}
          */
         this.TeamNames = obj.TeamNames
 
         /** Map from category name to puzzle point values
-         * @type {Object.<String,Number>}
+         * @type {Object.<string,number>}
          */
         this.PointsByCategory = obj.Puzzles
 
@@ -271,7 +271,7 @@ class State {
     /**
      * Returns a sorted list of open category names
      * 
-     * @returns {String[]} List of categories
+     * @returns {string[]} List of categories
      */
     Categories() {
         let ret = []
@@ -288,8 +288,8 @@ class State {
      * The server adds a puzzle with 0 points in every "solved" category,
      * so this just checks whether there is a 0-point puzzle in the category's point list.
      * 
-     * @param {String} category 
-     * @returns {Boolean}
+     * @param {string} category 
+     * @returns {boolean}
      */
     ContainsUnsolved(category) {
         return !this.PointsByCategory[category].includes(0)
@@ -298,7 +298,7 @@ class State {
     /**
      * Is the server in development mode?
      * 
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     DevelopmentMode() {
         return this.Config && this.Config.Devel
@@ -310,7 +310,7 @@ class State {
      * The returned list will be sorted by (category, points).
      * If not categories are given, all puzzles will be returned.
      * 
-     * @param {String} categories Limit results to these categories
+     * @param {string} categories Limit results to these categories
      * @returns {Puzzle[]}
      */
     Puzzles(...categories) {
@@ -335,8 +335,8 @@ class State {
      * Has this puzzle been solved by this team?
      * 
      * @param {Puzzle} puzzle 
-     * @param {String} teamID Team to check, default the logged-in team
-     * @returns {Boolean}
+     * @param {string} teamID Team to check, default the logged-in team
+     * @returns {boolean}
      */
     IsSolved(puzzle, teamID="self") {
         for (let award of this.PointsLog) {
@@ -350,6 +350,52 @@ class State {
         }
         return false
     }
+
+    /**
+     * Map from team ID to points.
+     * 
+     * A special "max" property contains the highest number of points in this map.
+     * 
+     * @typedef {Object.<string, number>} TeamPointsDict
+     * @property {Number} max Highest number of points
+     */
+
+    /**
+     * Map from category to PointsDict.
+     *
+     * @typedef {Object.<string, TeamPointsDict>} CategoryTeamPointsDict
+     */
+
+    /**
+     * Score snapshot.
+     * 
+     * @typedef {Object} ScoreSnapshot
+     * @property {number} when Epoch time of this snapshot
+     * @property {CategoryTeamPointsDict} snapshot
+     */
+
+    /**
+     * Replay scores.
+     *
+     * @yields {ScoreSnapshot} Snapshot at a point in time
+     */
+    * ScoreHistory() {
+        /** @type {CategoryTeamPointsDict} */
+        let categoryTeamPoints = {}
+        for (let award of this.PointsLog) {
+            let teamPoints = (categoryTeamPoints[award.Category] ??= {})
+            let points = teamPoints[award.TeamID] || 0
+            let max = teamPoints.max || 0
+
+            points += award.Points
+            teamPoints[award.TeamID] = points
+            teamPoints.max = Math.max(points, max)
+
+            /** @type ScoreSnapshot */
+            let snapshot = {when: award.When, snapshot: categoryTeamPoints}
+            yield snapshot
+        }
+    }
 }
 
 /**
@@ -360,7 +406,7 @@ class State {
  */
 class Server {
     /**
-     * @param {String | URL} baseUrl Base URL to server, for constructing API URLs
+     * @param {string | URL} baseUrl Base URL to server, for constructing API URLs
      */
     constructor(baseUrl) {
         if (!baseUrl) {
@@ -380,8 +426,8 @@ class Server {
      * This always sends teamID.
      * If args is set, POST will be used instead of GET
      * 
-     * @param {String} path Path to API endpoint
-     * @param {Object.<String,String>} args Key/Values to send in POST data
+     * @param {string} path Path to API endpoint
+     * @param {Object.<string,string>} args Key/Values to send in POST data
      * @returns {Promise.<Response>} Response
      */
     fetch(path, args={}) {
@@ -400,8 +446,8 @@ class Server {
     /**
      * Send a request to a JSend API endpoint.
      * 
-     * @param {String} path Path to API endpoint
-     * @param {Object.<String,String>} args Key/Values to send in POST
+     * @param {string} path Path to API endpoint
+     * @param {Object.<string,string>} args Key/Values to send in POST
      * @returns {Promise.<Object>} JSend Data
      */
     async call(path, args={}) {
@@ -434,7 +480,7 @@ class Server {
     /**
      * Are we logged in to the server?
      * 
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     LoggedIn() {
         return this.TeamID ? true : false
@@ -467,9 +513,9 @@ class Server {
      * This calls the server's registration endpoint; if the call succeds, or
      * fails with "team already exists", the login is returned as successful. 
      *
-     * @param {String} teamID
-     * @param {String} teamName 
-     * @returns {Promise.<String>} Success message from server
+     * @param {string} teamID
+     * @param {string} teamName 
+     * @returns {Promise.<string>} Success message from server
      */
     async Login(teamID, teamName) {
         let data = await this.call("/register", {id: teamID, name: teamName})
@@ -485,10 +531,10 @@ class Server {
      * The returned promise will fail if anything goes wrong, including the
      * proposed answer being rejected.
      *
-     * @param {String} category Category of puzzle
-     * @param {Number} points Point value of puzzle
-     * @param {String} proposed Answer to submit
-     * @returns {Promise.<String>} Success message
+     * @param {string} category Category of puzzle
+     * @param {number} points Point value of puzzle
+     * @param {string} proposed Answer to submit
+     * @returns {Promise.<string>} Success message
      */
     async SubmitAnswer(category, points, proposed) {
         let data = await this.call("/answer", {
@@ -502,9 +548,9 @@ class Server {
     /**
      * Fetch a file associated with a puzzle.
      * 
-     * @param {String} category Category of puzzle
-     * @param {Number} points Point value of puzzle
-     * @param {String} filename
+     * @param {string} category Category of puzzle
+     * @param {number} points Point value of puzzle
+     * @param {string} filename
      * @returns {Promise.<Response>}
      */
     GetContent(category, points, filename) {
@@ -517,8 +563,8 @@ class Server {
      * New Puzzle objects only know their category and point value.
      * See docstrings on the Puzzle object for more information.
      * 
-     * @param {String} category 
-     * @param {Number} points 
+     * @param {string} category 
+     * @param {number} points 
      * @returns {Puzzle}
      */
     GetPuzzle(category, points) {
