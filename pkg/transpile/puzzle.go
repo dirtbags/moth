@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/sha256"
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -85,9 +85,9 @@ func (puzzle *Puzzle) computeAnswerHashes() {
 	}
 	puzzle.AnswerHashes = make([]string, len(puzzle.Answers))
 	for i, answer := range puzzle.Answers {
-		sum := sha256.Sum256([]byte(answer))
+		sum := sha1.Sum([]byte(answer))
 		hexsum := fmt.Sprintf("%x", sum)
-		puzzle.AnswerHashes[i] = hexsum
+		puzzle.AnswerHashes[i] = hexsum[:4]
 	}
 }
 
