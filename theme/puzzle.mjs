@@ -142,9 +142,24 @@ async function loadPuzzle(category, points) {
     }    
 
     let puzzle = server.GetPuzzle(category, points)
+
     console.time("Populate")
-    await puzzle.Populate()
-    console.timeEnd("Populate")
+    try {
+        await puzzle.Populate()
+    }
+    catch {
+        let error = puzzleElement().appendChild(document.createElement("pre"))
+        error.classList.add("notification", "error")
+        error.textContent = puzzle.Error.Body
+        return
+    }
+    finally {
+        console.timeEnd("Populate")
+    }
+
+    console.info(`Setting base tag to ${contentBase}`)
+    let baseElement = document.head.appendChild(document.createElement("base"))
+    baseElement.href = contentBase
 
     console.info("Tweaking HTML...")
     let title = `${category} ${points}`
@@ -182,9 +197,6 @@ async function loadPuzzle(category, points) {
             e.classList.add("hidden")
         }
     }
-
-    let baseElement = document.head.appendChild(document.createElement("base"))
-    baseElement.href = contentBase
 
     window.app.puzzle = puzzle
     console.info("window.app.puzzle =", window.app.puzzle)

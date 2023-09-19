@@ -1,5 +1,6 @@
 {
     "TrackSolved": true,
     "URLInScoreboard": true,
+    "Messages": "<!-- Messages can go here (HTML) -->",
     "__sentry__": "this is here so you don't have to remember to take the comma off the last item"
 }

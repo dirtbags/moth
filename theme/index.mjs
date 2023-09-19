@@ -68,6 +68,10 @@ class App {
      */
     async UpdateConfig() {
         this.config = await common.Config()
+
+        for (let e of document.querySelectorAll(".messages")) {
+            e.innerHTML = this.config.Messages || ""
+        }
     }
 
     /**
@@ -79,9 +83,6 @@ class App {
      */
     async UpdateState() {
         this.state = await this.server.GetState()
-        for (let e of document.querySelectorAll(".messages")) {
-            e.innerHTML = this.state.Messages
-        }
 
         // Update elements with data-track-solved
         for (let e of document.querySelectorAll("[data-track-solved]")) {
@@ -133,7 +134,7 @@ class App {
             if (this.state.DevelopmentMode()) {
                 let a = h.appendChild(document.createElement('a'))
                 a.classList.add("mothball")
-                a.textContent = "📦"
+                a.textContent = "⬇️"
                 a.href = this.server.URL(`mothballer/${cat}.mb`)
                 a.title = "Download a compiled puzzle for this category"
             }

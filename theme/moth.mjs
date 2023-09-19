@@ -352,7 +352,7 @@ class State {
      * @param {Object} obj Raw state data
      */
     constructor(server, obj) {
-        for (let key of ["Config", "Messages", "TeamNames", "PointsLog"]) {
+        for (let key of ["Config", "TeamNames", "PointsLog"]) {
             if (!obj[key]) {
                 throw(`Missing state property: ${key}`)
             }
