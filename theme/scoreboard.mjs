@@ -43,7 +43,7 @@ async function update() {
   }
 
   let frame = 0
-  for (let scores of state.ScoreHistory()) {
+  for (let scores of state.ScoresHistory()) {
     frame += 1
     if ((frame < state.PointsLog.length) && (frame % frameModulo)) {
       continue

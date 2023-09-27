@@ -480,7 +480,7 @@ class State {
      *
      * @yields {Scores} Snapshot at a point in time
      */
-    * ScoreHistory() {
+    * ScoresHistory() {
         let scores = new Scores()
         for (let award of this.PointsLog) {
             scores.Add(award)
@@ -493,7 +493,7 @@ class State {
      * 
      * @returns {Scores}
      */
-    CurrentScore() {
+    CurrentScores() {
         let scores
         for (scores of this.ScoreHistory());
         return scores
