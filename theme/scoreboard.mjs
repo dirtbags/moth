@@ -61,25 +61,28 @@ async function update() {
       
       let row = rankingsElement.appendChild(document.createElement("div"))
       
-      let heading = row.appendChild(document.createElement("span"))
-      heading.textContent = teamName
-      heading.classList.add("teamname")
+      let teamname = row.appendChild(document.createElement("span"))
+      teamname.textContent = teamName
+      teamname.classList.add("teamname")
       
       let categoryNumber = 0
+      let teampoints = row.appendChild(document.createElement("span"))
+      teampoints.classList.add("teampoints")
       for (let category of scores.Categories) {
         let score = scores.CyFiCategoryScore(category, teamID)
         if (!score) {
           continue
         }
 
-        let block = row.appendChild(document.createElement("span"))
+        let block = teampoints.appendChild(document.createElement("span"))
         let points = scores.GetPoints(category, teamID)
         let width = MaxScoreWidth * score / topScore
 
         block.textContent = category
         block.title = `${points} points`
         block.style.width = `${width}%`
-        block.classList.add(`cat${categoryNumber}`)
+        block.classList.add("category", `cat${categoryNumber}`)
+
         categoryNumber += 1
       } 
     }

@@ -5,158 +5,9 @@
   }
 }
 
-#rankings span {
-	font-size: 75%;
-	display: inline-block;
-	overflow: hidden;
-	height: 1.7em;
-}
-#rankings span.teamname {
-	font-size: inherit;
-	color: white;
-	text-shadow: 0 0 3px black;
-	opacity: 0.8;
-	position: absolute;
-	right: 0.2em;
-	background-color: #292929;
-	background-blend-mode: darken;
-	padding: 0em 0.2em;
-	border-top-left-radius: 0.5em;
-	border-bottom-left-radius: 0.5em;
-	margin:0em;
-	height: 1.5em;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	transition-property: max-width;
-	transition-duration: 2s;
-	transition-delay: 0s;
-}
-
-#rankings span.teamname:hover {
-	max-width: 100%;
-}
-
-#rankings span.teampoints {
-	font-size:100%;
-	height:1.2em;
-	margin:0em;
-	padding:0em;
-	width:99%;
-}
-
-/* Responsive design */
-/* Defaults */
-        #rankings span.teampoints {
-                max-width:89%;
-        }
-        #rankings span.teamname {
-                max-width:10%;
-        }
-
-
-/* Monitors with large enough screens to do side by side */
-@media only screen and (min-width: 170em) {
-	#chart, #rankings {
-		width: 49%;
-		display:inline-block;
-		vertical-align:middle;
-	}
-
-}
-
-/* Monitor
-@media only screen and (max-width: 130em) {
-        #chart, #rankings {
-                width: 49%;
-                display:inline-block;
-		vertical-align: middle;
-        }
-
-	#rankings span.teampoints {
-		max-width:89%;
-	}
-	#rankings span.teamname {
-		max-width:10%;
-	}
-}
-
-/* Laptop size screen */
-@media only screen and (max-width: 100em) {
-	#rankings span.teampoints {
-		max-width:84%;
-	}
-	#rankings span.teamname {
-		max-width:15%;
-	}
-}
-
-/* Roughly Tablet size */
-@media only screen and (max-width: 70em) {
-	#rankings span.teampoints {
-		max-width:79%;
-	}
-	#rankings span.teamname {
-		max-width:20%;
-	}
-}
-
-/* Small screens phone size */
-@media only screen and (max-width: 40em) {
-	#rankings span.teampoints {
-		max-width:65%;
-	}
-	#rankings span.teamname {
-		max-width:34%;
-	}
-}
 
 
 
-
-
-#chart {
-    background-color: rgba(0, 0, 0, 0.8);
-}
-.logo {
-  text-align: center;
-  background-color: rgba(255, 255, 255, 0.2);
-  font-family: Montserrat, sans-serif;
-  font-weight: 500;
-  border-radius: 10px;
-  font-size: 1.2em;
-}
-.cyber {
-  color: black;
-}
-.fire {
-  color: #d94a1f;
-}
-.announcement.floating {
-  position: fixed;
-  bottom: 0;
-  width: 100hw;
-  max-width: inherit;
-}
-.announcement {
-  background-color: rgba(255,255,255,0.5);
-  color: black;
-  padding: 0.25em;
-  border-radius: 5px;
-  max-width: 20em;
-  text-align: center;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-  font-size: 1.3em;
-  flex-wrap: wrap;
-}
-.announcement div {
-  margin: 1em;  
-  max-width: 45vw;
-  text-align: center;
-  
-}
 .location {
   color: #acf;
   background-color: #0008;
@@ -169,18 +20,6 @@
   font-weight:bold;
   text-decoration: underline;
 }
-.qrcode {
-  width: 30vw;
-}
-.examples {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-.examples > div {
-  margin: 0.5em;
-  max-width: 40%;
-}
 
 /** Scoreboard */
 #rankings {
@@ -189,20 +28,23 @@
   background-color: #000c;
 }
 #rankings div {
-  height: 1.4rem;
+  height: 1.2rem;
+  display: flex;
+  align-items: center;
 }
 #rankings div:nth-child(6n){
-  background-color: #ccc1;
+  background-color: #ccc3;
 }
 #rankings div:nth-child(6n+3) {
-  background-color: #0f01;
+  background-color: #0f03;
 }
 
 #rankings span {
-	font-size: 75%;
-	display: inline-block;
-	overflow: hidden;
-  height: 1.4em;
+  display: inline-block;
+  overflow: hidden;
+}
+#rankings span.category {
+  font-size: 80%;
 }
 #rankings span.teamname {
   height: auto;
@@ -213,6 +55,22 @@
 	position: absolute;
 	right: 0.2em;
 }
+#rankings span.teamname:hover,
+#rankings span.category:hover {
+  width: inherit;
+  max-width: 100%;
+}
+
+@media only screen and (max-width: 450px) {
+  #rankings span.teamname {
+    max-width: 6em;
+    text-overflow: ellipsis;
+  }
+  span.teampoints {
+    max-width: 80%;
+  }
+}
+
 #rankings div * {white-space: nowrap;}
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
 .cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
