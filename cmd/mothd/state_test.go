@@ -17,8 +17,16 @@ func NewTestState() *State {
 	return s
 }
 
+func slurp(c chan bool) {
+	for range c {
+		// Nothing
+	}
+}
+
 func TestState(t *testing.T) {
 	s := NewTestState()
+	defer close(s.refreshNow)
+	go slurp(s.refreshNow)
 
 	mustExist := func(path string) {
 		_, err := s.Fs.Stat(path)
@@ -33,7 +41,6 @@ func TestState(t *testing.T) {
 	}
 
 	mustExist("initialized")
-	mustExist("enabled")
 	mustExist("hours.txt")
 
 	teamIDsBuf, err := afero.ReadFile(s.Fs, "teamids.txt")
@@ -57,11 +64,12 @@ func TestState(t *testing.T) {
 
 	teamName := "My Team"
 	if err := s.SetTeamName(teamID, teamName); err != nil {
-		t.Errorf("Setting team name: %w", err)
+		t.Errorf("Setting team name: %v", err)
 	}
 	if err := s.SetTeamName(teamID, "wat"); err == nil {
 		t.Errorf("Registering team a second time didn't fail")
 	}
+	s.refresh()
 	if name, err := s.TeamName(teamID); err != nil {
 		t.Error(err)
 	} else if name != teamName {
@@ -73,9 +81,6 @@ func TestState(t *testing.T) {
 	if err := s.AwardPoints(teamID, category, points); err != nil {
 		t.Error(err)
 	}
-	if err := s.AwardPoints(teamID, category, points); err != nil {
-		t.Error("Two awards before refresh:", err)
-	}
 	// Flex duplicate detection with different timestamp
 	if f, err := s.Create("points.new/moo"); err != nil {
 		t.Error("Creating duplicate points file:", err)
@@ -83,24 +88,34 @@ func TestState(t *testing.T) {
 		fmt.Fprintln(f, time.Now().Unix()+1, teamID, category, points)
 		f.Close()
 	}
+
+	s.AwardPoints(teamID, category, points)
 	s.refresh()
+	pl = s.PointsLog()
+	if len(pl) != 1 {
+		for i, award := range pl {
+			t.Logf("pl[%d] == %s", i, award.String())
+		}
+		t.Errorf("After awarding duplicate points, points log has length %d", len(pl))
+	} else if (pl[0].TeamID != teamID) || (pl[0].Category != category) || (pl[0].Points != points) {
+		t.Errorf("Incorrect logged award %v", pl)
+	}
 
 	if err := s.AwardPoints(teamID, category, points); err == nil {
-		t.Error("Duplicate points award didn't fail")
+		t.Error("Duplicate points award after refresh didn't fail")
 	}
 
 	if err := s.AwardPoints(teamID, category, points+1); err != nil {
 		t.Error("Awarding more points:", err)
 	}
 
-	pl = s.PointsLog()
-	if len(pl) != 1 {
-		t.Errorf("After awarding points, points log has length %d", len(pl))
-	} else if (pl[0].TeamID != teamID) || (pl[0].Category != category) || (pl[0].Points != points) {
-		t.Errorf("Incorrect logged award %v", pl)
+	s.refresh()
+	if len(s.PointsLog()) != 2 {
+		t.Errorf("There should be two awards")
 	}
 
 	afero.WriteFile(s, "points.log", []byte("intentional parse error\n"), 0644)
+	s.refresh()
 	if len(s.PointsLog()) != 0 {
 		t.Errorf("Intentional parse error breaks pointslog")
 	}
@@ -108,7 +123,8 @@ func TestState(t *testing.T) {
 		t.Error(err)
 	}
 	s.refresh()
-	if len(s.PointsLog()) != 2 {
+	if len(s.PointsLog()) != 1 {
+		t.Log(s.PointsLog())
 		t.Error("Intentional parse error screws up all parsing")
 	}
 
@@ -122,18 +138,45 @@ func TestState(t *testing.T) {
 
 }
 
+// Out of order points insertion, issue #168
+func TestStateOutOfOrderAward(t *testing.T) {
+	s := NewTestState()
+
+	category := "meow"
+	points := 100
+
+	now := time.Now().Unix()
+	if err := s.awardPointsAtTime(now+20, "AA", category, points); err != nil {
+		t.Error("Awarding points to team ZZ:", err)
+	}
+	if err := s.awardPointsAtTime(now+10, "ZZ", category, points); err != nil {
+		t.Error("Awarding points to team AA:", err)
+	}
+	s.refresh()
+	pl := s.PointsLog()
+	if len(pl) != 2 {
+		t.Error("Wrong length for points log")
+	}
+	if pl[0].TeamID != "ZZ" {
+		t.Error("Out of order points insertion not properly sorted in points log")
+	}
+}
+
 func TestStateEvents(t *testing.T) {
 	s := NewTestState()
-	s.LogEvent("moo", "", "", "", 0)
-	s.LogEvent("moo 2", "", "", "", 0)
+	s.LogEvent("moo", "", "", 0)
+	s.LogEvent("moo 2", "", "", 0)
 
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "init:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo::::0" {
+	if msg := <-s.eventStream; !strings.HasPrefix(msg[5], "state/hours.txt") {
+		t.Error("Wrong message from event stream:", msg[5])
+	}
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
-	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2::::0" {
+	if msg := <-s.eventStream; strings.Join(msg[1:], ":") != "moo 2:::0" {
 		t.Error("Wrong message from event stream:", msg)
 	}
 }
@@ -151,19 +194,37 @@ func TestStateDisabled(t *testing.T) {
 		t.Error(err)
 	}
 	defer hoursFile.Close()
+	s.refresh()
+	if !s.Enabled {
+		t.Error("Empty hours.txt not enabled")
+	}
 
 	fmt.Fprintln(hoursFile, "- 1970-01-01T01:01:01Z")
 	hoursFile.Sync()
 	s.refresh()
 	if s.Enabled {
-		t.Error("Disabling 1970-01-01")
+		t.Error("1970-01-01")
 	}
 
-	fmt.Fprintln(hoursFile, "+ 1970-01-01 01:01:01+05:00")
+	fmt.Fprintln(hoursFile, "+ 1970-01-02 01:01:01+05:00")
 	hoursFile.Sync()
 	s.refresh()
 	if !s.Enabled {
-		t.Error("Enabling 1970-01-02")
+		t.Error("1970-01-02")
+	}
+
+	fmt.Fprintln(hoursFile, "-")
+	hoursFile.Sync()
+	s.refresh()
+	if s.Enabled {
+		t.Error("bare -")
+	}
+
+	fmt.Fprintln(hoursFile, "+")
+	hoursFile.Sync()
+	s.refresh()
+	if !s.Enabled {
+		t.Error("bare +")
 	}
 
 	fmt.Fprintln(hoursFile, "")
@@ -171,7 +232,7 @@ func TestStateDisabled(t *testing.T) {
 	hoursFile.Sync()
 	s.refresh()
 	if !s.Enabled {
-		t.Error("Comments")
+		t.Error("Comment")
 	}
 
 	fmt.Fprintln(hoursFile, "intentional parse error")
@@ -185,7 +246,7 @@ func TestStateDisabled(t *testing.T) {
 	hoursFile.Sync()
 	s.refresh()
 	if s.Enabled {
-		t.Error("Disabling 1980-01-01")
+		t.Error("1980-01-01")
 	}
 
 	if err := s.Remove("hours.txt"); err != nil {
@@ -194,14 +255,6 @@ func TestStateDisabled(t *testing.T) {
 	s.refresh()
 	if !s.Enabled {
 		t.Error("Removing `hours.txt` disabled event")
-	}
-
-	if err := s.Remove("enabled"); err != nil {
-		t.Error(err)
-	}
-	s.refresh()
-	if s.Enabled {
-		t.Error("Removing `enabled` didn't disable")
 	}
 
 	s.Remove("initialized")
@@ -233,7 +286,7 @@ func TestStateMaintainer(t *testing.T) {
 		t.Error("Team ID too short:", teamID)
 	}
 
-	s.LogEvent("Hello!", "", "", "", 0)
+	s.LogEvent("Hello!", "", "", 0)
 
 	if len(s.PointsLog()) != 0 {
 		t.Error("Points log is not empty")
@@ -258,11 +311,11 @@ func TestStateMaintainer(t *testing.T) {
 	eventLog, err := afero.ReadFile(s.Fs, "events.csv")
 	if err != nil {
 		t.Error(err)
-	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 3 {
+	} else if events := strings.Split(string(eventLog), "\n"); len(events) != 4 {
 		t.Log("Events:", events)
 		t.Error("Wrong event log length:", len(events))
-	} else if events[2] != "" {
-		t.Error("Event log didn't end with newline")
+	} else if events[3] != "" {
+		t.Error("Event log didn't end with newline", events)
 	}
 }
 

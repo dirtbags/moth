@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/transpile"
+	"github.com/dirtbags/moth/v4/pkg/transpile"
 )
 
 // ProviderCommand specifies a command to run for the puzzle API
@@ -125,7 +125,7 @@ func (pc ProviderCommand) CheckAnswer(cat string, points int, answer string) (bo
 
 // Mothball just returns an error
 func (pc ProviderCommand) Mothball(cat string) (*bytes.Reader, error) {
-	return nil, fmt.Errorf("Can't package a command-generated category")
+	return nil, fmt.Errorf("can't package a command-generated category")
 }
 
 // Maintain does nothing: a command puzzle ProviderCommand has no housekeeping

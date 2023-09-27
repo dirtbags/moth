@@ -45,8 +45,8 @@ Scores
 Pausing/resuming scoring
 -------------------
 
-    rm /srv/moth/state/enabled     # Pause scoring
-    touch /srv/moth/state/enabled   # Resume scoring
+    echo '-###' >> /srv/moth/state/hours.txt # Suspend scoring
+    sed -i '/###/d' /srv/moth/state/hours.txt # Resume scoring
 
 When scoring is paused,
 participants can still submit answers,
@@ -54,12 +54,13 @@ and the system will tell them whether the answer is correct.
 As soon as you unpause,
 all correctly-submitted answers will be scored.
 
+
 Adjusting scores
 ------------------
 
-    rm /srv/moth/state/enabled # Suspend scoring
+    echo '-###' >> /srv/moth/state/hours.txt # Suspend scoring
     nano /srv/moth/state/points.log  # Replace nano with your preferred editor
-    touch /srv/moth/state/enabled # Resume scoring
+    sed -i '/###/d' /srv/moth/state/hours.txt # Resume scoring
 
 We don't warn participants before we do this:
 any points scored while scoring is suspended are queued up and processed as soon as scoreing is resumed.

@@ -23,6 +23,12 @@ func TestPuzzle(t *testing.T) {
 		if (len(p.Answers) == 0) || (p.Answers[0] != "YAML answer") {
 			t.Error("Answers are wrong", p.Answers)
 		}
+		if len(p.Answers) != len(p.AnswerHashes) {
+			t.Error("Answer hashes length does not match answers length")
+		}
+		if len(p.AnswerHashes[0]) != 4 {
+			t.Error("Answer hash is wrong length")
+		}
 		if (len(p.Authors) != 3) || (p.Authors[1] != "Buster") {
 			t.Error("Authors are wrong", p.Authors)
 		}

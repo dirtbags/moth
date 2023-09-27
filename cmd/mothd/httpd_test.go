@@ -7,21 +7,15 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/spf13/afero"
 )
 
-const TestParticipantID = "shipox"
-
 func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest.ResponseRecorder {
 	vals := url.Values{}
-	vals.Set("pid", TestParticipantID)
 	vals.Set("id", TestTeamID)
-	if args != nil {
-		for k, v := range args {
-			vals.Set(k, v)
-		}
+	for k, v := range args {
+		vals.Set(k, v)
 	}
 
 	recorder := httptest.NewRecorder()
@@ -35,7 +29,8 @@ func (hs *HTTPServer) TestRequest(path string, args map[string]string) *httptest
 }
 
 func TestHttpd(t *testing.T) {
-	hs := NewHTTPServer("/", NewTestServer())
+	server := NewTestServer()
+	hs := NewHTTPServer("/", server.MothServer)
 
 	if r := hs.TestRequest("/", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -56,21 +51,23 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/register", map[string]string{"id": "bad team id", "name": "GoTeam"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not registered","description":"Team ID not found in list of valid Team IDs"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not registered","description":"team ID not found in list of valid team IDs"}}` {
 		t.Error("Register bad team ID failed")
 	}
 
 	if r := hs.TestRequest("/register", map[string]string{"name": "GoTeam"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"success","data":{"short":"registered","description":"Team ID registered"}}` {
+	} else if r.Body.String() != `{"status":"success","data":{"short":"registered","description":"team ID registered"}}` {
 		t.Error("Register failed")
 	}
 
 	if r := hs.TestRequest("/register", map[string]string{"name": "GoTeam"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"Team ID has already been registered"}}` {
+	} else if r.Body.String() != `{"status":"success","data":{"short":"already registered","description":"team ID has already been registered"}}` {
 		t.Error("Register failed", r.Body.String())
 	}
+
+	server.refresh()
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -102,7 +99,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "moo"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"Incorrect answer"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"incorrect answer"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
@@ -112,7 +109,7 @@ func TestHttpd(t *testing.T) {
 		t.Error("Unexpected body", r.Body.String())
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	if r := hs.TestRequest("/content/pategory/2/puzzle.json", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
@@ -124,14 +121,14 @@ func TestHttpd(t *testing.T) {
 	} else if err := json.Unmarshal(r.Body.Bytes(), &state); err != nil {
 		t.Error(err)
 	} else if len(state.PointsLog) != 1 {
-		t.Error("Points log wrong length")
+		t.Errorf("Points log wrong length. Wanted 1, got %v (length %d)", state.PointsLog, len(state.PointsLog))
 	} else if len(state.Puzzles["pategory"]) != 2 {
 		t.Error("Didn't unlock next puzzle")
 	}
 
 	if r := hs.TestRequest("/answer", map[string]string{"cat": "pategory", "points": "1", "answer": "answer123"}); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"Error awarding points: Points already awarded to this team in this category"}}` {
+	} else if r.Body.String() != `{"status":"fail","data":{"short":"not accepted","description":"points already awarded to this team in this category"}}` {
 		t.Error("Unexpected body", r.Body.String())
 	}
 }
@@ -140,7 +137,7 @@ func TestDevelMemHttpd(t *testing.T) {
 	srv := NewTestServer()
 
 	{
-		hs := NewHTTPServer("/", srv)
+		hs := NewHTTPServer("/", srv.MothServer)
 
 		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 404 {
 			t.Error("Should have gotten a 404 for mothballer in prod mode")
@@ -149,7 +146,7 @@ func TestDevelMemHttpd(t *testing.T) {
 
 	{
 		srv.Config.Devel = true
-		hs := NewHTTPServer("/", srv)
+		hs := NewHTTPServer("/", srv.MothServer)
 
 		if r := hs.TestRequest("/mothballer/pategory.md", nil); r.Result().StatusCode != 500 {
 			t.Log(r.Body.String())

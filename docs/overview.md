@@ -33,24 +33,13 @@ The state directory is also used to communicate actions to mothd.
 Remove this file to reset the state. This will blow away team assignments and the points log.
 
 
-`disabled`
-----------
-
-Create this file to pause collection of points and other maintenance.
-Contestants can still submit answers,
-but they won't show up on the scoreboard until you remove this file.
-
-This file does not normally exist.
-
-
-`until`
+`hours.txt`
 -------
 
-Put an RFC3337 date/time stamp in here to have the server pause itself at a given time.
-Remember that time zones exist!
-I recommend always using Zulu time.
-
-This file does not normally exist.
+A list of start and stop hours.
+If all the hours are in the future, the event defaults to running.
+"Stop" here just pertains to scoreboard updates and puzzle unlocking.
+People can still submit answers and their awards are queued up for the next start.
 
 
 `teamids.txt`

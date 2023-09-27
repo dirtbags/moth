@@ -3,22 +3,15 @@
   <head>
     <title>Scoreboard</title>
     <link rel="stylesheet" href="basic.css">
+    <link rel="stylesheet" href="scoreboard.css">
     <meta name="viewport" content="width=device-width">
-    <script src="moment.min.js" async></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" async></script>
-    <script src="scoreboard.js" async></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@1.26.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@0.2.1"></script>
+    <script type="module" src="scoreboard.mjs"></script>
   </head>
-  <body class="wide">
-    <h4 id="location"></h4>
-    <section class="rotate">
-      <div id="chart"></div>
-      <div id="rankings"></div>
-    </section>
-    <nav>
-      <ul>
-        <li><a href="index.html">Puzzles</a></li>
-        <li><a href="scoreboard.html">Scoreboard</a></li>
-      </ul>
-    </nav>
+  <body>
+    <div id="rankings"></div>
+    <div class="location"></div>
   </body>
 </html>

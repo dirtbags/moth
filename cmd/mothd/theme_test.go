@@ -32,6 +32,11 @@ func TestTheme(t *testing.T) {
 		t.Error("Timestamp compared wrong")
 	}
 
+	if f, _, err := s.Open("/foo/bar/index.html"); err == nil {
+		f.Close()
+		t.Error("Path is ignored")
+	}
+
 	if f, _, err := s.Open("nofile"); err == nil {
 		f.Close()
 		t.Error("Opening non-existent file didn't return an error")

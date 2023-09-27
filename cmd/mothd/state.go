@@ -11,9 +11,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/award"
+	"github.com/dirtbags/moth/v4/pkg/award"
 	"github.com/spf13/afero"
 )
 
@@ -27,7 +28,7 @@ const DistinguishableChars = "34678abcdefhikmnpqrtwxy="
 const RFC3339Space = "2006-01-02 15:04:05Z07:00"
 
 // ErrAlreadyRegistered means a team cannot be registered because it was registered previously.
-var ErrAlreadyRegistered = errors.New("Team ID has already been registered")
+var ErrAlreadyRegistered = errors.New("team ID has already been registered")
 
 // State defines the current state of a MOTH instance.
 // We use the filesystem for synchronization between threads.
@@ -38,10 +39,18 @@ type State struct {
 	// Enabled tracks whether the current State system is processing updates
 	Enabled bool
 
+	enabledWhy      string
 	refreshNow      chan bool
 	eventStream     chan []string
 	eventWriter     *csv.Writer
 	eventWriterFile afero.File
+
+	// Caches, so we're not hammering NFS with metadata operations
+	teamNamesLastChange time.Time
+	teamNames           map[string]string
+	pointsLog           award.List
+	messages            string
+	lock                sync.RWMutex
 }
 
 // NewState returns a new State struct backed by the given Fs
@@ -51,6 +60,8 @@ func NewState(fs afero.Fs) *State {
 		Enabled:     true,
 		refreshNow:  make(chan bool, 5),
 		eventStream: make(chan []string, 80),
+
+		teamNames: make(map[string]string),
 	}
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
@@ -61,11 +72,10 @@ func NewState(fs afero.Fs) *State {
 // updateEnabled checks a few things to see if this state directory is "enabled".
 func (s *State) updateEnabled() {
 	nextEnabled := true
-	why := "`state/enabled` present, `state/hours.txt` missing"
+	why := "state/hours.txt has no timestamps before now"
 
 	if untilFile, err := s.Open("hours.txt"); err == nil {
 		defer untilFile.Close()
-		why = "`state/hours.txt` present"
 
 		scanner := bufio.NewScanner(untilFile)
 		for scanner.Scan() {
@@ -85,59 +95,64 @@ func (s *State) updateEnabled() {
 			case '#':
 				continue
 			default:
-				log.Println("Misformatted line in hours.txt file")
+				log.Println("state/hours.txt has bad line:", line)
 			}
+			line, _, _ = strings.Cut(line, "#") // Remove inline comments
 			line = strings.TrimSpace(line)
-			until, err := time.Parse(time.RFC3339, line)
-			if err != nil {
-				until, err = time.Parse(RFC3339Space, line)
-			}
-			if err != nil {
-				log.Println("Suspended: Unparseable until date:", line)
+			until := time.Time{}
+			if len(line) == 0 {
+				// Let it stay as zero time, so it's always before now
+			} else if until, err = time.Parse(time.RFC3339, line); err == nil {
+				// Great, it was RFC 3339
+			} else if until, err = time.Parse(RFC3339Space, line); err == nil {
+				// Great, it was RFC 3339 with a space instead of a 'T'
+			} else {
+				log.Println("state/hours.txt has bad timestamp:", line)
 				continue
 			}
 			if until.Before(time.Now()) {
 				nextEnabled = thisEnabled
+				why = fmt.Sprint("state/hours.txt most recent timestamp:", line)
 			}
 		}
 	}
 
-	if _, err := s.Stat("enabled"); os.IsNotExist(err) {
-		nextEnabled = false
-		why = "`state/enabled` missing"
-	}
-
-	if nextEnabled != s.Enabled {
+	if (nextEnabled != s.Enabled) || (why != s.enabledWhy) {
 		s.Enabled = nextEnabled
-		log.Printf("Setting enabled=%v: %s", s.Enabled, why)
+		s.enabledWhy = why
+		log.Printf("Setting enabled=%v: %s", s.Enabled, s.enabledWhy)
 		if s.Enabled {
-			s.LogEvent("enabled", "", "", "", 0, why)
+			s.LogEvent("enabled", "", "", 0, s.enabledWhy)
 		} else {
-			s.LogEvent("disabled", "", "", "", 0, why)
+			s.LogEvent("disabled", "", "", 0, s.enabledWhy)
 		}
 	}
 }
 
 // TeamName returns team name given a team ID.
 func (s *State) TeamName(teamID string) (string, error) {
-	teamFs := afero.NewBasePathFs(s.Fs, "teams")
-	teamNameBytes, err := afero.ReadFile(teamFs, teamID)
-	if os.IsNotExist(err) {
-		return "", fmt.Errorf("Unregistered team ID: %s", teamID)
-	} else if err != nil {
-		return "", fmt.Errorf("Unregistered team ID: %s (%s)", teamID, err)
+	s.lock.RLock()
+	name, ok := s.teamNames[teamID]
+	s.lock.RUnlock()
+	if !ok {
+		return "", fmt.Errorf("unregistered team ID: %s", teamID)
 	}
-
-	teamName := strings.TrimSpace(string(teamNameBytes))
-	return teamName, nil
+	return name, nil
 }
 
 // SetTeamName writes out team name.
 // This can only be done once per team.
 func (s *State) SetTeamName(teamID, teamName string) error {
+	s.lock.RLock()
+	_, ok := s.teamNames[teamID]
+	s.lock.RUnlock()
+	if ok {
+		return ErrAlreadyRegistered
+	}
+
 	idsFile, err := s.Open("teamids.txt")
 	if err != nil {
-		return fmt.Errorf("Team IDs file does not exist")
+		return fmt.Errorf("team IDs file does not exist")
 	}
 	defer idsFile.Close()
 	found := false
@@ -149,7 +164,7 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 		}
 	}
 	if !found {
-		return fmt.Errorf("Team ID not found in list of valid Team IDs")
+		return fmt.Errorf("team ID not found in list of valid team IDs")
 	}
 
 	teamFilename := filepath.Join("teams", teamID)
@@ -163,36 +178,26 @@ func (s *State) SetTeamName(teamID, teamName string) error {
 	log.Printf("Setting team name [%s] in file %s", teamName, teamFilename)
 	fmt.Fprintln(teamFile, teamName)
 	teamFile.Close()
+
+	s.refreshNow <- true
+
 	return nil
 }
 
 // PointsLog retrieves the current points log.
 func (s *State) PointsLog() award.List {
-	f, err := s.Open("points.log")
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	defer f.Close()
-
-	pointsLog := make(award.List, 0, 200)
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cur, err := award.Parse(line)
-		if err != nil {
-			log.Printf("Skipping malformed award line %s: %s", line, err)
-			continue
-		}
-		pointsLog = append(pointsLog, cur)
-	}
-	return pointsLog
+	s.lock.RLock()
+	ret := make(award.List, len(s.pointsLog))
+	copy(ret, s.pointsLog)
+	s.lock.RUnlock()
+	return ret
 }
 
 // Messages retrieves the current messages.
 func (s *State) Messages() string {
-	bMessages, _ := afero.ReadFile(s, "messages.html")
-	return string(bMessages)
+	s.lock.RLock() // It's not clear to me that this actually needs to happen
+	defer s.lock.RUnlock()
+	return s.messages
 }
 
 // AwardPoints gives points to teamID in category.
@@ -202,8 +207,12 @@ func (s *State) Messages() string {
 // It's just a courtesy to the user.
 // The update task makes sure we never have duplicate points in the log.
 func (s *State) AwardPoints(teamID, category string, points int) error {
+	return s.awardPointsAtTime(time.Now().Unix(), teamID, category, points)
+}
+
+func (s *State) awardPointsAtTime(when int64, teamID string, category string, points int) error {
 	a := award.T{
-		When:     time.Now().Unix(),
+		When:     when,
 		TeamID:   teamID,
 		Category: category,
 		Points:   points,
@@ -211,11 +220,12 @@ func (s *State) AwardPoints(teamID, category string, points int) error {
 
 	for _, e := range s.PointsLog() {
 		if a.Equal(e) {
-			return fmt.Errorf("Points already awarded to this team in this category")
+			return fmt.Errorf("points already awarded to this team in this category")
 		}
 	}
 
-	fn := fmt.Sprintf("%s-%s-%d", teamID, category, points)
+	//fn := fmt.Sprintf("%s-%s-%d", a.TeamID, a.Category, a.Points)
+	fn := a.Filename()
 	tmpfn := filepath.Join("points.tmp", fn)
 	newfn := filepath.Join("points.new", fn)
 
@@ -255,12 +265,14 @@ func (s *State) collectPoints() {
 		}
 
 		duplicate := false
-		for _, e := range s.PointsLog() {
+		s.lock.RLock()
+		for _, e := range s.pointsLog {
 			if awd.Equal(e) {
 				duplicate = true
 				break
 			}
 		}
+		s.lock.RUnlock()
 
 		if duplicate {
 			log.Print("Skipping duplicate points: ", awd.String())
@@ -274,6 +286,11 @@ func (s *State) collectPoints() {
 			}
 			fmt.Fprintln(logf, awd.String())
 			logf.Close()
+
+			// Stick this on the cache too
+			s.lock.Lock()
+			s.pointsLog = append(s.pointsLog, awd)
+			s.lock.Unlock()
 		}
 
 		if err := s.Remove(filename); err != nil {
@@ -295,6 +312,7 @@ func (s *State) maybeInitialize() {
 	s.Remove("enabled")
 	s.Remove("hours.txt")
 	s.Remove("points.log")
+	s.Remove("events.csv")
 	s.Remove("messages.html")
 	s.Remove("mothd.log")
 	s.RemoveAll("points.tmp")
@@ -305,7 +323,7 @@ func (s *State) maybeInitialize() {
 	if err := s.reopenEventLog(); err != nil {
 		log.Fatal(err)
 	}
-	s.LogEvent("init", "", "", "", 0)
+	s.LogEvent("init", "", "", 0)
 
 	// Make sure various subdirectories exist
 	s.Mkdir("points.tmp", 0755)
@@ -333,21 +351,19 @@ func (s *State) maybeInitialize() {
 		f.Close()
 	}
 
-	if f, err := s.Create("enabled"); err == nil {
-		fmt.Fprintln(f, "enabled: remove or rename to suspend the contest.")
-		f.Close()
-	}
-
 	if f, err := s.Create("hours.txt"); err == nil {
 		fmt.Fprintln(f, "# hours.txt: when the contest is enabled")
 		fmt.Fprintln(f, "#")
-		fmt.Fprintln(f, "# Enable:  + timestamp")
-		fmt.Fprintln(f, "# Disable: - timestamp")
+		fmt.Fprintln(f, "# Enable:  + [timestamp]")
+		fmt.Fprintln(f, "# Disable: - [timestamp]")
 		fmt.Fprintln(f, "#")
-		fmt.Fprintln(f, "# You can have multiple start/stop times.")
-		fmt.Fprintln(f, "# Whatever time is the most recent, wins.")
-		fmt.Fprintln(f, "# Times in the future are ignored.")
+		fmt.Fprintln(f, "# This file, and all files in this directory, are re-read periodically.")
+		fmt.Fprintln(f, "# Default is enabled.")
+		fmt.Fprintln(f, "# Rules with only '-' or '+' are also allowed.")
+		fmt.Fprintln(f, "# Rules apply from the top down.")
+		fmt.Fprintln(f, "# If you put something in out of order, it's going to be bonkers.")
 		fmt.Fprintln(f)
+		fmt.Fprintln(f, "- 1970-01-01T00:00:00Z")
 		fmt.Fprintln(f, "+", now)
 		fmt.Fprintln(f, "- 2519-10-31T00:00:00Z")
 		f.Close()
@@ -363,20 +379,12 @@ func (s *State) maybeInitialize() {
 	}
 }
 
-func logstr(s string) string {
-	if s == "" {
-		return "-"
-	}
-	return s
-}
-
 // LogEvent writes to the event log
-func (s *State) LogEvent(event, participantID, teamID, cat string, points int, extra ...string) {
+func (s *State) LogEvent(event, teamID, cat string, points int, extra ...string) {
 	s.eventStream <- append(
 		[]string{
 			strconv.FormatInt(time.Now().Unix(), 10),
 			event,
-			participantID,
 			teamID,
 			cat,
 			strconv.Itoa(points),
@@ -404,12 +412,72 @@ func (s *State) reopenEventLog() error {
 	return nil
 }
 
+func (s *State) updateCaches() {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
+	if f, err := s.Open("points.log"); err != nil {
+		log.Println(err)
+	} else {
+		defer f.Close()
+
+		pointsLog := make(award.List, 0, 200)
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := scanner.Text()
+			cur, err := award.Parse(line)
+			if err != nil {
+				log.Printf("Skipping malformed award line %s: %s", line, err)
+				continue
+			}
+			pointsLog = append(pointsLog, cur)
+		}
+		s.pointsLog = pointsLog
+	}
+
+	// Only do this if the teams directory has a newer mtime; directories with
+	// hundreds of team names can cause NFS I/O storms
+	{
+		_, ismmfs := s.Fs.(*afero.MemMapFs) // Tests run so quickly that the time check isn't precise enough
+		if fi, err := s.Fs.Stat("teams"); err != nil {
+			log.Printf("Getting modification time of teams directory: %v", err)
+		} else if ismmfs || s.teamNamesLastChange.Before(fi.ModTime()) {
+			s.teamNamesLastChange = fi.ModTime()
+
+			// The compiler recognizes this as an optimization case
+			for k := range s.teamNames {
+				delete(s.teamNames, k)
+			}
+
+			teamsFs := afero.NewBasePathFs(s.Fs, "teams")
+			if dirents, err := afero.ReadDir(teamsFs, "."); err != nil {
+				log.Printf("Reading team ids: %v", err)
+			} else {
+				for _, dirent := range dirents {
+					teamID := dirent.Name()
+					if teamNameBytes, err := afero.ReadFile(teamsFs, teamID); err != nil {
+						log.Printf("Reading team %s: %v", teamID, err)
+					} else {
+						teamName := strings.TrimSpace(string(teamNameBytes))
+						s.teamNames[teamID] = teamName
+					}
+				}
+			}
+		}
+	}
+
+	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
+		s.messages = string(bMessages)
+	}
+}
+
 func (s *State) refresh() {
 	s.maybeInitialize()
 	s.updateEnabled()
 	if s.Enabled {
 		s.collectPoints()
 	}
+	s.updateCaches()
 }
 
 // Maintain performs housekeeping on a State struct.
@@ -453,6 +521,9 @@ func NewDevelState(sp StateProvider) *DevelState {
 func (ds *DevelState) TeamName(teamID string) (string, error) {
 	if name, err := ds.StateProvider.TeamName(teamID); err == nil {
 		return name, nil
+	}
+	if teamID == "" {
+		return "", fmt.Errorf("Empty team ID")
 	}
 	return fmt.Sprintf("«devel:%s»", teamID), nil
 }

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/award"
+	"github.com/dirtbags/moth/v4/pkg/award"
 )
 
 // Category represents a puzzle category.
@@ -58,7 +58,7 @@ type StateProvider interface {
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
 	AwardPoints(teamID string, cat string, points int) error
-	LogEvent(event, participantID, teamID, cat string, points int, extra ...string)
+	LogEvent(event, teamID, cat string, points int, extra ...string)
 	Maintainer
 }
 
@@ -68,6 +68,9 @@ type Maintainer interface {
 	// It will only be called once, when execution begins.
 	// It's okay to just exit if there's no maintenance to be done.
 	Maintain(updateInterval time.Duration)
+
+	// refresh is a shortcut used internally for testing
+	refresh()
 }
 
 // MothServer gathers together the providers that make up a MOTH server.
@@ -89,19 +92,17 @@ func NewMothServer(config Configuration, theme ThemeProvider, state StateProvide
 }
 
 // NewHandler returns a new http.RequestHandler for the provided teamID.
-func (s *MothServer) NewHandler(participantID, teamID string) MothRequestHandler {
+func (s *MothServer) NewHandler(teamID string) MothRequestHandler {
 	return MothRequestHandler{
-		MothServer:    s,
-		participantID: participantID,
-		teamID:        teamID,
+		MothServer: s,
+		teamID:     teamID,
 	}
 }
 
 // MothRequestHandler provides http.RequestHandler for a MothServer.
 type MothRequestHandler struct {
 	*MothServer
-	participantID string
-	teamID        string
+	teamID string
 }
 
 // PuzzlesOpen opens a file associated with a puzzle.
@@ -115,7 +116,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 		}
 	}
 	if !found {
-		return nil, time.Time{}, fmt.Errorf("Puzzle does not exist or is locked")
+		return nil, time.Time{}, fmt.Errorf("puzzle does not exist or is locked")
 	}
 
 	// Try every provider until someone doesn't return an error
@@ -128,7 +129,7 @@ func (mh *MothRequestHandler) PuzzlesOpen(cat string, points int, path string) (
 
 	// Log puzzle.json loads
 	if path == "puzzle.json" {
-		mh.State.LogEvent("load", mh.participantID, mh.teamID, cat, points)
+		mh.State.LogEvent("load", mh.teamID, cat, points)
 	}
 
 	return
@@ -145,17 +146,17 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		}
 	}
 	if !correct {
-		mh.State.LogEvent("wrong", mh.participantID, mh.teamID, cat, points)
-		return fmt.Errorf("Incorrect answer")
+		mh.State.LogEvent("wrong", mh.teamID, cat, points)
+		return fmt.Errorf("incorrect answer")
 	}
 
-	mh.State.LogEvent("correct", mh.participantID, mh.teamID, cat, points)
+	mh.State.LogEvent("correct", mh.teamID, cat, points)
 
 	if _, err := mh.State.TeamName(mh.teamID); err != nil {
-		return fmt.Errorf("Invalid team ID")
+		return fmt.Errorf("invalid team ID")
 	}
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
-		return fmt.Errorf("Error awarding points: %s", err)
+		return err
 	}
 
 	return nil
@@ -168,11 +169,10 @@ func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time,
 
 // Register associates a team name with a team ID.
 func (mh *MothRequestHandler) Register(teamName string) error {
-	// BUG(neale): Register returns an error if a team is already registered; it may make more sense to return success
 	if teamName == "" {
-		return fmt.Errorf("Empty team name")
+		return fmt.Errorf("empty team name")
 	}
-	mh.State.LogEvent("register", mh.participantID, mh.teamID, "", 0)
+	mh.State.LogEvent("register", mh.teamID, "", 0)
 	return mh.State.SetTeamName(mh.teamID, teamName)
 }
 
@@ -184,12 +184,15 @@ func (mh *MothRequestHandler) ExportState() *StateExport {
 	return mh.exportStateIfRegistered(false)
 }
 
-func (mh *MothRequestHandler) exportStateIfRegistered(override bool) *StateExport {
+// Export state, replacing the team ID with "self" if the team is registered.
+//
+// If forceRegistered is true, go ahead and export it anyway
+func (mh *MothRequestHandler) exportStateIfRegistered(forceRegistered bool) *StateExport {
 	export := StateExport{}
 	export.Config = mh.Config
 
 	teamName, err := mh.State.TeamName(mh.teamID)
-	registered := override || mh.Config.Devel || (err == nil)
+	registered := forceRegistered || mh.Config.Devel || (err == nil)
 
 	export.Messages = mh.State.Messages()
 	export.TeamNames = make(map[string]string)
@@ -254,7 +257,7 @@ func (mh *MothRequestHandler) Mothball(cat string, w io.Writer) error {
 	var err error
 
 	if !mh.Config.Devel {
-		return fmt.Errorf("Cannot mothball in production mode")
+		return fmt.Errorf("cannot mothball in production mode")
 	}
 	for _, provider := range mh.PuzzleProviders {
 		if err = provider.Mothball(cat, w); err == nil {

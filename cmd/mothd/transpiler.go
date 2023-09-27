@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dirtbags/moth/pkg/transpile"
+	"github.com/dirtbags/moth/v4/pkg/transpile"
 	"github.com/spf13/afero"
 )
 
@@ -78,4 +78,8 @@ func (p TranspilerProvider) Mothball(cat string, w io.Writer) error {
 // Maintain performs housekeeping.
 func (p TranspilerProvider) Maintain(updateInterval time.Duration) {
 	// Nothing to do here.
+}
+
+func (p TranspilerProvider) refresh() {
+	// Nothing to do for a theme
 }

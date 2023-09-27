@@ -3,34 +3,46 @@ package main
 import (
 	"io/ioutil"
 	"testing"
-	"time"
 
 	"github.com/spf13/afero"
 )
 
-const TestMaintenanceInterval = time.Millisecond * 1
 const TestTeamID = "teamID"
 
-func NewTestServer() *MothServer {
+type TestServer struct {
+	*MothServer
+}
+
+// NewTestServer creates a new MothServer with NewTestMothballs and some initial state.
+//
+// See function definition for details.
+func NewTestServer() TestServer {
 	puzzles := NewTestMothballs()
-	go puzzles.Maintain(TestMaintenanceInterval)
+	puzzles.refresh()
 
 	state := NewTestState()
 	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
 	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
-	go state.Maintain(TestMaintenanceInterval)
+	state.refresh()
 
 	theme := NewTestTheme()
 	afero.WriteFile(theme.Fs, "/index.html", []byte("index.html"), 0644)
-	go theme.Maintain(TestMaintenanceInterval)
 
-	return NewMothServer(Configuration{}, theme, state, puzzles)
+	return TestServer{NewMothServer(Configuration{}, theme, state, puzzles)}
+}
+
+func (ts TestServer) refresh() {
+	ts.State.(*State).refresh()
+	for _, pp := range ts.PuzzleProviders {
+		pp.(*Mothballs).refresh()
+	}
+	ts.Theme.(*Theme).refresh()
 }
 
 func TestDevelServer(t *testing.T) {
 	server := NewTestServer()
 	server.Config.Devel = true
-	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
+	anonHandler := server.NewHandler("badTeamId")
 
 	{
 		es := anonHandler.ExportState()
@@ -45,12 +57,11 @@ func TestDevelServer(t *testing.T) {
 
 func TestProdServer(t *testing.T) {
 	teamName := "OurTeam"
-	participantID := "participantID"
 	teamID := TestTeamID
 
 	server := NewTestServer()
-	handler := server.NewHandler(participantID, teamID)
-	anonHandler := server.NewHandler("badParticipantId", "badTeamId")
+	handler := server.NewHandler(teamID)
+	anonHandler := server.NewHandler("badTeamId")
 
 	{
 		es := handler.ExportState()
@@ -80,13 +91,15 @@ func TestProdServer(t *testing.T) {
 		t.Error("index.html wrong contents", contents)
 	}
 
+	server.refresh()
+
 	{
 		es := handler.ExportState()
 		if es.Config.Devel {
 			t.Error("Marked as development server", es.Config)
 		}
 		if len(es.Puzzles) != 1 {
-			t.Error("Puzzle categories wrong length")
+			t.Error("Puzzle categories wrong length", len(es.Puzzles))
 		}
 		if es.Messages != "messages.html" {
 			t.Error("Messages has wrong contents")
@@ -131,7 +144,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("Right answer marked wrong", err)
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	{
 		es := handler.ExportState()
@@ -160,7 +173,7 @@ func TestProdServer(t *testing.T) {
 		t.Error("Right answer marked wrong:", err)
 	}
 
-	time.Sleep(TestMaintenanceInterval)
+	server.refresh()
 
 	{
 		es := anonHandler.ExportState()
@@ -168,9 +181,8 @@ func TestProdServer(t *testing.T) {
 			t.Error("Anonymous TeamNames is wrong:", es.TeamNames)
 		}
 		if len(es.PointsLog) != 2 {
-			t.Error("Points log wrong length")
-		}
-		if es.PointsLog[1].TeamID != "0" {
+			t.Errorf("Points log wrong length: got %d, wanted 2", len(es.PointsLog))
+		} else if es.PointsLog[1].TeamID != "0" {
 			t.Error("Second point log didn't anonymize team ID correctly:", es.PointsLog[1])
 		}
 	}

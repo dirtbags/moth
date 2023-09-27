@@ -4,11 +4,13 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
-	"github.com/dirtbags/moth/pkg/transpile"
+	"github.com/dirtbags/moth/v4/pkg/transpile"
 	"github.com/spf13/afero"
 )
 
@@ -200,5 +202,34 @@ func TestFilesystem(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), "Moo.") {
 		t.Error("Wrong file pulled", stdout.String())
+	}
+}
+
+func TestCwd(t *testing.T) {
+	testwd, err := os.Getwd()
+	if err != nil {
+		t.Error("Can't get current working directory!")
+		return
+	}
+	defer os.Chdir(testwd)
+
+	stdin := new(bytes.Buffer)
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	tp := T{
+		Stdin:  stdin,
+		Stdout: stdout,
+		Stderr: stderr,
+		BaseFs: afero.NewOsFs(),
+	}
+
+	stdout.Reset()
+	os.Chdir("/")
+	if err := tp.Run(
+		"file",
+		fmt.Sprintf("-dir=%s/testdata/cat1/1", testwd),
+		"moo.txt",
+	); err != nil {
+		t.Error(err)
 	}
 }
