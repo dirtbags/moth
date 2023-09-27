@@ -113,7 +113,6 @@ input:invalid {
   cursor: help;
 }
 
-
 /** Development mode information */
 .debug {
   overflow: auto;
