@@ -1,7 +1,6 @@
 Dirtbags Monarch Of The Hill Server
 =====================
 
-![Build badge](https://github.com/dirtbags/moth/workflows/Build/Test/Push/badge.svg)
 ![Go report card](https://goreportcard.com/badge/github.com/dirtbags/moth)
 
 Monarch Of The Hill (MOTH) is a puzzle server.
