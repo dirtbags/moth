@@ -2,10 +2,8 @@ import * as moth from "./moth.mjs"
 import * as common from "./common.mjs"
 
 const server = new moth.Server(".")
-const ReplayDuration = 0.3 * common.Second
-const MaxFrameRate = 60
 /** Don't let any team's score exceed this percentage width */
-const MaxScoreWidth = 95
+const MaxScoreWidth = 90
 
 /**
  * Returns a promise that resolves after timeout.
@@ -23,10 +21,26 @@ function sleep(timeout) {
  * The update is animated, because I think that looks cool.
  */
 async function update() {
-  let config = await common.Config()
+  let config = {}
+  try {
+    config = await common.Config()
+  }
+  catch (err) {
+    console.warn("Parsing config.json:", err)
+  }
+
+  // Pull configuration settings
+  let ScoreboardConfig = config.Scoreboard ?? {}
+  let ReplayHistory = ScoreboardConfig.ReplayHistory ?? false
+  let ReplayDurationMS = ScoreboardConfig.ReplayDurationMS ?? 300
+  let ReplayFPS = ScoreboardConfig.ReplayFPS ?? 24
+  if (!config.Scoreboard) {
+    console.warn("config.json has empty Scoreboard section")
+  }
+
   for (let e of document.querySelectorAll(".location")) {
     e.textContent = common.BaseURL
-    e.classList.toggle("hidden", !config.URLInScoreboard)
+    e.classList.toggle("hidden", !ScoreboardConfig.DisplayServerURL)
   }
 
   let state = await server.GetState()
@@ -34,19 +48,21 @@ async function update() {
   let logSize = state.PointsLog.length
 
   // Figure out the timing so that we can replay the scoreboard in about
-  // ReplayDuration, but no more than 24 frames per second.
+  // ReplayDurationMS, but no more than 24 frames per second.
   let frameModulo = 1
   let delay = 0
-  while (delay < (common.Second / MaxFrameRate)) {
+  while (delay < (common.Second / ReplayFPS)) {
     frameModulo += 1
-    delay = ReplayDuration / (logSize / frameModulo)
+    delay = ReplayDurationMS / (logSize / frameModulo)
   }
 
   let frame = 0
   for (let scores of state.ScoresHistory()) {
     frame += 1
-    if ((frame < state.PointsLog.length) && (frame % frameModulo)) {
-      continue
+    if (frame < state.PointsLog.length) { // Always render the last frame
+      if (!ReplayHistory || (frame % frameModulo)) { // Skip if we're not animating, or if we need to drop frames
+        continue
+      }
     }
 
     while (rankingsElement.firstChild) rankingsElement.firstChild.remove()
@@ -83,7 +99,7 @@ async function update() {
         block.title = `${points} points`
         block.style.width = `${width}%`
         block.classList.add("category", `cat${categoryNumber}`)
-        block.classList.toggle("topscore", score == 1)
+        block.classList.toggle("topscore", (score == 1) && ScoreboardConfig.ShowCategoryLeaders)
 
         categoryNumber += 1
       } 
