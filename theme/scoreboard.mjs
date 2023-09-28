@@ -7,7 +7,11 @@ const MaxScoreWidth = 90
 
 /**
  * Returns a promise that resolves after timeout.
- * 
+ *
+ * This uses setTimeout instead of some other fancy thing like
+ * requestAnimationFrame, because who actually cares about scoreboard update
+ * framerate?
+ *
  * @param {Number} timeout How long to sleep (milliseconds)
  * @returns {Promise}
  */
