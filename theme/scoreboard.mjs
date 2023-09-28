@@ -74,7 +74,8 @@ async function update() {
           continue
         }
 
-        let block = teampoints.appendChild(document.createElement("span"))
+        // XXX: Figure out how to do this properly with flexbox
+        let block = row.appendChild(document.createElement("span"))
         let points = scores.GetPoints(category, teamID)
         let width = MaxScoreWidth * score / topScore
 
@@ -82,6 +83,7 @@ async function update() {
         block.title = `${points} points`
         block.style.width = `${width}%`
         block.classList.add("category", `cat${categoryNumber}`)
+        block.classList.toggle("topscore", score == 1)
 
         categoryNumber += 1
       } 

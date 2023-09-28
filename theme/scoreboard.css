@@ -57,6 +57,11 @@
   width: inherit;
   max-width: 100%;
 }
+.topscore::before {
+  content: "✩";
+  font-size: 75%;
+  vertical-align: top;
+}
 
 @media only screen and (max-width: 450px) {
   #rankings span.teamname {
