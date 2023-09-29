@@ -510,7 +510,7 @@ func (ds *DevelState) TeamName(teamID string) (string, error) {
 		return name, nil
 	}
 	if teamID == "" {
-		return "", fmt.Errorf("Empty team ID")
+		return "", fmt.Errorf("empty team ID")
 	}
 	return fmt.Sprintf("«devel:%s»", teamID), nil
 }
