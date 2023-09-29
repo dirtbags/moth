@@ -367,10 +367,8 @@ class State {
             Devel: obj.Config.Devel,
         }
 
-        /** Global messages, in HTML
-         * @type {string}
-         */
-        this.Messages = obj.Messages
+        /** True if the server is in enabled state */
+        this.Enabled = obj.Enabled
 
         /** Map from Team ID to Team Name
          * @type {Object.<string,string>}

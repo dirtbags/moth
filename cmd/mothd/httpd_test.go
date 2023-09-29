@@ -45,7 +45,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"Config":{"Devel":false},"Messages":"messages.html","TeamNames":{},"PointsLog":[],"Puzzles":{}}` {
+	} else if r.Body.String() != `{"Config":{"Devel":false},"TeamNames":{},"PointsLog":[],"Puzzles":{}}` {
 		t.Error("Unexpected state", r.Body.String())
 	}
 
@@ -71,7 +71,7 @@ func TestHttpd(t *testing.T) {
 
 	if r := hs.TestRequest("/state", nil); r.Result().StatusCode != 200 {
 		t.Error(r.Result())
-	} else if r.Body.String() != `{"Config":{"Devel":false},"Messages":"messages.html","TeamNames":{"self":"GoTeam"},"PointsLog":[],"Puzzles":{"pategory":[1]}}` {
+	} else if r.Body.String() != `{"Config":{"Devel":false},"TeamNames":{"self":"GoTeam"},"PointsLog":[],"Puzzles":{"pategory":[1]}}` {
 		t.Error("Unexpected state", r.Body.String())
 	}
 

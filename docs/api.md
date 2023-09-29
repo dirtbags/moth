@@ -53,7 +53,6 @@ Returns the current Moth event state as a JSON object.
     "Config": {
         "Devel": false // true means this is a development server
     },
-    "Messages: "HTML to be rendered as broadcast messages",
     "TeamNames": {
         "self": "Requesting team name", // Only if regestered team id is a provided
         "0": "Team 1 Name",
@@ -91,7 +90,6 @@ Content-Type: application/json
 
 {"Config":
   {"Devel":false},
-  "Messages":"<p>Welcome to the event!</p><p>Event ends at 19:00!</p>",
   "TeamNames":{
       "0":"Mike and Jack",
       "12":"Team 2",

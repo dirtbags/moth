@@ -22,7 +22,6 @@ func NewTestServer() TestServer {
 
 	state := NewTestState()
 	afero.WriteFile(state, "teamids.txt", []byte("teamID\n"), 0644)
-	afero.WriteFile(state, "messages.html", []byte("messages.html"), 0644)
 	state.refresh()
 
 	theme := NewTestTheme()
@@ -100,9 +99,6 @@ func TestProdServer(t *testing.T) {
 		}
 		if len(es.Puzzles) != 1 {
 			t.Error("Puzzle categories wrong length", len(es.Puzzles))
-		}
-		if es.Messages != "messages.html" {
-			t.Error("Messages has wrong contents")
 		}
 		if len(es.PointsLog) != 0 {
 			t.Error("Points log not empty")

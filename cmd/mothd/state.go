@@ -37,7 +37,7 @@ type State struct {
 	afero.Fs
 
 	// Enabled tracks whether the current State system is processing updates
-	Enabled bool
+	enabled bool
 
 	enabledWhy      string
 	refreshNow      chan bool
@@ -49,7 +49,6 @@ type State struct {
 	teamNamesLastChange time.Time
 	teamNames           map[string]string
 	pointsLog           award.List
-	messages            string
 	lock                sync.RWMutex
 }
 
@@ -57,7 +56,7 @@ type State struct {
 func NewState(fs afero.Fs) *State {
 	s := &State{
 		Fs:          fs,
-		Enabled:     true,
+		enabled:     true,
 		refreshNow:  make(chan bool, 5),
 		eventStream: make(chan []string, 80),
 
@@ -117,11 +116,11 @@ func (s *State) updateEnabled() {
 		}
 	}
 
-	if (nextEnabled != s.Enabled) || (why != s.enabledWhy) {
-		s.Enabled = nextEnabled
+	if (nextEnabled != s.enabled) || (why != s.enabledWhy) {
+		s.enabled = nextEnabled
 		s.enabledWhy = why
-		log.Printf("Setting enabled=%v: %s", s.Enabled, s.enabledWhy)
-		if s.Enabled {
+		log.Printf("Setting enabled=%v: %s", s.enabled, s.enabledWhy)
+		if s.enabled {
 			s.LogEvent("enabled", "", "", 0, s.enabledWhy)
 		} else {
 			s.LogEvent("disabled", "", "", 0, s.enabledWhy)
@@ -193,11 +192,9 @@ func (s *State) PointsLog() award.List {
 	return ret
 }
 
-// Messages retrieves the current messages.
-func (s *State) Messages() string {
-	s.lock.RLock() // It's not clear to me that this actually needs to happen
-	defer s.lock.RUnlock()
-	return s.messages
+// Enabled returns true if the server is in "enabled" state
+func (s *State) Enabled() bool {
+	return s.enabled
 }
 
 // AwardPoints gives points to teamID in category.
@@ -313,7 +310,6 @@ func (s *State) maybeInitialize() {
 	s.Remove("hours.txt")
 	s.Remove("points.log")
 	s.Remove("events.csv")
-	s.Remove("messages.html")
 	s.Remove("mothd.log")
 	s.RemoveAll("points.tmp")
 	s.RemoveAll("points.new")
@@ -366,11 +362,6 @@ func (s *State) maybeInitialize() {
 		fmt.Fprintln(f, "- 1970-01-01T00:00:00Z")
 		fmt.Fprintln(f, "+", now)
 		fmt.Fprintln(f, "- 2519-10-31T00:00:00Z")
-		f.Close()
-	}
-
-	if f, err := s.Create("messages.html"); err == nil {
-		fmt.Fprintln(f, "<!-- messages.html: put client broadcast messages here. -->")
 		f.Close()
 	}
 
@@ -465,16 +456,12 @@ func (s *State) updateCaches() {
 			}
 		}
 	}
-
-	if bMessages, err := afero.ReadFile(s, "messages.html"); err == nil {
-		s.messages = string(bMessages)
-	}
 }
 
 func (s *State) refresh() {
 	s.maybeInitialize()
 	s.updateEnabled()
-	if s.Enabled {
+	if s.enabled {
 		s.collectPoints()
 	}
 	s.updateCaches()

@@ -185,7 +185,7 @@ func TestStateDisabled(t *testing.T) {
 	s := NewTestState()
 	s.refresh()
 
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("Brand new state is disabled")
 	}
 
@@ -195,35 +195,35 @@ func TestStateDisabled(t *testing.T) {
 	}
 	defer hoursFile.Close()
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("Empty hours.txt not enabled")
 	}
 
 	fmt.Fprintln(hoursFile, "- 1970-01-01T01:01:01Z")
 	hoursFile.Sync()
 	s.refresh()
-	if s.Enabled {
+	if s.Enabled() {
 		t.Error("1970-01-01")
 	}
 
 	fmt.Fprintln(hoursFile, "+ 1970-01-02 01:01:01+05:00")
 	hoursFile.Sync()
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("1970-01-02")
 	}
 
 	fmt.Fprintln(hoursFile, "-")
 	hoursFile.Sync()
 	s.refresh()
-	if s.Enabled {
+	if s.Enabled() {
 		t.Error("bare -")
 	}
 
 	fmt.Fprintln(hoursFile, "+")
 	hoursFile.Sync()
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("bare +")
 	}
 
@@ -231,21 +231,21 @@ func TestStateDisabled(t *testing.T) {
 	fmt.Fprintln(hoursFile, "# Comment")
 	hoursFile.Sync()
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("Comment")
 	}
 
 	fmt.Fprintln(hoursFile, "intentional parse error")
 	hoursFile.Sync()
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("intentional parse error")
 	}
 
 	fmt.Fprintln(hoursFile, "- 1980-01-01T01:01:01Z")
 	hoursFile.Sync()
 	s.refresh()
-	if s.Enabled {
+	if s.Enabled() {
 		t.Error("1980-01-01")
 	}
 
@@ -253,13 +253,13 @@ func TestStateDisabled(t *testing.T) {
 		t.Error(err)
 	}
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("Removing `hours.txt` disabled event")
 	}
 
 	s.Remove("initialized")
 	s.refresh()
-	if !s.Enabled {
+	if !s.Enabled() {
 		t.Error("Re-initializing didn't start event")
 	}
 }

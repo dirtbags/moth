@@ -167,9 +167,7 @@ class App {
 }
 
 function init() {
-    window.app = {
-        server: new App()
-    }
+    window.app = new App()
 }
 
 common.WhenDOMLoaded(init)

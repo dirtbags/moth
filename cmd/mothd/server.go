@@ -30,7 +30,7 @@ type Configuration struct {
 // StateExport is given to clients requesting the current state.
 type StateExport struct {
 	Config    Configuration
-	Messages  string
+	Enabled   bool
 	TeamNames map[string]string
 	PointsLog award.List
 	Puzzles   map[string][]int
@@ -53,7 +53,7 @@ type ThemeProvider interface {
 
 // StateProvider defines what's required to provide MOTH state.
 type StateProvider interface {
-	Messages() string
+	Enabled() bool
 	PointsLog() award.List
 	TeamName(teamID string) (string, error)
 	SetTeamName(teamID, teamName string) error
@@ -194,7 +194,7 @@ func (mh *MothRequestHandler) exportStateIfRegistered(forceRegistered bool) *Sta
 	teamName, err := mh.State.TeamName(mh.teamID)
 	registered := forceRegistered || mh.Config.Devel || (err == nil)
 
-	export.Messages = mh.State.Messages()
+	export.Enabled = mh.State.Enabled()
 	export.TeamNames = make(map[string]string)
 
 	// Anonymize team IDs in points log, and write out team names
