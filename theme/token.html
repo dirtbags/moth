@@ -1,45 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>Redeem Token</title>
     <link rel="stylesheet" href="basic.css">
     <meta name="viewport" content="width=device-width">
-    <script src="puzzle.js"></script>
-    <script>
-function tokenInput(e) {
-  let vals = e.target.value.split(":")
-  document.querySelector("input[name=cat]").value = vals[0]
-  document.querySelector("input[name=points]").value = vals[1]
-  document.querySelector("input[name=answer]").value = vals[2]
-}
-
-function tokenInit() {
-  document.querySelector("input[name=token]").addEventListener("input", tokenInput)
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", tokenInit)
-} else {
-  tokenInit()
-}
-    </script>
+    <script src="token.mjs" type="module" async></script>
   </head>
   <body>
     <h1>Redeem Token</h1>
-    <div id="messages"></div>
-    <form id="tokenForm">
-      <input type="hidden" name="cat">
-      <input type="hidden" name="points">
-      <input type="hidden" name="answer">
-      Team ID: <input type="text" name="id"> <br>
-      Token: <input type="text" name="token"> <br>
+    <main>
+      <p>
+        Have you found a token?
+      </p>
+      <p></p>
+        Tokens look like
+        <code>category:5:xylep-radar-nanox</code>
+      <p>
+        Tokens may be redeemed here for points in their category.
+        Tokens can appear anywhere: online, on slips of paper, projected onto screens…
+      </p>
+    </main>
+    <form class="token"</form>
+      <label for="token">Token:</label> <input type="text" name="token" id="token"> <br>
       <input type="submit" value="Submit">
     </form>
-    <nav>
-      <ul>
-        <li><a href="puzzle-list.html">Puzzles</a></li>
-        <li><a href="scoreboard.html">Scoreboard</a></li>
-      </ul>
-    </nav>
+    <div class="toasts"></div>
   </body>
 </html>

@@ -1,0 +1,84 @@
+/* GHC displays: 1024x1820 */
+@media screen and (max-aspect-ratio: 4/5) and (min-height: 1600px) {
+  html {
+    font-size: 20pt;
+  }
+}
+
+.location {
+  color: #acf;
+  background-color: #0008;
+  position: fixed;
+  right: 30vw;
+  bottom: 0;
+  padding: 1em;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight:bold;
+  text-decoration: underline;
+}
+
+/** Scoreboard */
+#rankings {
+	width: 100%;
+	position: relative;
+  background-color: #000c;
+}
+#rankings div {
+  height: 1.2rem;
+  display: flex;
+  align-items: center;
+}
+#rankings div:nth-child(6n){
+  background-color: #ccc3;
+}
+#rankings div:nth-child(6n+3) {
+  background-color: #0f03;
+}
+
+#rankings span {
+  display: inline-block;
+  overflow: hidden;
+}
+#rankings span.category {
+  font-size: 80%;
+}
+#rankings span.teamname {
+  height: auto;
+	font-size: inherit;
+	color: white;
+  background-color: #000e;
+  border-radius: 3px;
+	position: absolute;
+	right: 0.2em;
+}
+#rankings span.teamname:hover,
+#rankings span.category:hover {
+  width: inherit;
+  max-width: 100%;
+}
+.topscore::before {
+  content: "✩";
+  font-size: 75%;
+  vertical-align: top;
+}
+
+@media only screen and (max-width: 450px) {
+  #rankings span.teamname {
+    max-width: 6em;
+    text-overflow: ellipsis;
+  }
+  span.teampoints {
+    max-width: 80%;
+  }
+}
+
+#rankings div * {white-space: nowrap;}
+.cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
+.cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
+.cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
+.cat3, .cat11, .cat19 {background-color: #33a02c; color: white;}
+.cat4, .cat12, .cat20 {background-color: #fb9a99; color: black;}
+.cat5, .cat13, .cat21 {background-color: #e31a1c; color: white;}
+.cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
+.cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>KSA Report</title>
+        <meta name="viewport" content="width=device-width">
+        <meta charset="utf-8">    
+        <script src="ksa.mjs" type="module" async></script>
+        <script src="../background.mjs" type="module" async></script>
+        <link rel="stylesheet" href="../basic.css">
+    </head>
+    <body>
+        <h1>KSA Report</h1>
+        <main>
+            <p>
+                This report shows all KSAs covered by this server so far.
+                This is not a report on your progress, but rather
+                what you would have covered if you had worked every exercise available.
+            </p>
+    
+            <div class="notification">
+                <p class="doing"></p>
+                <progress class="doing"></progress>
+            </div>
+    
+            <h2>All KSAs across all content</h2>
+            <ul class="allKSAs"></ul>
+
+            <h2>All KSAs by Category</h2>
+            <div class="KSAsByCategory">
+            </div>
+    
+            <h2>KSAs by Puzzle</h2>
+            <table class="puzzles">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Points</th>
+                        <th>KSAs</th>
+                        <th>Errors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template id="puzzlerow">
+                        <tr>
+                            <td class="category"></td>
+                            <td class="points"></td>
+                            <td class="ksas"></td>
+                            <td><pre class="error"></pre></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </main>
+    </body>
+</html>

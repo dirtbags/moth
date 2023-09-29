@@ -1,132 +1,138 @@
-/* http://paletton.com/#uid=63T0u0k7O9o3ouT6LjHih7ltq4c */
+/* Color palette: http://paletton.com/#uid=33x0u0klrl-4ON9dhtKtAdqMQ4T */
+
 body {
   font-family: sans-serif;
+  background: #010e19 url("bg.png") center fixed;
+  background-size: cover;
+  background-blend-mode: soft-light;
+  background-color: #010e19;
+  color: #edd488;
+}
+canvas.wallpaper {
+  position: fixed;
+  display: block;
+  z-index: -1000;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  opacity: 0.2;
+  image-rendering: pixelated;
+}
+main {
   max-width: 40em;
-	background: #282a33;
-	color: #f6efdc;
+  margin: 1em auto;
+  padding: 1px 3px;
+  border-radius: 5px;
+  background: #000d;
 }
-body.wide {
-  max-width: 100%;
-}
-a:any-link {
-	color: #8b969a;
+h1, h2, h3, h4, h5, h6 {
+  color: #cb2408cc;
 }
 h1 {
-	background: #5e576b;
-	color: #9e98a8;
-}
-.Fail, .Error, #messages {
-	background: #3a3119;
-	color: #ffcc98;
-}
-.Fail:before {
-	content: "Fail: ";
-}
-.Error:before {
-	content: "Error: ";
+  background: #cb240844;
+  padding: 3px;
 }
 p {
 	margin: 1em 0em;
 }
+a:any-link {
+	color: #b9cbd8;
+}
 form, pre {
 	margin: 1em;
+  overflow-x: auto;
 }
 input, select {
 	padding: 0.6em;
 	margin: 0.2em;
 	max-width: 30em;
 }
-nav {
-  border: solid black 2px;
+input {
+  background-color: #ccc4;
+  color: inherit;
+}
+input:hover {
+  background-color: #8884;
+}
+input:active {
+  background-color: inherit;
+}
+.notification, .error {
+  padding: 0 1em;
+  border-radius: 8px;
+}
+.notification {
+	background: #ac8f3944;
+}
+.error {
+  background: red;
+  color: white;
+}
+.hidden {
+  display: none;
+}
+
+/** Puzzles list */
+.category {
+  margin: 5px 0;
+  background: #ccc4;
+}
+.category h2 {
+  margin: 0 0.2em;
+}
+.category .solved {
+  text-decoration: line-through;
 }
 nav ul, .category ul {
-  padding: 1em;
+  margin: 0;
+  padding: 0.2em 1em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 nav li, .category li {
 	display: inline;
-	margin: 1em;
 }
-iframe#body {
-  border: inherit;
-  width: 100%;
+.mothball {
+  float: right;
+  text-decoration: none;
+  border-radius: 5px;
+  background: #ccc;
+  padding: 4px 8px;
+  margin: 5px;
 }
-img {
+
+/** Puzzle content */
+#puzzle {
+  border-bottom: solid;
+  padding: 0 0.5em;
+}
+#puzzle img {
   max-width: 100%;
 }
 input:invalid {
-  border-color: red;
+  background-color: #800;
+  color: white;
 }
-#messages {
-  min-height: 3em;
-  border: solid black 2px;
-}
-#rankings {
-	width: 100%;
-	position: relative;
+.answer_ok {
+  cursor: help;
 }
 
-#rankings span {
-	font-size: 75%;
-	display: inline-block;
-	overflow: hidden;
-	height: 1.7em;
-}
-#rankings span.teamname {
-	font-size: inherit;
-	color: white;
-	text-shadow: 0 0 3px black;
-	opacity: 0.8;
-	position: absolute;
-	right: 0.2em;
-}
-#rankings div * {white-space: nowrap;}
-.cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
-.cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
-.cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
-.cat3, .cat11, .cat19 {background-color: #33a02c; color: white;}
-.cat4, .cat12, .cat20 {background-color: #fb9a99; color: black;}
-.cat5, .cat13, .cat21 {background-color: #e31a1c; color: white;}
-.cat6, .cat14, .cat22 {background-color: #fdbf6f; color: black;}
-.cat7, .cat15, .cat23 {background-color: #ff7f00; color: black;}
-
-
-#devel {
-  background-color: #eee;
+/** Development mode information */
+.debug {
+  overflow: auto;
+  padding: 1em;
+  border-radius: 10px;
+  margin: 2em auto;
+  background: #cccc;
   color: black;
-  overflow: scroll;
 }
-#devel .string {
-  color: #9c27b0;
-}
-#devel .body {
-  background-color: #ffc107;
-}
-.kvpair {
-  border: solid black 2px;
+.debug dt {
+  font-weight: bold;
 }
 
-.spinner {
-  display: inline-block;
-  width: 64px;
-  height: 64px;
-  display: block;
-  width: 46px;
-  height: 46px;
-  margin: 1px;
-  border-radius: 50%;
-  border: 5px solid #fff;
-  border-color: #fff transparent #fff transparent;
-  animation: rotate 1.2s linear infinite;
-}
-@keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
+/** Draggable items, from the draggable plugin */
 li[draggable]::before {
   content: "↕";
   padding: 0.5em;
@@ -144,6 +150,48 @@ li[draggable] {
   border: 1px white dashed;
 }
 
-#cacheButton.disabled {
-  display: none;
+
+
+
+
+/** Toasts are little pop-up informational messages. */
+ .toasts {
+  position: fixed;
+  z-index: 100;
+  bottom: 10px;
+  left: 10px;
+  text-align: center;
+  width: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
+}
+.toast {
+  border-radius: 0.5em;
+  padding:  0.2em 2em;
+  animation: fadeIn ease 1s;
+  margin: 2px auto;
+  background: #333;
+  color: #eee;
+  box-shadow: 0px 0px 8px 0px #0b0;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-color-scheme: light) {
+  /* We uses the alpha channel to apply hue tinting to elements, to get a
+   * similar effect in light or dark mode. That means there aren't a whole lot of
+   * things to change between light and dark mode.
+   */
+ body {
+    background-color: #b9cbd8;
+    color: black;
+  }
+  main {
+    background-color: #fffd;
+  }
+  a:any-link {
+    color: #092b45;
+  }
 }

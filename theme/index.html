@@ -1,33 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>MOTH</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
+    <link rel="icon" href="luna-moth.svg">
     <link rel="stylesheet" href="basic.css">
-    <script src="moth.js"></script>
-    <link rel="manifest" href="manifest.json">
+    <script src="index.mjs" type="module" async></script>
+    <script src="background.mjs" type="module" async></script>
   </head>
   <body>
-    <h1 id="title">MOTH</h1>
-    <section>
-      <div id="messages">
-        <div id="notices"></div>
+    <h1 class="title" title="Monarch Of The Hill">MOTH</h1>
+    <main>
+      <div class="messages notification">
       </div>
 
-      <form id="login">
+      <form class="login">
         Team ID: <input name="id"> <br>
         Team name: <input name="name"> <br>
         <input type="submit" value="Sign In">
       </form>
 
-      <div id="puzzles"></div>
+      <div class="puzzles"></div>
+    </main>
+      
+    <div class="notification" data-track-solved="no">
+      <p>
+        Solved puzzle tracking: <b>disabled</b>.
+      </p>
+      <p>
+        Your team's Incident Coordinator can help coordinate team activity.
+      </p>
+    </div>
 
-    </section>
+    <div class="toasts"></div>
+
     <nav>
       <ul>
-        <li><a href="scoreboard.html">Scoreboard</a></li>
-        <li><a href="logout.html">Sign Out</a></li>
+        <li><a href="scoreboard.html" target="_blank">Scoreboard</a></li>
+        <li><button class="logout">Sign Out</button></li>
       </ul>
     </nav>
   </body>

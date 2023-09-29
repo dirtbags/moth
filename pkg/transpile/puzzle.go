@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/sha256"
+	"crypto/sha1"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,23 +37,45 @@ type PuzzleDebug struct {
 	Summary string
 }
 
-// Puzzle contains everything about a puzzle that a client would see.
+// Puzzle contains everything about a puzzle that a client will see.
 type Puzzle struct {
-	Debug         PuzzleDebug
-	Authors       []string
-	Attachments   []string
-	Scripts       []string
-	Body          string
+	// Debug contains debugging information, omitted in mothballs
+	Debug PuzzleDebug
+
+	// Authors names all authors of this puzzle
+	Authors []string
+
+	// Attachments is a list of filenames used by this puzzle
+	Attachments []string
+
+	// Scripts is a list of EMCAScript files needed by the client for this puzzle
+	Scripts []string
+
+	// Body is the HTML rendering of this puzzle
+	Body string
+
+	// AnswerPattern contains the pattern (regular expression?) used to match valid answers
 	AnswerPattern string
-	AnswerHashes  []string
-	Objective     string
-	KSAs          []string
-	Success       struct {
+
+	// AnswerHashes contains hashes of all answers for this puzzle
+	AnswerHashes []string
+
+	// Objective is the learning objective for this puzzle
+	Objective string
+
+	// KSAs lists all KSAs achieved upon successfull completion of this puzzle
+	KSAs []string
+
+	// Success lists the criteria for successfully understanding this puzzle
+	Success struct {
+		// Acceptable describes the minimum work required to be considered successfully understanding this puzzle's concepts
 		Acceptable string
-		Mastery    string
+
+		// Mastery describes the work required to be considered mastering this puzzle's conceptss
+		Mastery string
 	}
 
-	// Answers will be empty in a mothball
+	// Answers lists all acceptable answers, omitted in mothballs
 	Answers []string
 }
 
@@ -63,9 +85,9 @@ func (puzzle *Puzzle) computeAnswerHashes() {
 	}
 	puzzle.AnswerHashes = make([]string, len(puzzle.Answers))
 	for i, answer := range puzzle.Answers {
-		sum := sha256.Sum256([]byte(answer))
+		sum := sha1.Sum([]byte(answer))
 		hexsum := fmt.Sprintf("%x", sum)
-		puzzle.AnswerHashes[i] = hexsum
+		puzzle.AnswerHashes[i] = hexsum[:4]
 	}
 }
 

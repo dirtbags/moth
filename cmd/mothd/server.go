@@ -156,7 +156,7 @@ func (mh *MothRequestHandler) CheckAnswer(cat string, points int, answer string)
 		return fmt.Errorf("invalid team ID")
 	}
 	if err := mh.State.AwardPoints(mh.teamID, cat, points); err != nil {
-		return fmt.Errorf("error awarding points: %s", err)
+		return err
 	}
 
 	return nil
@@ -169,7 +169,6 @@ func (mh *MothRequestHandler) ThemeOpen(path string) (ReadSeekCloser, time.Time,
 
 // Register associates a team name with a team ID.
 func (mh *MothRequestHandler) Register(teamName string) error {
-	// BUG(neale): Register returns an error if a team is already registered; it may make more sense to return success
 	if teamName == "" {
 		return fmt.Errorf("empty team name")
 	}

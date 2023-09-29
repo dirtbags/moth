@@ -522,6 +522,9 @@ func (ds *DevelState) TeamName(teamID string) (string, error) {
 	if name, err := ds.StateProvider.TeamName(teamID); err == nil {
 		return name, nil
 	}
+	if teamID == "" {
+		return "", fmt.Errorf("Empty team ID")
+	}
 	return fmt.Sprintf("«devel:%s»", teamID), nil
 }
 

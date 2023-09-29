@@ -1,9 +1,0 @@
-{
-  "name": "Monarch of the Hill",
-  "short_name": "MOTH",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#282a33",
-  "theme_color": "#ECB",
-  "description": "The MOTH CTF engine"
-}
