@@ -26,7 +26,8 @@ class App {
 
     handleLoginSubmit(event) {
         event.preventDefault()
-        console.log(event)
+        let f = new FormData(event.target)
+        this.Login(f.get("id"), f.get("name"))
     }
     
     /**

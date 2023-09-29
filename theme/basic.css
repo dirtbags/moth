@@ -52,6 +52,12 @@ input {
   background-color: #ccc4;
   color: inherit;
 }
+input:hover {
+  background-color: #8884;
+}
+input:active {
+  background-color: inherit;
+}
 .notification, .error {
   padding: 0 1em;
   border-radius: 8px;
