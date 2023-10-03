@@ -209,6 +209,7 @@ async function loadPuzzle(category, points) {
 async function init() {
     window.app = {}
     window.setanswer = (str => SetAnswer(str))
+    window.checkAnswer = (str => window.app.puzzle.IsPossiblyCorrect(str))
 
     for (let form of document.querySelectorAll("form.answer")) {
         form.addEventListener("submit", formSubmitHandler)
