@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - messages.html moved into theme
 - Exported state now includes "Enabled" boolean
 
+## [v4.4.11] - 2023-04-11
+### Changed
+- CI/CD now builds tags
+
+## [v4.4.10] - 2022-10-21
+### Changed
+- `enabled` file is no longer used
+- `hours.txt` parsing logs more verbosely
+- Participant IDs are no longer used anywhere
+- A few changes to CI/CD test reporting
+
 ## [v4.4.9] - 2022-05-12
 ### Changed
 - Added a performance optimization for events with a large number of teams
