@@ -43,6 +43,11 @@ case $ACTION in
             run docker push $image
         done
     ;;
+    release)
+        run go build -v ./cmd/mothd
+        run go build -v ./cmd/transpile
+        run tar czf moth-$(git tag --contains).$(uname -s)-$(uname -m).tar.gz mothd transpile theme
+        ;;
 *)
     echo "Unknown action: $1" 1>&2
     exit 1

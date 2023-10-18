@@ -3,3 +3,6 @@
 .idea
 /vendor/
 __debug_bin
+*.tar.gz
+transpile
+mothd
