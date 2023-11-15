@@ -211,7 +211,7 @@ async function init() {
     window.setanswer = (str => SetAnswer(str))
     window.checkAnswer = (str => window.app.puzzle.IsPossiblyCorrect(str))
 
-    for (let form of document.querySelectorAll("form.answer")) {
+    for (let form of document.querySelectorAll("form.submit-answer")) {
         form.addEventListener("submit", formSubmitHandler)
         for (let e of form.querySelectorAll("[name=answer]")) {
             e.addEventListener("input", answerInputHandler)
