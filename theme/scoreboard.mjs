@@ -71,7 +71,6 @@ async function update() {
 
     while (rankingsElement.firstChild) rankingsElement.firstChild.remove()
 
-    let sortedCategories = scores.SortedCategories()
     let sortedTeamIDs = [...scores.TeamIDs]
     sortedTeamIDs.sort((a, b) => scores.CyFiScore(a) - scores.CyFiScore(b))
     sortedTeamIDs.reverse()
@@ -98,7 +97,7 @@ async function update() {
         let block = row.appendChild(document.createElement("span"))
         let points = scores.GetPoints(category, teamID)
         let width = MaxScoreWidth * score / topScore
-        let categoryNumber = sortedCategories.indexOf(category)
+        let categoryNumber = [...scores.Categories].indexOf(category)
 
         block.textContent = category
         block.title = `${points} points`
