@@ -18,6 +18,21 @@
   text-decoration: underline;
 }
 
+.no-scores {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: calc(100vh - 2em);
+}
+.no-scores.hidden {
+  display: none;
+}
+.no-scores img {
+  object-fit: cover;
+  max-height: 60vh;
+}
+
 /** Scoreboard */
 #rankings {
 	width: 100%;

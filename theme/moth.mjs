@@ -367,8 +367,8 @@ class State {
             Devel: obj.Config.Devel,
         }
 
-        /** True if the server is in enabled state */
-        this.Enabled = obj.Enabled
+        /** True if the server is in enabled state, or if  we don't know */
+        this.Enabled = obj.Enabled ?? true
 
         /** Map from Team ID to Team Name
          * @type {Object.<string,string>}

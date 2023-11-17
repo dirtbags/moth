@@ -1,11 +1,12 @@
 {
     "TrackSolved": true,
     "Scoreboard": {
-        "DisplayServerURL": true,
+        "DisplayServerURLWhenEnabled": true,
         "ShowCategoryLeaders": true,
         "ReplayHistory": true,
         "ReplayFPS": 6,
         "ReplayDurationMS": 2000,
+        "NoScoresHtml": "<div class='notification'><h2>~ no scores ~</h2></div>",
         "": ""
     },
     "Messages": "<!-- Messages can go here (HTML) -->",

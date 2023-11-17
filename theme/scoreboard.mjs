@@ -42,17 +42,18 @@ async function update() {
     console.warn("config.json has empty Scoreboard section")
   }
 
+  let state = await server.GetState()
+
   for (let e of document.querySelectorAll(".location")) {
     e.textContent = common.BaseURL
-    e.classList.toggle("hidden", !ScoreboardConfig.DisplayServerURL)
+    e.classList.toggle("hidden", !(ScoreboardConfig.DisplayServerURLWhenEnabled && state.Enabled))
   }
 
-  let state = await server.GetState()
   let rankingsElement = document.querySelector("#rankings")
   let logSize = state.PointsLog.length
 
   // Figure out the timing so that we can replay the scoreboard in about
-  // ReplayDurationMS, but no more than 24 frames per second.
+  // ReplayDurationMS.
   let frameModulo = 1
   let delay = 0
   while (delay < (common.Second / ReplayFPS)) {
@@ -109,6 +110,11 @@ async function update() {
       } 
     }
     await sleep(delay)
+  }
+
+  for (let e of document.querySelectorAll(".no-scores")) {
+    e.innerHTML = ScoreboardConfig.NoScoresHtml
+    e.classList.toggle("hidden", frame > 0)
   }
 }
 
