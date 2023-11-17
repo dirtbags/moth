@@ -49,7 +49,7 @@ async function update() {
     e.classList.toggle("hidden", !(ScoreboardConfig.DisplayServerURLWhenEnabled && state.Enabled))
   }
 
-  let rankingsElement = document.querySelector("#rankings")
+  let rankingsElement = document.querySelector(".rankings")
   let logSize = state.PointsLog.length
 
   // Figure out the timing so that we can replay the scoreboard in about

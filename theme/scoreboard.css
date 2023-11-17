@@ -34,31 +34,31 @@
 }
 
 /** Scoreboard */
-#rankings {
+.rankings {
 	width: 100%;
 	position: relative;
   background-color: #000c;
 }
-#rankings div {
+.rankings div {
   height: 1.2rem;
   display: flex;
   align-items: center;
 }
-#rankings div:nth-child(6n){
+.rankings div:nth-child(6n){
   background-color: #ccc3;
 }
-#rankings div:nth-child(6n+3) {
+.rankings div:nth-child(6n+3) {
   background-color: #0f03;
 }
 
-#rankings span {
+.rankings span {
   display: inline-block;
   overflow: hidden;
 }
-#rankings span.category {
+.rankings span.category {
   font-size: 80%;
 }
-#rankings span.teamname {
+.rankings span.teamname {
   height: auto;
 	font-size: inherit;
 	color: white;
@@ -67,8 +67,8 @@
 	position: absolute;
 	right: 0.2em;
 }
-#rankings span.teamname:hover,
-#rankings span.category:hover {
+.rankings span.teamname:hover,
+.rankings span.category:hover {
   width: inherit;
   max-width: 100%;
 }
@@ -79,7 +79,7 @@
 }
 
 @media only screen and (max-width: 450px) {
-  #rankings span.teamname {
+  .rankings span.teamname {
     max-width: 6em;
     text-overflow: ellipsis;
   }
@@ -88,7 +88,7 @@
   }
 }
 
-#rankings div * {white-space: nowrap;}
+.rankings div * {white-space: nowrap;}
 .cat0, .cat8, .cat16 {background-color: #a6cee3; color: black;}
 .cat1, .cat9, .cat17 {background-color: #1f78b4; color: white;}
 .cat2, .cat10, .cat18 {background-color: #b2df8a; color: black;}
