@@ -492,9 +492,7 @@ class State {
      * @returns {Scores}
      */
     CurrentScores() {
-        let scores
-        for (scores of this.ScoreHistory());
-        return scores
+        return [...this.ScoresHistory()].pop()
     }
 }
 
@@ -676,4 +674,5 @@ class Server {
 export {
     Hash,
     Server,
+    State,
 }

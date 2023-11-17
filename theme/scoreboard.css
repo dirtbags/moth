@@ -33,32 +33,37 @@
   max-height: 60vh;
 }
 
+/* Only the first child of a rotate class is visible */
+.rotate > div:nth-child(n + 2) {
+  display: none;
+}
+
 /** Scoreboard */
-.rankings {
+.rankings.classic {
 	width: 100%;
 	position: relative;
   background-color: #000c;
 }
-.rankings div {
+.rankings.classic div {
   height: 1.2rem;
   display: flex;
   align-items: center;
 }
-.rankings div:nth-child(6n){
+.rankings.classic div:nth-child(6n){
   background-color: #ccc3;
 }
-.rankings div:nth-child(6n+3) {
+.rankings.classic div:nth-child(6n+3) {
   background-color: #0f03;
 }
 
-.rankings span {
+.rankings.classic span {
   display: inline-block;
   overflow: hidden;
 }
-.rankings span.category {
+.rankings.classic span.category {
   font-size: 80%;
 }
-.rankings span.teamname {
+.rankings.classic span.teamname {
   height: auto;
 	font-size: inherit;
 	color: white;
@@ -67,8 +72,8 @@
 	position: absolute;
 	right: 0.2em;
 }
-.rankings span.teamname:hover,
-.rankings span.category:hover {
+.rankings.classic span.teamname:hover,
+.rankings.classic span.category:hover {
   width: inherit;
   max-width: 100%;
 }
@@ -78,8 +83,24 @@
   vertical-align: top;
 }
 
+.rankings.category {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+}
+.rankings.category div {
+  border: solid black 2px;
+  min-width: 15em;
+}
+.rankings.category table {
+  width: 100%;
+}
+.rankings.category td.number {
+  text-align: right;
+}
+
 @media only screen and (max-width: 450px) {
-  .rankings span.teamname {
+  .rankings.classic span.teamname {
     max-width: 6em;
     text-overflow: ellipsis;
   }
