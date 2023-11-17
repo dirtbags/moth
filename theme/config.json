@@ -4,7 +4,7 @@
         "DisplayServerURL": true,
         "ShowCategoryLeaders": true,
         "ReplayHistory": true,
-        "ReplayFPS": 30,
+        "ReplayFPS": 6,
         "ReplayDurationMS": 2000,
         "": ""
     },
