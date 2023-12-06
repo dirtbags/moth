@@ -43,6 +43,7 @@ build-win:
   image: *goimage
   needs: ["Run unit tests"]
   script:
+    - apt install zip
     - ./build/package/winbuild.sh
   artifacts:
     paths:
