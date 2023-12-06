@@ -1,4 +1,5 @@
-FROM golang:1 AS builder
+ARG GO_VERSION=1.21-alpine
+FROM docker.io/library/golang:${GO_VERSION} AS builder
 COPY go.* /src/
 COPY pkg /src/pkg/
 COPY cmd /src/cmd/

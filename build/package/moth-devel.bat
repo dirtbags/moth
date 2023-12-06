@@ -1,0 +1,1 @@
+.\mothd.exe -puzzles puzzles
