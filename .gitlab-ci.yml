@@ -38,17 +38,16 @@ Generage coverage XML:
         coverage_format: cobertura
         path: coverage.xml
 
-build-win:
+winbuild:
   stage: build
   image: *goimage
   needs: ["Run unit tests"]
   script:
-    - apt-get -y update
-    - apt-get -y install zip
-    - ./build/package/winbuild.sh
+    - GOOS=windows GOARCH=amd64 go build ./...
   artifacts:
     paths:
-      - build/package/winmoth.*.zip
+      - mothd.exe
+      - theme/*
 
 push:
   stage: push
