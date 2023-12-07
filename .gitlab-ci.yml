@@ -44,9 +44,11 @@ winbuild:
   needs: ["Run unit tests"]
   script:
     - GOOS=windows GOARCH=amd64 go build ./cmd/mothd
+    - cp build/package/moth-devel.bat .
   artifacts:
     paths:
       - mothd.exe
+      - moth-devel.bat
       - theme/*
 
 push:
