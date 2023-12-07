@@ -43,7 +43,7 @@ winbuild:
   image: *goimage
   needs: ["Run unit tests"]
   script:
-    - GOOS=windows GOARCH=amd64 go build ./...
+    - GOOS=windows GOARCH=amd64 go build ./cmd/mothd
   artifacts:
     paths:
       - mothd.exe
