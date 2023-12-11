@@ -3,7 +3,8 @@ Developing Content: Structure
 
 ![Content Layout](content-layout.png)
 
-MOTH content is structured ot two levels: categories, and puzzles.
+MOTH content heirarchy consists of three layers:
+categories, puzzles, and attachments.
 
 Category
 -------
@@ -81,13 +82,22 @@ The body of a puzzle is interpreted as
 [CommonMark Markdown](https://spec.commonmark.org/dingus/)
 and rendered as HTML.
 
-You can inline attached images with the `![alt text](filename.jpg)`
-Markdown construct, but they must be listed as attachments!
-
-### Attachments
+Attachments
+-------
 
 Any filenames listed under `attachments` in the metadata will be included
 with the puzzle.
+
+Usually,
+these are listed at the bottom of each puzzle,
+one by one.
+But you can also refer to attachments from the puzzle body
+with either links or inline images.
+
+```markdown
+This is a [link](attachment-document.html).
+And this is an inline image: ![alt text](attachment-image.png)
+```
 
 
 Developing Content: Source vs Mothballs
