@@ -101,14 +101,15 @@ type StaticPuzzle struct {
 	Attachments   []StaticAttachment
 	Scripts       []StaticAttachment
 	AnswerPattern string
+	Answers       []string
+	Debug         PuzzleDebug
+	Extra         map[string]any
 	Objective     string
 	Success       struct {
 		Acceptable string
 		Mastery    string
 	}
-	KSAs    []string
-	Debug   PuzzleDebug
-	Answers []string
+	KSAs []string
 }
 
 // StaticAttachment carries information about an attached file.
@@ -209,6 +210,7 @@ func (fp FsPuzzle) Puzzle() (Puzzle, error) {
 	puzzle.Debug = static.Debug
 	puzzle.Answers = static.Answers
 	puzzle.Authors = static.Authors
+	puzzle.Extra = static.Extra
 	puzzle.Objective = static.Objective
 	puzzle.KSAs = static.KSAs
 	puzzle.Success = static.Success
@@ -246,7 +248,7 @@ func (fp FsPuzzle) Open(name string) (ReadSeekCloser, error) {
 		}
 	}
 	if fsPath == "" {
-		return empty, fmt.Errorf("Not listed in attachments or scripts: %s", name)
+		return empty, fmt.Errorf("not listed in attachments or scripts: %s", name)
 	}
 
 	return fp.fs.Open(fsPath)
@@ -332,7 +334,7 @@ func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
 	p := StaticPuzzle{}
 	m, err := mail.ReadMessage(r)
 	if err != nil {
-		return p, fmt.Errorf("Parsing RFC822 headers: %v", err)
+		return p, fmt.Errorf("parsing RFC822 headers: %v", err)
 	}
 
 	for key, val := range m.Header {
@@ -363,7 +365,7 @@ func rfc822HeaderParser(r io.Reader) (StaticPuzzle, error) {
 		case "success.mastery":
 			p.Success.Mastery = val[0]
 		default:
-			return p, fmt.Errorf("Unknown header field: %s", key)
+			return p, fmt.Errorf("unknown header field: %s", key)
 		}
 	}
 
