@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - [moth.mjs](theme/moth.mjs) is now the standard MOTH library for ECMAScript
 - Exported state now includes "Enabled" boolean
-- New `Extra` field on puzzles will allow addition of arbitrary fields to be attached to puzzles.
+- New `Extra` field on puzzles will allow arbitrary metadata on puzzles.
   PNNL's SCTR Osprey will use this to standardize fields for their custom theme,
   but it can be generally used for anything.
 
