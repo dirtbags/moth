@@ -178,11 +178,17 @@ class Puzzle {
         this.Answers ||= []
         this.Attachments ||= []
         this.Authors ||= []
+        this.Scripts ||= []
+        this.Debug ||= {}
         this.Debug.Errors ||= []
         this.Debug.Hints ||= []
         this.Debug.Log ||= []
-        this.KSAs ||= []
-        this.Scripts ||= []
+        this.Extra ||= {}
+
+        // Be ready to handle a future revision to the Puzzle structure
+        this.Objective ||= this.Extra.Objective
+        this.KSAs ||= this.Extra.KSAs || []
+        this.Success ||= this.Extra.Success || {}
     }
 
     /**

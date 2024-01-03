@@ -60,6 +60,13 @@ type Puzzle struct {
 	// AnswerHashes contains hashes of all answers for this puzzle
 	AnswerHashes []string
 
+	// Answers lists all acceptable answers, omitted in mothballs
+	Answers []string
+
+	// Extra is send unchanged to the client.
+	// Eventually, Objective, KSAs, and Success will move into Extra.
+	Extra map[string]any
+
 	// Objective is the learning objective for this puzzle
 	Objective string
 
@@ -74,9 +81,6 @@ type Puzzle struct {
 		// Mastery describes the work required to be considered mastering this puzzle's conceptss
 		Mastery string
 	}
-
-	// Answers lists all acceptable answers, omitted in mothballs
-	Answers []string
 }
 
 func (puzzle *Puzzle) computeAnswerHashes() {

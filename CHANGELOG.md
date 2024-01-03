@@ -8,10 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Answer hashes are now the first 4 characters of the hex-encoded SHA1 digest
 - Reworked the built-in theme
-- [moth.mjs](theme/moth.mjs) is now the standard MOTH library for ECMAScript
 - Devel mode no longer accepts an empty team ID
 - messages.html moved into theme
+
+### Added
+- [moth.mjs](theme/moth.mjs) is now the standard MOTH library for ECMAScript
 - Exported state now includes "Enabled" boolean
+- New `Extra` field on puzzles will allow addition of arbitrary fields to be attached to puzzles.
+  PNNL's SCTR Osprey will use this to standardize fields for their custom theme,
+  but it can be generally used for anything.
 
 ## [v4.4.11] - 2023-04-11
 ### Changed
