@@ -1,5 +1,6 @@
 {
     "TrackSolved": true,
+    "Titles": false,
     "Scoreboard": {
         "DisplayServerURLWhenEnabled": true,
         "ShowCategoryLeaders": true,

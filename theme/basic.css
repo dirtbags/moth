@@ -94,6 +94,9 @@ nav ul, .category ul {
 nav li, .category li {
 	display: inline;
 }
+.category li.entitled {
+  flex-basis: 100%;
+}
 .mothball {
   float: right;
   text-decoration: none;

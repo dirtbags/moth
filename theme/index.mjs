@@ -155,6 +155,9 @@ class App {
                 if (this.config.TrackSolved) {
                     a.classList.toggle("solved", this.state.IsSolved(puzzle))
                 }
+                if (this.config.Titles) {
+                    this.loadTitle(puzzle, i)
+                }
             }
 
             if (!this.state.ContainsUnsolved(cat)) {
@@ -162,6 +165,28 @@ class App {
             }
             
             element.appendChild(pdiv)        
+        }
+    }
+
+    /**
+     * Asynchronously loads a puzzle, in order to populate the title.
+     * 
+     * Calling this for every open puzzle will generate a lot of load on the server.
+     * If we decide we want this for a multi-participant server,
+     * we should implement some sort of cache.
+     * 
+     * @param {Puzzle} puzzle 
+     * @param {Element} element 
+     */
+    async loadTitle(puzzle, element) {
+        await puzzle.Populate()
+        let title = puzzle.Extra.title
+        if (!title) {
+            return
+        }
+        element.classList.add("entitled")
+        for (let a of element.querySelectorAll("a")) {
+            a.textContent += `: ${title}`
         }
     }
 }
