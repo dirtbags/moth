@@ -1,4 +1,4 @@
-module github.com/dirtbags/moth/v4
+module github.com/dirtbags/moth/v4 v4.5.1
 
 go 1.21
 
