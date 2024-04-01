@@ -36,7 +36,7 @@
 }
 
 .fixed .output, .fixed .editor {
-    font-family: Go-Mono, monospace;
+    font-family: "source code pro", consolas, monospace;
 }
 
 .controls {
