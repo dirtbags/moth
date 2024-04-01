@@ -1,6 +1,9 @@
 {
-    "TrackSolved": true,
-    "Titles": false,
+    "PuzzleList": {
+        "TrackSolved": true,
+        "Titles": false,
+        "": 0
+    },
     "Puzzle": {
         "SyntaxHighlighting": true,
         "": 0

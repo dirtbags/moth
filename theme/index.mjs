@@ -88,7 +88,7 @@ class App {
         // Update elements with data-track-solved
         for (let e of document.querySelectorAll("[data-track-solved]")) {
             // Only display if data-track-solved is the same as config.trackSolved
-            e.classList.toggle("hidden", common.Truthy(e.dataset.trackSolved) != this.config.TrackSolved)
+            e.classList.toggle("hidden", common.Truthy(e.dataset.trackSolved) != this.config.PuzzleList?.TrackSolved)
         }
 
         for (let e of document.querySelectorAll(".login")) {
@@ -152,10 +152,10 @@ class App {
                 a.href = url
                 a.target = "_blank"
 
-                if (this.config.TrackSolved) {
+                if (this.config.PuzzleList?.TrackSolved) {
                     a.classList.toggle("solved", this.state.IsSolved(puzzle))
                 }
-                if (this.config.Titles) {
+                if (this.config.PuzzleList?.Titles) {
                     this.loadTitle(puzzle, i)
                 }
             }
