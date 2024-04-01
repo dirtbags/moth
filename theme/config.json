@@ -1,6 +1,10 @@
 {
     "TrackSolved": true,
     "Titles": false,
+    "Puzzle": {
+        "SyntaxHighlighting": true,
+        "": 0
+    },
     "Scoreboard": {
         "DisplayServerURLWhenEnabled": true,
         "ShowCategoryLeaders": true,
@@ -8,7 +12,7 @@
         "ReplayFPS": 6,
         "ReplayDurationMS": 2000,
         "NoScoresHtml": "<div class='notification'><h2>~ no scores ~</h2></div>",
-        "": ""
+        "": 0
     },
     "Messages": "<!-- Messages can go here (HTML) -->",
     "": "this is here so you don't have to remember to take the comma off the last item"

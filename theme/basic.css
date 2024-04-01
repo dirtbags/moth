@@ -1,12 +1,47 @@
 /* Color palette: http://paletton.com/#uid=33x0u0klrl-4ON9dhtKtAdqMQ4T */
 
+:root {
+  --bg: #010e19;
+  --bg-main: #000d;
+  --heading: #cb2408cc;
+  --bg-heading1: #cb240844;
+  --fg-link: #b9cbd8;
+  --bg-input: #ccc4;
+  --bg-input-hover: #8884;
+  --bg-notification: #ac8f3944;
+  --bg-error: #f00;
+  --fg-error: white;
+  --bg-category: #ccc4;
+  --bg-input-invalid: #800;
+  --fg-input-invalid: white;
+  --bg-mothball:  #ccc;
+  --bg-debug: #cccc;
+  --fg-debug: black;
+  --bg-toast: #333;
+  --fg-toast: #eee;
+  --box-toast: #0b0;
+}
+
+@media (prefers-color-scheme: light) {
+  /* We uses the alpha channel to apply hue tinting to elements, to get a
+   * similar effect in light or dark mode. That means there aren't a whole lot of
+   * things to change between light and dark mode.
+   */
+   :root {
+    --bg: #b9cbd8;
+    --fg: black;
+    --bg-main: #fffd;
+    --fg-link: #092b45;
+  }
+}
+
 body {
   font-family: sans-serif;
-  background: #010e19 url("bg.png") center fixed;
+  background: var(--bg) url("bg.png") center fixed;
   background-size: cover;
   background-blend-mode: soft-light;
-  background-color: #010e19;
-  color: #edd488;
+  background-color: var(--bg);
+  color: var(--fg);
 }
 canvas.wallpaper {
   position: fixed;
@@ -24,20 +59,20 @@ main {
   margin: 1em auto;
   padding: 1px 3px;
   border-radius: 5px;
-  background: #000d;
+  background: var(--bg-main);
 }
 h1, h2, h3, h4, h5, h6 {
-  color: #cb2408cc;
+  color: var(--heading);
 }
 h1 {
-  background: #cb240844;
+  background: var(--bg-heading1);
   padding: 3px;
 }
 p {
 	margin: 1em 0em;
 }
 a:any-link {
-	color: #b9cbd8;
+	color: var(--fg-link);
 }
 form, pre {
 	margin: 1em;
@@ -49,11 +84,11 @@ input, select {
 	max-width: 30em;
 }
 input {
-  background-color: #ccc4;
+  background-color: var(--bg-input);
   color: inherit;
 }
 input:hover {
-  background-color: #8884;
+  background-color: var(--bg-input-hover);
 }
 input:active {
   background-color: inherit;
@@ -63,11 +98,11 @@ input:active {
   border-radius: 8px;
 }
 .notification {
-	background: #ac8f3944;
+	background: var(--bg-notification);
 }
 .error {
-  background: red;
-  color: white;
+  background: var(--bg-error);
+  color: var(--fg-error);
 }
 .hidden {
   display: none;
@@ -76,7 +111,7 @@ input:active {
 /** Puzzles list */
 .category {
   margin: 5px 0;
-  background: #ccc4;
+  background: var(--bg-category);
 }
 .category h2 {
   margin: 0 0.2em;
@@ -101,7 +136,7 @@ nav li, .category li {
   float: right;
   text-decoration: none;
   border-radius: 5px;
-  background: #ccc;
+  background: var(--bg-mothball);
   padding: 4px 8px;
   margin: 5px;
 }
@@ -115,8 +150,8 @@ nav li, .category li {
   max-width: 100%;
 }
 input:invalid {
-  background-color: #800;
-  color: white;
+  background-color: var(--bg-input-invalid);
+  color: var(--fg-input-invalid);
 }
 .answer_ok {
   cursor: help;
@@ -128,8 +163,8 @@ input:invalid {
   padding: 1em;
   border-radius: 10px;
   margin: 2em auto;
-  background: #cccc;
-  color: black;
+  background: var(--bg-debug);
+  color: var(--fg-debug);
 }
 .debug dt {
   font-weight: bold;
@@ -173,28 +208,11 @@ li[draggable] {
   padding:  0.2em 2em;
   animation: fadeIn ease 1s;
   margin: 2px auto;
-  background: #333;
-  color: #eee;
-  box-shadow: 0px 0px 8px 0px #0b0;
+  background: var(--bg-toast);
+  color: var(--fg-toast);
+  box-shadow: 0px 0px 8px 0px var(--box-toast);
 }
 @keyframes fadeIn {
   0% { opacity: 0; }
   100% { opacity: 1; }
-}
-
-@media (prefers-color-scheme: light) {
-  /* We uses the alpha channel to apply hue tinting to elements, to get a
-   * similar effect in light or dark mode. That means there aren't a whole lot of
-   * things to change between light and dark mode.
-   */
- body {
-    background-color: #b9cbd8;
-    color: black;
-  }
-  main {
-    background-color: #fffd;
-  }
-  a:any-link {
-    color: #092b45;
-  }
 }

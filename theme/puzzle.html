@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <link rel="icon" href="luna-moth.svg">
     <link rel="stylesheet" href="basic.css">
+    <link rel="stylesheet" href="puzzle.css">
     <script src="background.mjs" type="module" async></script>
     <script src="puzzle.mjs" type="module" async></script>
   </head>
@@ -30,5 +31,23 @@
     </main>
     <div class="debug" class="notification"></div>
     <div class="toasts"></div>
+    <template id="workspace">
+      <div class="editor">
+        <div class="linenos"></div>
+        <div class="text"></div>
+      </div>
+      <div class="controls">
+        <button class="run">Run</button>
+        <button class="font" title="Switch in and out of monospace font">Font</button>
+        <span class="status">Execution time: 0.03s</span>
+        <button class="revert" title="Reset code to original">Revert</button>
+      </div>
+      <div class="output">
+        <div class="stdout"></div>
+        <div class="stderr"></div>
+        <div class="traceback"></div>
+        <div class="stdinfo"></div>
+      </div>
+    </template>
   </body>
 </html>

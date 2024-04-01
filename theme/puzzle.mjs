@@ -3,6 +3,7 @@
  */
 import * as moth from "./moth.mjs"
 import * as common from "./common.mjs"
+import * as workspace from "./workspace/workspace.mjs"
 
 const server = new moth.Server(".")
 
@@ -129,7 +130,7 @@ function writeObject(e, obj) {
  * @param {string} category 
  * @param {number} points 
  */
-async function loadPuzzle(category, points) {
+async function loadPuzzle(category, points) {  
     console.groupCollapsed("Loading puzzle:", category, points)
     let contentBase = new URL(`content/${category}/${points}/`, common.BaseURL)
     
@@ -179,15 +180,41 @@ async function loadPuzzle(category, points) {
     }
 
     console.info("Listing attached files...")
+    let attachmentUrls = []
     for (let fn of (puzzle.Attachments || [])) {
         let li = document.createElement("li")
         let a = document.createElement("a")
-        a.href = new URL(fn, contentBase)
+        let url = new URL(fn, contentBase)
+        attachmentUrls.push(url)
+        a.href = url
         a.innerText = fn
         li.appendChild(a)
         document.getElementById("files").appendChild(li)
     }
 
+    let codeBlocks = document.querySelectorAll("code[class^=language-]")
+    for (let i = 0; i < codeBlocks.length; i++) {
+        console.info(`Loading workspace ${i}...`)
+        let codeBlock = codeBlocks[i]
+        let language = "unknown"
+        let sourceCode = codeBlock.textContent
+        for (let c of codeBlock.classList) {
+            let parts = c.split("-")
+            if ((parts.length == 2) && parts[0].startsWith("lang")) {
+                language = parts[1]
+            }
+        }
+
+        let id = category + "#" + points + "#" + i
+        let element = document.createElement("div")
+        let template = document.querySelector("template#workspace")
+        element.classList.add("workspace")
+        element.appendChild(template.content.cloneNode(true))
+        element.workspace = new workspace.Workspace(element, id, sourceCode, language, attachmentUrls)
+
+        // Now swap it in for the pre
+        codeBlock.parentElement.replaceWith(element)
+    }
 
     console.info("Filling debug information...")
     for (let e of document.querySelectorAll(".debug")) {
@@ -199,7 +226,7 @@ async function loadPuzzle(category, points) {
     }
 
     window.app.puzzle = puzzle
-    console.info("window.app.puzzle =", window.app.puzzle)
+    console.info("window.app.puzzle:", window.app.puzzle)
 
     console.groupEnd()
 
@@ -219,6 +246,9 @@ async function init() {
     }
     // There isn't a more graceful way to "unload" scripts attached to the current puzzle
     window.addEventListener("hashchange", () => location.reload())
+
+    // Workspaces may trigger a "this is the answer" event
+    document.addEventListener("setAnswer", e => SetAnswer(e.detail.value))
 
     // Make all links absolute, because we're going to be changing the base URL
     for (let e of document.querySelectorAll("[href]")) {

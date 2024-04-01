@@ -1,0 +1,113 @@
+@font-face {
+  font-family: "Go";
+  src: url("fonts/Go-Regular.ttf");
+}
+
+@font-face {
+    font-family: "Go-Mono";
+    src: url("fonts/Go-Mono.ttf");
+}
+
+/** Workspace
+ *
+ * Tools for this puzzle: shows up in content.
+ * Right now this is just a Python interpreter.
+ */
+ .workspace {
+  background-color: rgba(255, 240, 220, 0.3);
+  white-space: normal;
+  padding: 0;
+}
+
+.output {
+    background-color: #555;
+    color: #fff;
+    margin: 0.5em 0;
+    padding: 0.5em;
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 3em;
+    max-height: 24em;
+    overflow: scroll;
+}
+
+.output, .editor {
+    font-family: Go, monospace;
+}
+
+.fixed .output, .fixed .editor {
+    font-family: Go-Mono, monospace;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+.controls .status {
+  font-size: 9pt;
+  flex-grow: 2;
+}
+
+.stdout,
+.stderr,
+.stdinfo,
+.traceback {
+  white-space: pre-wrap;
+}
+.stderr {
+  color: #f88;
+}
+.traceback {
+  background-color: #222;
+}
+.stdinfo {
+  font-style: italic;
+}
+
+.editor {
+  border: 1px solid black;
+  overflow-y: scroll;
+  max-height: 24em;
+  display: flex;
+  flex-grow: 1;
+  flex-shrink: 1;
+  font-size: 12pt;
+  line-height: 1.2rem;
+}
+.editor .linenos {
+  background-color: #eee;
+  white-space: pre;
+  min-width: 2em;
+  padding: 0 4px;
+  text-align: right;
+  height: fit-content;
+}
+.editor .text {
+  background-color: #fff;
+  flex-grow: 1;
+  flex-shrink: 1;
+  white-space: nowrap;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  padding: 0 4px;
+  height: fit-content;
+  min-height: 8em;
+}
+
+/* Some things that crop up in puzzles */
+[draggable] {
+  padding-left: 1em;
+  background-image: url(../images/drag-handle.svg);
+  background-position: 0 center;
+  background-size: 1em 1em;
+  background-repeat: no-repeat;
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 2px 0px;
+  cursor: move;
+}
+
+[draggable].over,
+[draggable].moving {
+  background-color: rgba(127, 127, 127, 0.5);
+}
