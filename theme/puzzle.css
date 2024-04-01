@@ -32,7 +32,7 @@
 }
 
 .output, .editor {
-    font-family: Go, monospace;
+    font-family: Go, "source code pro", consolas, monospace;
 }
 
 .fixed .output, .fixed .editor {
