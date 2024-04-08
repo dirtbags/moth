@@ -48,6 +48,10 @@
   font-size: 9pt;
   flex-grow: 2;
 }
+.controls .language {
+  font-size: 9pt;
+  font-style: italic;
+}
 
 .stdout,
 .stderr,

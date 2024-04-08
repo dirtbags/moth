@@ -1,5 +1,6 @@
 import {Toast} from "../common.mjs"
 import "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"
+import * as CodeJar from "https://cdn.jsdelivr.net/npm/codejar@4.2.0"
 
 var workers = {}
 
@@ -11,7 +12,6 @@ function loadWorker(language) {
         worker = new Worker(url, {
             type: "module",
         })
-        console.info("Loading worker", url, worker)
         workers[language] = worker
     }
     return worker
@@ -20,16 +20,29 @@ function loadWorker(language) {
 export class Workspace {
     /**
      * 
-     * @param element {HTMLElement} Element to populate with the workspace
+     * @param codeBlock {HTMLElement} The element containing the source code
      * @param id {string} A unique identifier of this workspace
-     * @param code {string} The "pristine" source code for this workspace
-     * @param language {string} The language for this workspace
      * @param attachmentUrls {URL[]} List of attachment URLs
      */
-    constructor(element, id, code, language, attachmentUrls) {
-        this.element = element
-        this.originalCode = code
-        this.language = language
+    constructor(codeBlock, id, attachmentUrls) {
+        // Show a progress bar
+        let loadingElement = document.createElement("progress")
+        codeBlock.insertAdjacentElement("afterend", loadingElement)
+
+        this.language = "unknown"
+        for (let c of codeBlock.classList) {
+            let parts = c.split("-")
+            if ((parts.length == 2) && parts[0].startsWith("lang")) {
+                this.language = parts[1]
+            }
+        }
+    
+        this.element = document.createElement("div")
+        this.element.classList.add("workspace")
+        let template = document.querySelector("template#workspace")
+        this.element.appendChild(template.content.cloneNode(true))
+    
+        this.originalCode = codeBlock.textContent
         this.attachmentUrls = attachmentUrls
         this.storageKey = "code:" + id
 
@@ -50,41 +63,66 @@ export class Workspace {
         this.runButton = this.element.querySelector("button.run")
         this.revertButton = this.element.querySelector("button.revert")
         this.fontButton = this.element.querySelector("button.font")
+        this.element.querySelector(".language").textContent = this.language
 
         this.runButton.disabled = true
     
         // Load in the editor
-        this.editor.classList.add("language-" + language)
-        import("https://cdn.jsdelivr.net/npm/codejar@4.2.0").then((module) => this.editorReady(module))
+        this.editor.classList.add("language-" + this.language)
+        this.jar = CodeJar.CodeJar(this.editor, (editor) => this.highlight(editor), {window: this.window})
+        this.jar.updateCode(this.code)
+        switch (this.language) {
+            case "python":
+                this.jar.updateOptions({
+                    tab: "    ",
+                    indentOn: /:$/,
+                })
+                break
+        }
 
         // Load the interpreter
-        this.initLanguage(language)
-
+        this.initLanguage(this.language)
+        .then(() => {
+            codeBlock.parentElement.replaceWith(this.element)
+        })
+        .catch(err => console.warn(`Unable to load ${this.language} interpreter`))
+        .finally(() => {
+            loadingElement.remove()
+        })
         this.runButton.addEventListener("click", () => this.run())
         this.revertButton.addEventListener("click", () => this.revert())
         this.fontButton.addEventListener("click", () => this.font())
+
     }
 
-    async initLanguage(language) {
+    initLanguage(language) {
         let start = performance.now()
         this.status.textContent = "Initializing..."
         this.status.appendChild(document.createElement("progress"))
-        this.worker = loadWorker(language)
-        await this.workerReady()
 
-        let runtime = performance.now() - start
-        let duration = new Date(runtime).toISOString().slice(11, -1)        
-        this.status.textContent = "Loaded in " + duration
-        this.runButton.disabled = false
+        let workerUrl = new URL(language + ".mjs", import.meta.url)
+        this.worker = new Worker(workerUrl, {type: "module"})
 
-        for (let a of this.attachmentUrls) {
-            let filename = a.pathname.split("/").pop()
-            this.workerWget(a)
-            .then(ret => {
-                this.stdinfo.appendChild(this.document.createElement("div")).textContent = "Downloaded " + filename
+        // XXX: There has got to be a cleaner way to do this
+        return new Promise((resolve, reject) => {
+            this.worker.addEventListener("error", err => reject(err))
+            this.workerMessage({type: "nop"})
+            .then(() => {
+                let runtime = performance.now() - start
+                let duration = new Date(runtime).toISOString().slice(11, -1)        
+                this.status.textContent = "Loaded in " + duration
+                this.runButton.disabled = false
+        
+                for (let a of this.attachmentUrls) {
+                    let filename = a.pathname.split("/").pop()
+                    this.workerMessage({type: "wget", url: a.href || a})
+                    .then(ret => {
+                        this.stdinfo.appendChild(this.document.createElement("div")).textContent = "Downloaded " + filename
+                    })
+                }
+                resolve()
             })
-
-        }
+        })
     }
 
     workerMessage(message) {
@@ -138,23 +176,6 @@ export class Workspace {
                 ltxt += i + "\n"
             }
             this.linenos.textContent = ltxt
-        }
-    }
-    
-    /** 
-     * Called when the editor has imported
-     * 
-     */
-    editorReady(module) {
-        this.jar = module.CodeJar(this.editor, (editor) => this.highlight(editor), {window: this.window})
-        this.jar.updateCode(this.code)
-        switch (this.language) {
-            case "python":
-                this.jar.updateOptions({
-                    tab: "    ",
-                    indentOn: /:$/,
-                })
-                break
         }
     }
 

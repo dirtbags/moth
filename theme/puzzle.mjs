@@ -3,7 +3,8 @@
  */
 import * as moth from "./moth.mjs"
 import * as common from "./common.mjs"
-import * as workspace from "./workspace/workspace.mjs"
+
+const workspacePromise = import("./workspace/workspace.mjs")
 
 const server = new moth.Server(".")
 
@@ -173,7 +174,7 @@ async function loadPuzzle(category, points) {
         document.querySelector("#answer").pattern = puzzle.AnswerPattern
     }
     puzzleElement().innerHTML = puzzle.Body
-
+    
     console.info("Adding attached scripts...")
     for (let script of (puzzle.Scripts || [])) {
         let st = document.createElement("script")
@@ -193,30 +194,15 @@ async function loadPuzzle(category, points) {
         li.appendChild(a)
         document.getElementById("files").appendChild(li)
     }
-
-    let codeBlocks = document.querySelectorAll("code[class^=language-]")
-    for (let i = 0; i < codeBlocks.length; i++) {
-        console.info(`Loading workspace ${i}...`)
-        let codeBlock = codeBlocks[i]
-        let language = "unknown"
-        let sourceCode = codeBlock.textContent
-        for (let c of codeBlock.classList) {
-            let parts = c.split("-")
-            if ((parts.length == 2) && parts[0].startsWith("lang")) {
-                language = parts[1]
-            }
+    
+    workspacePromise.then(workspace => {
+        let codeBlocks = document.querySelectorAll("code[class^=language-]")
+        for (let i = 0; i < codeBlocks.length; i++) {
+            let codeBlock = codeBlocks[i]
+            let id = category + "#" + points + "#" + i
+            new workspace.Workspace(codeBlock, id, attachmentUrls)
         }
-
-        let id = category + "#" + points + "#" + i
-        let element = document.createElement("div")
-        let template = document.querySelector("template#workspace")
-        element.classList.add("workspace")
-        element.appendChild(template.content.cloneNode(true))
-        element.workspace = new workspace.Workspace(element, id, sourceCode, language, attachmentUrls)
-
-        // Now swap it in for the pre
-        codeBlock.parentElement.replaceWith(element)
-    }
+    })
 
     console.info("Filling debug information...")
     for (let e of document.querySelectorAll(".debug")) {
@@ -235,7 +221,7 @@ async function loadPuzzle(category, points) {
     return puzzle
 }
 
-const confettiPromise = import("https://cdn.jsdelivr.net/npm/canvas-conefetti@1.9.2/+esm")
+const confettiPromise = import("https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/+esm")
 async function CorrectAnswer() { 
     setInterval(window.close, 3 * common.Second)
     
