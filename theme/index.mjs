@@ -17,6 +17,11 @@ class App {
             e.addEventListener("click", () => this.Logout())
         }
 
+        common.StateUpdateChannel.addEventListener("message", () => {
+            // Give mothd time to catch up
+            setTimeout(() => this.UpdateState(), 1/2 * common.Second)
+        })
+
         setInterval(() => this.UpdateState(), common.Minute/3)
         setInterval(() => this.UpdateConfig(), common.Minute* 5)
 

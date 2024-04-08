@@ -28,6 +28,8 @@ async function formSubmitHandler(event) {
     try {
         message = await window.app.puzzle.SubmitAnswer(proposed)
         common.Toast(message)
+        common.StateUpdateChannel.postMessage({})
+        document.dispatchEvent(new CustomEvent("answerCorrect"))
     }
     catch (err) {
         common.Toast(err)
@@ -233,6 +235,16 @@ async function loadPuzzle(category, points) {
     return puzzle
 }
 
+const confettiPromise = import("https://cdn.jsdelivr.net/npm/canvas-conefetti@1.9.2/+esm")
+async function CorrectAnswer() { 
+    setInterval(window.close, 3 * common.Second)
+    
+    let confetti = await confettiPromise
+    confetti.default({
+        disableForReducedMotion: true,
+    })
+}
+
 async function init() {
     window.app = {}
     window.setanswer = (str => SetAnswer(str))
@@ -249,6 +261,9 @@ async function init() {
 
     // Workspaces may trigger a "this is the answer" event
     document.addEventListener("setAnswer", e => SetAnswer(e.detail.value))
+
+    // Celebrate on correct answer
+    document.addEventListener("answerCorrect", e => CorrectAnswer())
 
     // Make all links absolute, because we're going to be changing the base URL
     for (let e of document.querySelectorAll("[href]")) {

@@ -8,6 +8,9 @@ const Minute = Second * 60
 /** URL to the top of this MOTH server */
 const BaseURL = new URL(".", location)
 
+/** A channel to monitor for state updates (or to notify of state updates) */
+const StateUpdateChannel = new BroadcastChannel("StateUpdate")
+
 /**
  * Display a transient message to the user.
  * 
@@ -76,6 +79,7 @@ export {
     Millisecond,
     Second,
     Minute,
+    StateUpdateChannel,
     BaseURL,
     Toast,
     WhenDOMLoaded,
