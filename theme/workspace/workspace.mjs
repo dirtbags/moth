@@ -92,8 +92,7 @@ export class Workspace {
         this.runButton.addEventListener("click", () => this.run())
         this.revertButton.addEventListener("click", () => this.revert())
         this.fontButton.addEventListener("click", () => this.font())
-
-    }
+        }
 
     initLanguage(language) {
         let start = performance.now()
@@ -229,7 +228,7 @@ export class Workspace {
         }
     }
 
-    font(force) {
-        this.element.classList.toggle("fixed", force)
+    font() {
+        this.element.classList.toggle("fixed")
     }
 }

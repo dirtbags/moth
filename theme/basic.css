@@ -55,6 +55,11 @@ canvas.wallpaper {
   opacity: 0.2;
   image-rendering: pixelated;
 }
+@media (prefers-reduced-motion) {
+  canvas.wallpaper {
+    display: none;
+  }
+}
 main {
   max-width: 40em;
   margin: 1em auto;
