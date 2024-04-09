@@ -6,6 +6,7 @@ import (
 	"log"
 	"mime"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/afero"
@@ -54,21 +55,38 @@ func main() {
 	)
 	flag.Parse()
 
+	var theme *Theme
 	osfs := afero.NewOsFs()
-	theme := NewTheme(afero.NewBasePathFs(osfs, *themePath))
+	if p, err := filepath.Abs(*themePath); err != nil {
+		log.Fatal(err)
+	} else {
+		theme = NewTheme(afero.NewBasePathFs(osfs, p))
+	}
 
 	config := Configuration{}
 
 	var provider PuzzleProvider
-	provider = NewMothballs(afero.NewBasePathFs(osfs, *mothballPath))
+	if p, err := filepath.Abs(*mothballPath); err != nil {
+		log.Fatal(err)
+	} else {
+		provider = NewMothballs(afero.NewBasePathFs(osfs, p))
+	}
 	if *puzzlePath != "" {
-		provider = NewTranspilerProvider(afero.NewBasePathFs(osfs, *puzzlePath))
+		if p, err := filepath.Abs(*puzzlePath); err != nil {
+			log.Fatal(err)
+		} else {
+			provider = NewTranspilerProvider(afero.NewBasePathFs(osfs, p))
+		}
 		config.Devel = true
 		log.Println("-=- You are in development mode, champ! -=-")
 	}
 
 	var state StateProvider
-	state = NewState(afero.NewBasePathFs(osfs, *statePath))
+	if p, err := filepath.Abs(*statePath); err != nil {
+		log.Fatal(err)
+	} else {
+		state = NewState(afero.NewBasePathFs(osfs, p))
+	}
 	if config.Devel {
 		state = NewDevelState(state)
 	}

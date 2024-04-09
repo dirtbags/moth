@@ -5,6 +5,6 @@
 __debug_bin
 *.tar.gz
 transpile
-mothd
 winmoth.*.zip
-*.exe
+/mothd
+/*.exe
