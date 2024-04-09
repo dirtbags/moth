@@ -1,21 +1,11 @@
 import {Toast} from "../common.mjs"
-import "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"
+//import "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"
+import "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"
+import "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"
 import * as CodeJar from "https://cdn.jsdelivr.net/npm/codejar@4.2.0"
 
-var workers = {}
-
-// loadWorker returns an existing worker if one exists, otherwise, it starts a new worker
-function loadWorker(language) {
-    let worker = workers[language]
-    if (!worker) {
-        let url = new URL(language + ".mjs", import.meta.url)
-        worker = new Worker(url, {
-            type: "module",
-        })
-        workers[language] = worker
-    }
-    return worker
-}
+Prism.plugins.autoloader.languages_path = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/"
+const prismCssUrl = "https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
 
 export class Workspace {
     /**
@@ -85,7 +75,7 @@ export class Workspace {
         .then(() => {
             codeBlock.parentElement.replaceWith(this.element)
         })
-        .catch(err => console.warn(`Unable to load ${this.language} interpreter`))
+        .catch(err => console.warn(`Unable to load interpreter: `, this.language))
         .finally(() => {
             loadingElement.remove()
         })
@@ -231,4 +221,17 @@ export class Workspace {
     font() {
         this.element.classList.toggle("fixed")
     }
+}
+
+
+function init() {
+    let link = document.head.appendChild(document.createElement("link"))
+    link.rel = "stylesheet"
+    link.href = prismCssUrl
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init)
+} else {
+    init()
 }

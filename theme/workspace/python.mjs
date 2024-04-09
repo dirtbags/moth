@@ -1,4 +1,4 @@
-const pyodidePromise = import("https://cdn.jsdelivr.net/npm/pyodide@0.25.1/pyodide.mjs")
+import * as pyodide from "https://cdn.jsdelivr.net/npm/pyodide@0.25.1/pyodide.mjs" // v0.16.1 known good
 
 const HOME = "/home/web_user"
 
