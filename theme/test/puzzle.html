@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Example MOTHv5 Puzzle</title>
+        
+        <!-- style tells the client whether to inject its own stylesheet.
+        
+            By default, a client will try to style a puzzle using its own stylesheet.
+            If you want to override this behavior, provide "style" with
+            content="override".
+            Omitting this meta element is the same as content="inherit".
+        -->
+        <meta name="moth.style" content="inherit"> 
+        
+        
+        <!-- moth.answerhash is used for the "possibly correct" check.
+            
+            This is the first 8 characters of the hex-encoded sha1 checksum of the answer.
+            If you have multiple acceptable answers, provide multiple answerhash elements.
+        -->
+        <meta name="moth.answerhash" content="2c26b46b">
+        
+        <!-- author specifies the author of this puzzle.
+
+            If you have multiple authors, specify multiple meta elements,
+            one author per element.
+        -->
+        <meta name="author" content="Neale Pickett">
+        <meta name="author" content="Ford Powers">
+
+        <script href="example.mjs" type="module"></script>
+    </head>
+    <body>
+        <h1>Example Puzzle</h1>
+        <p>
+            This is an example puzzle, yo.
+            You can put whatever you want in the HTML.
+            If you do crazy tricks, it might break the client, though.
+        </p>
+        <img src="salad.jpg">
+    </body>
+</html>

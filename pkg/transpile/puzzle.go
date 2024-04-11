@@ -78,7 +78,7 @@ type Puzzle struct {
 		// Acceptable describes the minimum work required to be considered successfully understanding this puzzle's concepts
 		Acceptable string
 
-		// Mastery describes the work required to be considered mastering this puzzle's conceptss
+		// Mastery describes the work required to be considered mastering this puzzle's concepts
 		Mastery string
 	}
 }

@@ -1,10 +1,10 @@
 *~
 *#
-.idea
+/.idea
 /vendor/
-__debug_bin
-*.tar.gz
-transpile
-winmoth.*.zip
+/__debug_bin
+/winmoth.*.zip
+/*.tar.gz
+/transpile
 /mothd
 /*.exe
