@@ -3,7 +3,7 @@
 /.idea
 /vendor/
 /__debug_bin
-/winmoth.*.zip
+winmoth.*.zip
 /*.tar.gz
 /transpile
 /mothd
