@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v4.6.0] - 2024-04-17
+### Changed
+- Mothd now correctly handles using the current directory for a path.
+  For instance, `-puzzles .`
+- Theme configuration has a new structure: 
+  old theme config files need to be modified
+- Theme now omits the qix animation in the background
+  if the user has configured the browser to reduce motion.
+  This should help people with vestibular motion disorders,
+  or people who are annoyed by the animation.
+- Theme colors are now specified with CSS variables,
+  making the theme (hopefully) easier to re-color.
+  
+### Added
+- Theme: brought back integrated Python IDE,
+  with updated versions of CodeJar and Prism.js.
+  These depend on a CDN, but if it cannot be reached,
+  there is a graceful fallback.
+- Theme (nearly) instantly updates the list of open puzzles
+  when a puzzle is solved. 
+  Users should no longer need to refresh the index after solving a puzzle.
+- Theme fires confetti 🎊 when a puzzle is answered correctly.
+  This requires a CDN; if unreachable, everything still works.
+- Theme closes the tab a few seconds after a puzzle is answered
+  correctly.
 
 ## [v4.5.0] - 2024-01-19
 ### Changed

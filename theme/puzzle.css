@@ -3,11 +3,6 @@
   src: url("fonts/Go-Regular.ttf");
 }
 
-@font-face {
-    font-family: "Go-Mono";
-    src: url("fonts/Go-Mono.ttf");
-}
-
 /** Workspace
  *
  * Tools for this puzzle: shows up in content.

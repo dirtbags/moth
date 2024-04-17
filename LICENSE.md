@@ -130,7 +130,7 @@ Both came with the following license:
 
 
 Go Fonts
-=======
+-------
 
 The Go fonts were obtained from
 https://go.googlesource.com/image
