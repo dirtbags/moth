@@ -92,8 +92,10 @@ class App {
 
         // Update elements with data-track-solved
         for (let e of document.querySelectorAll("[data-track-solved]")) {
-            // Only display if data-track-solved is the same as config.trackSolved
-            e.classList.toggle("hidden", common.Truthy(e.dataset.trackSolved) != this.config.PuzzleList?.TrackSolved)
+            // Only hide if data-track-solved is different than config.PuzzleList.TrackSolved
+            let tracking = this.config.PuzzleList?.TrackSolved || false
+            let displayIf = common.StringTruthy(e.dataset.trackSolved)
+            e.classList.toggle("hidden", tracking != displayIf)
         }
 
         for (let e of document.querySelectorAll(".login")) {

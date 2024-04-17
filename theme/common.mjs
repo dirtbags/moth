@@ -48,7 +48,7 @@ function WhenDOMLoaded(cb) {
  * @param {String} s 
  * @returns {Boolean}
  */
-function Truthy(s) {
+function StringTruthy(s) {
     switch (s.toLowerCase()) {
         case "disabled":
         case "no":
@@ -66,13 +66,20 @@ function Truthy(s) {
  * @returns {Promise.<Object>}
  */
 async function Config() {
-    let resp = await fetch(
-        new URL("config.json", BaseURL), 
-        {
-            cache: "no-cache"
-        },
-    )
-    return resp.json()
+    let obj = {}
+    try {
+        let resp = await fetch(
+            new URL("configg.json", BaseURL), 
+            {
+                cache: "no-cache"
+            },
+        )
+        obj = await resp.json()
+    }
+    catch(err) {
+        obj = {}
+    }
+    return obj
 }
 
 export {
@@ -83,6 +90,6 @@ export {
     BaseURL,
     Toast,
     WhenDOMLoaded,
-    Truthy,
+    StringTruthy,
     Config,
 }
