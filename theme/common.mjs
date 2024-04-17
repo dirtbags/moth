@@ -69,7 +69,7 @@ async function Config() {
     let obj = {}
     try {
         let resp = await fetch(
-            new URL("configg.json", BaseURL), 
+            new URL("config.json", BaseURL), 
             {
                 cache: "no-cache"
             },
