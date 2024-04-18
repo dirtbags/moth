@@ -13,9 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug with solved puzzle tracking when config.json cannot be loaded.
 
 ## [v4.6.0] - 2024-04-17
-### Changed
+### Fixed
 - Mothd now correctly handles using the current directory for a path.
   For instance, `-puzzles .`
+
+### Changed
 - Theme configuration has a new structure: 
   old theme config files need to be modified
 - Theme now omits the qix animation in the background
