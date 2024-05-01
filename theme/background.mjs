@@ -149,12 +149,6 @@ class QixBackground {
 }
 
 function init() {
-    // Don't like the background animation? You can disable it by setting a
-    // property in localStorage and reloading.
-    if (localStorage.disableBackgroundAnimation) {
-        return
-    }
-
     let canvas = document.createElement("canvas")
     canvas.width = 640
     canvas.height = 640
