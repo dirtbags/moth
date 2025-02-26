@@ -42,6 +42,11 @@ winbuild:
   stage: build
   image: *goimage
   needs: ["Run unit tests"]
+  only:
+    refs:
+      - main
+      - tags
+      - merge_requests  
   script:
     - GOOS=windows GOARCH=amd64 go build ./cmd/mothd
     - cp build/package/moth-devel.bat .
