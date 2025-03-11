@@ -45,7 +45,6 @@ Documentation
 * [Administration](docs/administration.md): How to set hours, and change setup.
 
 
-
 Contributing to MOTH
 ==================
 

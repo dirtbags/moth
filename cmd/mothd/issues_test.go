@@ -2,27 +2,17 @@ package main
 
 import (
 	"testing"
-
-	"github.com/spf13/afero"
 )
 
+// TestIssue156: if a team has an entry in teams/, but isn't in teamids.txt, we should still let them log in.
 func TestIssue156(t *testing.T) {
-	puzzles := NewTestMothballs()
-	state := NewTestState()
-	theme := NewTestTheme()
-	server := NewMothServer(Configuration{}, theme, state, puzzles)
+	h := NewTestHttpd(t, "/")
 
-	afero.WriteFile(state, "teams/bloop", []byte("bloop: the team"), 0644)
-	state.refresh()
-
-	handler := server.NewHandler("bloop")
-	es := handler.ExportState()
-	if _, ok := es.TeamNames["self"]; !ok {
-		t.Fail()
+	if err := h.TestFSStateStore.fsys.WriteFile("test/teams/bloop", []byte{}, 0644); err != nil {
+		t.Fatal(err)
 	}
+	h.Refresh()
 
-	err := handler.Register("bloop: the other team")
-	if err != ErrAlreadyRegistered {
-		t.Fail()
-	}
+	ha := h.Authenticate("bloop", "")
+	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/index.html", nil, 200)
 }

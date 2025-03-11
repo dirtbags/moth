@@ -1,3 +1,0 @@
-author: neale
-
-Hello, world.

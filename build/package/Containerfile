@@ -1,29 +1,15 @@
-ARG GO_VERSION=1.21-alpine
+ARG GO_VERSION=1.22
 FROM docker.io/library/golang:${GO_VERSION} AS builder
-COPY go.* /src/
+COPY *.go go.* CHANGELOG.md /src/
 COPY pkg /src/pkg/
-COPY cmd /src/cmd/
-COPY theme /target/theme/
-COPY example-puzzles /target/puzzles/
-COPY LICENSE.md /target/
-RUN mkdir -p /target/state
+COPY docs/LICENSE.md /target/
+RUN mkdir -p /target/state /target/bin
 WORKDIR /src/
-RUN CGO_ENABLED=0 GOOS=linux go install -a -ldflags '-extldflags "-static"' ./...
-# I can't use /target/bin: doing so would cause the devel server to overwrite Ubuntu's /bin
-
-##########
-
-FROM builder AS tester
-RUN go test ./...
-
-##########
-
-FROM builder AS prodbuild
-RUN mkdir -p /target/bin
-RUN cp /go/bin/* /target/bin/
+RUN CGO_ENABLED=0 GOOS=linux GOBIN=/target/bin go install -a -ldflags '-extldflags "-static"' ./
 
 ##########
 
 FROM scratch AS moth
-COPY --from=prodbuild /target /
-ENTRYPOINT [ "/bin/mothd" ]
+COPY --from=builder /target /
+USER 500:500
+ENTRYPOINT [ "/bin/moth" ]

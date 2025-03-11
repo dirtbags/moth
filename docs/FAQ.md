@@ -1,8 +1,8 @@
 Frequently Asked Questions
 =================
 
-I should probably move this somewhere else,
-since most of it is about 
+I should probably move this somewhere else.
+
 
 Main Application Questions
 =====================
@@ -50,14 +50,6 @@ it was designed for a projector.
 Once we have a scoreboard that is readable on mobile,
 I'll add that link.
 
-## Why can't we show a list of teams to log in to?
-
-At a previous event,
-we had a participant log in as other teams and solve every puzzle,
-because they were upset about something.
-This ruined the event for everyone,
-because it took away the challenge of scoring points.
-
 
 Scoreboard Questions
 =================
@@ -77,3 +69,25 @@ using screen readers. This is why we decided to put the category name inside the
 bar and just deal with it being a little weird.
 
 I'm open to suggestions, but they need to work for all users.
+
+
+Server Questions
+=============
+
+## Why don't you implement HTTPS?
+
+HTTPS can be handled more effectively by a front-end service such as Caddy, Traefik, or nginx.
+Many HTTPS front-ends now automatically obtain and refresh an SSL certificate,
+and provide other helpful features.
+
+
+## Why don't you implement IP Rate Limiting on the registration endpoint?
+
+Any IP Rate Limiting solution the MOTH development team comes up with
+would be inferior to the solutions provided by Caddy, Traefik, or nginx.
+We're trying to make the best puzzle server possible,
+other teams are focused on making the best IP Rate Limiter.
+
+A better mechanism to prevent registration attacks is to provide 
+a list of valid team IDs in `teamids.txt`.
+There is no need for an IP Rate Limiter if this facility can be used.

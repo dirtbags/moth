@@ -1,37 +1,68 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
-	"log"
-	"mime"
+	"log/slog"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/spf13/afero"
+	"github.com/dirtbags/moth/v5/docs"
+	"github.com/dirtbags/moth/v5/pkg/wfs"
 )
 
-func main() {
-	themePath := flag.String(
-		"theme",
-		"theme",
-		"Path to theme files",
+var (
+	// Version of this program
+	Version = "[devel]"
+
+	// Date this version came out
+	VersionDate = "????-??-??"
+)
+
+type Context struct {
+	CategoryStore
+	StateStore
+	WebFS http.FileSystem
+
+	*http.ServeMux
+}
+
+func (ctx *Context) Refresh(now time.Time) error {
+	var errs []error
+	if err := ctx.CategoryStore.Refresh(now); err != nil {
+		errs = append(errs, err)
+	}
+	if err := ctx.StateStore.Refresh(now); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
+}
+
+func usage() {
+	fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [FLAGS] PUZZLEDIR [PUZZLEDIR...]:\n", os.Args[0])
+	flag.PrintDefaults()
+	fmt.Fprintln(flag.CommandLine.Output(), "Version", Version, "-", VersionDate)
+}
+
+func run() error {
+	webPath := flag.String(
+		"web",
+		"web",
+		"Path to static web files (the user interface)",
+	)
+	categoriesPath := flag.String(
+		"categories",
+		"categories",
+		"Path to categories tree",
 	)
 	statePath := flag.String(
 		"state",
 		"state",
-		"Path to state files",
-	)
-	mothballPath := flag.String(
-		"mothballs",
-		"mothballs",
-		"Path to mothball files",
-	)
-	puzzlePath := flag.String(
-		"puzzles",
-		"",
-		"Path to puzzles tree (enables development mode)",
+		"Path to event state directories",
 	)
 	refreshInterval := flag.Duration(
 		"refresh",
@@ -48,70 +79,65 @@ func main() {
 		"/",
 		"Base URL of this instance",
 	)
-	seed := flag.String(
-		"seed",
-		"",
-		"Random seed to use, overrides $SEED",
-	)
+
+	Version, VersionDate = docs.Version()
+
+	flag.Usage = usage
 	flag.Parse()
 
-	var theme *Theme
-	osfs := afero.NewOsFs()
-	if p, err := filepath.Abs(*themePath); err != nil {
-		log.Fatal(err)
+	ctx := &Context{}
+
+	if p, err := filepath.Abs(*webPath); err != nil {
+		return err
+	} else if _, err := os.Stat(p); err != nil {
+		return err
 	} else {
-		theme = NewTheme(afero.NewBasePathFs(osfs, p))
+		ctx.WebFS = http.Dir(p)
 	}
 
-	config := Configuration{}
-
-	var provider PuzzleProvider
-	if p, err := filepath.Abs(*mothballPath); err != nil {
-		log.Fatal(err)
+	if p, err := filepath.Abs(*categoriesPath); err != nil {
+		return err
+	} else if _, err := os.Stat(p); err != nil {
+		return err
 	} else {
-		provider = NewMothballs(afero.NewBasePathFs(osfs, p))
-	}
-	if *puzzlePath != "" {
-		if p, err := filepath.Abs(*puzzlePath); err != nil {
-			log.Fatal(err)
-		} else {
-			provider = NewTranspilerProvider(afero.NewBasePathFs(osfs, p))
-		}
-		config.Devel = true
-		log.Println("-=- You are in development mode, champ! -=-")
+		ctx.CategoryStore = NewFSCategoryStore(os.DirFS(p))
 	}
 
-	var state StateProvider
 	if p, err := filepath.Abs(*statePath); err != nil {
-		log.Fatal(err)
+		return err
+	} else if hostname, err := os.Hostname(); err != nil {
+		return err
+	} else if _, err := os.Stat(p); err != nil {
+		return err
 	} else {
-		state = NewState(afero.NewBasePathFs(osfs, p))
-	}
-	if config.Devel {
-		state = NewDevelState(state)
+		ctx.StateStore = NewFSStateStore(wfs.DirFS(p), hostname, os.Getpid(), 1)
 	}
 
-	// Set random seed
-	if *seed == "" {
-		*seed = os.Getenv("SEED")
+	if err := ctx.Refresh(time.Now()); err != nil {
+		slog.Error(err.Error())
 	}
-	if *seed == "" {
-		*seed = fmt.Sprintf("%d%d", os.Getpid(), time.Now().Unix())
+
+	ln, err := net.Listen("tcp", *bindStr)
+	if err != nil {
+		return err
 	}
-	os.Setenv("SEED", *seed)
-	log.Print("SEED=", *seed)
+	ctx.InstallHandlers(*base)
+	go http.Serve(ln, ctx)
 
-	// Add some MIME extensions
-	// Doing this avoids decompressing a mothball entry twice per request
-	mime.AddExtensionType(".json", "application/json")
-	mime.AddExtensionType(".zip", "application/zip")
+	slog.Info("started", "addr", *bindStr)
 
-	go theme.Maintain(*refreshInterval)
-	go state.Maintain(*refreshInterval)
-	go provider.Maintain(*refreshInterval)
+	for now := range time.Tick(*refreshInterval) {
+		if err := ctx.Refresh(now); err != nil {
+			slog.Error(err.Error())
+		}
+	}
 
-	server := NewMothServer(config, theme, state, provider)
-	httpd := NewHTTPServer(*base, server)
+	return nil
+}
 
-	httpd.Run(*bindStr)
+func main() {
+	if err := run(); err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
 }

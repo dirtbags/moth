@@ -97,6 +97,22 @@ New instances will initialize this with some hex values.
 Remember that team IDs are essentially passwords.
 
 
+Removing registration checks (Open Registration)
+----------------------
+
+If you'd like anybody to be able to register with any team ID
+12 characters or longer,
+just remove `teamids.txt`.
+
+    rm teamids.txt
+
+⚠️⚠️⚠️ This allows an attack that floods your server with teams. Only do this if you trust your audience. ⚠️⚠️⚠️
+
+The vulnerability can be mitigated to an extent by enabling 
+IP Rate Limiting in the HTTPS server front-ending MOTH.
+Only the `/register` URL needs this.
+
+
 Disabling team registration
 ---------------------
 

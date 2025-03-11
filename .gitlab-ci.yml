@@ -5,10 +5,11 @@ stages:
 
 Run unit tests:
   stage: test
-  image: &goimage golang:1.21
+  image: &goimage golang:1.22
   only:
     refs:
       - main
+      - v5
       - tags
       - merge_requests
   script:
@@ -20,6 +21,7 @@ Run unit tests:
     paths:
     - coverage.html
     - coverage.txt
+
 Generage coverage XML:
   stage: test
   image: *goimage
@@ -30,6 +32,7 @@ Generage coverage XML:
   only:
     refs:
       - main
+      - v5
       - tags
       - merge_requests
   artifacts:
@@ -46,23 +49,44 @@ winbuild:
     refs:
       - main
       - tags
-      - merge_requests  
+      - merge_requests
   script:
-    - GOOS=windows GOARCH=amd64 go build ./cmd/mothd
-    - cp build/package/moth-devel.bat .
+    - GOOS=windows GOARCH=amd64 go build -o . ./...
   artifacts:
     paths:
       - mothd.exe
-      - moth-devel.bat
-      - theme/*
 
-push:
+linbuild:
+  stage: build
+  image: *goimage
+  needs: ["Run unit tests"]
+  script:
+    - GOOS=linux GOARCH=amd64 go build -o . ./...
+  only:
+    refs:
+      - main
+      - tags
+      - merge_requests
+  artifacts:
+    paths:
+      - mothd
+
+docker-push:
   stage: push
   needs: ["Run unit tests"]
-  rules:
-    - if: $CI_COMMIT_TAG
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  only:
+    refs:
+      - tags
+  variables:
   script:
     - mkdir ~/.docker
-    - echo "$DOCKER_AUTH_CONFIG" | tee ~/.docker/config.json | md5sum
-    - sh build/ci/ci.sh publish
+    - echo -n "$DOCKER_AUTH_CONFIG" | tee ~/.docker/config.json | md5sum
+    - test -s ~/.docker/config.json
+    - >
+      docker build
+      --file build/package/Containerfile
+      --tag ghcr.io/dirtbags/moth:${CI_COMMIT_REF_SLUG}
+      --tag ghcr.io/dirtbags/moth:${CI_COMMIT_REF_SLUG%.*}
+      --tag ghcr.io/dirtbags/moth:${CI_COMMIT_REF_SLUG%.*.*}
+      .
+    - docker push ghcr.io/dirtbags/moth --all-tags

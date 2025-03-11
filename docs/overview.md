@@ -49,6 +49,9 @@ A list of valid Team IDs, one per line.
 It defaults to all 4-digit natural numbers,
 but you can put whatever you want in here.
 
+If this file is missing,
+all strings of length >= 12 are valid Team IDs.
+
 
 `points.log`
 ------------
@@ -159,5 +162,3 @@ This point system has proven both easy to explain (if not immediately obvious),
 and acceptable by participants.
 Because we don't award extra points for quick responses,
 teams always feel like they have the possibility to catch up if they are skilled enough.
-
-
