@@ -10,6 +10,7 @@ type TestClock struct {
 	when time.Time
 }
 
+// Now advances the clock by one second, and returns the current time
 func (c *TestClock) Now() time.Time {
 	c.when = c.when.Add(1 * time.Second)
 	return c.when

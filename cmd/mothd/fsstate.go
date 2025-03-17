@@ -504,19 +504,23 @@ func (s *FSState) Refresh(now time.Time) []error {
 	}
 	s.teamdata.Store(&teams)
 
-	awards := NewAwardList()
-	if awardFilenames, readErrs := s.ReadRecords(awards, s.awardFS); readErrs != nil {
-		errs = append(errs, readErrs...)
-	} else {
-		s.awards.Store(awards)
-		errs = append(errs, s.Compact(s.awardFS, awards, awardFilenames))
-	}
+	// Only update awards and events if the instance is enabled.
+	// This is all it means to disable an instance!
+	if s.Enabled(now) {
+		awards := NewAwardList()
+		if awardFilenames, readErrs := s.ReadRecords(awards, s.awardFS); readErrs != nil {
+			errs = append(errs, readErrs...)
+		} else {
+			s.awards.Store(awards)
+			errs = append(errs, s.Compact(s.awardFS, awards, awardFilenames))
+		}
 
-	events := NewEventList()
-	if eventFilenames, readErrs := s.ReadRecords(events, s.eventFS); readErrs != nil {
-		errs = append(errs, readErrs...)
-	} else {
-		errs = append(errs, s.Compact(s.eventFS, events, eventFilenames))
+		events := NewEventList()
+		if eventFilenames, readErrs := s.ReadRecords(events, s.eventFS); readErrs != nil {
+			errs = append(errs, readErrs...)
+		} else {
+			errs = append(errs, s.Compact(s.eventFS, events, eventFilenames))
+		}
 	}
 
 	var finalErrs []error
