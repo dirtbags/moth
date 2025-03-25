@@ -1,15 +1,14 @@
 ARG GO_VERSION=1.22
 FROM docker.io/library/golang:${GO_VERSION} AS builder
-COPY *.go go.* CHANGELOG.md /src/
-COPY pkg /src/pkg/
-COPY docs/LICENSE.md /target/
+COPY . /src/
+COPY docs/*.md /target/
 RUN mkdir -p /target/state /target/bin
 WORKDIR /src/
-RUN CGO_ENABLED=0 GOOS=linux GOBIN=/target/bin go install -a -ldflags '-extldflags "-static"' ./
+RUN CGO_ENABLED=0 GOOS=linux GOBIN=/target/bin go install -a -ldflags '-extldflags "-static"' ./...
 
 ##########
 
 FROM scratch AS moth
 COPY --from=builder /target /
 USER 500:500
-ENTRYPOINT [ "/bin/moth" ]
+ENTRYPOINT [ "/bin/mothd" ]
