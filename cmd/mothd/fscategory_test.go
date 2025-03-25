@@ -209,6 +209,7 @@ func TestFSPuzzlesBasicBad(t *testing.T) {
 
 }
 
+// ZipFSCategory builds a mothball from a category directory
 func ZipFSCategory(path string) ([]byte, error) {
 	zf := new(bytes.Buffer)
 	zw := zip.NewWriter(zf)
@@ -250,7 +251,8 @@ func TestFSStateStoreZipBasic(t *testing.T) {
 		t.Error("Second puzzle wrong")
 	}
 
-	// Now drop a new mothball
+	// Place new contents into the same mothball name:
+	// the next refresh should begin using the new contents.
 	pategorymb, err := ZipFSCategory("testdata/categories/pategory")
 	if err != nil {
 		t.Fatal(err)

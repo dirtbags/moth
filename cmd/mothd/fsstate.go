@@ -269,7 +269,12 @@ func (s *FSState) RecordAward(a Award) error {
 }
 
 func (s *FSState) Awards() *AwardList {
-	return s.awards.Load()
+	awards := s.awards.Load()
+	if awards == nil {
+		return &AwardList{}
+		
+	}
+	return awards
 }
 
 func (s *FSState) Log(e Event) error {

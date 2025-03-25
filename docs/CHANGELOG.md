@@ -4,14 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [v5.0.0] - 2024-03-25
 ### Changed
 - `-static` is now `-web`
 
 ### Fixed
 - If schedule specifies a category that doesn't exist, an error is reported to all clients. (#226, luna#18)
 - Errors in schedule.txt are now reported to the browser.
-- `errors.txt` is written if any errors happen during instance refresh.
+- `errors.txt` is written if any errors happen during instance refresh.\
+- Pausing the event actually works now, preventing awards from updating (#224)
+- Bad mothballs now present error messages (#226)
+- Additional bugfixes (multiple issues)
 
 ## [v5.0.0pre2] - 2024-12-17
 ### Fixed
