@@ -61,15 +61,19 @@ func TestEventListBasic(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	if n, err := list.WriteTo(buf); err != nil {
-		t.Error(err)
-	} else if n != 64 {
-		t.Error("WriteTo wrote the wrong number of bytes:", n)
-	}
 
-	if n, err := list.ReadFrom(buf); err != nil {
-		t.Error(err)
-	} else if n != 64 {
-		t.Error("ReadFrom read the wrong number of bytes:", n)
+	// Do this twice to test uniqueness
+	for i := 0; i < 2; i++ {
+		if n, err := list.WriteTo(buf); err != nil {
+			t.Error(err)
+		} else if n != 64 {
+			t.Error("WriteTo wrote the wrong number of bytes:", n)
+		}
+
+		if n, err := list.ReadFrom(buf); err != nil {
+			t.Error(err)
+		} else if n != 64 {
+			t.Error("ReadFrom read the wrong number of bytes:", n)
+		}
 	}
 }

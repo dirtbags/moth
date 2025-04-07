@@ -207,6 +207,7 @@ func (el *EventList) ReadFrom(r io.Reader) (int64, error) {
 		}
 	}
 	sort.Stable(el)
+	el.events = el.Unique().events
 	return counter.Len(), nil
 }
 
@@ -224,6 +225,23 @@ func (el *EventList) WriteTo(w io.Writer) (int64, error) {
 	}
 	cw.Flush()
 	return counter.Len(), nil
+}
+
+// Contains returns true if e is present in al.
+func (el *EventList) Contains(e Event) bool {
+	return slices.ContainsFunc(el.events, e.Equal)
+}
+
+// Unique returns an EventList with duplicates removed.
+func (el *EventList) Unique() *EventList {
+	ret := NewEventList()
+	for _, e := range el.events {
+		if ret.Contains(e) {
+			continue
+		}
+		ret.Append(e)
+	}
+	return ret
 }
 
 func (el *EventList) MarshalJSON() ([]byte, error) {
