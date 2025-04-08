@@ -21,13 +21,6 @@ import (
 const MaxAnswerLength = 4096
 const MaxPublicLength = 4096
 
-// HTTPServer is a MOTH HTTP server
-type HTTPServer struct {
-	*http.ServeMux
-	CategoryStore
-	StateStore
-}
-
 // SetHandlers sets up handlers on the context.
 func (ctx *Context) InstallHandlers(baseURL string) {
 	ctx.ServeMux = http.NewServeMux()
@@ -78,7 +71,7 @@ func ReadPutData(w http.ResponseWriter, req *http.Request, maxlen int64) (buf st
 // GetState looks up the named state instance, tries to authenticate against it,
 // and returns an HTTPState.
 //
-// nil is returned if  no state instance is found.
+// nil is returned if no state instance is found.
 func (ctx *Context) GetState(req *http.Request) (hs *HTTPState, authenticated bool) {
 	instance := req.PathValue("instance")
 	state, found := ctx.State(instance)
@@ -143,7 +136,7 @@ type StateExport struct {
 	// Hours when this instance is expected to be running.
 	Hours []period.Period
 
-	// TeamData maps team id to data for all registered teams.
+	// TeamData maps anonymized team id to data for all registered teams.
 	TeamData map[TeamID]string
 
 	// Awards which have been granted in this instance.
@@ -307,7 +300,6 @@ func (ctx *Context) PutAnswer(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(w, "Correct answer")
 }
 
-// StateHandler handles requests under /state/
 func (ctx *Context) GetStateCurrent(w http.ResponseWriter, req *http.Request) {
 	hs, authenticated := ctx.GetState(req)
 	if hs == nil {

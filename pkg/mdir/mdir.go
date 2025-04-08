@@ -23,12 +23,13 @@ import (
 // MDir acts as a WriteFS in NewDir,
 // allowing developers to use an MDir like a WriteFS that magically supports concurrency.
 type MDir struct {
+	// WriteFS provides access to files in NewDir
 	wfs.WriteFS
 
-	// TmpDir is the directory where new files will be created and written.
+	// TmpDir is the directory where files are created and written before they are closed.
 	TmpDir string
 
-	// NewDir is the directory where completed files will be moved.
+	// NewDir is the directory where closed files are moved.
 	NewDir string
 
 	// BaseFS is the WriteFS in which TmpDir and NewDir exist.

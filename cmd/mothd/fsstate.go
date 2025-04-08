@@ -84,10 +84,19 @@ type Rollout struct {
 }
 
 type FSState struct {
+	// configFS stores configuration of this State
 	configFS *mdir.MDir
+
+	// clientFS contains all client configuration for this State
 	clientFS *mdir.MDir
+
+	// teamFS stores team data for all registered teams
 	teamFS   *mdir.MDir
+
+	// awardFS contains all awards
 	awardFS  *mdir.MDir
+
+	// eventFS contains the event log
 	eventFS  *mdir.MDir
 
 	// openRegistration, obtained from teamids.txt
@@ -105,7 +114,7 @@ type FSState struct {
 	// teamdata for every team, obtained from teamFS
 	teamdata atomic.Pointer[map[TeamID]string]
 
-	// config displayed in UI
+	// config passed through to client: we don't care what these values are
 	config atomic.Pointer[map[string]string]
 
 	// errors displayed in UI
@@ -116,6 +125,9 @@ type FSState struct {
 
 	// compactBase is the filename to use for compaction.
 	compactBase string
+
+	// compactCount tracks how many times we have compacted.
+	compactCount uint32
 }
 
 func NewFSState(fsys wfs.WriteFS, compactBase string) (*FSState, error) {
@@ -411,20 +423,20 @@ func (s *FSState) Compact(fsys *mdir.MDir, w io.WriterTo, filenames []string) er
 		return nil
 	}
 
-	if err := writeItems(fsys, s.compactBase, w); err != nil {
+	name := fmt.Sprintf("%s.%d.award", s.compactBase, s.compactCount)
+	s.compactCount += 1
+	if err := writeItems(fsys, name, w); err != nil {
 		return err
 	}
 
 	var errs []error
 	for _, name := range filenames {
-		if name == s.compactBase {
-			continue
-		}
 		err := fsys.Remove(name)
 		switch {
 		case err == nil:
 		// pass
-		case errors.Is(err, fs.ErrNotExist): // not a problem
+		case errors.Is(err, fs.ErrNotExist):
+		// not a problem
 		default:
 			errs = append(errs, err)
 		}
