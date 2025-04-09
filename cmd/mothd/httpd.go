@@ -121,6 +121,9 @@ func (hs *HTTPState) Log(when time.Time, name string, cat CategoryID, puzzle Puz
 
 // StateExport is given to clients requesting the current state.
 type StateExport struct {
+	// MothVersion contains the current version of MOTH.
+	MothVersion string
+
 	// Running is true if the server is updating the Awards log.
 	Running bool
 
@@ -343,6 +346,7 @@ func (ctx *Context) sendState(w http.ResponseWriter, hs *HTTPState, authenticate
 	now := time.Now()
 
 	export := &StateExport{
+		MothVersion:      Version,
 		Running:          hs.State.Enabled(now),
 		OpenRegistration: hs.State.OpenRegistration(),
 		Hours:            hs.State.Hours(),
