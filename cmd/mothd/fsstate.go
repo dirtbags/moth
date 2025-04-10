@@ -73,8 +73,8 @@ const initialSchedule = `# schedule.txt: when things happen.
 # enable 2024-07-25T19:35:14-06:00/2024-07-26T01:35:14-06:00
 # enable 2024-07-25T19:35:14-06:00/PT6H
 # enable PT6H/2024-07-26T01:35:14-06:00
-# rollout - intro.mb easycat1.mb easycat2.mb
-# rollout 2024-07-25T21:00:00-0600 hardcat1.mb hardcat2.mb
+# rollout - intro easycat1 easycat2
+# rollout 2024-07-25T21:00:00-0600 hardcat1 hardcat2
 `
 
 // Rollout describes when a category should roll out.

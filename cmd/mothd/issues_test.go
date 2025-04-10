@@ -14,5 +14,5 @@ func TestIssue156(t *testing.T) {
 	h.Refresh()
 
 	ha := h.Authenticate("bloop", "")
-	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/index.html", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/", nil, 200)
 }

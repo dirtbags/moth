@@ -3,9 +3,11 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
@@ -16,62 +18,67 @@ import (
 	"testing/fstest"
 )
 
-type TestFSCategoryStore struct {
-	*FSCategoryStore
+type TestMothballStore struct {
+	*MothballStore
 }
 
-func TestdataCategoryStore(t *testing.T) *TestFSCategoryStore {
-	s := &TestFSCategoryStore{
-		&FSCategoryStore{
-			fsys: os.DirFS("testdata/categories"),
-		},
-	}
-	if err := s.Refresh(TimeZero); err != nil {
-		t.Fatal(err)
-	}
-	return s
-}
-
-func TestFSPuzzlesLeakage(t *testing.T) {
-	s := TestdataCategoryStore(t)
-	c, err := s.Category("cat0")
+// NewTestMothballStore creates a MothballStore from fsys, by generating mothballs in memory
+func NewTestMothballStore(fsys fs.FS) (*TestMothballStore, error) {
+	outfs := make(fstest.MapFS)
+	dents, err := fs.ReadDir(fsys, ".")
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
+	}
+	for _, dent := range dents {
+		name := dent.Name()
+		if !dent.IsDir() {
+			continue
+		}
+
+		info, err := dent.Info()
+		if err != nil {
+			return nil, err
+
+		}
+		catFS, err := fs.Sub(fsys, name)
+		if err != nil {
+			return nil, err
+		}
+
+		zf := new(bytes.Buffer)
+		zw := zip.NewWriter(zf)
+		if err := zw.AddFS(catFS); err != nil {
+			return nil, err
+		}
+		zw.Close()
+
+		mbname := fmt.Sprintf("%s.mb", name)
+		outfs[mbname] = &fstest.MapFile{
+			Data:    zf.Bytes(),
+			Mode:    0644,
+			ModTime: info.ModTime(),
+		}
 	}
 
-	name := "/__MOTH/answers.txt"
-	req := httptest.NewRequest("GET", name, nil)
-	w := httptest.NewRecorder()
-	c.ServeFile(w, req, name)
-
-	if w.Result().StatusCode != 404 {
-		t.Error("should have been 404")
+	s := &TestMothballStore{
+		NewMothballStore(outfs),
 	}
-	body, _ := io.ReadAll(w.Body)
-	if strings.Contains(string(body), "two") {
-		t.Error("404 is leaking the page")
-	}
+	return s, nil
 }
 
-func (s *TestFSCategoryStore) Should(t *testing.T, exists bool, cat Category, names ...string) {
+func (s *TestMothballStore) Should(t *testing.T, exists bool, cat Category, names ...string) {
 	t.Helper()
 	for _, name := range names {
-		name = path.Clean("/" + name)
-		req := httptest.NewRequest("GET", name, nil)
-		w := httptest.NewRecorder()
-		cat.ServeFile(w, req, name)
-
 		var found bool
-		switch w.Result().StatusCode {
-		case 200:
-			found = true
-		case 404:
+
+		name = path.Clean("/" + name)
+		if _, err := fs.Stat(cat, name); errors.Is(err, fs.ErrNotExist) {
 			found = false
-		default:
-			body, _ := io.ReadAll(w.Body)
-			t.Errorf("%s: unexpected return code: %v", name, w.Result().Status)
-			t.Log("  body:", string(body))
+		} else if err != nil {
+			t.Error(err)
 			continue
+		} else {
+			found = true
 		}
 
 		if found != exists {
@@ -84,19 +91,63 @@ func (s *TestFSCategoryStore) Should(t *testing.T, exists bool, cat Category, na
 	}
 }
 
-func testExistence(t *testing.T, name CategoryID, s *TestFSCategoryStore) {
+// TestdataCategoryStoreOpen zips up each directory in testdata/$name,
+// and returns a TestMothballStore containing the resulting mothballs.
+func TestdataCategoryStoreOpen(t *testing.T, name string) *TestMothballStore {
 	t.Helper()
-	cat0, err := s.Category(name)
+
+	categoriesPath := path.Join("testdata", name)
+	categoriesFS := os.DirFS(categoriesPath)
+	s, err := NewTestMothballStore(categoriesFS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+func TestdataCategoryStore(t *testing.T) *TestMothballStore {
+	t.Helper()
+	s := TestdataCategoryStoreOpen(t, "categories")
+	if err := s.Refresh(TimeZero); err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+func TestMothballsPuzzlesLeakage(t *testing.T) {
+	s := TestdataCategoryStore(t)
+	c, err := s.Category("cat0")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	s.Should(t, true, cat0,
+	name := "/__MOTH/answers.txt"
+	req := httptest.NewRequest("GET", name, nil)
+	w := httptest.NewRecorder()
+	http.ServeFileFS(w, req, c, name)
+
+	if w.Result().StatusCode != 404 {
+		t.Error("should have been 404")
+	}
+	body, _ := io.ReadAll(w.Body)
+	if strings.Contains(string(body), "two") {
+		t.Error("404 is leaking the page")
+	}
+}
+
+func testExistence(t *testing.T, catid CategoryID, s *TestMothballStore) {
+	t.Helper()
+	cat, err := s.Category(catid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s.Should(t, true, cat,
 		"1/index.html",
 		"two/index.html",
 	)
 
-	s.Should(t, false, cat0,
+	s.Should(t, false, cat,
 		"__MOTH/answers.txt",
 		"__MOTH//answers.txt",
 		"/__MOTH/answers.txt",
@@ -106,16 +157,16 @@ func testExistence(t *testing.T, name CategoryID, s *TestFSCategoryStore) {
 		"1/../__MOTH/answers.txt",
 	)
 
-	if !slices.Contains(cat0.Answers("1"), "hello") {
+	if !slices.Contains(cat.Answers("1"), "hello") {
 		t.Error("correct answer not listed")
 	}
 
-	if slices.Contains(cat0.Answers("0"), "hello") {
+	if slices.Contains(cat.Answers("0"), "hello") {
 		t.Error("answer listed for wrong puzzle")
 	}
 }
 
-func TestFSPuzzlesUnlocked(t *testing.T) {
+func TestMothballsPuzzlesUnlocked(t *testing.T) {
 	s := TestdataCategoryStore(t)
 	cat, err := s.Category("cat0")
 	if err != nil {
@@ -131,44 +182,7 @@ func TestFSPuzzlesUnlocked(t *testing.T) {
 	}
 
 }
-func TestFSPuzzlesDir(t *testing.T) {
-	s := TestdataCategoryStore(t)
-
-	if err := fstest.TestFS(s.fsys, "cat0/1/index.html"); err != nil {
-		t.Fatal(err)
-	}
-
-	testExistence(t, "cat0", s)
-}
-
-func TestFSPuzzlesZip(t *testing.T) {
-	zf := new(bytes.Buffer)
-	zw := zip.NewWriter(zf)
-	if err := zw.AddFS(os.DirFS("testdata/categories/cat0")); err != nil {
-		t.Fatal(err)
-	}
-	zw.Close()
-
-	s := &TestFSCategoryStore{
-		&FSCategoryStore{
-			fsys: fstest.MapFS{
-				"cat0.mb": &fstest.MapFile{
-					Data:    zf.Bytes(),
-					Mode:    0644,
-					ModTime: TimeZero,
-					Sys:     nil,
-				},
-			},
-		},
-	}
-	if err := s.Refresh(TimeZero); err != nil {
-		t.Fatal(err)
-	}
-
-	testExistence(t, "cat0.mb", s)
-}
-
-func TestFSPuzzlesTraversal(t *testing.T) {
+func TestMothballsPuzzlesTraversal(t *testing.T) {
 	s := TestdataCategoryStore(t)
 
 	cat0, err := s.Category("cat0")
@@ -189,7 +203,7 @@ func TestFSPuzzlesTraversal(t *testing.T) {
 	)
 }
 
-func TestFSPuzzlesBasicMetadata(t *testing.T) {
+func TestMothballsPuzzlesBasicMetadata(t *testing.T) {
 	s := TestdataCategoryStore(t)
 	cat0, err := s.Category("cat0")
 	if err != nil {
@@ -198,19 +212,8 @@ func TestFSPuzzlesBasicMetadata(t *testing.T) {
 	s.Should(t, false, cat0, "__MOTH/answers.txt")
 }
 
-func TestFSPuzzlesBasicBad(t *testing.T) {
-	s := &FSCategoryStore{
-		fsys: os.DirFS("testdata/bad-categories"),
-	}
-
-	if err := s.Refresh(TimeZero); err == nil {
-		t.Error("Bad categories refresh shouldn't be okay")
-	}
-
-}
-
-// ZipFSCategory builds a mothball from a category directory
-func ZipFSCategory(path string) ([]byte, error) {
+// ZipDirectory returns the bytes of a zip file containing everything under path.
+func ZipDirectory(path string) ([]byte, error) {
 	zf := new(bytes.Buffer)
 	zw := zip.NewWriter(zf)
 	if err := zw.AddFS(os.DirFS(path)); err != nil {
@@ -221,29 +224,27 @@ func ZipFSCategory(path string) ([]byte, error) {
 
 }
 
-func TestFSStateStoreZipBasic(t *testing.T) {
+func TestMothballsStateStoreZipBasic(t *testing.T) {
 	clock := NewTestClock()
 
-	cat0mb, err := ZipFSCategory("testdata/categories/cat0")
+	cat0mb, err := ZipDirectory("testdata/categories/cat0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	mapfs := fstest.MapFS{}
-	mapfs["test.mb"] =  &fstest.MapFile{
-		Data: cat0mb,
+	mapfs["test.mb"] = &fstest.MapFile{
+		Data:    cat0mb,
 		Mode:    0644,
 		ModTime: clock.Now(),
 		Sys:     nil,
 	}
 
-	s := &TestFSCategoryStore{
-		&FSCategoryStore{
-			fsys: mapfs,
-		},
+	s := &TestMothballStore{
+		NewMothballStore(mapfs),
 	}
 	s.Refresh(clock.Now())
 
-	cat, err := s.Category("test.mb")
+	cat, err := s.Category("test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,15 +254,15 @@ func TestFSStateStoreZipBasic(t *testing.T) {
 
 	// Place new contents into the same mothball name:
 	// the next refresh should begin using the new contents.
-	pategorymb, err := ZipFSCategory("testdata/categories/pategory")
+	pategorymb, err := ZipDirectory("testdata/categories/pategory")
 	if err != nil {
 		t.Fatal(err)
 	}
 	mapfs["test.mb"] = &fstest.MapFile{
-		Data: pategorymb,
-		Mode: 0644,
+		Data:    pategorymb,
+		Mode:    0644,
 		ModTime: clock.Now(),
-		Sys: nil,
+		Sys:     nil,
 	}
 	s.Refresh(clock.Now())
 
@@ -273,10 +274,10 @@ func TestFSStateStoreZipBasic(t *testing.T) {
 		if err := fstest.TestFS(zfs, "__MOTH/answers.txt", "__MOTH/puzzles.txt", "1/index.html", "2/index.html"); err != nil {
 			t.Fatal(err)
 		}
-		
+
 	}
 
-	cat2, err := s.Category("test.mb")
+	cat2, err := s.Category("test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,10 +305,10 @@ func readAnswers(fsys fs.FS) error {
 *     BenchmarkZipfileOperations-12          	   25963	     39200 ns/op
 *     BenchmarkZipfileCachedOperations-12    	  157394	      7601 ns/op
 *     BenchmarkOsfileOperations-12           	   56937	     20131 ns/op
-*/
+ */
 
 func BenchmarkZipfileOperations(b *testing.B) {
-	cat0mb, err := ZipFSCategory("testdata/categories/cat0")
+	cat0mb, err := ZipDirectory("testdata/categories/cat0")
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -333,7 +334,7 @@ func BenchmarkZipfileOperations(b *testing.B) {
 }
 
 func BenchmarkZipfileCachedOperations(b *testing.B) {
-	cat0mb, err := ZipFSCategory("testdata/categories/cat0")
+	cat0mb, err := ZipDirectory("testdata/categories/cat0")
 	if err != nil {
 		b.Fatal(err)
 	}

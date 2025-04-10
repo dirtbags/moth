@@ -31,7 +31,6 @@ func (ctx *Context) InstallHandlers(baseURL string) {
 	ctx.HandleFunc("GET "+baseURL+"/{instance}/puzzles/{cat}/{puzzle}/{name...}", ctx.GetPuzzleFile)
 	ctx.HandleFunc("PUT "+baseURL+"/{instance}/puzzles/{cat}/{puzzle}/answer", ctx.PutAnswer)
 	ctx.HandleFunc("GET "+baseURL+"/{instance}/state/current.json", ctx.GetStateCurrent)
-	ctx.HandleFunc("PUT "+baseURL+"/{instance}/state/public", ctx.PutStateTeamData) // Deprecated
 	ctx.HandleFunc("PUT "+baseURL+"/{instance}/state/teamdata", ctx.PutStateTeamData)
 	ctx.HandleFunc("OPTIONS "+baseURL+"/", ctx.Options)
 }
@@ -68,55 +67,97 @@ func ReadPutData(w http.ResponseWriter, req *http.Request, maxlen int64) (buf st
 	return b.String(), true
 }
 
-// GetState looks up the named state instance, tries to authenticate against it,
-// and returns an HTTPState.
-//
-// nil is returned if no state instance is found.
-func (ctx *Context) GetState(req *http.Request) (hs *HTTPState, authenticated bool) {
+// Environment contains instance state and authentication information.
+type Environment struct {
+	// State associated with the instance in the URL of this request.
+	State State
+
+	// TeamID of the team making the request.
+	// A value here does not imply the request is authenticated:
+	// this is just what the request specified as the team ID.
+	TeamID TeamID
+
+	// TeamData of the team making the request.
+
+	TeamData string
+
+	// Authenticated is true if the request is "logged in".
+	// This happens when the HTTP request included a TeamID which the state recognizes as a registered team.
+	Authenticated bool
+
+	ctx *Context
+}
+
+// GetEnvironment builds an Environment from req.
+// nil means no environemnt can be built: reply with 404 in this case.
+func (ctx *Context) GetEnvironment(req *http.Request) *Environment {
 	instance := req.PathValue("instance")
 	state, found := ctx.State(instance)
 	if !found {
-		return nil, false
-	}
-	hs = &HTTPState{
-		State: state,
+		return nil
 	}
 
-	if username, password, ok := req.BasicAuth(); !ok {
-		if c, err := req.Cookie("teamid"); err != nil {
-			return hs, false
+	// Determine team id, if applicable
+	var teamid TeamID
+	if c, err := req.Cookie("teamid"); err == nil {
+		teamid = TeamID(c.Value)
+	}
+	if username, password, ok := req.BasicAuth(); ok {
+		if password != "" {
+			teamid = TeamID(password)
 		} else {
-			hs.Team = TeamID(c.Value)
+			// Fall back to team ID as the username, if no password is provided
+			teamid = TeamID(username)
 		}
-	} else if username != "" {
-		hs.Team = TeamID(username)
-	} else {
-		hs.Team = TeamID(password)
 	}
-	hs.TeamData, authenticated = hs.State.TeamData(hs.Team)
 
-	return hs, authenticated
+	// Look team data up. This is how the state tells us whether the teamid is properly authenticated.
+	teamdata, authenticated := state.TeamData(teamid)
+
+	return &Environment{
+		State:         state,
+		TeamID:        teamid,
+		TeamData:      teamdata,
+		Authenticated: authenticated,
+		ctx:           ctx,
+	}
 }
 
-type HTTPState struct {
-	State    State
-	Team     TeamID
-	TeamData string
-}
-
-// Log an event to a state instance.
-func (hs *HTTPState) Log(when time.Time, name string, cat CategoryID, puzzle PuzzleID, extra ...string) {
-	e := NewEvent(when, name, hs.Team, cat, puzzle, extra...)
+// Log writes an event to a state's log.
+func (e *Environment) Log(when time.Time, name string, cat CategoryID, puzzle PuzzleID, extra ...string) {
+	evt := NewEvent(when, name, e.TeamID, cat, puzzle, extra...)
 	slog.Debug("event",
 		"name", name,
-		"team", hs.Team,
+		"team", e.TeamID,
 		"cat", cat,
 		"puzzle", puzzle,
 		"extra", extra,
 	)
-	if err := hs.State.Log(e); err != nil {
+	if err := e.State.Log(evt); err != nil {
 		slog.Error("logging error", "error", err.Error())
 	}
+}
+
+// Unlocked returns the list of unlocked puzzles in cat.
+//
+// If all puzzles are unlocked,
+// the list is terminated with a zero-value PuzzleID.
+func (e *Environment) Unlocked(cat Category) []PuzzleID {
+	if cat.Unlocked() {
+		return nil
+	}
+
+	inventory := cat.Puzzles()
+
+	last := -1
+	for _, awd := range e.State.Awards().Values() {
+		idx := slices.Index(inventory, awd.Puzzle)
+		if idx > last {
+			last = idx
+		}
+	}
+	inventory = append(inventory, PuzzleID(""))
+	return inventory[:last+2]
 }
 
 // StateExport is given to clients requesting the current state.
@@ -146,86 +187,6 @@ type StateExport struct {
 	Puzzles map[CategoryID][]PuzzleID
 }
 
-// Unlocked returns all currently unlocked puzzles in a category.
-//
-// If all puzzles in a category are unlocked,
-// the list for that category is terminated with a zero-value PuzzleID.
-func (hs *HTTPState) Unlocked(now time.Time, categories CategoryStore) (categoriesInventory map[CategoryID][]PuzzleID, errs []error) {
-	categoriesInventory = make(map[CategoryID][]PuzzleID)
-	isUnlocked := make(map[CategoryID]bool)
-	for _, catid := range hs.State.Categories(now) {
-		cat, err := categories.Category(catid)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		categoriesInventory[catid] = cat.Puzzles()
-		isUnlocked[catid] = cat.Unlocked()
-	}
-
-	maxIndex := make(map[CategoryID]int)
-	for _, awd := range hs.State.Awards().Values() {
-		inventory := categoriesInventory[awd.Category]
-		if inventory == nil {
-			continue
-		}
-
-		puzzleIndex := slices.Index(inventory, awd.Puzzle) + 1
-		if puzzleIndex > maxIndex[awd.Category] {
-			maxIndex[awd.Category] = puzzleIndex
-		}
-	}
-
-	for cat, inventory := range categoriesInventory {
-		max := maxIndex[cat]
-		if isUnlocked[cat] || (max == len(inventory)) {
-			inventory = append(inventory, PuzzleID(""))
-		} else {
-			inventory = inventory[:max+1]
-		}
-		categoriesInventory[cat] = inventory
-	}
-	return categoriesInventory, errs
-}
-
-// validate finds the named instance,
-// authenticates the user,
-// looks up the category,
-// and checks whether the puzzle is unlocked.
-func (ctx *Context) validate(w http.ResponseWriter, req *http.Request, now time.Time) (hs *HTTPState, cat Category, ok bool) {
-	catid := CategoryID(req.PathValue("cat"))
-	puzzleid := PuzzleID(req.PathValue("puzzle"))
-
-	var authenticated bool
-	hs, authenticated = ctx.GetState(req)
-	if hs == nil {
-		http.NotFound(w, req)
-		return
-	}
-	if !authenticated {
-		http.Error(w, "", http.StatusUnauthorized)
-		return
-	}
-
-	if c, err := ctx.CategoryStore.Category(catid); err != nil {
-		http.NotFound(w, req)
-		return
-	} else {
-		cat = c
-	}
-
-	if puzzleid != "" {
-		unlocked, _ := hs.Unlocked(now, ctx.CategoryStore)
-		if !slices.Contains(unlocked[catid], puzzleid) {
-			http.NotFound(w, req)
-			return
-		}
-	}
-
-	ok = true
-	return
-}
-
 func (ctx *Context) Options(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Allow", "GET, PUT")
 	w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
@@ -234,35 +195,65 @@ func (ctx *Context) Options(w http.ResponseWriter, req *http.Request) {
 
 // GetPuzzleFile serves static content from a Puzzle.
 func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
-	_, cat, ok := ctx.validate(w, req, time.Now())
-	if !ok {
+	env := ctx.GetEnvironment(req)
+	if env == nil {
+		http.NotFound(w, req)
+	}
+	if !env.Authenticated {
+		http.Error(w, "", http.StatusUnauthorized)
 		return
 	}
 
-	name := req.PathValue("name")
-	if puzzle := req.PathValue("puzzle"); puzzle != "" {
-		name = puzzle + "/" + name
-	}
-	name = path.Clean(name)
-	if strings.HasSuffix(name, "/") {
+	name := path.Clean(req.PathValue("name"))
+
+	// Find category
+	catid := CategoryID(req.PathValue("cat"))
+	cat, err := ctx.Category(catid)
+	if err != nil {
 		http.NotFound(w, req)
 		return
 	}
-	if name == "" {
-		name = "index.html"
+
+	// If a puzzle id was provided, ensure it's unlocked
+	puzzleid := PuzzleID(req.PathValue("puzzle"))
+	if puzzleid != "" {
+		unlocked := env.Unlocked(cat)
+		if !slices.Contains(unlocked, puzzleid) {
+			http.NotFound(w, req)
+			return
+		}
+		name = path.Join(puzzleid.String(), name)
 	}
 
-	cat.ServeFile(w, req, name)
+	http.ServeFileFS(w, req, cat, name)
 }
 
 // PutAnswer checks answer correctness and records correct submissions
 func (ctx *Context) PutAnswer(w http.ResponseWriter, req *http.Request) {
 	now := time.Now()
-	catid := CategoryID(req.PathValue("cat"))
-	puzzleid := PuzzleID(req.PathValue("puzzle"))
 
-	hs, cat, ok := ctx.validate(w, req, now)
-	if !ok {
+	env := ctx.GetEnvironment(req)
+	if env == nil {
+		http.NotFound(w, req)
+	}
+	if !env.Authenticated {
+		http.Error(w, "", http.StatusUnauthorized)
+		return
+	}
+
+	// Find category
+	catid := CategoryID(req.PathValue("cat"))
+	cat, err := ctx.Category(catid)
+	if err != nil {
+		http.NotFound(w, req)
+		return
+	}
+
+	// Ensure this puzzle is unlocked
+	puzzleid := PuzzleID(req.PathValue("puzzle"))
+	unlocked := env.Unlocked(cat)
+	if !slices.Contains(unlocked, puzzleid) {
+		http.NotFound(w, req)
 		return
 	}
 
@@ -275,24 +266,24 @@ func (ctx *Context) PutAnswer(w http.ResponseWriter, req *http.Request) {
 	// Is it right?
 	correct := cat.Answers(puzzleid)
 	if !slices.Contains(correct, answer) {
-		hs.Log(now, "wrong", catid, puzzleid)
+		env.Log(now, "wrong", catid, puzzleid)
 		http.Error(w, "Wrong answer", http.StatusConflict)
 		return
 	}
-	hs.Log(now, "correct", catid, puzzleid)
+	env.Log(now, "correct", catid, puzzleid)
 
 	// Prepare to record the event solution.
-	awd := NewAward(now, hs.Team, catid, puzzleid)
+	awd := NewAward(now, env.TeamID, catid, puzzleid)
 
 	// Do this check after correctness
 	// so people can waste a lot of time by not talking to their team-mates.
-	if hs.State.Awards().Contains(awd) {
+	if env.State.Awards().Contains(awd) {
 		http.Error(w, "puzzle already solved by this team", http.StatusAccepted)
 		return
 	}
 
 	// Now we can record the award.
-	if err := hs.State.RecordAward(awd); err != nil {
+	if err := env.State.RecordAward(awd); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -301,75 +292,81 @@ func (ctx *Context) PutAnswer(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ctx *Context) GetStateCurrent(w http.ResponseWriter, req *http.Request) {
-	hs, authenticated := ctx.GetState(req)
-	if hs == nil {
+	now := time.Now()
+	env := ctx.GetEnvironment(req)
+	if env == nil {
 		http.NotFound(w, req)
 		return
 	}
 
-	ctx.sendState(w, hs, authenticated, http.StatusOK)
+	env.sendState(w, now, http.StatusOK)
 }
 
 func (ctx *Context) PutStateTeamData(w http.ResponseWriter, req *http.Request) {
 	now := time.Now()
-	hs, _ := ctx.GetState(req)
-	if hs == nil {
+
+	env := ctx.GetEnvironment(req)
+	if env == nil {
 		http.NotFound(w, req)
+		return
+	}
+
+	// If they're already authenticated, they can't set team data again.
+	if env.Authenticated {
+		env.sendState(w, now, http.StatusConflict)
 		return
 	}
 
 	// Read in what they're submitting
 	data, ok := ReadPutData(w, req, MaxPublicLength)
 	if !ok {
+		// ReadPutData already sends a response
 		return
 	}
 
-	err := hs.State.SetTeamData(hs.Team, data)
-	switch {
-	case errors.Is(err, fs.ErrInvalid):
-		ctx.sendState(w, hs, false, http.StatusUnauthorized)
-	case errors.Is(err, fs.ErrExist):
-		ctx.sendState(w, hs, true, http.StatusConflict)
-	case err != nil:
+	if err := env.State.SetTeamData(env.TeamID, data); errors.Is(err, fs.ErrInvalid) {
+		env.sendState(w, now, http.StatusUnauthorized)
+		return
+	} else if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-	default:
-		hs.TeamData = data
-		ctx.sendState(w, hs, true, http.StatusOK)
-		hs.Log(now, "public", "", "", data)
+		return
 	}
+
+	env.TeamData = data
+	env.Authenticated = true
+	env.sendState(w, now, http.StatusOK)
+	env.Log(now, "public", "", "", data)
 }
 
-func (ctx *Context) sendState(w http.ResponseWriter, hs *HTTPState, authenticated bool, code int) {
-	now := time.Now()
-
+func (env *Environment) sendState(w http.ResponseWriter, now time.Time, code int) {
 	export := &StateExport{
-		Running:          hs.State.Enabled(now),
-		OpenRegistration: hs.State.OpenRegistration(),
-		Hours:            hs.State.Hours(),
-		ClientConfig:     hs.State.ClientConfig(),
-		Errors:           hs.State.Errors(),
+		Running:          env.State.Enabled(now),
+		OpenRegistration: env.State.OpenRegistration(),
+		Hours:            env.State.Hours(),
+		ClientConfig:     env.State.ClientConfig(),
+		Errors:           env.State.Errors(),
 	}
 
 	// Anonymize team IDs
 	export.TeamData = make(map[TeamID]string)
 	exportIDs := make(map[TeamID]TeamID)
-	if authenticated {
-		exportIDs[hs.Team] = "self"
-		export.TeamData["self"] = hs.TeamData
+	if env.Authenticated {
+		exportIDs[env.TeamID] = "self"
+		export.TeamData["self"] = env.TeamData
 	}
-	for _, team := range hs.State.Teams() {
-		if team == hs.Team {
+	for _, team := range env.State.Teams() {
+		if team == env.TeamID {
 			continue
 		}
 		n := len(export.TeamData)
 		anonTeam := TeamID(strconv.Itoa(n))
 		exportIDs[team] = anonTeam
-		export.TeamData[anonTeam], _ = hs.State.TeamData(team)
+		export.TeamData[anonTeam], _ = env.State.TeamData(team)
 	}
 
 	// Anonymize team IDs in points log, and write out team names.
 	export.Awards = NewAwardList()
-	for logno, awd := range hs.State.Awards().Values() {
+	for logno, awd := range env.State.Awards().Values() {
 		if anonTeam, ok := exportIDs[awd.Team]; ok {
 			awd.Team = anonTeam
 		} else {
@@ -378,12 +375,16 @@ func (ctx *Context) sendState(w http.ResponseWriter, hs *HTTPState, authenticate
 		export.Awards.Append(awd)
 	}
 
-	if authenticated {
-		puzzles, errs := hs.Unlocked(now, ctx.CategoryStore)
-		for _, err := range errs {
-			export.Errors = append(export.Errors, err.Error())
+	if env.Authenticated {
+		export.Puzzles = make(map[CategoryID][]PuzzleID)
+		for _, catid := range env.State.Categories(now) {
+			cat, err := env.ctx.Category(catid)
+			if err != nil {
+				export.Errors = append(export.Errors, err.Error())
+				continue
+			}
+			export.Puzzles[catid] = env.Unlocked(cat)
 		}
-		export.Puzzles = puzzles
 	}
 
 	r := new(bytes.Buffer)

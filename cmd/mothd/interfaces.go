@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"net/http"
+	"io/fs"
 	"time"
 
 	"github.com/dirtbags/moth/v5/pkg/period"
@@ -70,15 +70,11 @@ type StateStore interface {
 }
 
 type Category interface {
-	// ServeFile provides static files to clients.
-	// MOTH will ensure a path is properly unlocked.
-	//
-	// It is the responsibility of a Category implementation to hide
-	// metadata, such as Answers and Puzzles.
-	// "index.html" should render content directly,
-	// and not redirect to the directory:
-	// this means you cannot call http.ServeFile.
-	ServeFile(w http.ResponseWriter, r *http.Request, name string)
+	// The category as a filesystem.
+	// This should hide any metadata, like "__MOTH/*".
+	// Due to the way http.ServeFile works, any File returned by Open
+	// must also implement io.Seeker.
+	fs.FS
 
 	// Unlocked will return true if every puzzle in this category should be open.
 	//

@@ -100,7 +100,7 @@ func run() error {
 	} else if _, err := os.Stat(p); err != nil {
 		return err
 	} else {
-		ctx.CategoryStore = NewFSCategoryStore(os.DirFS(p))
+		ctx.CategoryStore = NewMothballStore(os.DirFS(p))
 	}
 
 	if p, err := filepath.Abs(*statePath); err != nil {

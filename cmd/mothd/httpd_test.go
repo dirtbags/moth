@@ -46,6 +46,7 @@ func NewTestHttpd(t *testing.T, base string) *TestHTTPServer {
 		t:                t,
 		now:              time.Date(2024, 8, 15, 9, 0, 0, 0, time.UTC),
 	}
+
 	return h
 }
 
@@ -147,7 +148,7 @@ func TestHttpdRegistration(t *testing.T) {
 		t.Errorf("Unexpected state\n   got: %#v\nwanted: %#v\n", resp.Body.String(), wanted)
 	}
 
-	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/public", teamData, "team1", "", 401)
+	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/teamdata", teamData, "team1", "", 401)
 
 	if f, err := h.TestFSStateStore.fsys.Create("test1/teamids.txt"); err != nil {
 		t.Error(err)
@@ -170,16 +171,16 @@ func TestHttpdRegistration(t *testing.T) {
 		}
 	}
 
-	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/public", nil, "team1", "", http.StatusLengthRequired)
-	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/public", make([]byte, 5000), "team1", "", http.StatusRequestEntityTooLarge)
-	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/public", teamData, "team1500", "", 401)
-	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/public", teamData, "team1", "", 200)
-	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/public", team2Data, "", "team2", 200)
-	stateTest("PUT", "http://example.com/test1/state/public", teamData, "team1", 200)
-	stateTest("PUT", "http://example.com/test1/state/public", team2Data, "team2", 200)
+	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/teamdata", nil, "team1", "", http.StatusLengthRequired)
+	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/teamdata", make([]byte, 5000), "team1", "", http.StatusRequestEntityTooLarge)
+	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/teamdata", teamData, "team1500", "", 401)
+	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/teamdata", teamData, "team1", "", 200)
+	h.TestRequestAuth(t, "PUT", "http://example.com/test1/state/teamdata", team2Data, "", "team2", 200)
+	stateTest("PUT", "http://example.com/test1/state/teamdata", teamData, "team1", 200)
+	stateTest("PUT", "http://example.com/test1/state/teamdata", team2Data, "team2", 200)
 	h.Refresh()
-	stateTest("PUT", "http://example.com/test1/state/public", teamData, "team1", 409)
-	stateTest("PUT", "http://example.com/test1/state/public", team2Data, "team2", 409)
+	stateTest("PUT", "http://example.com/test1/state/teamdata", teamData, "team1", 409)
+	stateTest("PUT", "http://example.com/test1/state/teamdata", team2Data, "team2", 409)
 	stateTest("GET", "http://example.com/test1/state/current.json", team2Data, "team2", 200)
 }
 
@@ -187,6 +188,7 @@ func TestHttpdUnlocked(t *testing.T) {
 	h := NewTestHttpd(t, "/")
 	h.MkInstance("test1")
 
+	// TODO: Build an fstest memfs and zip it up
 	if err := h.TestFSStateStore.fsys.WriteFile("test1/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -196,12 +198,22 @@ func TestHttpdUnlocked(t *testing.T) {
 	if !found {
 		t.Fatal("not found")
 	}
-	hs := &HTTPState{State: state}
-	puzzles, _ := hs.Unlocked(h.now, h.CategoryStore)
-	if len(puzzles) != 1 {
-		t.Error("Wrong length puzzles", puzzles)
-		t.Log(hs.State.Hours(), h.now)
-		t.Log(hs.State.Categories(h.now))
+	env := &Environment{
+		State: state,
+		ctx: h.Context,
+	}
+	for _, catid := range state.Categories(h.now) {
+		cat, err := h.Category(catid)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		puzzles := env.Unlocked(cat)
+		if len(puzzles) != 1 {
+			t.Error("Wrong length puzzles", puzzles)
+			t.Log(state.Hours(), h.now)
+			t.Log(state.Categories(h.now))
+		}
 	}
 }
 
@@ -209,7 +221,14 @@ func TestHttpdPuzzles(t *testing.T) {
 	h := NewTestHttpd(t, "/")
 	h.TestFSStateStore.MkInstance("test1")
 	h.TestFSStateStore.fsys.WriteFile("test1/teams/team1", []byte("TeamData"), 0644)
+
+	if _, err := h.Category("cat0"); err != nil {
+		t.Fatal(err)
+	}
 	h.Refresh()
+	if _, err := h.Category("cat0"); err != nil {
+		t.Fatal(err)
+	}
 
 	h.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/index.html", nil, 401)
 	h.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/not-here", nil, 401)
@@ -218,12 +237,11 @@ func TestHttpdPuzzles(t *testing.T) {
 	ha := h.Authenticate("team1", "")
 
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/", nil, 301)
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/index.html", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/index.html", nil, 301)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/not-here", nil, 404)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/index.html", nil, 404)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/moo.txt", nil, 404)
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/", nil, 404)
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/index.html", nil, 200)
 	if resp := ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/moo.txt", nil, 200); resp.Body.String() != "moo.\n" {
 		t.Error("Unexpected body", resp.Body.String())
 	}
@@ -239,7 +257,8 @@ func TestHttpdPuzzles(t *testing.T) {
 	h.Refresh()
 	ha.TestRequest(t, "PUT", "http://example.com/test1/puzzles/cat0/1/answer", []byte("answer123"), 202)
 	h.Refresh()
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/index.html", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/index.html", nil, 301)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/moo.txt", nil, 404)
 
 	state := StateExport{}
@@ -257,22 +276,7 @@ func TestHttpdPuzzles(t *testing.T) {
 }
 
 func TestHTTPZipPuzzles(t *testing.T) {
-	cat0mb, err := ZipFSCategory("testdata/categories/cat0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	s := &TestFSCategoryStore{
-		&FSCategoryStore{
-			fsys: fstest.MapFS{
-				"cat0.mb": &fstest.MapFile{
-					Data:    cat0mb,
-					Mode:    0644,
-					ModTime: TimeZero,
-					Sys:     nil,
-				},
-			},
-		},
-	}
+	s := TestdataCategoryStore(t)
 
 	states := NewTestFSStateStore(t)
 
@@ -293,7 +297,7 @@ func TestHTTPZipPuzzles(t *testing.T) {
 		t.Fatal(err)
 	}
 	h.Refresh()
-	if err := h.TestFSStateStore.fsys.WriteFile("test/schedule.txt", []byte("enable -\nrollout - cat0.mb\n"), 0644); err != nil {
+	if err := h.TestFSStateStore.fsys.WriteFile("test/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	h.Refresh()
@@ -302,7 +306,7 @@ func TestHTTPZipPuzzles(t *testing.T) {
 	// Now that we've set up the HTTP server, we can finally run a test
 	//
 	ha := h.Authenticate("team1", "")
-	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0.mb/1/index.html", nil, 200)
-	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0.mb/__MOTH/answers.txt", nil, 404)
-	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0.mb/1/__MOTH/answers.txt", nil, 404)
+	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/__MOTH/answers.txt", nil, 404)
+	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/__MOTH/answers.txt", nil, 404)
 }
