@@ -202,8 +202,6 @@ func (s *MothballStore) Refresh(now time.Time) error {
 			continue
 		}
 
-		cacheEntry.Closer = r
-
 		newMothballs[catid] = mb
 	}
 

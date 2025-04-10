@@ -78,7 +78,6 @@ type Environment struct {
 	TeamID TeamID
 
 	// TeamData of the team making the request.
-
 	TeamData string
 
 	// Authenticated is true if the request is "logged in".
