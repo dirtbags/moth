@@ -162,6 +162,9 @@ func (e *Environment) Unlocked(cat Category) []PuzzleID {
 
 // StateExport is given to clients requesting the current state.
 type StateExport struct {
+	// MothVersion contains the current version of MOTH.
+	MothVersion string
+
 	// Running is true if the server is updating the Awards log.
 	Running bool
 
@@ -340,6 +343,7 @@ func (ctx *Context) PutStateTeamData(w http.ResponseWriter, req *http.Request) {
 
 func (env *Environment) sendState(w http.ResponseWriter, now time.Time, code int) {
 	export := &StateExport{
+		MothVersion:      Version,
 		Running:          env.State.Enabled(now),
 		OpenRegistration: env.State.OpenRegistration(),
 		Hours:            env.State.Hours(),
