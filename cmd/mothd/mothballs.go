@@ -97,20 +97,21 @@ func (mb *Mothball) Open(name string) (fs.File, error) {
 type MothballStoreCacheEntry struct {
 	io.Closer
 	fs.FileInfo
+	error
 }
 
 // BUG(neale): Windows won't let you remove, rename, or overwrite an open file. Once a mothball has been opened, you're stuck with it until the program exits.
 type MothballStore struct {
 	fsys      fs.FS
 	mothballs atomic.Pointer[map[CategoryID]*Mothball]
-	cache     map[CategoryID]MothballStoreCacheEntry
+	cache     map[CategoryID]*MothballStoreCacheEntry
 }
 
 // NewMothballStore returns a new MothballStore wrapping fsys.
 func NewMothballStore(fsys fs.FS) *MothballStore {
 	return &MothballStore{
 		fsys:  fsys,
-		cache: make(map[CategoryID]MothballStoreCacheEntry),
+		cache: make(map[CategoryID]*MothballStoreCacheEntry),
 	}
 }
 
@@ -157,23 +158,39 @@ func (s *MothballStore) Refresh(now time.Time) error {
 		}
 
 		cacheEntry, cached := s.cache[catid]
-		if cached &&
-			cacheEntry.ModTime().Equal(info.ModTime()) &&
-			(cacheEntry.Size() == info.Size()) {
-			newMothballs[catid] = mothballs[catid]
-			continue
+		if cached {
+			if cacheEntry.ModTime().Equal(info.ModTime()) &&
+				(cacheEntry.Size() == info.Size()) {
+				newMothballs[catid] = mothballs[catid]
+				errs[i] = cacheEntry.error
+				continue
+			}
+
+			// If the file failed to open, Closer will be nil
+			if cacheEntry.Closer != nil {
+				cacheEntry.Close()
+			}
+			cacheEntry.Closer = nil
+		} else {
+			cacheEntry = new(MothballStoreCacheEntry)
+			s.cache[catid] = cacheEntry
 		}
+		cacheEntry.FileInfo = info
 
 		r, err := s.fsys.Open(name)
 		if err != nil {
 			errs[i] = err
+			cacheEntry.error = err
 			continue
 		}
+		cacheEntry.Closer = r
 
 		rat, ok := r.(io.ReaderAt)
 		if !ok {
 			r.Close()
-			errs[i] = fmt.Errorf("%s: ReaderAt not implemented", name)
+			err = fmt.Errorf("%s: ReaderAt not implemented", name)
+			errs[i] = err
+			cacheEntry.error = err
 			continue
 		}
 
@@ -181,15 +198,11 @@ func (s *MothballStore) Refresh(now time.Time) error {
 		if err != nil {
 			r.Close()
 			errs[i] = err
+			cacheEntry.error = err
 			continue
 		}
 
-		if cached {
-			cacheEntry.Close()
-		}
 		cacheEntry.Closer = r
-		cacheEntry.FileInfo = info
-		s.cache[catid] = cacheEntry
 
 		newMothballs[catid] = mb
 	}
