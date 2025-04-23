@@ -26,8 +26,8 @@ var (
 type Context struct {
 	CategoryStore
 	StateStore
-	WebFS http.FileSystem
-
+	WebFS  http.FileSystem
+	Errors []error
 	*http.ServeMux
 }
 
@@ -39,6 +39,7 @@ func (ctx *Context) Refresh(now time.Time) error {
 	if err := ctx.StateStore.Refresh(now); err != nil {
 		errs = append(errs, err)
 	}
+	ctx.Errors = errs
 	return errors.Join(errs...)
 }
 
