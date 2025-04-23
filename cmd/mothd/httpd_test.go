@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"testing/fstest"
 	"time"
@@ -200,7 +201,7 @@ func TestHttpdUnlocked(t *testing.T) {
 	}
 	env := &Environment{
 		State: state,
-		ctx: h.Context,
+		ctx:   h.Context,
 	}
 	for _, catid := range state.Categories(h.now) {
 		cat, err := h.Category(catid)
@@ -309,4 +310,31 @@ func TestHTTPZipPuzzles(t *testing.T) {
 	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/", nil, 200)
 	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/__MOTH/answers.txt", nil, 404)
 	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/__MOTH/answers.txt", nil, 404)
+}
+
+func TestErrors(t *testing.T) {
+	s := &TestMothballStore{
+		NewMothballStore(
+			fstest.MapFS{
+				"cat0.mb": &fstest.MapFile{
+					Data:    []byte{},
+					Mode:    0644,
+					ModTime: TimeZero,
+					Sys:     nil,
+				},
+			},
+		),
+	}
+
+	h := NewTestHttpd(t, "/")
+	h.Context.CategoryStore = s
+
+	h.now = h.now.Add(1 * time.Second)
+	if err := h.Context.Refresh(h.now); err == nil {
+		t.Fatal("Expecting error, none found")
+	}
+
+	if resp := h.TestRequest(t, "GET", "http://example.com/test/state/current.json", nil, 200); !strings.Contains(resp.Body.String(), "not a valid zip file") {
+		t.Error("Wrong body:", resp.Body.String())
+	}
 }
