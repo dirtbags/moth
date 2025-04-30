@@ -1,7 +1,8 @@
 ARG GO_VERSION=1.22
 FROM docker.io/library/golang:${GO_VERSION} AS builder
 COPY . /src/
-COPY docs/*.md /target/
+COPY docs/ /target/
+copy web/ /target/
 RUN mkdir -p /target/state /target/bin
 WORKDIR /src/
 RUN CGO_ENABLED=0 GOOS=linux GOBIN=/target/bin go install -a -ldflags '-extldflags "-static"' ./...
