@@ -350,6 +350,11 @@ func (env *Environment) sendState(w http.ResponseWriter, now time.Time, code int
 		Errors:           env.State.Errors(),
 	}
 
+	//Append errors with the other global errors
+	for _, err := range env.ctx.Errors {
+		export.Errors = append(export.Errors, err.Error())
+	}
+
 	// Anonymize team IDs
 	export.TeamData = make(map[TeamID]string)
 	exportIDs := make(map[TeamID]TeamID)
