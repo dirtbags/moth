@@ -2,34 +2,19 @@ Administration
 =========
 
 Everything you need to do happens through the filesystem.
-Usually, in `/srv/moth/state`.
+The convention Cyber Fire uses is `/srv/moth/state`.
 
-The server doesn't cache anything in memory,
-so the `state` directory always contains the current state.
-
-
-Backing up current state
----------------------------
-
-    tar czf backup.tar.gz /srv/moth/state  # Full backup
-    curl http://localhost:8080/state > state.json  # Pull anonymized event log and team names (scoreboard)
-
-
-
-Scheduling an automatic pause and resume
------------------------------------
-
-    printf '-'; date --rfc-3339=s -d '10:00 PM' >> /srv/moth/state/hours.txt  # Schedule suspend at 10:00 PM
-    printf '+'; date --rfc-3339=s -d '08:00 tomorrow' >> /srv/moth/state/hours.txt # Schedule resume at 08:00 tomorrow
-
-You might prefer to open `/srv/moth/state/hours.txt` in a text editor.
-I do.
+MOTHv5 does "virtual hosting" of instances.
+A single server can run as many simultaneous events as your computer can handle.
+Each event gets its own directory in `/srv/moth/state/`.
+In this document, we'll be using an event named `myevent`,
+which will store its state in `/srv/moth/state/myevent`.
 
 
 Re-initalize
 -------------------
 
-    rm /srv/moth/state/initialized
+    rm initialized
 
 This will reset the following:
 
@@ -42,57 +27,54 @@ Team tokens stick around, though.
 Scores
 =======
 
-Pausing/resuming scoring
+Pause/resume event
 -------------------
 
-    echo '-###' >> /srv/moth/state/hours.txt # Suspend scoring
-    sed -i '/###/d' /srv/moth/state/hours.txt # Resume scoring
-
-When scoring is paused,
-participants can still submit answers,
-and the system will tell them whether the answer is correct.
-As soon as you unpause,
-all correctly-submitted answers will be scored.
+    sed -i 's/^enable/#pause/' schedule.txt # pause
+    sed -i 's/^#pause/enable/' schedule.txt # resume
 
 
 Adjusting scores
 ------------------
 
-    echo '-###' >> /srv/moth/state/hours.txt # Suspend scoring
-    nano /srv/moth/state/points.log  # Replace nano with your preferred editor
-    sed -i '/###/d' /srv/moth/state/hours.txt # Resume scoring
+    sed -i 's/^enable/#pause/' schedule.txt # pause
+    vim awards/*
+    sed -i 's/^#pause/enable/' schedule.txt # resume
 
-We don't warn participants before we do this:
-any points scored while scoring is suspended are queued up and processed as soon as scoreing is resumed.
+It's very important to pause the event before mucking around with the points log.
+Otherwise, your changes will likely be lost.
 
-It's very important to suspend scoring before mucking around with the points log.
-The maintenance loop assumes it is the only thing writing to this file,
-and any edits you make will remove points scored while you were editing.
+There may be more than one file in `awards/`;
+if adding an award, you can add it to any file.
+If removing an award, remove if everywhere.
 
 
 Teams
 =====
 
-Changing a team name
+Set a team name / Register a team
+------------------
+
+    teamid=e2f8cc14
+    echo 'Cool Team Name' > $teamid
+
+
+List all registered teams
 ----------------------
 
-    grep . /srv/moth/state/teams/*  # Show all team IDs and names
-    echo 'exciting new team name' > /srv/moth/state/teams/$teamid
-
-Please remember, you have to replace `$teamid` with the actual team ID that you want to edit.
+    grep . teams/*
 
 
 Setting up custom team IDs
 -------------------
 
-    echo > /srv/moth/state/teamids.txt  # Teams must be registered manually
-    seq 9999 > /srv/moth/state/teamids.txt  # Allow all 4-digit numbers
+    seq -w 9999 > teamids.txt  # Allow all 4-digit numbers
 
 `teamids.txt` is a list of acceptable team IDs,
 one per line.
 You can make it anything you want.
 
-New instances will initialize this with some hex values.
+New instances will initialize this with some random values.
 
 Remember that team IDs are essentially passwords.
 
@@ -100,34 +82,24 @@ Remember that team IDs are essentially passwords.
 Removing registration checks (Open Registration)
 ----------------------
 
-If you'd like anybody to be able to register with any team ID
-12 characters or longer,
-just remove `teamids.txt`.
-
-    rm teamids.txt
+    echo '*' > teamids.txt  # Allow every string with length >= 12
 
 ⚠️⚠️⚠️ This allows an attack that floods your server with teams. Only do this if you trust your audience. ⚠️⚠️⚠️
 
 The vulnerability can be mitigated to an extent by enabling 
 IP Rate Limiting in the HTTPS server front-ending MOTH.
-Only the `/register` URL needs this.
+Only the `${interface}/state/teamdata` path needs this.
 
 
 Disabling team registration
 ---------------------
 
+    echo > teamids.txt
+
 `teamids.txt` contains a list of team IDs accepted for registration.
-If you don't want teams to self-register,
-zero out the list:
+An empty list means nobody can register.
+You should manually register some teams if you do this!
 
-    true > /srv/moth/state/teamids.txt
-
-
-Manually registering a team
-------------------
-
-    teamid=e2f8cc14
-    echo "Cool Team Name" > /srv/moth/state/teams/$teamid
 
 
 Dealing with puzzles
@@ -136,14 +108,9 @@ Dealing with puzzles
 Checking on an answer
 ----------------------
 
-Mothballs are just zip files.
-If you need to check something about a running category,
-just unzip the mothball for that category.
+    unzip -p /srv/moth/mothballs/category.mb __MOTH/answers.txt
 
-    mkdir /tmp/category
-    cd /tmp/category
-    unzip /srv/moth/mothballs/category.zip
-    cat answers.txt  # Show all valid answers for all puzzles. Watch your shoulder!
+This will dump every answer for every puzzle.
 
 
 Installing new categories

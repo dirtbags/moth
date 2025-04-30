@@ -1,7 +1,28 @@
-Dirtbags Monarch Of The Hill Server
-=====================
-
 [![Go report card](https://goreportcard.com/badge/github.com/dirtbags/moth)](https://goreportcard.com/report/github.com/dirtbags/moth)
+
+Quick Start
+===========
+
+```sh
+# Build MOTH
+git clone https://git.woozle.org/neale/moth.git
+cd moth
+go build ./...
+mkdir -p state/demo mothballs
+
+# Create a mothball (puzzle category)
+zip -r mothballs/cat0.mb cmd/mothd/testdata/categories/cat0
+
+# Install a web client
+git clone https://git.woozle.org/neale/luna.git
+
+# Run it!
+./mothd -web luna
+```
+
+
+About
+=====================
 
 Monarch Of The Hill (MOTH) is a puzzle server.
 We (the authors) have used it for instructional and contest events called
@@ -29,18 +50,9 @@ A few things make MOTH different than other Capture The Flag server projects:
 You can read more about why we made these decisions in [philosophy](docs/philosophy.md).
 
 
-Run in demonstration mode
-===========
-
-    docker run --rm -it -p 8080:8080 ghcr.io/dirtbags/moth-devel
-
-Then open http://localhost:8080/ and check out the example puzzles.
-
-
 Documentation
 ==========
 
-* [Development](docs/development.md): The development server lets you create and test categories, and compile mothballs.
 * [Getting Started](docs/getting-started.md): This guide will get you started with a production server.
 * [Administration](docs/administration.md): How to set hours, and change setup.
 

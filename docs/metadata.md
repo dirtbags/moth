@@ -1,6 +1,8 @@
 MOTH Metadata
 ============
 
+The MOTH server is not aware of the structure of puzzles,
+but this seems like the best place to document current practice.
 
 
 Standard Metadata

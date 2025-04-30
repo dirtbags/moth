@@ -1,20 +1,10 @@
 Getting Started
 ===============
 
-Compile Mothballs
---------------------
-
-Mothballs are compiled, static-content versions of a puzzle category.
-You need a mothball for every category you want to run.
-
-To get some mothballs, you'll need to run a development server, which includes the category compiler.
-See [development](development.md) for details.
-
-
 Set up directories
 --------------------
 
-    mkdir -p /srv/moth/state
+    mkdir -p /srv/moth/state/myinstance
     mkdir -p /srv/moth/mothballs
     cp -r /path/to/src/moth/theme /srv/moth/theme # Skip if using Docker/Podman/Kubernetes
 
