@@ -43,16 +43,16 @@ or to show teams which puzzles they have already answered.
 
 #### Parameters
 
-| name | type | data type | description |
-| ---- | ---- | ---- | ---- |
-| `instance` | required | string | MOTH instance |
+| name       | type     | data type | description   |
+|------------|----------|-----------|---------------|
+| `instance` | required | string    | MOTH instance |
 
 #### Responses
 
-| http code | meaning |
-| ---- | ---- |
-| 200 | Current state in payload (text/plain) |
-| 401 | Authentication is invalid (bad team ID) |
+| http code | meaning                                 |
+|-----------|-----------------------------------------|
+| 200       | Current state in payload (text/plain)   |
+| 401       | Authentication is invalid (bad team ID) |
 
 
 #### Example curl
@@ -100,18 +100,18 @@ optionally with a message that the team has already been created.
 
 #### Parameters
 
-| name | type | data type | description |
-| ---- | ---- | ---- | ---- |
-| `instance` | required | string | MOTH instance |
-| body | required | `application/octet-stream` | public data |
+| name       | type     | data type                  | description   |
+|------------|----------|----------------------------|---------------|
+| `instance` | required | string                     | MOTH instance |
+| body       | required | `application/octet-stream` | public data   |
 
 #### Responses
 
-| http code | meaning |
-| ---- | ---- |
-| 200 | Team ID is valid, and team name was recorded |
-| 401 | Team ID is invalid, or no authentication was sent |
-| 409 | Team ID is valid, but team name was previously set and cannot be changed |
+| http code | meaning                                                                  |
+|-----------|--------------------------------------------------------------------------|
+| 200       | Team ID is valid, and team name was recorded                             |
+| 401       | Team ID is invalid, or no authentication was sent                        |
+| 409       | Team ID is valid, but team name was previously set and cannot be changed |
 
 #### Example curl
 
@@ -144,19 +144,19 @@ See [Puzzle Format](puzzle-format.md) for details on metadata.
 
 #### Parameters
 
-| name | type | data type | description |
-| ---- | ---- | ---- | ---- |
-| `instance` | required | string | MOTH instance |
-| `category` | required | string | Category name |
-| `filename` | required | string | File name |
+| name       | type     | data type | description   |
+|------------|----------|-----------|---------------|
+| `instance` | required | string    | MOTH instance |
+| `category` | required | string    | Category name |
+| `filename` | required | string    | File name     |
 
 #### Responses
 
-| http code | meaning |
-| ---- | ---- |
-| 200 | Content follows |
-| 401 | Authentication is required |
-| 404 | Category or Filename not found |
+| http code | meaning                        |
+|-----------|--------------------------------|
+| 200       | Content follows                |
+| 401       | Authentication is required     |
+| 404       | Category or Filename not found |
 
 
 #### Example curl
@@ -174,24 +174,24 @@ Answer Submission
 
 #### Parameters
 
-| name | type | data type | description |
-| ---- | ---- | ---- | ---- |
-| `instance` | required | string | MOTH instance |
-| `category` | required | string | Category name |
-| `filename` | required | string | File name |
-| body | required | `application/octet-stream` | Answer
+| name       | type     | data type                  | description   |
+|------------|----------|----------------------------|---------------|
+| `instance` | required | string                     | MOTH instance |
+| `category` | required | string                     | Category name |
+| `filename` | required | string                     | File name     |
+| body       | required | `application/octet-stream` | Answer        |
 
 #### Responses
 
-| http code | meaning |
-| ---- | ---- |
-| 200 | Answer is correct, and award has been recorded |
-| 202 | Answer is correct, but award has already been recorded for this puzzle |
-| 404 | Puzzle does not exist or is not unlocked |
-| 409 | Answer is incorrect |
-| 401 | Authentication is invalid (bad team ID) |
-| 411 | Content-Length header was not provided |
-| 413 | Content-Length value is too large |
+| http code | meaning                                                                |
+|-----------|------------------------------------------------------------------------|
+| 200       | Answer is correct, and award has been recorded                         |
+| 202       | Answer is correct, but award has already been recorded for this puzzle |
+| 404       | Puzzle does not exist or is not unlocked                               |
+| 409       | Answer is incorrect                                                    |
+| 401       | Authentication is invalid (bad team ID)                                |
+| 411       | Content-Length header was not provided                                 |
+| 413       | Content-Length value is too large                                      |
 
 #### Example curl
 
@@ -215,16 +215,16 @@ the server provides a directory listing.
 
 #### Parameters
 
-| name | type | data type | description |
-| ---- | ---- | ---- | ---- |
-| `path` | required | string | Path to resource |
+| name   | type     | data type | description      |
+|--------|----------|-----------|------------------|
+| `path` | required | string    | Path to resource |
 
 #### Responses
 
-| http code | meaning |
-| ---- | ---- |
-| 200 | Content follows |
-| 404 | Path not found |
+| http code | meaning         |
+|-----------|-----------------|
+| 200       | Content follows |
+| 404       | Path not found  |
 
 
 #### Example curl
