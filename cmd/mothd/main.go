@@ -55,10 +55,10 @@ func run() error {
 		"web",
 		"Path to static web files (the user interface)",
 	)
-	categoriesPath := flag.String(
-		"categories",
-		"categories",
-		"Path to categories tree",
+	mothballsPath := flag.String(
+		"mothballs",
+		"mothballs",
+		"Directory containing mothballs",
 	)
 	statePath := flag.String(
 		"state",
@@ -96,7 +96,7 @@ func run() error {
 		ctx.WebFS = http.Dir(p)
 	}
 
-	if p, err := filepath.Abs(*categoriesPath); err != nil {
+	if p, err := filepath.Abs(*mothballsPath); err != nil {
 		return err
 	} else if _, err := os.Stat(p); err != nil {
 		return err

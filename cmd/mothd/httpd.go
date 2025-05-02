@@ -27,6 +27,7 @@ func (ctx *Context) InstallHandlers(baseURL string) {
 	baseURL = strings.TrimRight(baseURL, "/")
 	webServer := http.FileServer(ctx.WebFS)
 	ctx.Handle(baseURL+"/", http.StripPrefix(baseURL, webServer))
+	ctx.HandleFunc("GET "+baseURL+"/{instance}/puzzles/{cat}/", ctx.GetPuzzleFile)
 	ctx.HandleFunc("GET "+baseURL+"/{instance}/puzzles/{cat}/{name}", ctx.GetPuzzleFile)
 	ctx.HandleFunc("GET "+baseURL+"/{instance}/puzzles/{cat}/{puzzle}/{name...}", ctx.GetPuzzleFile)
 	ctx.HandleFunc("PUT "+baseURL+"/{instance}/puzzles/{cat}/{puzzle}/answer", ctx.PutAnswer)
@@ -142,10 +143,6 @@ func (e *Environment) Log(when time.Time, name string, cat CategoryID, puzzle Pu
 // If all puzzles are unlocked,
 // the list is terminated with a zero-value PuzzleID.
 func (e *Environment) Unlocked(cat Category) []PuzzleID {
-	if cat.Unlocked() {
-		return nil
-	}
-
 	inventory := cat.Puzzles()
 
 	last := -1
@@ -156,6 +153,11 @@ func (e *Environment) Unlocked(cat Category) []PuzzleID {
 		}
 	}
 	inventory = append(inventory, PuzzleID(""))
+
+	if cat.Unlocked() {
+		return inventory
+	}
+
 	return inventory[:last+2]
 }
 
@@ -206,8 +208,6 @@ func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	name := path.Clean(req.PathValue("name"))
-
 	// Find category
 	catid := CategoryID(req.PathValue("cat"))
 	cat, err := ctx.Category(catid)
@@ -215,6 +215,8 @@ func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
+
+	name := "/" + req.PathValue("name")
 
 	// If a puzzle id was provided, ensure it's unlocked
 	puzzleid := PuzzleID(req.PathValue("puzzle"))
@@ -224,7 +226,12 @@ func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
 			http.NotFound(w, req)
 			return
 		}
-		name = path.Join(puzzleid.String(), name)
+		name = puzzleid.String()
+	}
+
+	name = path.Clean(name)
+	if strings.HasSuffix(name, "/") {
+		name = name + "index.html"
 	}
 
 	http.ServeFileFS(w, req, cat, name)
