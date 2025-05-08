@@ -226,7 +226,7 @@ func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
 			http.NotFound(w, req)
 			return
 		}
-		name = puzzleid.String()
+		name = "/" + puzzleid.String() + name
 	}
 
 	name = path.Clean(name)

@@ -237,10 +237,11 @@ func TestHttpdPuzzles(t *testing.T) {
 
 	ha := h.Authenticate("team1", "")
 
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/", nil, 301)
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/", nil, 200)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/index.html", nil, 301)
-	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/not-here", nil, 404)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/", nil, 200)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/index.html", nil, 301)
+	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/not-here-but-authenticated", nil, 404)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/index.html", nil, 404)
 	ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/two/moo.txt", nil, 404)
 	if resp := ha.TestRequest(t, "GET", "http://example.com/test1/puzzles/cat0/1/moo.txt", nil, 200); resp.Body.String() != "moo.\n" {
