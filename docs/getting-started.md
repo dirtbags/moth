@@ -6,7 +6,7 @@ Set up directories
 
     mkdir -p /srv/moth/state/myinstance
     mkdir -p /srv/moth/mothballs
-    cp -r /path/to/src/moth/theme /srv/moth/theme # Skip if using Docker/Podman/Kubernetes
+    cp -r /path/to/src/moth/theme /srv/moth/theme
 
 MOTH needs three directories. We recommend putting them all in `/srv/moth`.
 
@@ -21,18 +21,8 @@ Run the server
 
 We're going to assume you put everything in `/srv/moth`, like we suggested.
 
-### Podman
-
-    podman run --name=moth -d -v /srv/moth/mothballs:/mothballs:ro -v /srv/moth/state:/state ghcr.io/dirtbags/moth
-
-### Docker
-
-    docker run --name=moth -d -v /srv/moth/mothballs:/mothballs:ro -v /srv/moth/state:/state ghcr.io/dirtbags/moth
-
-### Native
-
     cd /srv/moth
-    moth
+    mothd
 
 
 Copy in some mothballs
@@ -46,7 +36,7 @@ You can add and remove mothballs at any time while the server is running.
 Get a list of valid team tokens
 -----------------------
 
-    cat /srv/moth/state/tokens.txt
+    cat /srv/moth/state/myinstance/tokens.txt
 
 You can edit or replace this file if you want to use different tokens than the pre-generated ones.
 

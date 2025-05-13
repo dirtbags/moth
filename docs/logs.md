@@ -16,32 +16,33 @@ Moth has multiple log channels:
 : warnings and errors
 
 
-`points.log` format
+Awards log format
 ----------------------
 
-The points log is a space-separated file.
+The awards log is a comma-separated file recording when a team first correctly answers a puzzle.
 Each line has four fields:
 
-| `timestamp` | `teamID` | `category` | `points` |
+| `timestamp` | `teamID` | `category` | `puzzle` |
 | --- | --- | --- | --- |
 | int | string | string | int |
-| Unix epoch | Team's unique ID | Name of category | Points awarded |
-
+| Unix epoch | Team ID | Category ID | Puzzle ID |
 
 ### Example
 
 ```
-1602702696 2255 nocode 1
-1602702705 2255 sequence 1
-1602702787 2255 nocode 2
-1602702831 2255 sequence 2
-1602702839 9458 nocode 3
-1602702896 2255 sequence 8
-1602702900 9458 nocode 4
-1602702913 2255 sequence 16
+1602702696,2255,nocode,1
+1602702705,2255,sequence,1
+1602702787,2255,nocode,2
+1602702831,2255,sequence,2
+1602702839,9458,nocode,3
+1602702872,2255,heath,01-introduction
+1602702896,2255,sequence,8
+1602702900,9458,nocode,4
+1602702910,2255,heath,02-discovery
+1602702913,2255,sequence,16
 ```
 
-`events.csv` format
+Events log format
 ----------------------
 
 The events log is a comma-separated variable (CSV) file.
@@ -49,10 +50,10 @@ It ought to import into any spreadsheet program painlessly.
 
 Each line has six fields minimum:
 
-| `timestamp` | `event` | `teamID` | `category` | `points` | `extra`... |
+| `timestamp` | `event` | `teamID` | `category` | `puzzle` | `extra`... |
 | --- | --- | --- | --- | --- | --- |
 | int | string | string | string | int | string... |
-| Unix epoch | Event type | Team's unique ID | Name of category, if any | Points awarded, if any | Additional fields, if any |
+| Unix epoch | Event type | Team ID | Category ID, if any | Puzzle ID, if any | Additional fields, if any |
 
 Fields after `points` contain extra fields associated with the event. 
 

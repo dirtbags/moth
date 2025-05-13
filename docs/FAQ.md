@@ -21,4 +21,4 @@ other teams are focused on making the best IP Rate Limiter.
 
 A better mechanism to prevent registration attacks is to provide 
 a list of valid team IDs in `teamids.txt`.
-There is no need for an IP Rate Limiter if this facility can be used.
+There is substantially less need for an IP Rate Limiter if this facility can be used.

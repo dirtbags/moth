@@ -1,13 +1,16 @@
 Administration
 =========
 
+The state directory
+---------------
+
 Everything you need to do happens through the filesystem.
 The convention Cyber Fire uses is `/srv/moth/state`.
 
-MOTHv5 does "virtual hosting" of instances.
-A single server can run as many simultaneous events as your computer can handle.
-Each event gets its own directory in `/srv/moth/state/`.
-In this document, we'll be using an event named `myevent`,
+The MOTH server will run virtual hosted instances.
+Each instance gets its own directory in `/srv/moth/state/`.
+
+In this document, we'll be using an instance named `myevent`,
 which will store its state in `/srv/moth/state/myevent`.
 
 
