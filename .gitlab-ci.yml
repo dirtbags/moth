@@ -1,8 +1,3 @@
-stages:
-  - test
-  - build
-  - push
-
 Run unit tests:
   stage: test
   image: &goimage golang:1.22
@@ -41,7 +36,7 @@ Generage coverage XML:
         coverage_format: cobertura
         path: coverage.xml
 
-winbuild:
+build:
   stage: build
   image: *goimage
   needs: ["Run unit tests"]
@@ -51,28 +46,36 @@ winbuild:
       - tags
       - merge_requests
   script:
-    - GOOS=windows GOARCH=amd64 go build -o . ./...
+    - GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o ./bin/windows.amd64/ ./...
+    - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ./bin/linux.amd64/ ./...
+    - GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o ./bin/linux.arm64/ ./...
+    - GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -o ./bin/darwin.amd64/ ./...
+    - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o ./bin/darwin.arm64/ ./...
+    - |
+      # Build darwin multiarch binaries
+      mkdir ./bin/darwin.multiarch/
+      for name in ./bin/darwin.arm64/*; do
+        filename=$(basename $name)
+        go run github.com/randall77/makefat@latest ./bin/darwin.multiarch/$filename ./bin/darwin.amd64/$filename ./bin/darwin.arm64/$filename
+      done
   artifacts:
     paths:
-      - mothd.exe
+      - bin/
 
-linbuild:
-  stage: build
-  image: *goimage
-  needs: ["Run unit tests"]
+upload:
+  stage: deploy
+  needs:
+    - job: build
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_TAG
   script:
-    - GOOS=linux GOARCH=amd64 go build -o . ./...
-  only:
-    refs:
-      - main
-      - tags
-      - merge_requests
-  artifacts:
-    paths:
-      - mothd
+    - 'curl --silent --fail-with-body --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "./bin/windows.amd64/{mothd}.exe" "${PACKAGE_REGISTRY_URL}/windows.amd64/"'
+    - 'curl --silent --fail-with-body --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "./bin/linux.amd64/{mothd}" "${PACKAGE_REGISTRY_URL}/linux.amd64/"'
+    - 'curl --silent --fail-with-body --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "./bin/darwin.multiarch/{mothd}" "${PACKAGE_REGISTRY_URL}/darwin.multiarch/"'
 
 docker-push:
-  stage: push
+  stage: deploy
   needs: ["Run unit tests"]
   only:
     refs:
