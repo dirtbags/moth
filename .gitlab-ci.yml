@@ -20,7 +20,8 @@ Run unit tests:
 Generage coverage XML:
   stage: test
   image: *goimage
-  needs: ["Run unit tests"]
+  needs: 
+    - job: Run unit tests
   script:
     - go get github.com/boumenot/gocover-cobertura
     - go run github.com/boumenot/gocover-cobertura < coverage.txt > coverage.xml
@@ -39,7 +40,6 @@ Generage coverage XML:
 build:
   stage: build
   image: *goimage
-  needs: ["Run unit tests"]
   only:
     refs:
       - main
@@ -76,7 +76,8 @@ upload:
 
 docker-push:
   stage: deploy
-  needs: ["Run unit tests"]
+  needs: 
+    - job: Run unit tests
   only:
     refs:
       - tags
