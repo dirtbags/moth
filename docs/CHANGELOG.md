@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Provide MOTH version in state HTTP API endpoint (#234)
+- CI/CD builds of `mothd`
 ### Fixed
 - Unlocked categories get puzzle lists
 - Fixed an API issue with category indexing

@@ -1,3 +1,6 @@
+variables:
+  PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/${CI_COMMIT_TAG}"
+
 Run unit tests:
   stage: test
   image: &goimage golang:1.22
@@ -64,6 +67,7 @@ build:
 
 upload:
   stage: deploy
+  image: curlimages/curl
   needs:
     - job: build
       artifacts: true
@@ -76,12 +80,8 @@ upload:
 
 docker-push:
   stage: deploy
-  needs: 
-    - job: Run unit tests
-  only:
-    refs:
-      - tags
-  variables:
+  rules:
+    - if: $CI_COMMIT_TAG
   script:
     - mkdir ~/.docker
     - echo -n "$DOCKER_AUTH_CONFIG" | tee ~/.docker/config.json | md5sum
@@ -94,3 +94,30 @@ docker-push:
       --tag ghcr.io/dirtbags/moth:${CI_COMMIT_TAG%.*.*}
       .
     - docker push ghcr.io/dirtbags/moth --all-tags
+
+release:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: upload
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - echo "Creating release"
+    - awk -v rel=$CI_COMMIT_TAG '/^## / {p = ($2 == rel); next} (p) {print}' docs/CHANGELOG.md > release-notes.md
+  release:
+    name: 'Release $CI_COMMIT_TAG'
+    tag_name: '$CI_COMMIT_TAG'
+    description: release-notes.md
+    assets:
+      links:
+        - name: 'Container Image'
+          url: "https://$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA"
+          link_type: image
+        - name: 'mothd (Windows amd64)'
+          url: "${PACKAGE_REGISTRY_URL}/windows.amd64/mothd.exe"
+        - name: 'mothd (Linux amd64)'
+          url: "${PACKAGE_REGISTRY_URL}/linux.amd64/mothd"
+        - name: 'mothd (MacOS)'
+          url: "${PACKAGE_REGISTRY_URL}/darwin.multiarch/mothd"
+    
