@@ -91,13 +91,13 @@ type FSState struct {
 	clientFS *mdir.MDir
 
 	// teamFS stores team data for all registered teams
-	teamFS   *mdir.MDir
+	teamFS *mdir.MDir
 
 	// awardFS contains all awards
-	awardFS  *mdir.MDir
+	awardFS *mdir.MDir
 
 	// eventFS contains the event log
-	eventFS  *mdir.MDir
+	eventFS *mdir.MDir
 
 	// openRegistration, obtained from teamids.txt
 	openRegistration atomic.Bool
@@ -284,7 +284,7 @@ func (s *FSState) Awards() *AwardList {
 	awards := s.awards.Load()
 	if awards == nil {
 		return &AwardList{}
-		
+
 	}
 	return awards
 }
@@ -521,23 +521,19 @@ func (s *FSState) Refresh(now time.Time) []error {
 	}
 	s.teamdata.Store(&teams)
 
-	// Only update awards and events if the instance is enabled.
-	// This is all it means to disable an instance!
-	if s.Enabled(now) {
-		awards := NewAwardList()
-		if awardFilenames, readErrs := s.ReadRecords(awards, s.awardFS); readErrs != nil {
-			errs = append(errs, readErrs...)
-		} else {
-			s.awards.Store(awards)
-			errs = append(errs, s.Compact(s.awardFS, awards, awardFilenames))
-		}
+	awards := NewAwardList()
+	if awardFilenames, readErrs := s.ReadRecords(awards, s.awardFS); readErrs != nil {
+		errs = append(errs, readErrs...)
+	} else {
+		s.awards.Store(awards)
+		errs = append(errs, s.Compact(s.awardFS, awards, awardFilenames))
+	}
 
-		events := NewEventList()
-		if eventFilenames, readErrs := s.ReadRecords(events, s.eventFS); readErrs != nil {
-			errs = append(errs, readErrs...)
-		} else {
-			errs = append(errs, s.Compact(s.eventFS, events, eventFilenames))
-		}
+	events := NewEventList()
+	if eventFilenames, readErrs := s.ReadRecords(events, s.eventFS); readErrs != nil {
+		errs = append(errs, readErrs...)
+	} else {
+		errs = append(errs, s.Compact(s.eventFS, events, eventFilenames))
 	}
 
 	var finalErrs []error
