@@ -6,6 +6,7 @@ Being in this list is voluntary. Add your name when you contribute code.
 * Shannon Steinfadt
 * John Donaldson
 * 3ch01c
+* Emma Pollans
 
 Word List
 ---------
