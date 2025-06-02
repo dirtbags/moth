@@ -73,6 +73,10 @@ func (h *TestHTTPServer) TestServe(t *testing.T, req *http.Request, code int) *h
 	return w
 }
 
+// TestRequest makes an HTTP request to target (a URL) using method.
+// If body is non-nil, it will be sent as the body of the request.
+// If the returned HTTP code does not match code,
+// an error is logged to t.
 func (h *TestHTTPServer) TestRequest(t *testing.T, method string, target string, body []byte, code int) *httptest.ResponseRecorder {
 	t.Helper()
 	var bodyReader io.Reader
@@ -189,7 +193,6 @@ func TestHttpdUnlocked(t *testing.T) {
 	h := NewTestHttpd(t, "/")
 	h.MkInstance("test1")
 
-	// TODO: Build an fstest memfs and zip it up
 	if err := h.TestFSStateStore.fsys.WriteFile("test1/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -202,6 +205,10 @@ func TestHttpdUnlocked(t *testing.T) {
 	env := &Environment{
 		State: state,
 		ctx:   h.Context,
+	}
+	categories := state.Categories(h.now)
+	if len(categories) == 0 {
+		t.Fatal("no categories in this test requiring them")
 	}
 	for _, catid := range state.Categories(h.now) {
 		cat, err := h.Category(catid)
