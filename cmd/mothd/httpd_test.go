@@ -346,3 +346,23 @@ func TestErrors(t *testing.T) {
 		t.Error("Wrong body:", resp.Body.String())
 	}
 }
+
+func TestDisable(t *testing.T) {
+	h := NewTestHttpd(t, "/")
+	h.TestFSStateStore.fsys.WriteFile("test/teams/team1", []byte("TeamData"), 0644)
+	ha := h.Authenticate("team1", "")
+
+	if err := ha.TestFSStateStore.fsys.WriteFile("test/schedule.txt", []byte("rollout - cat0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	ha.Refresh()
+
+	ha.TestRequest(t, "PUT", "http://example.com/test/puzzles/cat0/1/answer", []byte("answer123"), 503)
+
+	if err := ha.TestFSStateStore.fsys.WriteFile("test/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	ha.Refresh()
+
+	ha.TestRequest(t, "PUT", "http://example.com/test/puzzles/cat0/1/answer", []byte("answer123"), 200)
+}

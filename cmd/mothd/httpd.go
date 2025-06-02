@@ -282,6 +282,12 @@ func (ctx *Context) PutAnswer(w http.ResponseWriter, req *http.Request) {
 	}
 	env.Log(now, "correct", catid, puzzleid)
 
+	// Is the event enabled?
+	if !env.State.Enabled(now) {
+		http.Error(w, "Event is not enabled, so sorry", http.StatusServiceUnavailable)
+		return
+	}
+
 	// Prepare to record the event solution.
 	awd := NewAward(now, env.TeamID, catid, puzzleid)
 
