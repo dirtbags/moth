@@ -91,7 +91,17 @@ func (mb *Mothball) Open(name string) (fs.File, error) {
 	if strings.HasPrefix(name, "__MOTH/") {
 		return nil, fs.ErrNotExist
 	}
-	return mb.Reader.Open(name)
+
+	f, err := mb.Reader.Open(name)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Go's HTTP server demands (at runtime) more functionality
+	// than is provided by mb.Reader.Open(name)
+	//
+	// see https://mahesh-hegde.github.io/posts/go-interface-smuggling/
+	return NewForwardFile(f)
 }
 
 type MothballStoreCacheEntry struct {

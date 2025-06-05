@@ -148,7 +148,7 @@ func TestHttpdRegistration(t *testing.T) {
 	// My technique so far has been to replace this with what's reported,
 	// but only if I'm expecting a change.
 	// Please leave the test, though, since it will catch unintentional changes.
-	wanted := "{\"MothVersion\":\"[devel]\",\"Running\":true,\"OpenRegistration\":false,\"ClientConfig\":{},\"Errors\":null,\"Hours\":[{\"start\":\"0001-01-01T00:00:00Z\",\"end\":\"9999-12-31T23:59:59Z\"}],\"TeamData\":{},\"Awards\":null,\"Puzzles\":null}\n"
+	wanted := "{\"MothVersion\":\"[devel]\",\"Running\":true,\"OpenRegistration\":false,\"ClientConfig\":{},\"Errors\":null,\"Hours\":[{\"start\":\"0001-01-01T00:00:00Z\",\"end\":\"9999-12-31T23:59:59Z\"}],\"TeamData\":{\"0\":\"test team\"},\"Awards\":null,\"Puzzles\":null}\n"
 	if resp := h.TestRequest(t, "GET", "http://example.com/test1/state/current.json", nil, 200); resp.Body.String() != wanted {
 		t.Errorf("Unexpected state\n   got: %#v\nwanted: %#v\n", resp.Body.String(), wanted)
 	}

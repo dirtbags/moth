@@ -157,6 +157,9 @@ func (store *TestFSStateStore) MkInstance(name string) {
 	if err := store.fsys.WriteFile(name+"/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
 		store.T.Fatal(err)
 	}
+	if err := store.fsys.WriteFile(name+"/teams/test-team", []byte("test team"), 0644); err != nil {
+		store.T.Fatal(err)
+	}
 	store.Refresh()
 }
 

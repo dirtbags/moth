@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"net/http/httptest"
 	"testing"
 	"testing/fstest"
 )
@@ -81,4 +82,13 @@ func TestIssue222(t *testing.T) {
 	if puzz := cat2.Puzzles(); puzz[1] != "2" {
 		t.Error("Second puzzle wrong", puzz)
 	}
+}
+
+// TestIssue239: seeker can't seek
+func TestIssue239(t *testing.T) {
+	h := NewTestHttpd(t, "/")
+	request := httptest.NewRequest("GET", "http://example.com/test/puzzles/cat0/1/GrahamCracker.docx", nil)
+	request.SetBasicAuth("test-team", "test-team")
+	request.Header.Set("Range", "bytes=10-1023")
+	h.TestServe(t, request, 206)
 }
