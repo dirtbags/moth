@@ -8,6 +8,4 @@ winmoth.*.zip
 /transpile
 /mothd
 /*.exe
-state/
-categories/
 cover.out

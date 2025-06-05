@@ -87,7 +87,7 @@ func TestIssue222(t *testing.T) {
 // TestIssue239: seeker can't seek
 func TestIssue239(t *testing.T) {
 	h := NewTestHttpd(t, "/")
-	request := httptest.NewRequest("GET", "http://example.com/test/puzzles/cat0/1/GrahamCracker.docx", nil)
+	request := httptest.NewRequest("GET", "http://example.com/test/puzzles/cat0/1/", nil)
 	request.SetBasicAuth("test-team", "test-team")
 	request.Header.Set("Range", "bytes=10-1023")
 	h.TestServe(t, request, 206)
