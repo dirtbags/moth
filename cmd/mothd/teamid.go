@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+
+	"github.com/dirtbags/moth/v5/pkg/writecounter"
 )
 
 // TeamID uniquely identifies a team.
@@ -30,7 +32,7 @@ type TeamIDList struct {
 }
 
 func (tl *TeamIDList) WriteTo(w io.Writer) (int64, error) {
-	counter := new(WriteCounter)
+	counter := new(writecounter.WriteCounter)
 	tw := io.MultiWriter(w, counter)
 	for _, id := range tl.teams {
 		fmt.Fprintln(tw, id)
@@ -39,7 +41,7 @@ func (tl *TeamIDList) WriteTo(w io.Writer) (int64, error) {
 }
 
 func (tl *TeamIDList) ReadFrom(r io.Reader) (int64, error) {
-	counter := new(WriteCounter)
+	counter := new(writecounter.WriteCounter)
 	tr := io.TeeReader(r, counter)
 	scanner := bufio.NewScanner(tr)
 	for scanner.Scan() {

@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dirtbags/moth/v5/pkg/writecounter"
 )
 
 // PuzzleID uniquely identifies a puzzle.
@@ -166,7 +168,7 @@ func NewAwardList(awards ...Award) *AwardList {
 // Returns n: the number of entries read.
 // Because duplicated entries are removed, n may not be the number of entries stored!
 func (al *AwardList) ReadFrom(r io.Reader) (int64, error) {
-	counter := new(WriteCounter)
+	counter := new(writecounter.WriteCounter)
 	tr := io.TeeReader(r, counter)
 	cr := csv.NewReader(tr)
 	cr.FieldsPerRecord = 4
@@ -200,7 +202,7 @@ func (al *AwardList) ReadFrom(r io.Reader) (int64, error) {
 
 // WriteTo writes al as strings to w, one per line.
 func (al *AwardList) WriteTo(w io.Writer) (int64, error) {
-	counter := new(WriteCounter)
+	counter := new(writecounter.WriteCounter)
 	tw := io.MultiWriter(w, counter)
 	cw := csv.NewWriter(tw)
 

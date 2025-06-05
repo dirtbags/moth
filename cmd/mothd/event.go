@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dirtbags/moth/v5/pkg/writecounter"
 )
 
 type Event struct {
@@ -174,7 +176,7 @@ func (el *EventList) Swap(i, j int) {
 //
 // el will be sorted when err==nil.
 func (el *EventList) ReadFrom(r io.Reader) (int64, error) {
-	counter := new(WriteCounter)
+	counter := new(writecounter.WriteCounter)
 	tr := io.TeeReader(r, counter)
 	cr := csv.NewReader(tr)
 	cr.FieldsPerRecord = -1
@@ -213,7 +215,7 @@ func (el *EventList) ReadFrom(r io.Reader) (int64, error) {
 
 // WriteTo writes el as strings to w, one per line.
 func (el *EventList) WriteTo(w io.Writer) (int64, error) {
-	counter := new(WriteCounter)
+	counter := new(writecounter.WriteCounter)
 	tw := io.MultiWriter(w, counter)
 	cw := csv.NewWriter(tw)
 

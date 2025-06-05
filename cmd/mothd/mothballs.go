@@ -11,6 +11,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/dirtbags/moth/v5/pkg/forwardreader"
 )
 
 // Mothball contains an open zip.Reader and some cached information
@@ -101,7 +103,7 @@ func (mb *Mothball) Open(name string) (fs.File, error) {
 	// than is provided by mb.Reader.Open(name)
 	//
 	// see https://mahesh-hegde.github.io/posts/go-interface-smuggling/
-	return NewForwardFile(f)
+	return forwardreader.NewForwardFile(f)
 }
 
 type MothballStoreCacheEntry struct {

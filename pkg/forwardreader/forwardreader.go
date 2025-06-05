@@ -1,8 +1,10 @@
-package main
+package forwardreader
 
 import (
 	"io"
 	"io/fs"
+
+	"github.com/dirtbags/moth/v5/pkg/writecounter"
 )
 
 // ForwardReaderAt wraps an io.Reader to support io.ReaderAt.
@@ -13,12 +15,12 @@ type ForwardReaderAt struct {
 	r io.Reader
 
 	// pos tracks how much has been consumed from r
-	pos *WriteCounter
+	pos *writecounter.WriteCounter
 }
 
 func NewForwardReaderAt(r io.Reader, length int64) *ForwardReaderAt {
 	ls := new(ForwardReaderAt)
-	ls.pos = new(WriteCounter)
+	ls.pos = new(writecounter.WriteCounter)
 	ls.r = io.TeeReader(r, ls.pos)
 	return ls
 }

@@ -1,4 +1,4 @@
-package main
+package writecounter
 
 // WriteCounter provides io.Counter, counting how much was written to it.
 // The zero value for WriteCounter is ready to use.
