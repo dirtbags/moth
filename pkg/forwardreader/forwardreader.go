@@ -16,6 +16,9 @@ type ForwardReaderAt struct {
 
 	// pos tracks how much has been consumed from r
 	pos *writecounter.WriteCounter
+
+	// sniffBuf keeps the first chunk read, in case it's requested a second time
+	sniffBuf []byte
 }
 
 func NewForwardReaderAt(r io.Reader, length int64) *ForwardReaderAt {
@@ -27,6 +30,12 @@ func NewForwardReaderAt(r io.Reader, length int64) *ForwardReaderAt {
 
 // ReadAt reads len(p) bytes into p starting at offset off in the underlying input source. It returns the number of bytes read (0 <= n <= len(p)) and any error encountered.
 func (ls *ForwardReaderAt) ReadAt(p []byte, off int64) (int, error) {
+	// send the cached sniff buffer, if it exists
+	if (off == 0) && (ls.sniffBuf != nil) {
+		copy(p, ls.sniffBuf)
+		return len(ls.sniffBuf), nil
+	}
+
 	if off < ls.pos.Len() {
 		return 0, fs.ErrInvalid
 	}
@@ -35,7 +44,13 @@ func (ls *ForwardReaderAt) ReadAt(p []byte, off int64) (int, error) {
 		return 0, err
 	}
 
-	return ls.r.Read(p)
+	n, err := ls.r.Read(p)
+	if off == 0 {
+		ls.sniffBuf = make([]byte, n)
+		copy(ls.sniffBuf, p[:n])
+	}
+
+	return n, err
 }
 
 

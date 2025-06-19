@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"log/slog"
 	"net/http"
 	"path"
@@ -202,6 +203,7 @@ func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
 	env := ctx.GetEnvironment(req)
 	if env == nil {
 		http.NotFound(w, req)
+		return
 	}
 	if !env.Authenticated {
 		http.Error(w, "", http.StatusUnauthorized)

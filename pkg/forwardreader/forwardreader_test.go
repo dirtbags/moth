@@ -21,6 +21,31 @@ func TestForwardReaderAll(t *testing.T) {
 	}
 }
 
+func TestForwardReaderRewind(t *testing.T) {
+	r := strings.NewReader("0123456789abcdef")
+	fr := NewForwardReadSeeker(r, r.Size())
+
+	// Read a header
+	buf := make([]byte, 2)
+	if n, err := fr.ReadAt(buf, 0); err != nil {
+		t.Error(err)
+	} else if n != 2 {
+		t.Errorf("Read: %d", n)
+	} else if string(buf) != "01" {
+		t.Errorf("Read bytes: %#v", buf)
+	}
+
+	// Read it again
+	buf = make([]byte, 2)
+	if n, err := fr.ReadAt(buf, 0); err != nil {
+		t.Error(err)
+	} else if n != 2 {
+		t.Errorf("Read: %d", n)
+	} else if string(buf) != "01" {
+		t.Errorf("Read bytes: %#v", buf)
+	}
+}
+
 func TestForwardReaderSeek(t *testing.T) {
 	r := strings.NewReader("0123456789abcdef")
 	fr := NewForwardReadSeeker(r, r.Size())

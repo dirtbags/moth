@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Fix premature channel close for certain attachments with unguessable
+  extensions.  These would manifest as "Secure connection failed" in
+  Firefox, and `net::ERR_HTTP2_PROTOCOL_ERROR` in Chrome.
+- Fix potential crash for puzzle file get with unauthenticated
+  connection.
+
 ## [5.1.2] - 2025-06-05
 ### Fixed
 - Fix "seeker can't seek" error for certain attachments (#239)
