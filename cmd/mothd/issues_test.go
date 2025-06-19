@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"io"
 	"net/http/httptest"
 	"testing"
 	"testing/fstest"
