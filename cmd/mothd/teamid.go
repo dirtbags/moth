@@ -22,10 +22,12 @@ func ParseTeamID(filename string) TeamID {
 func (id TeamID) String() string {
 	return string(id)
 }
+func (id TeamID) Bytes() []byte {
+	return []byte(id)
+}
 func (id TeamID) Filename() string {
 	return url.PathEscape(id.String())
 }
-
 
 type TeamIDList struct {
 	teams []TeamID
