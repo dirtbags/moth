@@ -9,14 +9,19 @@ import (
 	"github.com/dirtbags/moth/v5/pkg/wfs"
 )
 
-func TestCreate(t *testing.T) {
+func NewTestMdir(t *testing.T) *MDir {
+	t.Helper()
 	tempDir := t.TempDir()
 	fsys := wfs.DirFS(tempDir)
-
 	md, err := NewDefault(fsys)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
+	return md
+}
+
+func TestCreate(t *testing.T) {
+	md := NewTestMdir(t)
 
 	name := "bloop.txt"
 	body := "bloop\n"
@@ -25,18 +30,18 @@ func TestCreate(t *testing.T) {
 	} else if _, err := fmt.Fprint(f, body); err != nil {
 		f.Close()
 		t.Fatal(err)
-	} else if _, err := fs.ReadFile(fsys, wfs.Join(md.TmpDir, name)); err != nil {
+	} else if _, err := fs.ReadFile(md.BaseFS, wfs.Join(md.TmpDir, name)); err != nil {
 		f.Close()
 		t.Fatal(err)
 	} else if err := f.Close(); err != nil {
 		t.Error(err)
 	}
 
-	if _, err := fs.ReadFile(fsys, wfs.Join(md.NewDir, name)); err != nil {
+	if _, err := fs.ReadFile(md.BaseFS, wfs.Join(md.NewDir, name)); err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log("filename (fsys):", fsys.OSPath(wfs.Join(md.NewDir, name)))
+	t.Log("filename (fsys):", md.BaseFS.OSPath(wfs.Join(md.NewDir, name)))
 	t.Log("filename (md):", md.OSPath(name))
 	if data, err := fs.ReadFile(md, name); err != nil {
 		t.Error(err)
@@ -46,13 +51,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	tempDir := t.TempDir()
-	fsys := wfs.DirFS(tempDir)
-
-	md, err := NewDefault(fsys)
-	if err != nil {
-		t.Fatal(err)
-	}
+	md := NewTestMdir(t)
 
 	if err := md.WriteFile("test.txt", []byte("bloop"), 0644); err != nil {
 		t.Fatal(err)
@@ -75,12 +74,7 @@ func TestReset(t *testing.T) {
 }
 
 func TestOverwrite(t *testing.T) {
-	tempDir := t.TempDir()
-	fsys := wfs.DirFS(tempDir)
-	md, err := NewDefault(fsys)
-	if err != nil {
-		t.Fatal(err)
-	}
+	md := NewTestMdir(t)
 
 	if err := md.WriteFile("a", []byte{}, 0644); err != nil {
 		t.Fatal(err)
@@ -104,5 +98,28 @@ func TestOverwrite(t *testing.T) {
 		if err := md.WriteFile("a", []byte{}, 0644); err != nil {
 			t.Error(err)
 		}
+	}
+}
+
+func TestDoubleClose(t *testing.T) {
+	md := NewTestMdir(t)
+
+	f, err := md.Create("moo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err == nil {
+		t.Fatal("Double close did not return error")
+	}
+}
+
+func TestBadFilename(t *testing.T) {
+	md := NewTestMdir(t)
+
+	if err := md.WriteFile("floop/gribble", []byte{}, 0644); err == nil {
+		t.Error("That should have been an error.")
 	}
 }
