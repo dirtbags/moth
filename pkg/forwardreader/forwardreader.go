@@ -53,7 +53,6 @@ func (ls *ForwardReaderAt) ReadAt(p []byte, off int64) (int, error) {
 	return n, err
 }
 
-
 // NewForwardReadSeeker wraps r in an io.SectionReader that can only read forward.
 //
 // Seek() may be used as needed (for instance, to determine file size),
@@ -67,7 +66,6 @@ func NewForwardReadSeeker(r io.Reader, length int64) *io.SectionReader {
 	return io.NewSectionReader(fr, 0, length)
 }
 
-
 type ForwardFile struct {
 	io.ReadSeeker
 	fs.File
@@ -78,10 +76,10 @@ func NewForwardFile(f fs.File) (*ForwardFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	
-	ff := &ForwardFile {
+
+	ff := &ForwardFile{
 		ReadSeeker: NewForwardReadSeeker(f, fi.Size()),
-		File: f,
+		File:       f,
 	}
 	return ff, nil
 }

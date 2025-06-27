@@ -76,4 +76,3 @@ func TestReleasedChangelog(t *testing.T) {
 		t.Fatal("Wrong version:", v, d)
 	}
 }
-

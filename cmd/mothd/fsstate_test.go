@@ -3,40 +3,7 @@ package main
 import (
 	"errors"
 	"testing"
-
-	"github.com/dirtbags/moth/v5/pkg/wfs"
 )
-
-type TestFSState struct {
-	*FSState
-	*TestClock
-	*testing.T
-}
-
-func NewTestFSState(t *testing.T) *TestFSState {
-	fsys := wfs.DirFS(t.TempDir())
-	state, err := NewFSState(fsys, "test-consolidate")
-	if err != nil {
-		t.Fatal(err)
-	}
-	s := &TestFSState{
-		FSState:   state,
-		TestClock: NewTestClock(),
-		T:         t,
-	}
-	s.Refresh()
-	return s
-}
-
-func (s *TestFSState) Refresh() {
-	s.T.Helper()
-	errs := s.FSState.Refresh(s.Now())
-	for _, err := range errs {
-		if err != nil {
-			s.T.Error(err)
-		}
-	}
-}
 
 func TestFSStateBasic(t *testing.T) {
 	state := NewTestFSState(t)
@@ -54,26 +21,26 @@ func TestFSStateBasic(t *testing.T) {
 		t.Error("Wrong team data")
 	}
 
-	if state.Enabled(state.Now()) {
+	if state.Enabled(state.clock.Now()) {
 		t.Error("New instance should default disabled")
 	}
 	if err := state.configFS.WriteFile("schedule.txt", []byte("enable -\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if errs := state.FSState.Refresh(state.Now()); errs != nil {
+	if errs := state.FSState.Refresh(state.clock.Now()); errs != nil {
 		t.Error(errs)
 	}
 
-	if !state.Enabled(state.Now()) {
+	if !state.Enabled(state.clock.Now()) {
 		t.Error("Event should be enabled")
 	}
 	if err := state.configFS.Remove("schedule.txt"); err != nil {
 		t.Error(err)
 	}
-	if errs := state.FSState.Refresh(state.Now()); errs == nil {
+	if errs := state.FSState.Refresh(state.clock.Now()); errs == nil {
 		t.Error("Removing schedule should trigger a refresh error")
 	}
-	if !state.Enabled(state.Now()) {
+	if !state.Enabled(state.clock.Now()) {
 		t.Error("Removing shedule.txt should fall back to previous schedule")
 	}
 }
@@ -124,45 +91,6 @@ func TestFSStateCompact(t *testing.T) {
 
 }
 
-type TestFSStateStore struct {
-	*FSStateStore
-	*TestClock
-	*testing.T
-}
-
-// NewTestFSStateStore returns a TestFSStateStore with a "test" instance.
-func NewTestFSStateStore(t *testing.T) *TestFSStateStore {
-	fsys := wfs.DirFS(t.TempDir())
-	store := &TestFSStateStore{
-		FSStateStore: NewFSStateStore(fsys, "testhost", 10, 1),
-		TestClock:    NewTestClock(),
-		T:            t,
-	}
-	store.MkInstance("test")
-	return store
-}
-
-func (store *TestFSStateStore) Refresh() {
-	store.T.Helper()
-	if err := store.FSStateStore.Refresh(store.Now()); err != nil {
-		store.T.Error(err)
-	}
-}
-
-func (store *TestFSStateStore) MkInstance(name string) {
-	if err := store.fsys.Mkdir(name, 0755); err != nil {
-		store.T.Fatal(err)
-	}
-	store.Refresh()
-	if err := store.fsys.WriteFile(name+"/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
-		store.T.Fatal(err)
-	}
-	if err := store.fsys.WriteFile(name+"/teams/test-team", []byte("test team"), 0644); err != nil {
-		store.T.Fatal(err)
-	}
-	store.Refresh()
-}
-
 func TestFSStateStoreBasic(t *testing.T) {
 	store := NewTestFSStateStore(t)
 
@@ -206,7 +134,7 @@ func TestFSStateStoreMulitpleRollout(t *testing.T) {
 	if !found {
 		t.Error("didn't find test state")
 	}
-	categories := cat.Categories(store.Now())
+	categories := cat.Categories(store.clock.Now())
 	if len(categories) != 2 {
 		t.Error("wrong number of categories")
 	}

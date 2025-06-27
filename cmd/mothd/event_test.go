@@ -8,23 +8,26 @@ import (
 	"time"
 )
 
-var TestEvent1 = Event{time.Unix(120, 0), "name", "team", "cat", "puzzle", nil}
-var TestEvent2 = Event{time.Unix(240, 0), "name", "team", "cat", "puzzle", []string{"extra1", "extra2"}}
+// TestEvent is an example log event with no extra fields.
+var TestEvent = Event{time.Unix(120, 0), "name", "team", "cat", "puzzle", nil}
+
+// TestEventExtra is an example log event with extra fields.
+var TestEventExtra = Event{time.Unix(240, 0), "name", "team", "cat", "puzzle", []string{"extra1", "extra2"}}
 
 func TestEventBasic(t *testing.T) {
-	if fn := TestEvent1.Filename(); fn != "120-name-team-cat-puzzle.event" {
+	if fn := TestEvent.Filename(); fn != "120-name-team-cat-puzzle.event" {
 		t.Error("Filename wrong", fn)
 	}
-	if s := TestEvent1.String(); s != "120,name,team,cat,puzzle" {
+	if s := TestEvent.String(); s != "120,name,team,cat,puzzle" {
 		t.Error("String wrong", s)
 	}
-	if s := TestEvent2.String(); s != "240,name,team,cat,puzzle,extra1,extra2" {
+	if s := TestEventExtra.String(); s != "240,name,team,cat,puzzle,extra1,extra2" {
 		t.Error("String wrong", s)
 	}
 
-	if te2, err := ParseEvent(TestEvent2.String()); err != nil {
+	if te2, err := ParseEvent(TestEventExtra.String()); err != nil {
 		t.Error(err)
-	} else if !TestEvent2.Equal(te2) {
+	} else if !TestEventExtra.Equal(te2) {
 		t.Error("Equality failed")
 	}
 
@@ -41,22 +44,22 @@ func TestEventBasic(t *testing.T) {
 
 func TestEventJSON(t *testing.T) {
 	var e Event
-	if buf, err := json.Marshal(TestEvent2); err != nil {
+	if buf, err := json.Marshal(TestEventExtra); err != nil {
 		t.Error(err)
 	} else if string(buf) != `[240,"name","team","cat","puzzle","extra1","extra2"]` {
 		t.Errorf("JSON Marshal wrong: %#q", buf)
 	} else if err := json.Unmarshal(buf, &e); err != nil {
 		t.Error(err)
-	} else if !e.Equal(TestEvent2) {
+	} else if !e.Equal(TestEventExtra) {
 		t.Errorf("Unmarshal wrong: %#q", e)
 	}
 }
 
 func TestEventListBasic(t *testing.T) {
-	list := NewEventList(TestEvent2, TestEvent1)
+	list := NewEventList(TestEventExtra, TestEvent)
 
 	sort.Stable(list)
-	if !TestEvent1.Equal(list.events[0]) {
+	if !TestEvent.Equal(list.events[0]) {
 		t.Error("Sort didn't")
 	}
 

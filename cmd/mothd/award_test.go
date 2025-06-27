@@ -10,14 +10,16 @@ import (
 	"time"
 )
 
-const TestAwardStr = "1536958399 1a2b3c4d counting 10"
-
+// TestAward is a sample Award.
 var TestAward = Award{
 	time.Unix(1536958399, 0),
 	"1a2b3c4d",
 	"counting",
 	"10",
 }
+
+// TestAwardStr is the string representation of TestAward.
+const TestAwardStr = "1536958399 1a2b3c4d counting 10"
 
 func TestAwardGeneral(t *testing.T) {
 	a, err := ParseAward(TestAwardStr)

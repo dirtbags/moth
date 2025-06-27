@@ -98,7 +98,7 @@ func (mb *Mothball) Open(name string) (fs.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Go's HTTP server demands (at runtime) more functionality
 	// than is provided by mb.Reader.Open(name)
 	//

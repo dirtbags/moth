@@ -142,11 +142,14 @@ func (e *Environment) Log(when time.Time, name string, cat CategoryID, puzzle Pu
 //
 // If all puzzles are unlocked,
 // the list is terminated with a zero-value PuzzleID.
-func (e *Environment) Unlocked(cat Category) []PuzzleID {
+func (e *Environment) Unlocked(catid CategoryID, cat Category) []PuzzleID {
 	inventory := cat.Puzzles()
 
 	last := -1
 	for _, awd := range e.State.Awards().Values() {
+		if awd.Category != catid {
+			continue
+		}
 		idx := slices.Index(inventory, awd.Puzzle)
 		if idx > last {
 			last = idx
@@ -222,7 +225,7 @@ func (ctx *Context) GetPuzzleFile(w http.ResponseWriter, req *http.Request) {
 	// If a puzzle id was provided, ensure it's unlocked
 	puzzleid := PuzzleID(req.PathValue("puzzle"))
 	if puzzleid != "" {
-		unlocked := env.Unlocked(cat)
+		unlocked := env.Unlocked(catid, cat)
 		if !slices.Contains(unlocked, puzzleid) {
 			http.NotFound(w, req)
 			return
@@ -262,7 +265,7 @@ func (ctx *Context) PutAnswer(w http.ResponseWriter, req *http.Request) {
 
 	// Ensure this puzzle is unlocked
 	puzzleid := PuzzleID(req.PathValue("puzzle"))
-	unlocked := env.Unlocked(cat)
+	unlocked := env.Unlocked(catid, cat)
 	if !slices.Contains(unlocked, puzzleid) {
 		http.NotFound(w, req)
 		return
@@ -406,7 +409,7 @@ func (env *Environment) sendState(w http.ResponseWriter, now time.Time, code int
 				export.Errors = append(export.Errors, err.Error())
 				continue
 			}
-			export.Puzzles[catid] = env.Unlocked(cat)
+			export.Puzzles[catid] = env.Unlocked(catid, cat)
 		}
 	}
 

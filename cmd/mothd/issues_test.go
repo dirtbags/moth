@@ -10,15 +10,14 @@ import (
 
 // TestIssue156: if a team has an entry in teams/, but isn't in teamids.txt, we should still let them log in.
 func TestIssue156(t *testing.T) {
-	h := NewTestHttpd(t, "/")
+	h := NewTestContext(t, "/")
 
-	if err := h.TestFSStateStore.fsys.WriteFile("test/teams/bloop", []byte{}, 0644); err != nil {
+	if err := h.stateStore.fsys.WriteFile("test/teams/bloop", []byte{}, 0644); err != nil {
 		t.Fatal(err)
 	}
 	h.Refresh()
 
-	ha := h.Authenticate("bloop", "")
-	ha.TestRequest(t, "GET", "http://example.com/test/puzzles/cat0/1/", nil, 200)
+	h.TestRequestAuth("GET", "http://example.com/test/puzzles/cat0/1/", nil, "", "bloop", 200)
 }
 
 // TestIssue222: v5 didn't recognize when I uploaded a newer .mb file
@@ -86,9 +85,9 @@ func TestIssue222(t *testing.T) {
 
 // TestIssue239: seeker can't seek
 func TestIssue239(t *testing.T) {
-	h := NewTestHttpd(t, "/")
+	h := NewTestContext(t, "/")
 	request := httptest.NewRequest("GET", "http://example.com/test/puzzles/cat0/1/", nil)
 	request.SetBasicAuth("test-team", "test-team")
 	request.Header.Set("Range", "bytes=10-1023")
-	h.TestServe(t, request, 206)
+	h.TestServe(request, 206)
 }

@@ -25,8 +25,8 @@ func ReadVersionFS(fs fs.FS) (version string, date string) {
 // https://keepachangelog.com/
 // Specifically, versions must appear as one of the two formats:
 //
-//    - ## [Unreleased]
-//    - ## [1.0.0] - 2017-06-20
+//   - ## [Unreleased]
+//   - ## [1.0.0] - 2017-06-20
 func ReadVersion(r io.Reader) (version string, date string) {
 	date = "???"
 
