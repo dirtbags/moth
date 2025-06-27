@@ -12,7 +12,7 @@ import (
 func TestIssue156(t *testing.T) {
 	h := NewTestContext(t, "/")
 
-	if err := h.stateStore.fsys.WriteFile("test/teams/bloop", []byte{}, 0644); err != nil {
+	if err := h.WriteStateFile("test/teams/bloop", []byte{}); err != nil {
 		t.Fatal(err)
 	}
 	h.Refresh()

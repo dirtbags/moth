@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -50,16 +52,13 @@ func TestHttpdRegistration(t *testing.T) {
 	// Team doesn't exist yet
 	h.TestRequestAuth("PUT", "http://example.com/test/state/teamdata", teamIDs[0].Bytes(), teamIDs[0].String(), "", 401)
 
-	// Set it up so we can register team2
-	f, err := h.stateStore.fsys.Create("test/teamids.txt")
-	if err != nil {
+	// Write team IDs to teamids.txt
+	f := new(bytes.Buffer)
+	fmt.Fprintln(f, teamIDs[0])
+	fmt.Fprintln(f, teamIDs[1])
+	if err := h.WriteStateFile("test/teamids.txt", f.Bytes()); err != nil {
 		t.Fatal(err)
 	}
-	tl := &TeamIDList{teamIDs}
-	if _, err := tl.WriteTo(f); err != nil {
-		t.Error(err)
-	}
-	f.Close()
 	h.Refresh()
 
 	stateTest := func(method string, target string, data []byte, team int, code int) {
@@ -103,11 +102,11 @@ func TestHttpdUnlocked(t *testing.T) {
 		State: state,
 		ctx:   h.Context,
 	}
-	categories := state.Categories(h.clock.Now())
+	categories := state.Categories(h.Now())
 	if len(categories) == 0 {
 		t.Fatal("no categories in this test requiring them")
 	}
-	for _, catid := range state.Categories(h.clock.Now()) {
+	for _, catid := range state.Categories(h.Now()) {
 		cat, err := h.Category(catid)
 		if err != nil {
 			t.Error(err)
@@ -116,8 +115,8 @@ func TestHttpdUnlocked(t *testing.T) {
 		puzzles := env.Unlocked(catid, cat)
 		if len(puzzles) != 1 {
 			t.Error("Wrong length puzzles", puzzles)
-			t.Log(state.Hours(), h.clock.Now())
-			t.Log(state.Categories(h.clock.Now()))
+			t.Log(state.Hours(), h.Now())
+			t.Log(state.Categories(h.Now()))
 		}
 	}
 }
@@ -194,7 +193,7 @@ func TestErrors(t *testing.T) {
 	h := NewTestContext(t, "/")
 	h.Context.CategoryStore = s
 
-	if err := h.Context.Refresh(h.clock.Now()); err == nil {
+	if err := h.Context.Refresh(h.Now()); err == nil {
 		t.Fatal("Expecting error, none found")
 	}
 
@@ -206,14 +205,14 @@ func TestErrors(t *testing.T) {
 func TestDisable(t *testing.T) {
 	h := NewTestContext(t, "/")
 
-	if err := h.stateStore.fsys.WriteFile("test/schedule.txt", []byte("rollout - cat0\n"), 0644); err != nil {
+	if err := h.WriteStateFile("test/schedule.txt", []byte("rollout - cat0\n")); err != nil {
 		t.Fatal(err)
 	}
 	h.Refresh()
 
 	h.TestRequest("PUT", "http://example.com/test/puzzles/cat0/1/answer", []byte("answer123"), 503)
 
-	if err := h.stateStore.fsys.WriteFile("test/schedule.txt", []byte("enable -\nrollout - cat0\n"), 0644); err != nil {
+	if err := h.WriteStateFile("test/schedule.txt", []byte("enable -\nrollout - cat0\n")); err != nil {
 		t.Fatal(err)
 	}
 	h.Refresh()

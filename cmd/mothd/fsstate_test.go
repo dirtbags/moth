@@ -21,26 +21,26 @@ func TestFSStateBasic(t *testing.T) {
 		t.Error("Wrong team data")
 	}
 
-	if state.Enabled(state.clock.Now()) {
+	if state.Enabled(state.Now()) {
 		t.Error("New instance should default disabled")
 	}
 	if err := state.configFS.WriteFile("schedule.txt", []byte("enable -\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if errs := state.FSState.Refresh(state.clock.Now()); errs != nil {
+	if errs := state.FSState.Refresh(state.Now()); errs != nil {
 		t.Error(errs)
 	}
 
-	if !state.Enabled(state.clock.Now()) {
+	if !state.Enabled(state.Now()) {
 		t.Error("Event should be enabled")
 	}
 	if err := state.configFS.Remove("schedule.txt"); err != nil {
 		t.Error(err)
 	}
-	if errs := state.FSState.Refresh(state.clock.Now()); errs == nil {
+	if errs := state.FSState.Refresh(state.Now()); errs == nil {
 		t.Error("Removing schedule should trigger a refresh error")
 	}
-	if !state.Enabled(state.clock.Now()) {
+	if !state.Enabled(state.Now()) {
 		t.Error("Removing shedule.txt should fall back to previous schedule")
 	}
 }
@@ -134,7 +134,7 @@ func TestFSStateStoreMulitpleRollout(t *testing.T) {
 	if !found {
 		t.Error("didn't find test state")
 	}
-	categories := cat.Categories(store.clock.Now())
+	categories := cat.Categories(store.Now())
 	if len(categories) != 2 {
 		t.Error("wrong number of categories")
 	}

@@ -49,8 +49,8 @@ func TestTestClock(t *testing.T) {
 // It also provides is a wrapper around FSState, providing an internal test clock.
 type TestFSState struct {
 	*FSState
-	clock *TestClock
-	t     *testing.T
+	*TestClock
+	t *testing.T
 }
 
 // NewTestFSState returns a newly initialized TestFSState, backed by a temporary directory.
@@ -61,9 +61,9 @@ func NewTestFSState(t *testing.T) *TestFSState {
 		t.Fatal(err)
 	}
 	s := &TestFSState{
-		FSState: state,
-		clock:   NewTestClock(),
-		t:       t,
+		FSState:   state,
+		TestClock: NewTestClock(),
+		t:         t,
 	}
 	s.Refresh()
 	return s
@@ -72,7 +72,7 @@ func NewTestFSState(t *testing.T) *TestFSState {
 // Refresh the state and advance the clock.
 func (s *TestFSState) Refresh() {
 	s.t.Helper()
-	errs := s.FSState.Refresh(s.clock.Now())
+	errs := s.FSState.Refresh(s.Now())
 	for _, err := range errs {
 		if err != nil {
 			s.t.Error(err)
@@ -85,8 +85,8 @@ func (s *TestFSState) Refresh() {
 // and with an associated TestClock.
 type TestFSStateStore struct {
 	*FSStateStore
-	clock *TestClock
-	t     *testing.T
+	*TestClock
+	t *testing.T
 }
 
 // NewTestFSStateStore returns a TestFSStateStore with an
@@ -98,7 +98,7 @@ func NewTestFSStateStore(t *testing.T) *TestFSStateStore {
 	fsys := wfs.DirFS(t.TempDir())
 	store := &TestFSStateStore{
 		FSStateStore: NewFSStateStore(fsys, "testhost", 10, 1),
-		clock:        NewTestClock(),
+		TestClock:    NewTestClock(),
 		t:            t,
 	}
 	store.MkInstance("test")
@@ -108,7 +108,7 @@ func NewTestFSStateStore(t *testing.T) *TestFSStateStore {
 // Refresh all TestFSStates in store, and advance the clock.
 func (store *TestFSStateStore) Refresh() {
 	store.t.Helper()
-	if err := store.FSStateStore.Refresh(store.clock.Now()); err != nil {
+	if err := store.FSStateStore.Refresh(store.Now()); err != nil {
 		store.t.Error(err)
 	}
 }
@@ -141,9 +141,9 @@ func (store *TestFSStateStore) MkInstance(name string) {
 // filesystem.
 type TestContext struct {
 	*Context
-	stateStore *TestFSStateStore
-	clock      *TestClock
-	t          *testing.T
+	*TestFSStateStore
+	*TestClock
+	t *testing.T
 }
 
 // WebRootFS is a minimal filesystem usable as the web root.
@@ -169,10 +169,10 @@ func NewTestContext(t *testing.T, base string) *TestContext {
 	ctx.InstallHandlers(base)
 
 	h := &TestContext{
-		Context:    ctx,
-		stateStore: states,
-		clock:      NewTestClock(),
-		t:          t,
+		Context:          ctx,
+		TestFSStateStore: states,
+		TestClock:        NewTestClock(),
+		t:                t,
 	}
 
 	return h
@@ -181,9 +181,14 @@ func NewTestContext(t *testing.T, base string) *TestContext {
 // Refresh the context and advance the clock.
 func (h *TestContext) Refresh() {
 	h.t.Helper()
-	if err := h.Context.Refresh(h.clock.Now()); err != nil {
+	if err := h.Context.Refresh(h.Now()); err != nil {
 		h.t.Fatal(err)
 	}
+}
+
+// WriteStateFile is a convenience wrapper around h.TestFSStateStore.fsys.WriteFile
+func (h *TestContext) WriteStateFile(name string, data []byte) error {
+	return h.TestFSStateStore.fsys.WriteFile(name, data, 0644)
 }
 
 // TestServe serves req, logging an error if the returned HTTP code is not code.
