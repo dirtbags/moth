@@ -694,8 +694,13 @@ func (store *FSStateStore) Refresh(now time.Time) error {
 	}
 
 	var errs []error
-	for _, fsstate := range newStates {
-		errs = append(errs, fsstate.Refresh(now)...)
+	for name, fsstate := range newStates {
+		stateErrs := fsstate.Refresh(now)
+		for _, err := range stateErrs {
+			if err != nil {
+				errs = append(errs, fmt.Errorf("instance %s: %w", name, err))
+			}
+		}
 	}
 
 	// always store newStates: we don't want a goofy instance to block other changes.
@@ -703,3 +708,4 @@ func (store *FSStateStore) Refresh(now time.Time) error {
 
 	return errors.Join(errs...)
 }
+
