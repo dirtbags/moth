@@ -708,4 +708,3 @@ func (store *FSStateStore) Refresh(now time.Time) error {
 
 	return errors.Join(errs...)
 }
-
