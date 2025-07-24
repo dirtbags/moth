@@ -395,6 +395,10 @@ func (s *FSState) ReadRecords(r io.ReaderFrom, fsys fs.FS) (filenames []string, 
 
 		f, err := fsys.Open(name)
 		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				// Ignore files that disappeared between ReadDir and Open
+				continue
+			}
 			errs = append(errs, err)
 			continue
 		}
