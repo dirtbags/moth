@@ -7,7 +7,7 @@ Quick Start
 # Build MOTH
 git clone https://git.woozle.org/neale/moth.git
 cd moth
-go build ./...
+go build -o . ./...
 mkdir -p state/demo mothballs
 
 # Create a mothball (puzzle category)
