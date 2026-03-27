@@ -63,6 +63,8 @@ func ParseAward(s string) (Award, error) {
 	return ret, nil
 }
 
+// Record returns this award as a list of strings.
+// You could use this in a CSV writer, for instance.
 func (a Award) Record() []string {
 	when := a.When.Unix()
 	return []string{
